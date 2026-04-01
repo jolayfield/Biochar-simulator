@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg-info/
+.installed.cfg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Generated GROMACS output files
+*.gro
+*.top
+*.itp
+*.tpr
+*.trr
+*.xtc
+*.edr
+*.log
+*.mdp
+
+# Test output directories
+/tmp/
+output/
+examples/output/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
