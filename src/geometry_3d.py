@@ -46,28 +46,41 @@ class CoordinateGenerator:
             mol = Chem.AddHs(mol)
 
         # Generate 3D coordinates using distance geometry
-        if use_distance_geometry:
-            AllChem.EmbedMolecule(
-                mol, randomSeed=self.seed if self.seed is not None else -1
-            )
-        else:
-            AllChem.EmbedMolecule(
-                mol, randomSeed=self.seed if self.seed is not None else -1
-            )
+        seed = self.seed if self.seed is not None else -1
+
+        # Try ETKDGv3 first (best quality), fall back to ETKDGv2, then basic
+        result = -1
+        for params_fn in [
+            lambda: AllChem.ETKDGv3(),
+            lambda: AllChem.ETKDGv2(),
+            lambda: AllChem.EmbedParameters(),
+        ]:
+            params = params_fn()
+            params.randomSeed = seed
+            params.maxIterations = 200
+            result = AllChem.EmbedMolecule(mol, params)
+            if result == 0:
+                break
+
+        # If all embedding attempts failed, assign random coordinates as last resort
+        if result != 0:
+            AllChem.Compute2DCoords(mol)
 
         # Optional: apply force field relaxation
         try:
             AllChem.MMFFOptimizeMolecule(mol)
         except Exception:
-            # MMFF not applicable, try UFF
             try:
                 AllChem.UFFOptimizeMolecule(mol)
             except Exception:
                 pass
 
-        # Extract coordinates
-        conf = mol.GetConformer(0)
-        coords = np.array([list(conf.GetAtomPosition(i)) for i in range(mol.GetNumAtoms())])
+        # Extract coordinates — use conformer 0 if available, else zero-coords
+        try:
+            conf = mol.GetConformer(0)
+            coords = np.array([list(conf.GetAtomPosition(i)) for i in range(mol.GetNumAtoms())])
+        except Exception:
+            coords = np.zeros((mol.GetNumAtoms(), 3))
 
         # Apply planarity constraints to aromatic rings if requested
         if force_aromatic_planarity:

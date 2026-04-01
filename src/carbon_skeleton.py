@@ -274,10 +274,11 @@ class RandomGraphGenerator:
 
     def _create_default_aromatic(self, num_carbons: int) -> str:
         """
-        Create a default aromatic structure as fallback.
+        Create a default aromatic structure.
 
-        For targets up to 22C, use verified single PAHs.
-        For larger targets, concatenate pyrene (16C) units.
+        For targets up to 16C, use verified single PAH SMILES.
+        For larger targets, build a polyphenyl chain (each phenyl ring = 6C).
+        Polyphenyl chains are guaranteed to kekulize and scale to any size.
         """
         if num_carbons <= 6:
             return PAH_LIBRARY["benzene"]["smiles"]
@@ -288,20 +289,25 @@ class RandomGraphGenerator:
         elif num_carbons <= 16:
             return PAH_LIBRARY["pyrene"]["smiles"]
         else:
-            # For larger structures, concatenate pyrene (16C) and benzene (6C) units
-            # Use pyrene as base and add benzene rings
-            pyrene = PAH_LIBRARY["pyrene"]["smiles"]
-            remaining = num_carbons - 16
-            result = pyrene
+            # Build a polyphenyl chain: n rings × 6C each
+            # Use round() to get closest ring count to target
+            n_rings = max(3, round(num_carbons / 6))
+            return self._build_polyphenyl(n_rings)
 
-            # Add benzene rings (6C each) to reach target
-            # Use direct C-C bonds between aromatic carbons
-            benzene = "c1ccccc1"
-            while remaining >= 6:
-                result = result + "-" + benzene
-                remaining -= 6
+    def _build_polyphenyl(self, n_rings: int) -> str:
+        """
+        Build a para-polyphenyl chain SMILES with n_rings benzene rings.
 
-            return result
+        Each ring contributes 6 carbons. Chain grows as:
+          1 ring:  c1ccccc1                 (6C)
+          2 rings: c1ccc(-c2ccccc2)cc1      (12C)
+          3 rings: c1ccc(-c2ccc(-c3ccccc3)cc2)cc1  (18C)
+          ...
+        """
+        smiles = "c1ccccc1"
+        for _ in range(n_rings - 1):
+            smiles = f"c1ccc(-{smiles})cc1"
+        return smiles
 
 
 class SkeletonValidator:
