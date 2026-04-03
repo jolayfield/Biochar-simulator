@@ -45,6 +45,18 @@ class CoordinateGenerator:
         Returns:
             (mol_with_coords, coords_array)
         """
+        # Ensure aromaticity is properly perceived and kekulized before embedding
+        try:
+            Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
+            Chem.Kekulize(mol, clearAromaticFlags=False)
+        except Exception:
+            # If kekulization fails, try to kekulize with aromatic flags cleared
+            try:
+                Chem.Kekulize(mol)
+            except Exception:
+                # If still fails, proceed without kekulization
+                pass
+
         # Add hydrogens if not already present
         if mol.GetNumHeavyAtoms() == mol.GetNumAtoms():
             mol = Chem.AddHs(mol)

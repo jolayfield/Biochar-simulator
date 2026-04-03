@@ -125,9 +125,19 @@ class OxygenAssigner:
                 except Exception:
                     continue
 
-            # Sanitize the molecule
+            # Sanitize and re-perceive aromaticity
             try:
                 Chem.SanitizeMol(new_mol)
+            except Exception as e:
+                # If full sanitization fails, try partial sanitization
+                try:
+                    Chem.SanitizeMol(new_mol, Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS)
+                except Exception:
+                    pass
+
+            # Always re-perceive aromaticity after modifications
+            try:
+                Chem.SetAromaticity(new_mol, Chem.AromaticityModel.AROMATICITY_MDL)
             except Exception:
                 pass
 
@@ -224,9 +234,19 @@ class HydrogenAssigner:
         else:
             mol_with_H = mol_saturated
 
-        # Sanitize if possible
+        # Sanitize and re-perceive aromaticity
         try:
             Chem.SanitizeMol(mol_with_H)
+        except Exception:
+            # If full sanitization fails, try partial sanitization
+            try:
+                Chem.SanitizeMol(mol_with_H, Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS)
+            except Exception:
+                pass
+
+        # Always re-perceive aromaticity after modifications
+        try:
+            Chem.SetAromaticity(mol_with_H, Chem.AromaticityModel.AROMATICITY_MDL)
         except Exception:
             pass
 

@@ -177,9 +177,17 @@ class RandomGraphGenerator:
                 Chem.SanitizeMol(mol)
         else:
             # Build 2D graphene nanoflake
-            mol = self._build_graphene_flake_mol(target_num_carbons)
+            try:
+                mol = self._build_graphene_flake_mol(target_num_carbons)
+            except Exception:
+                mol = None
+
             if mol is not None:
-                smiles = Chem.MolToSmiles(mol)
+                try:
+                    smiles = Chem.MolToSmiles(mol)
+                except Exception:
+                    # If SMILES generation fails, it's okay - we'll use the mol directly
+                    smiles = None
 
         # Fallback to polyphenyl chain if nanoflake builder failed
         if mol is None:
@@ -293,6 +301,8 @@ class RandomGraphGenerator:
         mol = rwmol.GetMol()
         try:
             Chem.SanitizeMol(mol)
+            # Re-perceive aromaticity to ensure all aromatic systems are recognized
+            Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
             return mol
         except Exception:
             # If Kekulé assignment failed (e.g. imperfect matching for odd-carbon
@@ -317,6 +327,8 @@ class RandomGraphGenerator:
         mol = rwmol.GetMol()
         try:
             Chem.SanitizeMol(mol)
+            # Re-perceive aromaticity to ensure all aromatic systems are recognized
+            Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
             return mol
         except Exception:
             return None
