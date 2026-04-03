@@ -18,7 +18,7 @@ from .heteroatom_assignment import (
     HeteroatomValidator,
     CompositionInfo,
 )
-from .geometry_3d import CoordinateGenerator, GeometryValidator
+from .geometry_3d import CoordinateGenerator, GeometryValidator, ClashResolver
 from .opls_typing import AtomTyper, ChargeAssigner
 from .gromacs_export import GromacsExporter
 from .validation import ValidationEngine
@@ -246,15 +246,42 @@ class BiocharGenerator:
         return mol, composition
 
     def _generate_geometry(self, mol: Chem.Mol) -> Tuple[Chem.Mol, np.ndarray]:
-        """Generate 3D coordinates."""
+        """Generate 3D coordinates with clash resolution."""
         generator = CoordinateGenerator(seed=self.config.seed)
         mol, coords = generator.generate_3d_coordinates(
             mol,
             force_aromatic_planarity=True,
         )
 
-        # Validate geometry
+        # Validate and detect clashes
         valid, errors = GeometryValidator.validate_geometry(mol, coords)
+        steric_clashes = [e for e in errors if "Steric clash" in e]
+
+        # Resolve clashes if found
+        if steric_clashes:
+            # First pass: iterative clash resolution
+            coords = ClashResolver.resolve_clashes(
+                mol, coords, max_iterations=15, displacement_step=0.15, use_vdw_radii=True
+            )
+
+            # Second pass: force field refinement to optimize geometry
+            coords, _ = generator.validate_and_relax(mol, coords, max_iterations=200)
+
+            # Third pass: final clash resolution if needed
+            valid_check, errors_check = GeometryValidator.validate_geometry(mol, coords)
+            steric_clashes_after_ff = [e for e in errors_check if "Steric clash" in e]
+
+            if steric_clashes_after_ff:
+                coords = ClashResolver.resolve_clashes(
+                    mol, coords, max_iterations=10, displacement_step=0.08, use_vdw_radii=True
+                )
+
+            # Final validation
+            valid, errors = GeometryValidator.validate_geometry(mol, coords)
+            steric_clashes_after = [e for e in errors if "Steric clash" in e]
+            clashes_resolved = len(steric_clashes) - len(steric_clashes_after)
+            print(f"  Clash resolution: {clashes_resolved}/{len(steric_clashes)} clashes resolved")
+
         if not valid:
             print(f"Warning: Geometry validation issues:")
             for error in errors[:3]:

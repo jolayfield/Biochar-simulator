@@ -28,15 +28,19 @@ class CoordinateGenerator:
         force_aromatic_planarity: bool = True,
         num_conformers: int = 1,
         use_distance_geometry: bool = True,
+        max_embedding_attempts: int = 3,
+        max_ff_iterations: int = None,
     ) -> Tuple[Chem.Mol, np.ndarray]:
         """
-        Generate 3D coordinates for molecule.
+        Generate 3D coordinates for molecule with enhanced relaxation.
 
         Args:
             mol: RDKit molecule
             force_aromatic_planarity: If True, enforce planarity on aromatic rings
             num_conformers: Number of conformers to generate
             use_distance_geometry: Use distance geometry for coordinate generation
+            max_embedding_attempts: Number of independent embedding attempts (default 3)
+            max_ff_iterations: Max force field iterations (default: 500 for large molecules, 300 for small)
 
         Returns:
             (mol_with_coords, coords_array)
@@ -45,37 +49,85 @@ class CoordinateGenerator:
         if mol.GetNumHeavyAtoms() == mol.GetNumAtoms():
             mol = Chem.AddHs(mol)
 
-        # Generate 3D coordinates using distance geometry
-        seed = self.seed if self.seed is not None else -1
+        # Adaptive force field iterations based on molecule size
+        if max_ff_iterations is None:
+            num_heavy_atoms = mol.GetNumHeavyAtoms()
+            if num_heavy_atoms > 300:
+                max_ff_iterations = 500
+            elif num_heavy_atoms > 100:
+                max_ff_iterations = 400
+            else:
+                max_ff_iterations = 300
 
-        # Try ETKDGv3 first (best quality), fall back to ETKDGv2, then basic
-        result = -1
-        for params_fn in [
-            lambda: AllChem.ETKDGv3(),
-            lambda: AllChem.ETKDGv2(),
-            lambda: AllChem.EmbedParameters(),
-        ]:
-            params = params_fn()
-            params.randomSeed = seed
-            params.maxIterations = 200
-            result = AllChem.EmbedMolecule(mol, params)
-            if result == 0:
-                break
+        # Try multiple independent embeddings and keep the best one
+        best_mol = None
+        best_energy = float('inf')
+        best_converged = False
 
-        # If all embedding attempts failed, assign random coordinates as last resort
-        if result != 0:
-            AllChem.Compute2DCoords(mol)
+        for attempt in range(max_embedding_attempts):
+            # Use different seed for each attempt to escape local minima
+            seed = (self.seed + attempt) if self.seed is not None else attempt
 
-        # Optional: apply force field relaxation
-        try:
-            AllChem.MMFFOptimizeMolecule(mol)
-        except Exception:
+            # Create a copy for this attempt
+            mol_copy = Chem.RWMol(mol)
+
+            # Try ETKDGv3 first (best quality), fall back to ETKDGv2, then basic
+            result = -1
+            for params_fn in [
+                lambda: AllChem.ETKDGv3(),
+                lambda: AllChem.ETKDGv2(),
+                lambda: AllChem.EmbedParameters(),
+            ]:
+                params = params_fn()
+                params.randomSeed = seed
+                params.maxIterations = 200
+                result = AllChem.EmbedMolecule(mol_copy, params)
+                if result == 0:
+                    break
+
+            # If embedding failed, skip this attempt
+            if result != 0:
+                continue
+
+            # Apply force field relaxation with enhanced iterations
+            ff_converged = False
+            ff_energy = float('inf')
+
             try:
-                AllChem.UFFOptimizeMolecule(mol)
+                # Try MMFF94 with tighter convergence
+                ff = AllChem.MMFFGetMoleculeForceField(mol_copy)
+                if ff is not None:
+                    minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
+                    ff_converged = minimize_result == 0
+                    ff_energy = ff.CalcEnergy()
             except Exception:
                 pass
 
-        # Extract coordinates — use conformer 0 if available, else zero-coords
+            # Fallback to UFF if MMFF94 unavailable
+            if ff_energy == float('inf'):
+                try:
+                    ff = AllChem.UFFGetMoleculeForceField(mol_copy)
+                    if ff is not None:
+                        minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
+                        ff_converged = minimize_result == 0
+                        ff_energy = ff.CalcEnergy()
+                except Exception:
+                    pass
+
+            # Keep track of best embedding (lowest energy)
+            if ff_energy < best_energy:
+                best_energy = ff_energy
+                best_mol = mol_copy
+                best_converged = ff_converged
+
+        # Use best embedding, or fall back to 2D if all attempts failed
+        if best_mol is not None:
+            mol = best_mol
+        else:
+            # Fallback: use 2D coordinates
+            AllChem.Compute2DCoords(mol)
+
+        # Extract coordinates
         try:
             conf = mol.GetConformer(0)
             coords = np.array([list(conf.GetAtomPosition(i)) for i in range(mol.GetNumAtoms())])
@@ -198,6 +250,115 @@ class CoordinateGenerator:
         return coords, False
 
 
+class ClashResolver:
+    """Resolve steric clashes in molecular geometries."""
+
+    @staticmethod
+    def resolve_clashes(
+        mol: Chem.Mol,
+        coords: np.ndarray,
+        max_iterations: int = 10,
+        displacement_step: float = 0.1,
+        use_vdw_radii: bool = True,
+    ) -> np.ndarray:
+        """
+        Iteratively resolve steric clashes by displacing atoms away from each other.
+
+        Algorithm:
+        - Detect pairs of atoms that are too close (violating Van der Waals radii)
+        - Displace the lighter atom (usually H) away from its neighbor
+        - Repeat until no clashes remain or max iterations reached
+
+        Args:
+            mol: RDKit molecule
+            coords: 3D coordinates
+            max_iterations: Maximum number of clash resolution iterations
+            displacement_step: Step size for atom displacement (Angstrom)
+            use_vdw_radii: If True, use Van der Waals radii; else use fixed threshold
+
+        Returns:
+            Adjusted coordinates with reduced clashes
+        """
+        adjusted_coords = coords.copy()
+
+        for iteration in range(max_iterations):
+            clashes = ClashResolver._detect_clashes(mol, adjusted_coords, use_vdw_radii)
+
+            if not clashes:
+                # No more clashes
+                break
+
+            # Displace clashing atoms
+            for atom_i, atom_j in clashes:
+                # Prefer to move the lighter atom (usually H)
+                mass_i = mol.GetAtomWithIdx(atom_i).GetMass()
+                mass_j = mol.GetAtomWithIdx(atom_j).GetMass()
+
+                if mass_i < mass_j:
+                    moving_atom = atom_i
+                else:
+                    moving_atom = atom_j
+
+                # Calculate displacement direction (away from the other atom)
+                if moving_atom == atom_i:
+                    other_atom = atom_j
+                else:
+                    other_atom = atom_i
+
+                direction = adjusted_coords[moving_atom] - adjusted_coords[other_atom]
+                distance = np.linalg.norm(direction)
+
+                if distance > 1e-6:  # Avoid division by zero
+                    direction_normalized = direction / distance
+                    adjusted_coords[moving_atom] += displacement_step * direction_normalized
+
+        return adjusted_coords
+
+    @staticmethod
+    def _detect_clashes(
+        mol: Chem.Mol,
+        coords: np.ndarray,
+        use_vdw_radii: bool = True,
+    ) -> List[Tuple[int, int]]:
+        """
+        Detect steric clashes between atoms.
+
+        Args:
+            mol: RDKit molecule
+            coords: 3D coordinates
+            use_vdw_radii: If True, use Van der Waals radii; else use fixed 2.0 Å threshold
+
+        Returns:
+            List of (atom_i, atom_j) pairs with clashes
+        """
+        clashes = []
+        distances = squareform(pdist(coords))
+
+        for i in range(mol.GetNumAtoms()):
+            for j in range(i + 1, mol.GetNumAtoms()):
+                # Skip bonded atoms
+                if mol.GetBondBetweenAtoms(i, j) is not None:
+                    continue
+
+                if use_vdw_radii:
+                    # Use Van der Waals radii with 0.2 Å buffer
+                    atom_i = mol.GetAtomWithIdx(i)
+                    atom_j = mol.GetAtomWithIdx(j)
+                    symbol_i = atom_i.GetSymbol()
+                    symbol_j = atom_j.GetSymbol()
+                    r_vdw_i = VDW_RADII.get(symbol_i, 1.70)
+                    r_vdw_j = VDW_RADII.get(symbol_j, 1.70)
+                    min_distance = r_vdw_i + r_vdw_j + 0.2
+                else:
+                    # Use fixed threshold
+                    min_distance = 2.0
+
+                if distances[i, j] < min_distance:
+                    clashes.append((i, j))
+
+        return clashes
+
+
 class GeometryValidator:
     """Validate 3D molecular geometry."""
 
@@ -241,7 +402,7 @@ class GeometryValidator:
         mol: Chem.Mol, coords: np.ndarray, clash_threshold: float = 2.0
     ) -> List[str]:
         """
-        Check for steric clashes between atoms.
+        Check for steric clashes between atoms with enhanced reporting.
 
         Args:
             mol: RDKit molecule
@@ -249,9 +410,10 @@ class GeometryValidator:
             clash_threshold: Minimum allowed distance (Angstrom)
 
         Returns:
-            List of error messages
+            List of error messages with clash severity
         """
         errors = []
+        clashes = []
 
         # Calculate pairwise distances
         distances = squareform(pdist(coords))
@@ -270,12 +432,20 @@ class GeometryValidator:
                 symbol_j = atom_j.GetSymbol()
                 r_vdw_i = VDW_RADII.get(symbol_i, 1.70)
                 r_vdw_j = VDW_RADII.get(symbol_j, 1.70)
-                min_distance = r_vdw_i + r_vdw_j - clash_threshold
+                min_distance = r_vdw_i + r_vdw_j + 0.2  # Use realistic Van der Waals sum
 
-                if distances[i, j] < min_distance:
+                distance = distances[i, j]
+                if distance < min_distance:
+                    severity = min_distance - distance  # How far below minimum
+                    clash_type = "H-H" if symbol_i == "H" and symbol_j == "H" else \
+                                 "H-C" if symbol_i in ["H", "C"] and symbol_j in ["H", "C"] else \
+                                 "Other"
+
+                    clashes.append((i, j, distance, min_distance, severity, clash_type))
                     errors.append(
                         f"Steric clash: atoms {i} and {j} "
-                        f"(distance: {distances[i, j]:.2f}, min: {min_distance:.2f})"
+                        f"(distance: {distance:.2f}, min: {min_distance:.2f}, "
+                        f"severity: {severity:.2f} Å, type: {clash_type})"
                     )
 
         return errors

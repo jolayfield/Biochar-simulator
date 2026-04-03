@@ -41,6 +41,32 @@ OPLS_ATOM_TYPES = {
     "SH": ("H on sulfur", 1.008, 0.16),
 }
 
+# OPLS-AA Lennard-Jones Parameters
+# Format: atom_type -> (sigma_nm, epsilon_kJ/mol)
+# sigma: van der Waals radius (in nanometers)
+# epsilon: well depth (in kJ/mol)
+# Reference: GROMACS OPLS-AA forcefield
+
+OPLS_LJ_PARAMS = {
+    "CA": (0.3550, 0.2928),      # Aromatic carbon
+    "HA": (0.2600, 0.0630),      # Aromatic hydrogen
+    "CT": (0.3500, 0.2761),      # Aliphatic carbon (sp3)
+    "HC": (0.2500, 0.0630),      # H on aliphatic C
+    "OC": (0.2960, 0.5023),      # Carbonyl oxygen
+    "OH": (0.3066, 0.7113),      # Hydroxyl oxygen
+    "OS": (0.2960, 0.5023),      # Ether oxygen
+    "OW": (0.3066, 0.6276),      # Water oxygen
+    "HO": (0.0000, 0.0000),      # H in hydroxyl (no LJ)
+    "C": (0.3750, 0.4392),       # Carboxylic acid carbonyl C
+    "O": (0.2960, 0.5023),       # Carboxylic acid carbonyl O
+    "OH2": (0.3066, 0.7113),     # Hydroxyl on carboxylic acid
+    "HO2": (0.0000, 0.0000),     # H on carboxylic hydroxyl (no LJ)
+    "N": (0.3250, 0.7113),       # Tertiary nitrogen
+    "NT": (0.3250, 0.7113),      # Quaternary nitrogen
+    "S": (0.3550, 1.0460),       # Sulfur sp3
+    "SH": (0.0000, 0.0000),      # H on sulfur (no LJ)
+}
+
 # OPLS-AA Bond Parameters (k_bond, r0)
 # Format: (atom_type1, atom_type2) -> (k_kcal/mol/Angstrom^2, r0_Angstrom)
 # Values from GROMACS OPLS-AA forcefield
