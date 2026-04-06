@@ -220,18 +220,25 @@ PAH_LIBRARY = {
         "references": "Four fused rings",
     },
     "chrysene": {
-        "smiles": "c1ccc2cc3ccccc3cc2c1",  # Needs fixing - this is same as anthracene
+        "smiles": "c1ccc2c(c1)cc1ccc3ccccc3c1c2",
         "num_atoms": 18,
         "num_aromatic": 18,
         "molecular_formula": "C18H12",
         "references": "Four fused rings planar",
     },
+    "triphenylene": {
+        "smiles": "c1ccc2c(c1)c1ccccc1c1ccccc21",
+        "num_atoms": 18,
+        "num_aromatic": 18,
+        "molecular_formula": "C18H12",
+        "references": "Three fused rings angular",
+    },
     "coronene": {
-        "smiles": "c1cc2ccccc2c3ccccc3c1",
+        "smiles": "c1cc2ccc3ccc4ccc5ccc6ccc1c1c2c3c4c5c61",
         "num_atoms": 24,
         "num_aromatic": 24,
         "molecular_formula": "C24H12",
-        "references": "Six fused benzene rings",
+        "references": "Seven fused rings (central + 6 surrounding)",
     },
 }
 

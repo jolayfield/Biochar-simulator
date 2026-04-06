@@ -125,15 +125,22 @@ class OxygenAssigner:
                 except Exception:
                     continue
 
-            # Sanitize and re-perceive aromaticity
+            # Sanitize without kekulizing: SANITIZE_KEKULIZE converts aromatic bonds
+            # to explicit single/double, which fails for large graphene-like systems
+            # and leaves bond types in a corrupt state.  Skip it here; the aromatic
+            # model is self-consistent without Kekule assignment.
+            _SAFE_FLAGS = (
+                Chem.SanitizeFlags.SANITIZE_FINDRADICALS
+                | Chem.SanitizeFlags.SANITIZE_SETAROMATICITY
+                | Chem.SanitizeFlags.SANITIZE_SETCONJUGATION
+                | Chem.SanitizeFlags.SANITIZE_SETHYBRIDIZATION
+                | Chem.SanitizeFlags.SANITIZE_SYMMRINGS
+                | Chem.SanitizeFlags.SANITIZE_ADJUSTHS
+            )
             try:
-                Chem.SanitizeMol(new_mol)
-            except Exception as e:
-                # If full sanitization fails, try partial sanitization
-                try:
-                    Chem.SanitizeMol(new_mol, Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS)
-                except Exception:
-                    pass
+                Chem.SanitizeMol(new_mol, _SAFE_FLAGS)
+            except Exception:
+                pass
 
             # Always re-perceive aromaticity after modifications
             try:
@@ -234,15 +241,19 @@ class HydrogenAssigner:
         else:
             mol_with_H = mol_saturated
 
-        # Sanitize and re-perceive aromaticity
+        # Sanitize without kekulizing (same rationale as OxygenAssigner)
+        _SAFE_FLAGS = (
+            Chem.SanitizeFlags.SANITIZE_FINDRADICALS
+            | Chem.SanitizeFlags.SANITIZE_SETAROMATICITY
+            | Chem.SanitizeFlags.SANITIZE_SETCONJUGATION
+            | Chem.SanitizeFlags.SANITIZE_SETHYBRIDIZATION
+            | Chem.SanitizeFlags.SANITIZE_SYMMRINGS
+            | Chem.SanitizeFlags.SANITIZE_ADJUSTHS
+        )
         try:
-            Chem.SanitizeMol(mol_with_H)
+            Chem.SanitizeMol(mol_with_H, _SAFE_FLAGS)
         except Exception:
-            # If full sanitization fails, try partial sanitization
-            try:
-                Chem.SanitizeMol(mol_with_H, Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS)
-            except Exception:
-                pass
+            pass
 
         # Always re-perceive aromaticity after modifications
         try:

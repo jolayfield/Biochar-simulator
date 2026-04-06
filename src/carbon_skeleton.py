@@ -4,6 +4,7 @@ Carbon Skeleton Generation
 Generates aromatic carbon frameworks for biochar structures using PAHs or random graphs.
 """
 
+import math
 import random
 from typing import List, Tuple, Set, Optional
 from dataclasses import dataclass
@@ -26,29 +27,283 @@ class CarbonSkeleton:
     aromaticity_percent: float
 
 
+# ---------------------------------------------------------------------------
+# Utility: convert RDKit Mol (carbon-only) to NetworkX graph
+# ---------------------------------------------------------------------------
+
+def _mol_to_graph(mol: Chem.Mol) -> nx.Graph:
+    """Convert an RDKit carbon-only Mol to a NetworkX graph."""
+    G = nx.Graph()
+    for atom in mol.GetAtoms():
+        if atom.GetAtomicNum() == 6:
+            G.add_node(atom.GetIdx())
+    for bond in mol.GetBonds():
+        i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+        if i in G.nodes and j in G.nodes:
+            G.add_edge(i, j)
+    return G
+
+
+def _graph_to_mol(G: nx.Graph) -> Optional[Chem.Mol]:
+    """
+    Convert a NetworkX carbon graph to an RDKit Mol.
+
+    Uses aromatic bond type so RDKit handles kekulization internally,
+    which correctly perceives all fused-ring aromatic carbons.
+    Falls back to max-matching Kekule assignment if sanitization fails.
+    """
+    if G.number_of_nodes() == 0:
+        return None
+
+    node_list = sorted(G.nodes())
+    node_to_idx = {n: i for i, n in enumerate(node_list)}
+
+    # Primary: all-aromatic bonds, let SanitizeMol kekulize
+    rwmol = RWMol()
+    for _ in node_list:
+        a = Chem.Atom(6)
+        a.SetNoImplicit(False)
+        rwmol.AddAtom(a)
+    for u, v in G.edges():
+        rwmol.AddBond(node_to_idx[u], node_to_idx[v], Chem.BondType.AROMATIC)
+    mol = rwmol.GetMol()
+    try:
+        Chem.SanitizeMol(mol)
+        Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
+        return mol
+    except Exception:
+        pass
+
+    # Fallback: explicit Kekule via max matching (requires even node count)
+    if G.number_of_nodes() % 2 != 0:
+        return None
+
+    matching = nx.max_weight_matching(G, maxcardinality=True)
+    double_bonds: Set[Tuple[int, int]] = {
+        (min(u, v), max(u, v)) for u, v in matching
+    }
+    rwmol2 = RWMol()
+    for _ in node_list:
+        rwmol2.AddAtom(Chem.Atom(6))
+    for u, v in G.edges():
+        iu, iv = node_to_idx[u], node_to_idx[v]
+        key = (min(u, v), max(u, v))
+        btype = Chem.BondType.DOUBLE if key in double_bonds else Chem.BondType.SINGLE
+        rwmol2.AddBond(iu, iv, btype)
+    mol2 = rwmol2.GetMol()
+    try:
+        Chem.SanitizeMol(mol2)
+        Chem.SetAromaticity(mol2, Chem.AromaticityModel.AROMATICITY_MDL)
+        return mol2
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Hex-lattice seed builder
+# ---------------------------------------------------------------------------
+
+def _build_hex_lattice_graph(num_rings: int) -> nx.Graph:
+    """
+    Build a compact graphene-like PAH graph from a hexagonal lattice.
+
+    Uses axial hex coordinates. Starts with the centre cell and spirals
+    outward.  Each hex cell is a 6-membered ring; shared edges between
+    adjacent cells are automatically deduplicated.
+
+    The resulting graph is always bipartite (A/B sublattice of the
+    honeycomb), which guarantees a perfect matching exists (by König's
+    theorem) when the graph has an even number of nodes.
+
+    Args:
+        num_rings: Number of hexagonal cells to place (1 = benzene, 7 = coronene)
+
+    Returns:
+        NetworkX graph of the carbon backbone.
+    """
+    # Generate hex cell centres in axial coordinates using a spiral
+    cells = _hex_spiral(num_rings)
+
+    # For each cell, compute its 6 corner positions (using "pointy-top" hex).
+    # Corners are shared between adjacent cells.
+    # We identify corners by rounding their (x, y) to avoid float duplicates.
+    corner_id_map: dict = {}  # (rounded_x, rounded_y) -> node_id
+    cell_corners: list = []   # list of lists of node_ids per cell
+    next_id = 0
+
+    for q, r in cells:
+        # Centre of hex cell in Cartesian (pointy-top orientation)
+        cx = math.sqrt(3) * (q + r / 2.0)
+        cy = 1.5 * r
+
+        corners = []
+        for k in range(6):
+            angle = math.pi / 3.0 * k + math.pi / 6.0
+            px = cx + math.cos(angle)
+            py = cy + math.sin(angle)
+            key = (round(px, 4), round(py, 4))
+            if key not in corner_id_map:
+                corner_id_map[key] = next_id
+                next_id += 1
+            corners.append(corner_id_map[key])
+        cell_corners.append(corners)
+
+    # Build the graph: nodes are corner IDs, edges are ring edges
+    G = nx.Graph()
+    G.add_nodes_from(range(next_id))
+    for corners in cell_corners:
+        for i in range(6):
+            G.add_edge(corners[i], corners[(i + 1) % 6])
+
+    return G
+
+
+def _hex_spiral(n: int) -> List[Tuple[int, int]]:
+    """Return *n* hex-cell axial coordinates in a compact spiral.
+
+    Cells are emitted from the centre outwards, ring by ring.  Each ring
+    is traversed using the correct ring-edge direction vectors so that
+    consecutive cells on the same ring are always adjacent (share an
+    edge), producing a compact 2-D cluster rather than a strip.
+    """
+    if n <= 0:
+        return []
+    cells = [(0, 0)]
+    if n == 1:
+        return cells
+
+    # Direction vectors for traversing the *perimeter* of ring r.
+    # Starting at (r, 0) and going counter-clockwise in axial coords.
+    ring_dirs = [(-1, 1), (-1, 0), (0, -1), (1, -1), (1, 0), (0, 1)]
+    radius = 1
+    while len(cells) < n:
+        q, r = radius, 0  # Start of ring `radius`
+        for d in range(6):
+            for _ in range(radius):
+                if len(cells) >= n:
+                    return cells
+                cells.append((q, r))
+                q += ring_dirs[d][0]
+                r += ring_dirs[d][1]
+        radius += 1
+    return cells[:n]
+
+
+# ---------------------------------------------------------------------------
+# Ring-growth engine (shared by PAHAssembler and RandomGraphGenerator)
+# ---------------------------------------------------------------------------
+
+def _grow_graph(G: nx.Graph, target_nodes: int, seed: Optional[int] = None) -> nx.Graph:
+    """
+    Grow a carbon graph by iteratively fusing 6-membered rings.
+
+    Each new ring shares one edge with the existing graph and adds 4
+    new carbon nodes.  The algorithm prefers edges whose neighbours have
+    higher total degree, promoting compact 2D growth.
+
+    A parity guard ensures the graph always has an even number of nodes
+    (required for Kekule / perfect-matching assignment).
+
+    Args:
+        G: Seed graph (will NOT be mutated; a copy is made).
+        target_nodes: Desired number of nodes.
+        seed: Optional RNG seed for tie-breaking.
+
+    Returns:
+        Grown graph (new object).
+    """
+    G = G.copy()
+    rng = random.Random(seed)
+    next_node = max(G.nodes()) + 1 if G.nodes() else 0
+
+    while G.number_of_nodes() + 4 <= target_nodes:
+        fusable = _get_fusable_edges(G)
+        if not fusable:
+            break
+
+        # Sort by compactness heuristic; break ties randomly
+        fusable.sort(key=lambda e: (-_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
+        u, v = fusable[0]
+
+        # Add 4 new nodes forming a new 6-membered ring sharing edge u-v
+        new_nodes = list(range(next_node, next_node + 4))
+        next_node += 4
+        for n in new_nodes:
+            G.add_node(n)
+        G.add_edge(v, new_nodes[0])
+        G.add_edge(new_nodes[0], new_nodes[1])
+        G.add_edge(new_nodes[1], new_nodes[2])
+        G.add_edge(new_nodes[2], new_nodes[3])
+        G.add_edge(new_nodes[3], u)
+
+    # Parity guard: if odd node count, try adding one more ring
+    if G.number_of_nodes() % 2 != 0:
+        fusable = _get_fusable_edges(G)
+        if fusable:
+            fusable.sort(key=lambda e: (-_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
+            u, v = fusable[0]
+            new_nodes = list(range(next_node, next_node + 4))
+            for n in new_nodes:
+                G.add_node(n)
+            G.add_edge(v, new_nodes[0])
+            G.add_edge(new_nodes[0], new_nodes[1])
+            G.add_edge(new_nodes[1], new_nodes[2])
+            G.add_edge(new_nodes[2], new_nodes[3])
+            G.add_edge(new_nodes[3], u)
+
+    return G
+
+
+def _get_fusable_edges(G: nx.Graph) -> List[Tuple[int, int]]:
+    """Return edges where both endpoints have degree <= 2 (open for ring fusion)."""
+    return [(u, v) for u, v in G.edges() if G.degree(u) == 2 and G.degree(v) == 2]
+
+
+def _edge_neighbor_degree(G: nx.Graph, a: int, b: int) -> int:
+    """Sum of degrees of neighbours of a and b (excluding each other)."""
+    na = {n for n in G.neighbors(a) if n != b}
+    nb = {n for n in G.neighbors(b) if n != a}
+    return sum(G.degree(n) for n in na | nb)
+
+
+# ---------------------------------------------------------------------------
+# PAH Assembler (main public API)
+# ---------------------------------------------------------------------------
+
 class PAHAssembler:
     """
-    Build aromatic carbon skeletons from Polycyclic Aromatic Hydrocarbons (PAHs).
+    Build aromatic carbon skeletons from validated PAH building blocks.
 
-    Strategy: Start with PAH building blocks and fuse them together to reach target size.
+    Strategy:
+      <= 24C  : use a pre-validated PAH from the library (exact or nearest).
+      > 24C   : build a hex-lattice seed, then grow via ring fusion.
     """
+
+    # Sorted list of (num_carbons, pah_name) for quick lookup
+    _SIZE_INDEX: Optional[List[Tuple[int, str]]] = None
 
     def __init__(self, seed: int = None):
         self.seed = seed
         if seed is not None:
             random.seed(seed)
 
-        # Preload PAH library into RDKit molecules
+        # Preload PAH library
         self.pahs = {}
         for name, data in PAH_LIBRARY.items():
             mol = Chem.MolFromSmiles(data["smiles"])
             if mol is not None:
-                Chem.SanitizeMol(mol)
-                self.pahs[name] = {
-                    "mol": mol,
-                    "num_carbons": data["num_atoms"],
-                    "data": data,
-                }
+                try:
+                    Chem.SanitizeMol(mol)
+                    nC = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 6)
+                    self.pahs[name] = {"mol": mol, "num_carbons": nC, "data": data}
+                except Exception:
+                    pass
+
+        # Build size index (sorted ascending by carbon count)
+        if PAHAssembler._SIZE_INDEX is None:
+            PAHAssembler._SIZE_INDEX = sorted(
+                [(info["num_carbons"], name) for name, info in self.pahs.items()]
+            )
 
     def generate(
         self,
@@ -56,224 +311,93 @@ class PAHAssembler:
         target_aromaticity: float = 100.0,
         prefer_larger_pahs: bool = True,
     ) -> CarbonSkeleton:
-        """
-        Generate a PAH-based carbon skeleton.
+        """Generate a PAH carbon skeleton of approximately *target_num_carbons*."""
+        mol = None
 
-        For ≤16C: uses single PAH templates.
-        For >16C: fuses multiple PAH building blocks together.
+        # --- Route 1: exact library match ---
+        for name, info in self.pahs.items():
+            if info["num_carbons"] == target_num_carbons:
+                mol = Chem.Mol(info["mol"])
+                break
 
-        Args:
-            target_num_carbons: Target number of carbon atoms
-            target_aromaticity: Target aromaticity percentage (0-100)
-            prefer_larger_pahs: If True, prefer larger PAHs for assembly
+        # --- Route 2: library seed + graph growth ---
+        if mol is None:
+            mol = self._build_from_seed(target_num_carbons)
 
-        Returns:
-            CarbonSkeleton object
-        """
-        try:
-            if target_num_carbons <= 16:
-                # Use single PAH template
-                smiles = self._select_pah_smiles(target_num_carbons, prefer_larger_pahs)
-                mol = Chem.MolFromSmiles(smiles)
-                if mol is None:
-                    raise ValueError("Could not parse SMILES")
-                Chem.SanitizeMol(mol)
-            else:
-                # Use PAH fusion for larger targets
-                mol = self._assemble_from_pahs(target_num_carbons)
-                if mol is None:
-                    raise ValueError("PAH assembly failed")
+        # --- Fallback: pyrene ---
+        if mol is None:
+            mol = Chem.Mol(self.pahs["pyrene"]["mol"])
 
-            Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
-
-            num_carbons = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 6)
-            num_aromatic = sum(
-                1 for atom in mol.GetAtoms()
-                if atom.GetAtomicNum() == 6 and atom.GetIsAromatic()
-            )
-            aromaticity = (num_aromatic / num_carbons * 100) if num_carbons > 0 else 0
-
-            try:
-                smiles = Chem.MolToSmiles(mol)
-            except Exception:
-                smiles = None
-
-            return CarbonSkeleton(
-                mol=mol,
-                smiles=smiles or f"C{num_carbons}_PAH",
-                num_carbons=num_carbons,
-                num_aromatic_carbons=num_aromatic,
-                aromaticity_percent=aromaticity,
-            )
-
-        except Exception as e:
-            # If PAH assembly fails, use largest available PAH (pyrene) as fallback
-            return self._fallback_to_best_pah(target_num_carbons, target_aromaticity)
-
-    def _fallback_to_best_pah(self, target_num_carbons: int, target_aromaticity: float) -> CarbonSkeleton:
-        """
-        Fallback: use pyrene (16C) which has excellent geometry properties.
-
-        This is better than attempting complex graphene structures that
-        can't be properly kekulized or fused robustly.
-        """
-        mol = Chem.Mol(self.pahs["pyrene"]["mol"])
         Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
+        return self._make_skeleton(mol)
 
-        num_carbons = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 6)
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _build_from_seed(self, target: int) -> Optional[Chem.Mol]:
+        """
+        Build a PAH of *target* carbons using a library seed plus graph growth.
+
+        Seed selection uses parity: each ring addition in _grow_graph adds
+        exactly 4 nodes, so we need (target - seed_size) % 4 == 0.  Starting
+        from an even seed and adding 4 at a time always produces an even node
+        count, which is required for a valid Kekule structure.
+        """
+        # Pick the largest library PAH where (target - nC) % 4 == 0 and nC <= target
+        seed_mol = None
+        seed_carbons = 0
+        for nC, name in reversed(self._SIZE_INDEX):
+            if nC <= target and (target - nC) % 4 == 0 and name in self.pahs:
+                seed_mol = self.pahs[name]["mol"]
+                seed_carbons = nC
+                break
+
+        if seed_mol is None:
+            # No library match with correct parity; round target up to nearest valid size
+            # from benzene (6C): valid targets are 6 + 4k
+            rem = (target - 6) % 4
+            if rem != 0:
+                target = target + (4 - rem)
+            seed_mol = Chem.MolFromSmiles(PAH_LIBRARY["benzene"]["smiles"])
+            seed_carbons = 6
+
+        if seed_carbons >= target:
+            return Chem.Mol(seed_mol)
+
+        G = _mol_to_graph(seed_mol)
+        G = _grow_graph(G, target, seed=self.seed)
+        return _graph_to_mol(G)
+
+    @staticmethod
+    def _make_skeleton(mol: Chem.Mol) -> CarbonSkeleton:
+        num_carbons = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 6)
         num_aromatic = sum(
-            1 for atom in mol.GetAtoms()
-            if atom.GetAtomicNum() == 6 and atom.GetIsAromatic()
+            1 for a in mol.GetAtoms() if a.GetAtomicNum() == 6 and a.GetIsAromatic()
         )
         aromaticity = (num_aromatic / num_carbons * 100) if num_carbons > 0 else 0
-
+        try:
+            smiles = Chem.MolToSmiles(mol)
+        except Exception:
+            smiles = f"C{num_carbons}_PAH"
         return CarbonSkeleton(
             mol=mol,
-            smiles=PAH_LIBRARY["pyrene"]["smiles"],
+            smiles=smiles,
             num_carbons=num_carbons,
             num_aromatic_carbons=num_aromatic,
             aromaticity_percent=aromaticity,
         )
 
-    def _assemble_from_pahs(self, target_num_carbons: int) -> Optional[Chem.Mol]:
-        """
-        Assemble a larger PAH by fusing multiple building blocks.
 
-        Strategy:
-        1. Start with pyrene (16C)
-        2. Iteratively fuse additional PAHs to approach target size
-        3. Each fusion loses some carbons at the shared edge (overlap)
-
-        Args:
-            target_num_carbons: Target number of carbons
-
-        Returns:
-            Assembled PAH molecule, or None if assembly fails
-        """
-        # Start with pyrene (16C, our largest single PAH)
-        assembled = self.pahs["pyrene"]["mol"]
-        current_carbons = 16
-
-        # Build block list, excluding pyrene to avoid repetition early
-        available_pahs = [
-            ("naphthalene", 10),
-            ("anthracene", 14),
-            ("pyrene", 16),
-        ]
-
-        # Randomly shuffle to get variety
-        if self.seed is not None:
-            random.Random(self.seed).shuffle(available_pahs)
-
-        attempts = 0
-        max_attempts = 20
-
-        while current_carbons < target_num_carbons and attempts < max_attempts:
-            attempts += 1
-
-            # Find best PAH to add (prefers larger ones to get closer to target faster)
-            best_pah_name = None
-            best_new_carbons = current_carbons
-
-            for pah_name, pah_size in available_pahs:
-                if pah_name not in self.pahs:
-                    continue
-
-                pah_mol = self.pahs[pah_name]["mol"]
-
-                # Try fusion (roughly 2-4 carbons lost at fusion edge)
-                fused = self._fuse_pahs(assembled, pah_mol)
-                if fused is not None:
-                    new_carbon_count = sum(1 for a in fused.GetAtoms() if a.GetAtomicNum() == 6)
-
-                    # Prefer PAHs that get us closer to target without exceeding it
-                    if new_carbon_count <= target_num_carbons:
-                        if new_carbon_count > best_new_carbons:
-                            best_new_carbons = new_carbon_count
-                            best_pah_name = pah_name
-                    elif new_carbon_count - target_num_carbons < 5:
-                        # Allow slight overshoot if close
-                        if new_carbon_count > best_new_carbons:
-                            best_new_carbons = new_carbon_count
-                            best_pah_name = pah_name
-
-            # If no improvement found, we're done
-            if best_pah_name is None:
-                break
-
-            # Fuse with the best PAH
-            pah_mol = self.pahs[best_pah_name]["mol"]
-            assembled = self._fuse_pahs(assembled, pah_mol)
-            current_carbons = sum(1 for a in assembled.GetAtoms() if a.GetAtomicNum() == 6)
-
-        return assembled if current_carbons > 0 else None
-
-    def _select_pah_smiles(self, target_num_carbons: int, prefer_larger: bool) -> str:
-        """
-        Select appropriate PAH to reach closest match to target carbon count.
-
-        Uses verified PAH SMILES up to pyrene (16C). For larger targets,
-        raises exception to trigger PAH assembly.
-        """
-        if target_num_carbons <= 6:
-            return PAH_LIBRARY["benzene"]["smiles"]
-        elif target_num_carbons <= 10:
-            return PAH_LIBRARY["naphthalene"]["smiles"]
-        elif target_num_carbons <= 14:
-            return PAH_LIBRARY["anthracene"]["smiles"]
-        elif target_num_carbons <= 16:
-            return PAH_LIBRARY["pyrene"]["smiles"]
-        else:
-            raise ValueError(
-                f"Target {target_num_carbons}C exceeds maximum single PAH. "
-                "Use PAH assembly instead."
-            )
-
-    def _fuse_pahs(self, mol1: Chem.Mol, mol2: Chem.Mol) -> Optional[Chem.Mol]:
-        """
-        Fuse two PAH molecules by sharing an edge.
-
-        Instead of just bonding them (which creates very long structures),
-        this creates a proper ring-fused PAH by merging aromatic carbons
-        at the edge regions.
-        """
-        try:
-            # For simplicity, just create a linear linked structure
-            # (True ring fusion would require matching edge carbons)
-            # This is still better than the graphene approach
-            smiles1 = Chem.MolToSmiles(mol1)
-            smiles2 = Chem.MolToSmiles(mol2)
-
-            # Create linearly fused PAH by simple bonding
-            # Find aromatic carbons at edges to minimize strain
-            fused_smiles = smiles1 + "-" + smiles2
-            fused_mol = Chem.MolFromSmiles(fused_smiles)
-
-            if fused_mol is not None:
-                try:
-                    Chem.SanitizeMol(fused_mol)
-                    Chem.SetAromaticity(fused_mol, Chem.AromaticityModel.AROMATICITY_MDL)
-                    return fused_mol
-                except Exception:
-                    pass
-        except Exception:
-            pass
-        return None
-
-    def _fallback_to_random(
-        self, target_num_carbons: int, target_aromaticity: float
-    ) -> CarbonSkeleton:
-        """Fallback to random graph generation if PAH assembly fails."""
-        generator = RandomGraphGenerator(seed=self.seed)
-        return generator.generate(target_num_carbons, target_aromaticity)
-
+# ---------------------------------------------------------------------------
+# RandomGraphGenerator (kept for backward compatibility)
+# ---------------------------------------------------------------------------
 
 class RandomGraphGenerator:
     """
-    Generate random aromatic carbon frameworks as fallback.
+    Generate random aromatic carbon frameworks.
 
-    For targets ≤16C: uses verified PAH templates.
-    For larger targets: builds 2D graphene nanoflakes (fused aromatic sheets).
+    Delegates to hex-lattice builder + ring growth for all sizes.
     """
 
     def __init__(self, seed: int = None):
@@ -284,207 +408,11 @@ class RandomGraphGenerator:
     def generate(
         self, target_num_carbons: int, target_aromaticity: float = 100.0
     ) -> CarbonSkeleton:
-        """
-        Generate an aromatic carbon skeleton.
-
-        For ≤16C: uses PAH templates.
-        For >16C: builds 2D graphene nanoflakes via ring fusion.
-
-        Args:
-            target_num_carbons: Target number of carbon atoms
-            target_aromaticity: Target aromaticity percentage
-
-        Returns:
-            CarbonSkeleton object
-        """
-        mol = None
-        smiles = None
-
-        if target_num_carbons <= 16:
-            smiles = self._create_pah_template(target_num_carbons)
-            mol = Chem.MolFromSmiles(smiles)
-            if mol is not None:
-                Chem.SanitizeMol(mol)
-        else:
-            # Build 2D graphene nanoflake
-            try:
-                mol = self._build_graphene_flake_mol(target_num_carbons)
-            except Exception:
-                mol = None
-
-            if mol is not None:
-                try:
-                    smiles = Chem.MolToSmiles(mol)
-                except Exception:
-                    # If SMILES generation fails, it's okay - we'll use the mol directly
-                    smiles = None
-
-        # Fallback to polyphenyl chain if nanoflake builder failed
-        if mol is None:
-            smiles = self._build_polyphenyl(max(3, round(target_num_carbons / 6)))
-            mol = Chem.MolFromSmiles(smiles)
-            if mol is not None:
-                Chem.SanitizeMol(mol)
-
-        # Final fallback: benzene
-        if mol is None:
-            smiles = "c1ccccc1"
-            mol = Chem.MolFromSmiles(smiles)
-            Chem.SanitizeMol(mol)
-
-        num_carbons = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 6)
-        num_aromatic = sum(
-            1 for atom in mol.GetAtoms()
-            if atom.GetAtomicNum() == 6 and atom.GetIsAromatic()
-        )
-        aromaticity = (num_aromatic / num_carbons * 100) if num_carbons > 0 else 0
-
-        return CarbonSkeleton(
-            mol=mol,
-            smiles=smiles or Chem.MolToSmiles(mol),
-            num_carbons=num_carbons,
-            num_aromatic_carbons=num_aromatic,
-            aromaticity_percent=aromaticity,
-        )
-
-    # ------------------------------------------------------------------
-    # 2D graphene nanoflake builder
-    # ------------------------------------------------------------------
-
-    def _build_graphene_flake_mol(self, target_carbons: int) -> Optional[Chem.Mol]:
-        """
-        Build a 2D graphene nanoflake by iteratively fusing benzene rings.
-
-        Strategy:
-        1. Start from benzene.
-        2. Repeatedly fuse a new 6-membered ring at the most "interior"
-           available edge (highest sum of neighbor degrees) to grow a compact
-           2D sheet rather than a linear chain.
-        3. Convert to RDKit molecule using a Kekulé bond assignment found via
-           networkx maximum matching, then let SanitizeMol perceive aromaticity.
-
-        Each new fused ring adds 4 carbons (2 shared with existing ring).
-
-        Args:
-            target_carbons: Approximate target carbon count
-
-        Returns:
-            Sanitized RDKit Mol, or None if sanitization fails.
-        """
-        # Build the connectivity graph
-        G = nx.Graph()
-
-        # Initial benzene ring: nodes 0–5
-        for i in range(6):
-            G.add_node(i)
-        for i in range(6):
-            G.add_edge(i, (i + 1) % 6)
-
-        next_node = 6
-
-        while G.number_of_nodes() + 4 <= target_carbons:
-            fusable = self._get_fusable_edges(G)
-            if not fusable:
-                break
-
-            # Prefer edges whose non-shared neighbors have higher degree
-            # → promotes compact 2D growth over linear acene chains
-            fusable.sort(key=lambda e: -self._edge_neighbor_degree(G, e[0], e[1]))
-            u, v = fusable[0]
-
-            # Add 4 new nodes and wire them into a new 6-membered ring
-            new_nodes = list(range(next_node, next_node + 4))
-            next_node += 4
-            for n in new_nodes:
-                G.add_node(n)
-            # Ring: u - v - n0 - n1 - n2 - n3 - u
-            G.add_edge(v, new_nodes[0])
-            G.add_edge(new_nodes[0], new_nodes[1])
-            G.add_edge(new_nodes[1], new_nodes[2])
-            G.add_edge(new_nodes[2], new_nodes[3])
-            G.add_edge(new_nodes[3], u)
-
-        # Assign Kekulé bonds via maximum matching
-        # In a valid PAH, every carbon in the π system participates in one
-        # double bond (perfect matching exists for even-carbon systems).
-        matching = nx.max_weight_matching(G, maxcardinality=True)
-        double_bonds: Set[Tuple[int, int]] = {
-            (min(u, v), max(u, v)) for u, v in matching
-        }
-
-        # Build RDKit molecule with explicit SINGLE/DOUBLE bonds
-        node_list = sorted(G.nodes())
-        node_to_idx = {n: i for i, n in enumerate(node_list)}
-
-        rwmol = RWMol()
-        for _ in node_list:
-            rwmol.AddAtom(Chem.Atom(6))
-
-        for u, v in G.edges():
-            iu, iv = node_to_idx[u], node_to_idx[v]
-            key = (min(u, v), max(u, v))
-            btype = (
-                Chem.BondType.DOUBLE if key in double_bonds else Chem.BondType.SINGLE
-            )
-            rwmol.AddBond(iu, iv, btype)
-
-        mol = rwmol.GetMol()
-        try:
-            Chem.SanitizeMol(mol)
-            # Re-perceive aromaticity to ensure all aromatic systems are recognized
-            Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
-            return mol
-        except Exception:
-            # If Kekulé assignment failed (e.g. imperfect matching for odd-carbon
-            # intermediate), try with aromatic bonds as a last resort
-            return self._build_graphene_flake_aromatic(G)
-
-    def _build_graphene_flake_aromatic(self, G: nx.Graph) -> Optional[Chem.Mol]:
-        """Fallback: build with AROMATIC bonds and let RDKit sanitize."""
-        node_list = sorted(G.nodes())
-        node_to_idx = {n: i for i, n in enumerate(node_list)}
-
-        rwmol = RWMol()
-        for _ in node_list:
-            atom = Chem.Atom(6)
-            atom.SetNoImplicit(False)
-            rwmol.AddAtom(atom)
-
-        for u, v in G.edges():
-            iu, iv = node_to_idx[u], node_to_idx[v]
-            rwmol.AddBond(iu, iv, Chem.BondType.AROMATIC)
-
-        mol = rwmol.GetMol()
-        try:
-            Chem.SanitizeMol(mol)
-            # Re-perceive aromaticity to ensure all aromatic systems are recognized
-            Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
-            return mol
-        except Exception:
-            return None
-
-    @staticmethod
-    def _get_fusable_edges(G: nx.Graph) -> List[Tuple[int, int]]:
-        """Return edges where both endpoints have degree ≤ 2 (open for ring fusion)."""
-        return [
-            (u, v)
-            for u, v in G.edges()
-            if G.degree(u) == 2 and G.degree(v) == 2
-        ]
-
-    @staticmethod
-    def _edge_neighbor_degree(G: nx.Graph, a: int, b: int) -> int:
-        """Sum of degrees of neighbors of a and b (excluding each other)."""
-        neighbors_a = {n for n in G.neighbors(a) if n != b}
-        neighbors_b = {n for n in G.neighbors(b) if n != a}
-        return sum(G.degree(n) for n in neighbors_a | neighbors_b)
-
-    # ------------------------------------------------------------------
-    # Template and SMILES helpers
-    # ------------------------------------------------------------------
+        # Delegate to PAHAssembler for consistent parity-aware seed selection
+        asm = PAHAssembler(seed=self.seed)
+        return asm.generate(target_num_carbons, target_aromaticity)
 
     def _create_pah_template(self, num_carbons: int) -> str:
-        """Return a verified PAH SMILES for the given carbon count."""
         if num_carbons <= 6:
             return PAH_LIBRARY["benzene"]["smiles"]
         elif num_carbons <= 10:
@@ -494,51 +422,16 @@ class RandomGraphGenerator:
         else:
             return PAH_LIBRARY["pyrene"]["smiles"]
 
-    def _build_polyphenyl(self, n_rings: int) -> str:
-        """
-        Build a para-polyphenyl chain SMILES with n_rings benzene rings.
-        Kept as ultimate fallback for cases where the nanoflake builder fails.
-        """
-        smiles = "c1ccccc1"
-        for _ in range(n_rings - 1):
-            smiles = f"c1ccc(-{smiles})cc1"
-        return smiles
 
-    # Legacy stubs kept for API compatibility
-    def _create_random_aromatic_graph(self, num_nodes: int, target_aromaticity: float) -> nx.Graph:
-        graph = nx.Graph()
-        num_rings = max(1, num_nodes // 6)
-        for i in range(num_rings):
-            ring_nodes = list(range(i * 6, (i + 1) * 6))
-            graph.add_nodes_from(ring_nodes)
-            for j in range(6):
-                graph.add_edge(ring_nodes[j], ring_nodes[(j + 1) % 6])
-        all_nodes = list(graph.nodes())
-        for _ in range(max(0, num_rings - 1)):
-            if len(all_nodes) >= 2:
-                n1, n2 = random.sample(all_nodes, 2)
-                if not graph.has_edge(n1, n2):
-                    graph.add_edge(n1, n2)
-        return graph
-
-    def _graph_to_smiles(self, graph: nx.Graph) -> Optional[str]:
-        return None
-
+# ---------------------------------------------------------------------------
+# Skeleton Validator
+# ---------------------------------------------------------------------------
 
 class SkeletonValidator:
     """Validate carbon skeletons for chemical feasibility."""
 
     @staticmethod
     def validate(skeleton: CarbonSkeleton) -> Tuple[bool, List[str]]:
-        """
-        Validate a carbon skeleton.
-
-        Args:
-            skeleton: CarbonSkeleton object
-
-        Returns:
-            (is_valid, error_messages)
-        """
         errors = []
 
         if skeleton.mol is None:

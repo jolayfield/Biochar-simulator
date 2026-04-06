@@ -45,17 +45,14 @@ class CoordinateGenerator:
         Returns:
             (mol_with_coords, coords_array)
         """
-        # Ensure aromaticity is properly perceived and kekulized before embedding
+        # Ensure aromaticity is properly perceived before embedding.
+        # Do NOT call Kekulize here: it fails for large graphene-like systems and
+        # corrupts the aromatic bond types.  ETKDGv3 can embed aromatic bond types
+        # natively; UFF/MMFF operate on the sanitized mol after embedding.
         try:
             Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
-            Chem.Kekulize(mol, clearAromaticFlags=False)
         except Exception:
-            # If kekulization fails, try to kekulize with aromatic flags cleared
-            try:
-                Chem.Kekulize(mol)
-            except Exception:
-                # If still fails, proceed without kekulization
-                pass
+            pass
 
         # Add hydrogens if not already present
         if mol.GetNumHeavyAtoms() == mol.GetNumAtoms():
@@ -71,54 +68,127 @@ class CoordinateGenerator:
             else:
                 max_ff_iterations = 300
 
-        # Try multiple independent embeddings and keep the best one
+        # For large flat aromatic systems (> 80 heavy atoms), ETKDGv3 frequently
+        # folds or collapses the structure.  Use 2D-first embedding instead:
+        #   1. Compute 2D layout (flat aromatic ring system)
+        #   2. Promote to 3D with z = 0
+        #   3. Perturb non-ring atoms slightly in z for FF convergence
+        #   4. Run force field minimization
+        use_2d_first = mol.GetNumHeavyAtoms() > 80
+
         best_mol = None
         best_energy = float('inf')
         best_converged = False
 
-        for attempt in range(max_embedding_attempts):
-            # Use different seed for each attempt to escape local minima
-            seed = (self.seed + attempt) if self.seed is not None else attempt
-
-            # Create a copy for this attempt
+        if use_2d_first:
             mol_copy = Chem.RWMol(mol)
-
-            # Try ETKDGv3 first (best quality), fall back to ETKDGv2, then basic
-            result = -1
-            for params_fn in [
-                lambda: AllChem.ETKDGv3(),
-                lambda: AllChem.ETKDGv2(),
-                lambda: AllChem.EmbedParameters(),
-            ]:
-                params = params_fn()
-                params.randomSeed = seed
-                params.maxIterations = 200
-                result = AllChem.EmbedMolecule(mol_copy, params)
-                if result == 0:
-                    break
-
-            # If embedding failed, skip this attempt
-            if result != 0:
-                continue
-
-            # Apply force field relaxation with enhanced iterations
-            ff_converged = False
-            ff_energy = float('inf')
-
             try:
-                # Try MMFF94 with tighter convergence
-                ff = AllChem.MMFFGetMoleculeForceField(mol_copy)
-                if ff is not None:
-                    minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
-                    ff_converged = minimize_result == 0
-                    ff_energy = ff.CalcEnergy()
-            except Exception:
-                pass
+                # 2D-first embedding for large flat aromatics:
+                #  1. Compute 2D layout on the heavy-atom-only scaffold
+                #  2. Place heavy atoms at z=0 (flat PAH)
+                #  3. Compute H positions geometrically (not from 2D conventions)
+                #  4. FF minimization to relax H and functional groups
 
-            # Fallback to UFF if MMFF94 unavailable
-            if ff_energy == float('inf'):
+                # Map heavy-atom index in mol_copy -> position in mol_no_h
+                heavy_atom_indices = [
+                    a.GetIdx() for a in mol_copy.GetAtoms() if a.GetAtomicNum() != 1
+                ]
+                mol_no_h = Chem.RemoveAllHs(mol_copy.GetMol())
+                AllChem.Compute2DCoords(mol_no_h)
+                conf_2d = mol_no_h.GetConformer(0)
+
+                # Scale factor: RDKit 2D uses ~1.5 Å for C-C bonds; keep as-is (already Å)
+                heavy_pos = {}  # mol_copy_idx -> np.array([x, y, 0])
+                for nh_idx, orig_idx in enumerate(heavy_atom_indices):
+                    p = conf_2d.GetAtomPosition(nh_idx)
+                    heavy_pos[orig_idx] = np.array([p.x, p.y, 0.0])
+
+                # Build full coordinate array; start with heavy atoms
+                all_coords = np.zeros((mol_copy.GetNumAtoms(), 3))
+                for idx, coord in heavy_pos.items():
+                    all_coords[idx] = coord
+
+                # Place H atoms: radiate from parent at correct bond length
+                for atom in mol_copy.GetAtoms():
+                    if atom.GetAtomicNum() != 1:
+                        continue
+                    idx = atom.GetIdx()
+                    parent = atom.GetNeighbors()[0]
+                    par_idx = parent.GetIdx()
+                    par_pos = heavy_pos.get(par_idx, all_coords[par_idx])
+
+                    # Direction: opposite to average of other neighbor directions
+                    other_nbrs = [
+                        n.GetIdx() for n in parent.GetNeighbors() if n.GetIdx() != idx
+                    ]
+                    if other_nbrs:
+                        nbr_avg = np.mean(
+                            [heavy_pos.get(n, all_coords[n]) for n in other_nbrs], axis=0
+                        )
+                        h_dir = par_pos - nbr_avg
+                    else:
+                        h_dir = np.array([1.0, 0.0, 0.0])
+                    norm = np.linalg.norm(h_dir)
+                    if norm < 1e-8:
+                        h_dir = np.array([1.0, 0.0, 0.0])
+                    else:
+                        h_dir = h_dir / norm
+
+                    # Choose bond length by parent-H element
+                    par_elem = parent.GetAtomicNum()
+                    bl = 1.09 if par_elem == 6 else 0.96  # C-H or O-H
+                    all_coords[idx] = par_pos + h_dir * bl
+
+                # Create 3D conformer
+                conf3d = Chem.Conformer(mol_copy.GetNumAtoms())
+                for i, xyz in enumerate(all_coords):
+                    conf3d.SetAtomPosition(i, xyz.tolist())
+                mol_copy.RemoveAllConformers()
+                mol_copy.AddConformer(conf3d, assignId=True)
+                best_mol = mol_copy
+
+                # FF minimization to relax H positions
+                for ff_getter in [
+                    lambda m: AllChem.MMFFGetMoleculeForceField(m),
+                    lambda m: AllChem.UFFGetMoleculeForceField(m),
+                ]:
+                    try:
+                        ff = ff_getter(mol_copy.GetMol())
+                        if ff is not None:
+                            minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-4)
+                            best_converged = minimize_result == 0
+                            best_energy = ff.CalcEnergy()
+                            if best_energy < float('inf'):
+                                break
+                    except Exception:
+                        pass
+            except Exception:
+                best_mol = None
+        else:
+            for attempt in range(max_embedding_attempts):
+                seed = (self.seed + attempt) if self.seed is not None else attempt
+                mol_copy = Chem.RWMol(mol)
+
+                result = -1
+                for params_fn in [
+                    lambda: AllChem.ETKDGv3(),
+                    lambda: AllChem.ETKDGv2(),
+                    lambda: AllChem.EmbedParameters(),
+                ]:
+                    params = params_fn()
+                    params.randomSeed = seed
+                    params.maxIterations = 200
+                    result = AllChem.EmbedMolecule(mol_copy, params)
+                    if result == 0:
+                        break
+
+                if result != 0:
+                    continue
+
+                ff_converged = False
+                ff_energy = float('inf')
                 try:
-                    ff = AllChem.UFFGetMoleculeForceField(mol_copy)
+                    ff = AllChem.MMFFGetMoleculeForceField(mol_copy)
                     if ff is not None:
                         minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
                         ff_converged = minimize_result == 0
@@ -126,17 +196,26 @@ class CoordinateGenerator:
                 except Exception:
                     pass
 
-            # Keep track of best embedding (lowest energy)
-            if ff_energy < best_energy:
-                best_energy = ff_energy
-                best_mol = mol_copy
-                best_converged = ff_converged
+                if ff_energy == float('inf'):
+                    try:
+                        ff = AllChem.UFFGetMoleculeForceField(mol_copy)
+                        if ff is not None:
+                            minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
+                            ff_converged = minimize_result == 0
+                            ff_energy = ff.CalcEnergy()
+                    except Exception:
+                        pass
+
+                if ff_energy < best_energy:
+                    best_energy = ff_energy
+                    best_mol = mol_copy
+                    best_converged = ff_converged
 
         # Use best embedding, or fall back to 2D if all attempts failed
         if best_mol is not None:
             mol = best_mol
         else:
-            # Fallback: use 2D coordinates
+            # Final fallback: use 2D coordinates with z=0
             AllChem.Compute2DCoords(mol)
 
         # Extract coordinates
