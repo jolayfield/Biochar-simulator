@@ -127,7 +127,7 @@ class PAHQualityTester:
         print("TEST 1: PAH Size Exploration (Benzene → 200C)")
         print("=" * 70)
 
-        pah_sizes = [6, 10, 14, 16, 18, 24, 32, 50, 100, 200]
+        pah_sizes = [6, 10, 14, 16, 18, 22, 24, 26, 28, 30, 40, 50, 100, 200]
         results = {}
 
         for target_size in pah_sizes:
@@ -166,7 +166,7 @@ class PAHQualityTester:
         print("TEST 1b: Kekulizability / Aromaticity Check")
         print("=" * 70)
 
-        sizes = [6, 16, 24, 50, 100, 200]
+        sizes = [6, 16, 22, 24, 26, 28, 30, 40, 50, 100, 200]
         results = {}
 
         from src.carbon_skeleton import PAHAssembler
@@ -188,7 +188,7 @@ class PAHQualityTester:
         print("TEST 1c: Atom Count Accuracy")
         print("=" * 70)
 
-        targets = [10, 20, 32, 50, 75, 100, 150, 200]
+        targets = [10, 18, 22, 26, 30, 40, 50, 75, 100, 150, 200]
         results = {}
 
         from src.carbon_skeleton import PAHAssembler

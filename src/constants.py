@@ -183,7 +183,10 @@ FUNCTIONAL_GROUPS = {
 }
 
 # Common PAH structures (SMILES notation)
+# All entries validated: correct carbon count, 100% aromatic, all atoms in 6-membered rings.
+# Hex-lattice entries are programmatically generated compact graphene-nanoflake topologies.
 PAH_LIBRARY = {
+    # --- 6 carbons ---
     "benzene": {
         "smiles": "c1ccccc1",
         "num_atoms": 6,
@@ -191,6 +194,7 @@ PAH_LIBRARY = {
         "molecular_formula": "C6H6",
         "references": "Basic aromatic ring",
     },
+    # --- 10 carbons ---
     "naphthalene": {
         "smiles": "c1ccc2ccccc2c1",
         "num_atoms": 10,
@@ -198,47 +202,127 @@ PAH_LIBRARY = {
         "molecular_formula": "C10H8",
         "references": "Two fused rings",
     },
+    # --- 14 carbons ---
     "anthracene": {
         "smiles": "c1ccc2cc3ccccc3cc2c1",
         "num_atoms": 14,
         "num_aromatic": 14,
         "molecular_formula": "C14H10",
-        "references": "Three fused rings in line",
+        "references": "Three fused rings (linear acene)",
     },
     "phenanthrene": {
-        "smiles": "c1ccc2cc3ccccc3cc2c1",
+        "smiles": "c1ccc2ccc3ccccc3c2c1",
         "num_atoms": 14,
         "num_aromatic": 14,
         "molecular_formula": "C14H10",
-        "references": "Three fused rings branched",
+        "references": "Three fused rings (angular)",
     },
+    # --- 16 carbons ---
     "pyrene": {
         "smiles": "c1cc2ccc3cccc4ccc(c1)c2c34",
         "num_atoms": 16,
         "num_aromatic": 16,
         "molecular_formula": "C16H10",
-        "references": "Four fused rings",
+        "references": "Four fused rings (pericondensed)",
     },
+    # --- 18 carbons ---
     "chrysene": {
         "smiles": "c1ccc2c(c1)cc1ccc3ccccc3c1c2",
         "num_atoms": 18,
         "num_aromatic": 18,
         "molecular_formula": "C18H12",
-        "references": "Four fused rings planar",
+        "references": "Four fused rings (chrysene topology)",
+    },
+    "tetracene": {
+        "smiles": "c1ccc2cc3cc4ccccc4cc3cc2c1",
+        "num_atoms": 18,
+        "num_aromatic": 18,
+        "molecular_formula": "C18H12",
+        "references": "Four fused rings (linear acene, naphthacene)",
     },
     "triphenylene": {
         "smiles": "c1ccc2c(c1)c1ccccc1c1ccccc21",
         "num_atoms": 18,
         "num_aromatic": 18,
         "molecular_formula": "C18H12",
-        "references": "Three fused rings angular",
+        "references": "Four fused rings (triphenylene topology)",
     },
+    # --- 22 carbons ---
+    "pentacene": {
+        "smiles": "c1ccc2cc3cc4cc5ccccc5cc4cc3cc2c1",
+        "num_atoms": 22,
+        "num_aromatic": 22,
+        "molecular_formula": "C22H14",
+        "references": "Five fused rings (linear acene)",
+    },
+    "picene": {
+        "smiles": "c1ccc2cc3ccc4ccc5ccccc5c4c3cc2c1",
+        "num_atoms": 22,
+        "num_aromatic": 22,
+        "molecular_formula": "C22H14",
+        "references": "Five fused rings (picene/[5]helicene topology)",
+    },
+    "hex_lattice_22": {
+        "smiles": "c1cc2ccc3ccc4ccc5cccc6c(c1)c2c3c4c56",
+        "num_atoms": 22,
+        "num_aromatic": 22,
+        "molecular_formula": "C22H12",
+        "references": "Six-ring compact graphene nanoflake (hex-lattice seed)",
+    },
+    # --- 24 carbons ---
     "coronene": {
         "smiles": "c1cc2ccc3ccc4ccc5ccc6ccc1c1c2c3c4c5c61",
         "num_atoms": 24,
         "num_aromatic": 24,
         "molecular_formula": "C24H12",
         "references": "Seven fused rings (central + 6 surrounding)",
+    },
+    # --- 26 carbons ---
+    "hexacene": {
+        "smiles": "c1ccc2cc3cc4cc5cc6ccccc6cc5cc4cc3cc2c1",
+        "num_atoms": 26,
+        "num_aromatic": 26,
+        "molecular_formula": "C26H16",
+        "references": "Six fused rings (linear acene)",
+    },
+    "dibenzo_bc_ef_coronene": {
+        "smiles": "c1ccc2cc3cc4ccc5ccc6ccccc6c5c4cc3cc2c1",
+        "num_atoms": 26,
+        "num_aromatic": 26,
+        "molecular_formula": "C26H14",
+        "references": "Six fused rings (angular pericondensed topology)",
+    },
+    # --- 28 carbons ---
+    "hex_lattice_28": {
+        "smiles": "c1ccc2c(c1)c1ccc3ccc4ccc5ccc6ccc2c2c6c5c4c3c12",
+        "num_atoms": 28,
+        "num_aromatic": 28,
+        "molecular_formula": "C28H14",
+        "references": "Eight-ring compact graphene nanoflake (hex-lattice seed)",
+    },
+    # --- 30 carbons ---
+    "hex_lattice_30": {
+        "smiles": "c1cc2ccc3cc4ccc5ccc6ccc7ccc8c(c1)c2c3c1c4c5c6c7c81",
+        "num_atoms": 30,
+        "num_aromatic": 30,
+        "molecular_formula": "C30H14",
+        "references": "Nine-ring compact graphene nanoflake (hex-lattice seed)",
+    },
+    # --- 38 carbons ---
+    "hex_lattice_38": {
+        "smiles": "c1cc2cc3ccc4cc5cccc6c7ccc8ccc9ccc%10c(c1)c2c1c3c4c(c56)c2c7c8c9c%10c12",
+        "num_atoms": 38,
+        "num_aromatic": 38,
+        "molecular_formula": "C38H16",
+        "references": "Twelve-ring compact graphene nanoflake (hex-lattice seed)",
+    },
+    # --- 40 carbons ---
+    "hex_lattice_40": {
+        "smiles": "c1cc2cc3ccc4cc5ccc6ccc7cc8ccc9ccc%10c(c1)c2c1c3c4c2c5c6c7c3c8c9c%10c1c32",
+        "num_atoms": 40,
+        "num_aromatic": 40,
+        "molecular_formula": "C40H16",
+        "references": "Thirteen-ring compact graphene nanoflake (hex-lattice seed)",
     },
 }
 

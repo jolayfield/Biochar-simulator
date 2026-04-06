@@ -7,15 +7,25 @@ BIOCHAR PAH TEST SUITE REPORT
 TEST 0: PAH Library SMILES Validation
 ----------------------------------------------------------------------
 
-  8/8 SMILES valid
+  18/18 SMILES valid
   ✓ benzene
   ✓ naphthalene
   ✓ anthracene
   ✓ phenanthrene
   ✓ pyrene
   ✓ chrysene
+  ✓ tetracene
   ✓ triphenylene
+  ✓ pentacene
+  ✓ picene
+  ✓ hex_lattice_22
   ✓ coronene
+  ✓ hexacene
+  ✓ dibenzo_bc_ef_coronene
+  ✓ hex_lattice_28
+  ✓ hex_lattice_30
+  ✓ hex_lattice_38
+  ✓ hex_lattice_40
 
 ----------------------------------------------------------------------
 TEST 1: PAH Sizes (6–200C)
@@ -28,18 +38,27 @@ Target   Actual   Arom%   Bonds      Clashes    Valid    Span       H/C
 14C    14C    100%    22         9          ✗        13.32 Å  0.71
 16C    16C    100%    20         21         ✗        11.15 Å  0.62
 18C    18C    100%    22         24         ✗        10.24 Å  0.67
+22C    22C    100%    28         20         ✗        12.54 Å  0.64
 24C    24C    100%    38         10         ✗        20.06 Å  0.50
-32C    32C    100%    44         17         ✗        14.14 Å  0.50
-50C    50C    100%    43         68         ✗        14.73 Å  0.56
-100C    100C    100%    144        325        ✗        20.03 Å  0.50
-200C    200C    100%    292        988        ✗        25.39 Å  0.50
+26C    26C    100%    38         37         ✗        12.89 Å  0.62
+28C    28C    100%    37         16         ✗        12.97 Å  0.50
+30C    30C    100%    43         26         ✗        13.75 Å  0.47
+40C    40C    100%    60         38         ✗        15.09 Å  0.40
+50C    50C    100%    72         27         ✗        17.82 Å  0.44
+100C    100C    100%    142        311        ✗        20.80 Å  0.46
+200C    200C    100%    294        1067       ✗        25.20 Å  0.48
 
 ----------------------------------------------------------------------
 TEST 1b: Kekulizability (100% aromatic required)
 ----------------------------------------------------------------------
   ✓ 6C: 100% aromatic
   ✓ 16C: 100% aromatic
+  ✓ 22C: 100% aromatic
   ✓ 24C: 100% aromatic
+  ✓ 26C: 100% aromatic
+  ✓ 28C: 100% aromatic
+  ✓ 30C: 100% aromatic
+  ✓ 40C: 100% aromatic
   ✓ 50C: 100% aromatic
   ✓ 100C: 100% aromatic
   ✓ 200C: 100% aromatic
@@ -51,8 +70,11 @@ TEST 1c: Atom Count Accuracy (target vs actual)
 Target   Error%     OK?   
 -------------------------
 10       0.0        ✓
-20       0.0        ✓
-32       0.0        ✓
+18       0.0        ✓
+22       0.0        ✓
+26       0.0        ✓
+30       0.0        ✓
+40       0.0        ✓
 50       0.0        ✓
 75       4.0        ✓
 100      0.0        ✓
@@ -65,23 +87,23 @@ TEST 2: Compositions
 
 Composition          H/C    O/C    Bonds      Clashes    Valid   
 -----------------------------------------------------------------
-High H               0.560  0.100  43         68         ✗       
-High O               0.560  0.200  77         28         ✗       
-Low H                0.560  0.100  43         68         ✗       
-Low O                0.560  0.000  55         10         ✗       
-Moderate O           0.560  0.100  43         68         ✗       
+High H               0.440  0.100  72         27         ✗       
+High O               0.440  0.200  75         39         ✗       
+Low H                0.440  0.100  72         27         ✗       
+Low O                0.440  0.000  65         25         ✗       
+Moderate O           0.440  0.100  72         27         ✗       
 
 ----------------------------------------------------------------------
 TEST 3: Seed Variation (Statistics)
 ----------------------------------------------------------------------
 
 Bond Errors:
-  Mean: 60.2 ± 10.4
-  Range: 46-69
+  Mean: 70.8 ± 3.4
+  Range: 65-74
 
 Steric Clashes:
-  Mean: 46.6 ± 42.1
-  Range: 9-103
+  Mean: 29.2 ± 12.3
+  Range: 16-46
 
 ----------------------------------------------------------------------
 TEST 4: Large Structures (50–200C)
@@ -89,10 +111,10 @@ TEST 4: Large Structures (50–200C)
 
 Target   Actual   H/C    Clashes/C    Planarity   
 --------------------------------------------------
-50       50       0.56   1.36         0.234 Å
-100      100      0.50   3.25         0.000 Å
-150      150      0.52   4.44         0.000 Å
-200      200      0.50   4.94         0.000 Å
+50       50       0.44   0.54         0.580 Å
+100      100      0.46   3.11         0.000 Å
+150      150      0.48   4.03         0.000 Å
+200      200      0.48   5.33         0.000 Å
 
 ======================================================================
 SUMMARY & RECOMMENDATIONS
