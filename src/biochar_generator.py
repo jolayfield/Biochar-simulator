@@ -17,6 +17,7 @@ from .heteroatom_assignment import (
     HydrogenAssigner,
     HeteroatomValidator,
     CompositionInfo,
+    _fix_heteroatom_bond_types,
 )
 from .geometry_3d import CoordinateGenerator, GeometryValidator, ClashResolver
 from .opls_typing import AtomTyper, ChargeAssigner
@@ -42,8 +43,12 @@ class GeneratorConfig:
     aromaticity_percent: float = 90.0
     aromaticity_tolerance: float = 5.0
 
-    # Functional groups
-    functional_groups: Optional[List[str]] = None
+    # Functional groups — dict mapping group name → exact count to place.
+    # e.g. {"phenolic": 3, "carboxyl": 1}
+    # Valid keys: phenolic, hydroxyl, carboxyl, ether,
+    #             carbonyl*, quinone*, lactone*   (* fall back to phenolic)
+    # If None, O_C_ratio controls total oxygen using phenolic groups.
+    functional_groups: Optional[Dict[str, int]] = None
 
     # System setup
     periodic_box: bool = False
@@ -58,8 +63,8 @@ class GeneratorConfig:
     seed: Optional[int] = None
 
     def __post_init__(self):
-        if self.functional_groups is None:
-            self.functional_groups = ["hydroxyl", "carboxyl", "ether"]
+        # functional_groups defaults to None → O_C_ratio-driven phenolic placement
+        # (no default list here; OxygenAssigner handles the None case)
 
         # Validate molecule name length
         if len(self.molecule_name) > 5:
@@ -97,14 +102,23 @@ class BiocharGenerator:
 
         # Step 2: Assign heteroatoms (O, then H)
         print("Assigning oxygen atoms...")
-        mol = self._assign_oxygens(skeleton.mol)
+        mol, o_composition = self._assign_oxygens(skeleton.mol)
 
         print("Assigning hydrogen atoms...")
         mol, composition = self._assign_hydrogens(mol)
 
+        # Carry functional-group bookkeeping from the oxygen step into the
+        # final composition (HydrogenAssigner resets it to {}).
+        composition.functional_groups = o_composition.functional_groups
+
         # Step 3: Generate 3D coordinates
         print("Generating 3D coordinates...")
         mol, coords = self._generate_geometry(mol)
+
+        # Force field computation (inside geometry) internally re-sanitizes the
+        # mol with RDKit's default aromaticity model, which can mark ether C-O
+        # bonds as AROMATIC.  Restore correct single-bond types before typing.
+        mol = _fix_heteroatom_bond_types(mol)
 
         # Step 4: Assign OPLS types and charges
         print("Assigning OPLS-AA atom types and charges...")
@@ -113,6 +127,10 @@ class BiocharGenerator:
         # Step 5: Validate
         print("Validating structure...")
         self._validate(mol, composition, coords)
+
+        # validation.py calls Chem.SanitizeMol() which can re-mark ether C-O
+        # bonds as AROMATIC using RDKit's default model.  Fix again.
+        mol = _fix_heteroatom_bond_types(mol)
 
         # Store results
         self.mol = mol
@@ -212,8 +230,8 @@ class BiocharGenerator:
 
         return skeleton
 
-    def _assign_oxygens(self, mol: Chem.Mol) -> Chem.Mol:
-        """Assign oxygen atoms."""
+    def _assign_oxygens(self, mol: Chem.Mol) -> Tuple[Chem.Mol, CompositionInfo]:
+        """Assign oxygen atoms. Returns (mol, composition) including functional-group counts."""
         assigner = OxygenAssigner(seed=self.config.seed)
         mol, comp = assigner.assign_oxygens(
             mol,
@@ -221,7 +239,7 @@ class BiocharGenerator:
             O_C_tolerance=self.config.O_C_tolerance,
             functional_group_preference=self.config.functional_groups,
         )
-        return mol
+        return mol, comp
 
     def _assign_hydrogens(self, mol: Chem.Mol) -> Tuple[Chem.Mol, CompositionInfo]:
         """Assign hydrogen atoms."""
@@ -336,7 +354,7 @@ def generate_biochar(
     H_C_ratio: float = 0.5,
     O_C_ratio: float = 0.1,
     aromaticity_percent: float = 90.0,
-    functional_groups: Optional[List[str]] = None,
+    functional_groups: Optional[Dict[str, int]] = None,
     output_directory: str = ".",
     basename: str = "biochar",
     molecule_name: str = "BC",
@@ -346,15 +364,31 @@ def generate_biochar(
     Convenience function to generate and export biochar in one call.
 
     Args:
-        target_num_carbons: Target number of carbon atoms
-        H_C_ratio: Target hydrogen-to-carbon ratio
-        O_C_ratio: Target oxygen-to-carbon ratio
-        aromaticity_percent: Target aromaticity percentage
-        functional_groups: List of functional groups to include
-        output_directory: Output directory for GROMACS files
-        basename: Base filename for output files
-        molecule_name: Residue name (max 5 chars). Suggested: BC400, BC600, BCH05, etc.
-        seed: Random seed for reproducibility
+        target_num_carbons: Target number of carbon atoms.
+        H_C_ratio: Target hydrogen-to-carbon ratio.
+        O_C_ratio: Target oxygen-to-carbon ratio.  Used to determine total
+            oxygen when *functional_groups* is None.
+        aromaticity_percent: Target aromaticity percentage.
+        functional_groups: Dict mapping functional group name → exact count,
+            e.g. ``{"phenolic": 3, "carboxyl": 1}``.
+
+            Supported groups:
+
+            * ``phenolic``  — aromatic C–OH             (1 O per group)
+            * ``hydroxyl``  — same as phenolic for pure aromatic PAH (1 O)
+            * ``carboxyl``  — aromatic C–C(=O)(OH)      (2 O per group)
+            * ``ether``     — aromatic C–O–C bridge     (1 O per group)
+            * ``carbonyl``  — not supported; substituted with phenolic
+            * ``quinone``   — not supported; substituted with phenolic
+            * ``lactone``   — not supported; substituted with phenolic
+
+            If ``None`` (default), the total oxygen count is derived from
+            *O_C_ratio* and placed as phenolic (–OH) groups.
+        output_directory: Output directory for GROMACS files.
+        basename: Base filename for output files.
+        molecule_name: Residue name (max 5 chars). Suggested: BC400, BC600,
+            BCH05, BCO10.
+        seed: Random seed for reproducibility.
 
     Returns:
         (molecule, coordinates, gro_path, top_path, itp_path)
@@ -401,7 +435,7 @@ def generate_biochar_series(
             - 'O_C_ratio' (float, optional): Default 0.1
             - 'aromaticity_percent' (float, optional): Default 90.0
             - 'seed' (int, optional): For reproducibility
-            - 'functional_groups' (list, optional): Custom groups
+            - 'functional_groups' (dict, optional): e.g. {"phenolic": 3, "carboxyl": 1}
 
         output_directory: Output directory for all files
         create_combined_top: If True, generate a combined topology for all structures
@@ -552,3 +586,106 @@ def _create_combined_topology(
         print(f"✓ Combined topology written to {output_path.name}")
 
     return output_path
+
+
+def generate_surface(
+    target_num_carbons: int = 50,
+    H_C_ratio: float = 0.3,
+    O_C_ratio: float = 0.05,
+    functional_groups: Optional[Dict[str, int]] = None,
+    pore_diameter: float = 10.0,
+    num_sheets: int = 2,
+    sheet_overrides: Optional[List[Dict]] = None,
+    output_directory: str = ".",
+    basename: str = "surface",
+    system_name: str = "SLIT",
+    seed: Optional[int] = None,
+) -> Tuple[list, Path, Path, list]:
+    """
+    Generate a slit-pore surface system and export to GROMACS files.
+
+    Creates *num_sheets* parallel graphene-like sheets separated by
+    *pore_diameter* Ångströms, applies functional groups to each sheet,
+    and writes GROMACS-ready ``.gro`` / ``.top`` / ``.itp`` files.
+
+    Args:
+        target_num_carbons: Number of carbon atoms per sheet.
+        H_C_ratio: Target H/C ratio for each sheet.
+        O_C_ratio: Target O/C ratio for each sheet (used when
+            *functional_groups* is ``None``).
+        functional_groups: Functional groups applied to every sheet,
+            e.g. ``{'phenolic': 2, 'ether': 1}``.  Overridden per-sheet
+            if *sheet_overrides* is provided.
+        pore_diameter: Gap between sheet inner van-der-Waals surfaces,
+            in Ångströms.
+        num_sheets: Number of parallel sheets (default 2 → one slit pore).
+        sheet_overrides: List of per-sheet config dicts (length must equal
+            *num_sheets*).  Accepted keys: ``target_num_carbons``,
+            ``H_C_ratio``, ``O_C_ratio``, ``functional_groups``,
+            ``aromaticity_percent``, ``seed``.  If ``None``, all sheets
+            are chemically identical.
+        output_directory: Directory for output files.
+        basename: Base filename for ``.gro``/``.top``/``.itp`` files.
+        system_name: Name written to the ``[ system ]`` section in .top.
+        seed: Random seed for reproducibility.
+
+    Returns:
+        ``(sheets, gro_path, top_path, itp_paths)``
+
+        * *sheets* — ``List[SheetResult]`` with mol, coords, composition.
+        * *gro_path*, *top_path* — :class:`pathlib.Path` objects.
+        * *itp_paths* — list of :class:`pathlib.Path` (one per unique
+          sheet type).
+
+    Examples::
+
+        # Simple slit pore — two identical sheets, 10 Å pore
+        sheets, gro, top, itps = generate_surface(
+            target_num_carbons=40,
+            functional_groups={'phenolic': 2, 'ether': 1},
+            pore_diameter=10.0,
+        )
+
+        # Asymmetric pore — different chemistry on each wall
+        sheets, gro, top, itps = generate_surface(
+            pore_diameter=8.0,
+            sheet_overrides=[
+                {'functional_groups': {'phenolic': 3}, 'target_num_carbons': 40},
+                {'functional_groups': {'carboxyl': 2}, 'target_num_carbons': 50},
+            ],
+        )
+    """
+    # Import here to avoid circular imports at module level
+    from .surface_builder import SurfaceBuilder, SurfaceConfig
+
+    surface_config = SurfaceConfig(
+        target_num_carbons=target_num_carbons,
+        H_C_ratio=H_C_ratio,
+        O_C_ratio=O_C_ratio,
+        functional_groups=functional_groups,
+        aromaticity_percent=95.0,
+        pore_type="slit",
+        num_sheets=num_sheets,
+        pore_diameter=pore_diameter,
+        sheet_overrides=sheet_overrides,
+        system_name=system_name,
+        seed=seed,
+    )
+
+    builder = SurfaceBuilder(surface_config)
+    sheets, box_vectors = builder.build()
+
+    gro_path, top_path, itp_paths = builder.export_gromacs(
+        output_directory=output_directory,
+        basename=basename,
+    )
+
+    print(f"\nSurface GROMACS files written:")
+    print(f"  Structure:  {gro_path}")
+    print(f"  Topology:   {top_path}")
+    for itp in itp_paths:
+        print(f"  Include:    {itp}")
+    print(f"\nTo run with GROMACS:")
+    print(f"  gmx grompp -f md.mdp -c {gro_path.name} -p {top_path.name} -o topol.tpr")
+
+    return sheets, gro_path, top_path, itp_paths

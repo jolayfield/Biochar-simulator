@@ -350,6 +350,10 @@ VDW_RADII = {
     "Br": 1.85,
 }
 
+# Van der Waals diameter of graphitic carbon (graphite interlayer spacing).
+# Used as effective sheet thickness when computing slit-pore geometry.
+CARBON_VDW_DIAMETER = 3.4  # Angstroms
+
 # Covalent radii (in Angstrom) for bond length validation
 COVALENT_RADII = {
     "H": 0.31,
