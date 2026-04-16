@@ -1,6 +1,6 @@
 # Biochar Simulator — Structure Generator
 
-A Python package for generating realistic biochar molecular structures for GROMACS molecular dynamics simulations. Supports structures from 6 to 200+ carbons with 100% aromatic carbon content and accurate H/C and O/C ratios.
+A Python package for generating realistic biochar molecular structures for GROMACS molecular dynamics simulations. Supports single molecules, temperature/composition series, and **porous slit-pore surfaces**.
 
 ---
 
@@ -13,7 +13,8 @@ The Biochar Simulator builds polycyclic aromatic hydrocarbon (PAH) structures wi
 - **Size**: 6 to 200+ carbons (exact count for most targets)
 - **Composition**: H/C and O/C ratios with configurable tolerances
 - **Aromaticity**: 100% aromatic skeleton (graphene-nanoflake topology)
-- **Functional Groups**: Hydroxyl, carboxyl, ether, carbonyl, phenolic, lactone, quinone
+- **Functional Groups**: Exact counts via dict API — phenolic, carboxyl, ether, carbonyl, quinone, lactone, hydroxyl
+- **Porous Surfaces**: Slit-pore systems of stacked PAH sheets with user-controlled pore diameter
 - **Output**: GROMACS `.gro`, `.top`, `.itp` files with OPLS-AA force field
 
 ---
@@ -35,7 +36,7 @@ pip install -r requirements.txt
 
 ## Quick Start
 
-### Single structure
+### Single molecule
 
 ```python
 from src.biochar_generator import generate_biochar
@@ -46,31 +47,51 @@ mol, coords, gro_path, top_path, itp_path = generate_biochar(
     O_C_ratio=0.1,
     output_directory="output",
     basename="biochar_100C",
-    molecule_name="BC",   # residue name, max 5 chars (GROMACS requirement)
     seed=42,
 )
 ```
 
-### Full configuration
+### With specific functional groups
+
+Use a dict to place **exact counts** of each group type:
 
 ```python
-from src.biochar_generator import BiocharGenerator, GeneratorConfig
+mol, coords, gro, top, itp = generate_biochar(
+    target_num_carbons=50,
+    functional_groups={"phenolic": 3, "carboxyl": 1, "ether": 2},
+    output_directory="output",
+    basename="biochar_fg",
+    seed=42,
+)
+```
 
-config = GeneratorConfig(
-    target_num_carbons=200,
-    H_C_ratio=0.5,
-    H_C_tolerance=0.10,      # ±10%
-    O_C_ratio=0.1,
-    O_C_tolerance=0.10,
-    aromaticity_percent=90.0,
-    functional_groups=["hydroxyl", "carboxyl", "ether"],
+When `functional_groups` is `None` (default), total oxygen is controlled by `O_C_ratio` and placed as phenolic groups.
+
+### Slit-pore surface
+
+```python
+from src.biochar_generator import generate_surface
+
+# Two identical sheets, 10 Å pore
+sheets, gro, top, itps = generate_surface(
+    target_num_carbons=50,
+    functional_groups={"phenolic": 2, "ether": 1},
+    pore_diameter=10.0,
+    output_directory="output",
+    basename="slit_pore",
     seed=42,
 )
 
-gen = BiocharGenerator(config)
-mol, coords, composition = gen.generate()
-gen.print_summary()
-gro, top, itp = gen.export_gromacs(output_directory="output", basename="my_biochar")
+# Asymmetric pore — different chemistry on each wall
+sheets, gro, top, itps = generate_surface(
+    pore_diameter=8.0,
+    sheet_overrides=[
+        {"functional_groups": {"phenolic": 3}, "target_num_carbons": 40},
+        {"functional_groups": {"carboxyl": 2}, "target_num_carbons": 50},
+    ],
+    output_directory="output",
+    basename="asymmetric_pore",
+)
 ```
 
 ### Batch generation (temperature/composition series)
@@ -103,6 +124,8 @@ gmx mdrun -deffnm topol
 
 ## Configuration Parameters
 
+### Single molecule (`GeneratorConfig` / `generate_biochar`)
+
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `target_num_carbons` | int | 50 | Target carbon count |
@@ -111,18 +134,47 @@ gmx mdrun -deffnm topol
 | `O_C_ratio` | float | 0.1 | Target O/C molar ratio |
 | `O_C_tolerance` | float | 0.10 | Allowed O/C error (fraction) |
 | `aromaticity_percent` | float | 90.0 | Target % aromatic carbons |
-| `functional_groups` | list | `["hydroxyl","carboxyl","ether"]` | Groups to place |
-| `molecule_name` | str | `"BC"` | Residue name (≤5 chars) |
-| `periodic_box` | bool | False | Add periodic box vectors |
-| `seed` | int | None | RNG seed for reproducibility |
+| `functional_groups` | dict\|None | `None` | Exact group counts, e.g. `{"phenolic": 2}` |
+| `molecule_name` | str | `"BC"` | Residue name (≤5 chars for GROMACS) |
+| `periodic_box` | bool | False | Add periodic box vectors to `.gro` |
+| `seed` | int\|None | None | RNG seed for reproducibility |
+
+### Slit-pore surface (`SurfaceConfig` / `generate_surface`)
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `target_num_carbons` | int | 50 | Carbons per sheet |
+| `H_C_ratio` | float | 0.3 | Target H/C per sheet |
+| `O_C_ratio` | float | 0.05 | Target O/C per sheet |
+| `functional_groups` | dict\|None | `None` | Groups applied to all sheets |
+| `pore_diameter` | float | 10.0 | Gap between sheet surfaces (Å) |
+| `num_sheets` | int | 2 | Number of parallel sheets |
+| `sheet_overrides` | list\|None | `None` | Per-sheet config dicts (length = `num_sheets`) |
+| `box_padding_xy` | float | 1.0 | Box padding in x/y (nm) |
+| `box_padding_z` | float | 1.0 | Box padding in z (nm) |
+| `system_name` | str | `"SLIT"` | Name in `.top [ system ]` section |
+| `sheet_base_name` | str | `"SHT"` | Residue name base (≤3 chars) |
+| `seed` | int\|None | None | RNG seed |
 
 ### Available functional groups
 
-`"hydroxyl"`, `"carboxyl"`, `"phenolic"`, `"ether"`, `"carbonyl"`, `"lactone"`, `"quinone"`
+| Group | O added | Notes |
+|---|---|---|
+| `"phenolic"` | 1 | Ar–OH; always works |
+| `"hydroxyl"` | 1 | Same as phenolic for pure PAH |
+| `"carboxyl"` | 2 | Ar–C(=O)(OH); adds extra C |
+| `"ether"` | 1 | Ar–O–Ar bridge across two edge sites |
+| `"carbonyl"` | 1 | Falls back to phenolic with warning |
+| `"quinone"` | 2 | Falls back to phenolic with warning |
+| `"lactone"` | 2 | Falls back to phenolic with warning |
+
+Carbonyl, quinone, and lactone require ≥2 free valence on one carbon, which is unavailable on pure aromatic PAH edge sites — they warn and substitute phenolic automatically.
 
 ---
 
 ## Generation Pipeline
+
+### Single molecule
 
 ```
 target_num_carbons
@@ -131,7 +183,7 @@ target_num_carbons
 Carbon skeleton (PAH seed + ring-growth)
       │  Parity-aware hex-lattice builder; 100% aromatic for any size
       ▼
-Oxygen assignment (hydroxyl → target O/C ratio)
+Oxygen assignment (functional groups dict or O/C-ratio-driven)
       │
       ▼
 Hydrogen assignment (fill valences → target H/C ratio)
@@ -139,7 +191,7 @@ Hydrogen assignment (fill valences → target H/C ratio)
       ▼
 3D geometry
       │  ≤80 heavy atoms: ETKDGv3 / ETKDGv2 embedding + MMFF94
-      │  >80 heavy atoms: 2D-first embedding (flat graphene sheet) + FF minimization
+      │  >80 heavy atoms: 2D-first embedding (flat graphene sheet) + FF minimisation
       ▼
 OPLS-AA atom typing & partial charges
       │
@@ -150,28 +202,59 @@ Validation (composition, geometry, steric clashes)
 GROMACS export (.gro / .top / .itp)
 ```
 
+### Slit-pore surface
+
+```
+SurfaceConfig
+      │
+      ▼
+Generate N sheets (each via single-molecule pipeline above)
+      │  Identical sheets: generate once, deep-copy remainder
+      │  Distinct sheets:  generate each independently
+      ▼
+Flatten each sheet to xy plane (SVD best-fit plane rotation)
+      │
+      ▼
+Stack along z: sheet_i centroid at z = i × (pore_diameter + 3.4 Å)
+      │
+      ▼
+Compute periodic box (bounding box + padding)
+      │
+      ▼
+Centre system in box
+      │
+      ▼
+GROMACS export
+      │  .gro  — all N sheets as separate residues, single file
+      │  .itp  — one file (identical sheets) or one per sheet (distinct)
+      └─ .top  — includes forcefield + itp(s); [ molecules ] count = N
+```
+
 ---
 
 ## Supported Sizes
 
-The skeleton builder uses a pre-validated PAH library for exact matches and parity-aware ring growth for all other sizes:
-
 | Range | Strategy | Aromaticity | Count accuracy |
 |---|---|---|---|
-| 6, 10, 14, 16, 18, 24 C | Exact library match | 100% | Exact |
-| 17–50 C | Library seed + 4-node ring growth | 100% | Exact |
-| 51–200+ C | Hex-lattice seed + ring growth | 100% | ≤5% error |
+| 6–40 C | Exact PAH library match | 100% | Exact |
+| 41–200+ C | Library seed + 4-node ring growth | 100% | ≤5% error |
 
-### PAH library
+### PAH library (18 validated entries)
 
-| Molecule | Carbons |
-|---|---|
-| benzene | 6 |
-| naphthalene | 10 |
-| anthracene / phenanthrene | 14 |
-| pyrene | 16 |
-| chrysene / triphenylene | 18 |
-| coronene | 24 |
+| Molecule | Carbons | Type |
+|---|---|---|
+| benzene | 6 | Classic |
+| naphthalene | 10 | Classic |
+| anthracene / phenanthrene | 14 | Linear / angular |
+| pyrene | 16 | Pericondensed |
+| chrysene / tetracene / triphenylene | 18 | Various |
+| pentacene / picene / hex_lattice_22 | 22 | Various |
+| coronene | 24 | 7-ring pericondensed |
+| hexacene / dibenzo_bc_ef_coronene | 26 | Various |
+| hex_lattice_28 | 28 | Compact nanoflake |
+| hex_lattice_30 | 30 | Compact nanoflake |
+| hex_lattice_38 | 38 | Compact nanoflake |
+| hex_lattice_40 | 40 | Compact nanoflake |
 
 ---
 
@@ -189,11 +272,13 @@ The skeleton builder uses a pre-validated PAH library for exact matches and pari
 
 | File | Format | Contents |
 |---|---|---|
-| `.gro` | GROMACS structure | Atom positions in **nm** |
-| `.top` | GROMACS topology | Atoms, bonds, angles, dihedrals |
-| `.itp` | Include topology | Reusable molecule definition |
+| `.gro` | GROMACS structure | Atom positions in **nm**, box vectors |
+| `.top` | GROMACS topology | Force field include, molecule definitions |
+| `.itp` | Include topology | Atoms, bonds, angles, dihedrals for one molecule type |
 
-Coordinates are in **nanometers** (GROMACS convention; RDKit Å values × 0.1).
+Coordinates are in **nanometers** (GROMACS convention; RDKit Å × 0.1).
+
+For surfaces, a single `.gro` contains all sheets as separate residues, and the `.top` references one `.itp` with a molecule count (identical sheets) or one `.itp` per unique sheet type.
 
 ---
 
@@ -202,29 +287,35 @@ Coordinates are in **nanometers** (GROMACS convention; RDKit Å values × 0.1).
 | Module | Responsibility |
 |---|---|
 | `carbon_skeleton.py` | PAH library lookup and ring-growth engine |
-| `heteroatom_assignment.py` | Oxygen and hydrogen placement |
+| `heteroatom_assignment.py` | Oxygen (functional groups) and hydrogen placement |
 | `geometry_3d.py` | 3D coordinate generation and clash resolution |
 | `opls_typing.py` | OPLS-AA atom types and partial charges |
-| `gromacs_export.py` | `.gro` / `.top` / `.itp` file writer |
+| `gromacs_export.py` | `.gro` / `.top` / `.itp` writers (single and multi-sheet) |
+| `surface_builder.py` | Slit-pore surface assembly (`SurfaceBuilder`, `SurfaceConfig`) |
 | `validation.py` | Composition, chemistry, and geometry checks |
 | `constants.py` | OPLS-AA parameters, PAH library, VdW radii |
-| `biochar_generator.py` | Public API (`BiocharGenerator`, `generate_biochar`) |
+| `biochar_generator.py` | Public API: `generate_biochar`, `generate_surface`, `generate_biochar_series` |
 
 ---
 
 ## Testing
 
 ```bash
-# Quality test suite (PAH sizes 6–200C, compositions, seeds, large structures)
+# Unit tests (constants, skeleton, heteroatoms, geometry, OPLS, validation, generator)
+python3 -m pytest tests/test_generator.py -v
+
+# Surface builder tests (config, geometry, GROMACS export, convenience function)
+python3 -m pytest tests/test_surface_builder.py -v
+
+# PAH quality suite (sizes 6–200C, compositions, seeds)
 python3 tests/test_pah_quality.py
 ```
 
-The suite reports:
-- PAH library SMILES validity
-- Kekulizability (100% aromatic required)
+The PAH quality suite reports:
+- PAH library SMILES validity and kekulizability
 - Atom count accuracy (target vs actual)
 - Bond errors and steric clashes per size
-- Ring planarity (Å deviation)
+- Ring planarity (Å deviation from best-fit plane)
 - H/C and O/C ratio accuracy across compositions
 
 ---
@@ -233,22 +324,10 @@ The suite reports:
 
 | Issue | Notes |
 |---|---|
-| Only hydroxyl oxygens are placed | Other functional groups (carboxyl, ether…) are defined in constants but not yet wired into the oxygen assigner |
 | H/C ratio loose for very small structures (6–14 C) | Edge-to-interior carbon ratio limits control; use ≥30 C for tight H/C |
-| Steric clash count increases with size | Large flat aromatics have many H···H near-contacts; use GROMACS energy minimisation after generation for production runs |
-| Geometry validation thresholds | The built-in validator uses strict VdW radii; some reported "clashes" are artefacts of the 2D-flat starting structure and resolve under MD |
-
----
-
-## Examples
-
-```bash
-# Single structure examples
-python3 examples/example_usage.py
-
-# Batch generation (5 series: temperature, composition, oxygen, size, mixed)
-python3 examples/batch_generation.py
-```
+| Steric clash count increases with size | Large flat aromatics have H···H near-contacts; use GROMACS energy minimisation after generation for production runs |
+| Geometry validation thresholds | The built-in validator uses strict VdW radii; some reported "clashes" are artefacts of the flat starting structure and resolve under MD |
+| Amorphous porous surfaces not yet implemented | Only slit pores (parallel sheets) are supported; `pore_type="amorphous"` is reserved for a future release |
 
 ---
 
