@@ -4,26 +4,22 @@ Unit Tests for Biochar Generator
 Tests for all major components.
 """
 
-import sys
 import pytest
-from pathlib import Path
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from rdkit import Chem
 
-from constants import OPLS_ATOM_TYPES, PAH_LIBRARY
-from carbon_skeleton import PAHAssembler, SkeletonValidator
-from heteroatom_assignment import (
+from src.constants import OPLS_ATOM_TYPES, PAH_LIBRARY
+from src.carbon_skeleton import PAHAssembler, SkeletonValidator
+from src.heteroatom_assignment import (
     OxygenAssigner,
     HydrogenAssigner,
     HeteroatomValidator,
+    CompositionInfo,
 )
-from geometry_3d import CoordinateGenerator, GeometryValidator
-from opls_typing import AtomTyper, ChargeAssigner
-from validation import ValidationEngine
-from biochar_generator import BiocharGenerator, GeneratorConfig
+from src.geometry_3d import CoordinateGenerator, GeometryValidator
+from src.opls_typing import AtomTyper, ChargeAssigner
+from src.validation import ValidationEngine
+from src.biochar_generator import BiocharGenerator, GeneratorConfig
 
 
 class TestConstants:
@@ -130,7 +126,6 @@ class TestHeteroatomAssignment:
         num_H = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 1)
         num_O = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 8)
 
-        from heteroatom_assignment import CompositionInfo
 
         composition = CompositionInfo(
             num_carbons=num_C,
@@ -216,7 +211,6 @@ class TestValidation:
         mol = Chem.MolFromSmiles("c1ccccc1")
         assert mol is not None
 
-        from heteroatom_assignment import CompositionInfo
 
         num_C = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 6)
         num_H = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 1)
@@ -271,7 +265,7 @@ class TestBiocharGenerator:
         assert config.target_num_carbons == 50
         assert config.H_C_ratio == 0.5
         assert config.O_C_ratio == 0.1
-        assert config.functional_groups is not None
+        assert config.functional_groups is None  # None → O/C-ratio-driven placement
 
     def test_generator_reproducibility(self):
         """Test that same seed produces same structure."""
