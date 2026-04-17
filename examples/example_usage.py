@@ -98,7 +98,7 @@ def example_3_convenience_function():
         H_C_ratio=0.55,
         O_C_ratio=0.12,
         aromaticity_percent=92.0,
-        functional_groups=["hydroxyl", "carboxyl", "ether"],
+        functional_groups={"phenolic": 3, "carboxyl": 1, "ether": 2},
         output_directory="output",
         basename="biochar_convenience",
         seed=123,
@@ -119,7 +119,7 @@ def example_4_large_structure():
         H_C_ratio=0.45,
         O_C_ratio=0.08,
         aromaticity_percent=95.0,
-        functional_groups=["hydroxyl", "ether", "carbonyl"],
+        functional_groups={"phenolic": 5, "ether": 2},
         seed=999,
     )
 
@@ -134,34 +134,81 @@ def example_4_large_structure():
     )
 
 
+def example_5_pentagon_defects():
+    """Example 5: Biochar with pentagon ring defects."""
+    print("\n" + "=" * 70)
+    print("EXAMPLE 5: Biochar with Pentagon Ring Defects")
+    print("=" * 70)
+
+    config = GeneratorConfig(
+        target_num_carbons=80,
+        H_C_ratio=0.45,
+        O_C_ratio=0.10,
+        defect_fraction=0.15,  # 15% of rings will be pentagons
+        aromaticity_percent=95.0,
+        seed=555,
+    )
+
+    generator = BiocharGenerator(config)
+    mol, coords, composition = generator.generate()
+    print(f"Generated defective biochar with ~15% pentagonal rings")
+    generator.print_summary()
+
+    generator.export_gromacs(
+        output_directory="output",
+        basename="biochar_defects_15pct",
+    )
+
+
+def example_6_porous_surface():
+    """Example 6: Porous slit-pore surface."""
+    print("\n" + "=" * 70)
+    print("EXAMPLE 6: Porous Slit-Pore Surface")
+    print("=" * 70)
+
+    from src.biochar_generator import generate_surface
+
+    sheets, gro_path, top_path, itp_paths = generate_surface(
+        target_num_carbons=40,
+        H_C_ratio=0.3,
+        O_C_ratio=0.05,
+        functional_groups={"phenolic": 2, "ether": 1},
+        pore_diameter=10.0,  # Angstroms
+        num_sheets=2,
+        output_directory="output",
+        basename="surface_slit",
+        seed=666,
+    )
+
+    print(f"\nGenerated {len(sheets)} sheets for slit-pore system")
+    print(f"Pore diameter: 10.0 Å")
+    print(f"Files: {gro_path.name}, {top_path.name}")
+    for itp in itp_paths:
+        print(f"  {itp.name}")
+
+
 if __name__ == "__main__":
     # Create output directory
     Path("output").mkdir(exist_ok=True)
 
     # Run examples
-    try:
-        example_1_basic_generation()
-        print("\n✓ Example 1 completed successfully")
-    except Exception as e:
-        print(f"\n✗ Example 1 failed: {e}")
+    examples = [
+        ("Example 1", example_1_basic_generation),
+        ("Example 2", example_2_different_compositions),
+        ("Example 3", example_3_convenience_function),
+        ("Example 4", example_4_large_structure),
+        ("Example 5", example_5_pentagon_defects),
+        ("Example 6", example_6_porous_surface),
+    ]
 
-    try:
-        example_2_different_compositions()
-        print("\n✓ Example 2 completed successfully")
-    except Exception as e:
-        print(f"\n✗ Example 2 failed: {e}")
-
-    try:
-        example_3_convenience_function()
-        print("\n✓ Example 3 completed successfully")
-    except Exception as e:
-        print(f"\n✗ Example 3 failed: {e}")
-
-    try:
-        example_4_large_structure()
-        print("\n✓ Example 4 completed successfully")
-    except Exception as e:
-        print(f"\n✗ Example 4 failed: {e}")
+    for name, example_func in examples:
+        try:
+            example_func()
+            print(f"\n✓ {name} completed successfully")
+        except Exception as e:
+            print(f"\n✗ {name} failed: {e}")
+            import traceback
+            traceback.print_exc()
 
     print("\n" + "=" * 70)
     print("All examples completed!")

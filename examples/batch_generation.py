@@ -183,10 +183,61 @@ def example_4_size_series():
         print(f"  {mol_name}: {gro.name}")
 
 
-def example_5_custom_mixed_system():
-    """Example 5: Custom mixed system (different biochar types together)"""
+def example_5_defect_structures():
+    """Example 5: Defect structures (pentagon ring insertion)"""
     print("\n" + "=" * 70)
-    print("EXAMPLE 5: Custom Mixed System")
+    print("EXAMPLE 5: Defect Structures (Pentagon Ring Insertion)")
+    print("=" * 70)
+    print("Comparing pure hexagonal vs defective biochar:")
+    print("- BC800: Pure hexagonal (defect_fraction=0.0)")
+    print("- BD805: 5% pentagonal defects (defect_fraction=0.05)")
+    print("- BD815: 15% pentagonal defects (defect_fraction=0.15)")
+
+    configs = [
+        {
+            "molecule_name": "BC800",
+            "target_num_carbons": 80,
+            "H_C_ratio": 0.40,
+            "O_C_ratio": 0.05,
+            "defect_fraction": 0.0,
+            "seed": 601,
+        },
+        {
+            "molecule_name": "BD805",
+            "target_num_carbons": 80,
+            "H_C_ratio": 0.40,
+            "O_C_ratio": 0.05,
+            "defect_fraction": 0.05,  # 5% pentagons
+            "seed": 602,
+        },
+        {
+            "molecule_name": "BD815",
+            "target_num_carbons": 80,
+            "H_C_ratio": 0.40,
+            "O_C_ratio": 0.05,
+            "defect_fraction": 0.15,  # 15% pentagons
+            "seed": 603,
+        },
+    ]
+
+    results = generate_biochar_series(
+        configurations=configs,
+        output_directory="output/defect_study",
+        create_combined_top=True,
+        verbose=True,
+    )
+
+    print("\nGenerated files:")
+    for mol_name, (gro, top, itp) in results.items():
+        print(f"  {mol_name}: {gro.name}")
+
+    print("\n✓ Ready for studying effect of topological disorder!")
+
+
+def example_6_custom_mixed_system():
+    """Example 6: Custom mixed system (different biochar types together)"""
+    print("\n" + "=" * 70)
+    print("EXAMPLE 6: Custom Mixed System")
     print("=" * 70)
     print("Simulating a system with multiple biochar types:")
     print("- BC400: Low-temperature biochar (high O/C)")
@@ -199,21 +250,21 @@ def example_5_custom_mixed_system():
             "target_num_carbons": 60,
             "H_C_ratio": 0.65,
             "O_C_ratio": 0.25,  # Highly oxidized
-            "seed": 501,
+            "seed": 701,
         },
         {
             "molecule_name": "BC800",
             "target_num_carbons": 100,
             "H_C_ratio": 0.35,
             "O_C_ratio": 0.03,  # Minimal oxidation
-            "seed": 502,
+            "seed": 702,
         },
         {
             "molecule_name": "BCHWP",
             "target_num_carbons": 80,
             "H_C_ratio": 0.5,
             "O_C_ratio": 0.30,  # Chemically oxidized
-            "seed": 503,
+            "seed": 703,
         },
     ]
 
@@ -237,33 +288,39 @@ if __name__ == "__main__":
     print("BATCH GENERATION EXAMPLES - Mixed Biochar Simulations")
     print("=" * 70)
 
-    try:
-        # Run examples
-        example_1_temperature_series()
-        example_2_composition_series()
-        example_3_oxygen_series()
-        example_4_size_series()
-        example_5_custom_mixed_system()
+    examples = [
+        ("Example 1: Temperature Series", example_1_temperature_series),
+        ("Example 2: Composition Series", example_2_composition_series),
+        ("Example 3: Oxygen Series", example_3_oxygen_series),
+        ("Example 4: Size Series", example_4_size_series),
+        ("Example 5: Defect Structures", example_5_defect_structures),
+        ("Example 6: Custom Mixed System", example_6_custom_mixed_system),
+    ]
 
-        print("\n" + "=" * 70)
-        print("ALL EXAMPLES COMPLETED SUCCESSFULLY!")
-        print("=" * 70)
-        print("\nOutput directory structure:")
-        print("output/")
-        print("├── temperature_series/  (BC400, BC600, BC800)")
-        print("├── composition_series/  (BCH04, BCH06, BCH08)")
-        print("├── oxygen_series/       (BCO05, BCO12, BCO20)")
-        print("├── size_series/         (BC10, BC20, BC30)")
-        print("└── mixed_system/        (BC400, BC800, BCHWP + combined.top)")
-        print("\nEach directory contains:")
-        print("  - Individual .gro structure files")
-        print("  - Individual .top topology files")
-        print("  - Individual .itp molecule definitions")
-        print("  - combined.top (for running mixed simulations)")
-        print("=" * 70 + "\n")
+    completed = 0
+    for name, example_func in examples:
+        try:
+            example_func()
+            completed += 1
+        except Exception as e:
+            print(f"\n✗ {name} failed: {e}")
+            import traceback
+            traceback.print_exc()
 
-    except Exception as e:
-        print(f"\n✗ Error: {e}")
-        import traceback
-
-        traceback.print_exc()
+    print("\n" + "=" * 70)
+    print(f"COMPLETED: {completed}/{len(examples)} examples")
+    print("=" * 70)
+    print("\nOutput directory structure:")
+    print("output/")
+    print("├── temperature_series/  (BC400, BC600, BC800)")
+    print("├── composition_series/  (BCH04, BCH06, BCH08)")
+    print("├── oxygen_series/       (BCO05, BCO12, BCO20)")
+    print("├── size_series/         (BC10, BC20, BC30)")
+    print("├── defect_study/        (BC800, BD805, BD815 + combined.top)")
+    print("└── mixed_system/        (BC400, BC800, BCHWP + combined.top)")
+    print("\nEach directory contains:")
+    print("  - Individual .gro structure files")
+    print("  - Individual .top topology files")
+    print("  - Individual .itp molecule definitions")
+    print("  - combined.top (for running mixed simulations)")
+    print("=" * 70 + "\n")
