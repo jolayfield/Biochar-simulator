@@ -81,9 +81,10 @@ class GROFileWriter:
                 # Format: residue number, residue name, atom name, atom number, x, y, z
                 # Columns: 1-5 (resnum), 6-10 (resname), 11-15 (atomname), 16-20 (atomnum)
                 #         21-28 (x), 29-36 (y), 37-44 (z)
+                # Note: GROMACS format requires residue_name LEFT-aligned, atom_name RIGHT-aligned
                 # GROMACS expects coordinates in nanometers (nm) with 3 decimal places
                 f.write(
-                    f"{residue_num:5d}{residue_name:5s}{atom_name:5s}{atom_num:5d}"
+                    f"{residue_num:5d}{residue_name:<5s}{atom_name:>5s}{atom_num:5d}"
                     f"{x:8.3f}{y:8.3f}{z:8.3f}\n"
                 )
 
@@ -535,10 +536,11 @@ class MultiSheetGROWriter:
                     global_atom_num += 1
                     atom_name = f"{atom.GetSymbol()}{atom_idx}"[:5]
                     x_nm, y_nm, z_nm = sheet.coords[atom_idx] * 0.1  # Å → nm
+                    # Format: residue_name LEFT-aligned, atom_name RIGHT-aligned
                     f.write(
                         f"{residue_num % 100000:5d}"
-                        f"{residue_name:5s}"
-                        f"{atom_name:5s}"
+                        f"{residue_name:<5s}"
+                        f"{atom_name:>5s}"
                         f"{global_atom_num % 100000:5d}"
                         f"{x_nm:8.3f}{y_nm:8.3f}{z_nm:8.3f}\n"
                     )
