@@ -14,11 +14,376 @@ from scipy.spatial.distance import pdist, squareform
 from .constants import VDW_RADII, COVALENT_RADII
 
 
+def _get_excluded_pairs(mol: Chem.Mol) -> set:
+    """
+    Return the set of (min_idx, max_idx) atom-index pairs that should be
+    **excluded** from non-bonded clash detection.
+
+    Standard molecular-mechanics exclusion rules:
+    * 1-2 pairs (directly bonded)
+    * 1-3 pairs (angle neighbours, sharing one atom)
+
+    In a flat graphene-like sheet the 1-3 distance is
+    √3 × L ≈ 2.46 Å (L = 1.42 Å aromatic bond), which is below the
+    0.75 × vdW-sum threshold for C-C (2.55 Å).  Without this exclusion
+    every second-neighbour carbon pair is flagged as a clash, producing
+    hundreds of false positives that the resolver can never fix.
+    """
+    excluded: set = set()
+    for atom in mol.GetAtoms():
+        i = atom.GetIdx()
+        for nbr in atom.GetNeighbors():
+            j = nbr.GetIdx()
+            # 1-2 pair
+            excluded.add((min(i, j), max(i, j)))
+            # 1-3 pairs: all neighbours of j except i
+            for nbr2 in nbr.GetNeighbors():
+                k = nbr2.GetIdx()
+                if k != i:
+                    excluded.add((min(i, k), max(i, k)))
+    return excluded
+
+
+def _read_skeleton_positions(mol: Chem.Mol) -> dict:
+    """
+    Collect hex-lattice positions tagged on the molecule by
+    :mod:`carbon_skeleton` (atom properties ``init_x`` / ``init_y``).
+
+    Returns ``{atom_idx: np.array([x, y, 0])}`` for heavy atoms that have
+    both props.  Empty dict if no atom is tagged.
+    """
+    positions: dict = {}
+    for atom in mol.GetAtoms():
+        if atom.GetAtomicNum() == 1:
+            continue
+        if atom.HasProp("init_x") and atom.HasProp("init_y"):
+            try:
+                x = atom.GetDoubleProp("init_x")
+                y = atom.GetDoubleProp("init_y")
+            except Exception:
+                continue
+            positions[atom.GetIdx()] = np.array([x, y, 0.0])
+    return positions
+
+
+def _place_untagged_heavy_atom(
+    mol: Chem.Mol, idx: int, placed: dict, fallback_pos: np.ndarray
+) -> np.ndarray:
+    """
+    Compute a 2D position for a heavy atom (typically an oxygen) that
+    lacks the hex-lattice tag, by radiating outward from its tagged
+    heavy-atom neighbour.
+    """
+    atom = mol.GetAtomWithIdx(idx)
+    heavy_nbrs = [
+        n for n in atom.GetNeighbors() if n.GetAtomicNum() != 1
+    ]
+    parents = [n for n in heavy_nbrs if n.GetIdx() in placed]
+    if not parents:
+        return fallback_pos.copy()
+
+    parent = parents[0]
+    par_pos = placed[parent.GetIdx()]
+
+    # Direction: away from parent's other heavy neighbours
+    other = [
+        n for n in parent.GetNeighbors()
+        if n.GetAtomicNum() != 1 and n.GetIdx() != idx and n.GetIdx() in placed
+    ]
+    if other:
+        nbr_avg = np.mean([placed[n.GetIdx()] for n in other], axis=0)
+        direction = par_pos - nbr_avg
+    else:
+        direction = np.array([1.0, 0.0, 0.0])
+    norm = float(np.linalg.norm(direction))
+    if norm < 1e-8:
+        direction = np.array([1.0, 0.0, 0.0])
+    else:
+        direction = direction / norm
+
+    # Bond length by element pair
+    sym_parent = parent.GetSymbol()
+    sym_this = atom.GetSymbol()
+    if sym_parent == "C" and sym_this == "O":
+        bl = 1.36
+    elif sym_parent == "O" and sym_this == "C":
+        bl = 1.36
+    elif sym_this == "O" or sym_parent == "O":
+        bl = 1.36
+    else:
+        bl = 1.42
+    return par_pos + direction * bl
+
+
+def _heavy_atom_flat_layout(mol: Chem.Mol, seed: Optional[int] = None) -> np.ndarray:
+    """
+    Produce a flat (z=0) 2D layout for the heavy-atom scaffold of a PAH.
+
+    Uses networkx.kamada_kawai_layout on the heavy-atom bond graph, then
+    scales so the mean bond length is ~1.4 Å.  This is dramatically more
+    robust on large fused polycyclic biochar graphs than either
+    AllChem.Compute2DCoords (which collapses ~25 pairs to distance 0) or
+    ETKDGv3 3D embedding + flatten (which folds then loses separation when
+    projected).  Biochar graphs are planar by construction, so a planar
+    spring-like layout converges cleanly.
+
+    Args:
+        mol: molecule with heavy atoms (no explicit hydrogens).
+        seed: optional RNG seed for reproducibility of the layout.
+
+    Returns:
+        (N, 3) ndarray of 3D coords in Å, with z = 0 for every atom.
+    """
+    import networkx as nx
+
+    G = nx.Graph()
+    for a in mol.GetAtoms():
+        G.add_node(a.GetIdx())
+    for b in mol.GetBonds():
+        G.add_edge(b.GetBeginAtomIdx(), b.GetEndAtomIdx())
+
+    # Kamada-Kawai needs a connected graph; handle components independently.
+    n = mol.GetNumAtoms()
+    coords = np.zeros((n, 3))
+
+    components = list(nx.connected_components(G))
+    x_offset = 0.0
+    for comp in components:
+        subG = G.subgraph(comp).copy()
+        if subG.number_of_nodes() == 1:
+            only_node = next(iter(subG.nodes()))
+            coords[only_node] = [x_offset, 0.0, 0.0]
+            x_offset += 2.0
+            continue
+        pos = nx.kamada_kawai_layout(subG)
+        sub_coords = np.array([pos[i] for i in sorted(pos.keys())])
+
+        # Scale so the mean bond length is ~1.4 Å (aromatic C-C baseline).
+        bls = [
+            np.linalg.norm(np.array(pos[u]) - np.array(pos[v]))
+            for u, v in subG.edges()
+        ]
+        if bls:
+            scale = 1.4 / np.mean(bls)
+            sub_coords = sub_coords * scale
+        # Shift so component's min-x sits past previous component's max-x.
+        min_x = sub_coords[:, 0].min()
+        sub_coords[:, 0] += x_offset - min_x
+        x_offset = sub_coords[:, 0].max() + 2.0
+
+        for sub_idx, orig_idx in enumerate(sorted(pos.keys())):
+            coords[orig_idx] = [sub_coords[sub_idx, 0], sub_coords[sub_idx, 1], 0.0]
+
+    return coords
+
+
+def _kekulize_or_dearomatize(mol: Chem.Mol) -> Chem.Mol:
+    """
+    Ensure the returned mol is safe for FF/embedding by either kekulizing it
+    or, if that fails (non-kekulizable graph — common for large biochar PAHs
+    with odd-parity subgraphs), converting every aromatic bond to SINGLE and
+    clearing all aromatic flags.
+
+    After this call, `AllChem.Compute2DCoords`, `AllChem.EmbedMolecule`,
+    `AllChem.UFFGetMoleculeForceField`, and `AllChem.MMFFGetMoleculeProperties`
+    all work deterministically.
+    """
+    m = Chem.RWMol(mol)
+    try:
+        Chem.Kekulize(m, clearAromaticFlags=False)
+        return m
+    except Exception:
+        pass
+
+    # Fallback: strip aromaticity entirely. Downstream FF treats the ring as
+    # sp3/sp2 single-bonded; MMFF may still refuse without conjugation info,
+    # but UFF works and produces reasonable bond lengths.
+    for bond in m.GetBonds():
+        if bond.GetBondType() == Chem.BondType.AROMATIC:
+            bond.SetBondType(Chem.BondType.SINGLE)
+            bond.SetIsAromatic(False)
+    for atom in m.GetAtoms():
+        atom.SetIsAromatic(False)
+    try:
+        Chem.SanitizeMol(
+            m,
+            sanitizeOps=Chem.SanitizeFlags.SANITIZE_ALL
+            ^ Chem.SanitizeFlags.SANITIZE_KEKULIZE
+            ^ Chem.SanitizeFlags.SANITIZE_SETAROMATICITY,
+        )
+    except Exception:
+        pass
+    return m
+
+
+def _perpendicular_unit(v: np.ndarray) -> np.ndarray:
+    """Return an arbitrary unit vector perpendicular to *v* (v must be non-zero)."""
+    v = np.asarray(v, dtype=float)
+    # Pick the component with the smallest absolute value to avoid a near-parallel
+    # cross product, which would give a numerically unstable result.
+    if abs(v[0]) <= abs(v[1]) and abs(v[0]) <= abs(v[2]):
+        perp = np.array([0.0, -v[2], v[1]])
+    elif abs(v[1]) <= abs(v[2]):
+        perp = np.array([-v[2], 0.0, v[0]])
+    else:
+        perp = np.array([-v[1], v[0], 0.0])
+    return perp / np.linalg.norm(perp)
+
+
+def _optimize_h_positions(
+    mol: Chem.Mol,
+    all_coords: np.ndarray,
+    threshold: float = 1.8,
+    num_angles: int = 12,
+    allow_out_of_plane: bool = True,
+    num_passes: int = 2,
+) -> np.ndarray:
+    """
+    Reduce steric clashes for hydrogen atoms by rotating them around the bond
+    from their grandparent to their parent atom.
+
+    For each H atom whose nearest non-bonded neighbour is closer than
+    *threshold* Å, the H is swept through *num_angles* equally-spaced dihedral
+    angles around the grandparent→parent bond axis (e.g. the C–O axis for a
+    phenolic OH, or the ring-C bond for a peripheral C-H).  The position that
+    maximises the minimum non-bonded distance is kept.
+
+    When *allow_out_of_plane* is True, off-plane positions (z ≠ 0, valid
+    because hex-lattice molecules lie flat in the xy plane) are sampled at
+    ±0.3, ±0.6, and ±0.9 Å above/below the sheet.  This is the primary fix
+    for OH hydrogens that are pushed into the ring plane by geometric placement.
+
+    *num_passes* sweeps are performed (default 2).  A second pass is necessary
+    because optimising H_i changes the non-bonded environment seen by H_j
+    (which may be H_i's nearest neighbour), so H_j may need to be re-evaluated
+    after H_i has moved.
+
+    Clashing H atoms are processed sequentially within each pass; each update
+    is immediately visible to subsequent H optimisations in the same pass.
+
+    Args:
+        mol:               RDKit molecule (used for connectivity only).
+        all_coords:        (N, 3) coordinate array in Å — **modified in place**.
+        threshold:         Minimum non-bonded distance (Å) that triggers
+                           optimisation.  Default 1.8 Å.
+        num_angles:        Number of in-plane dihedral samples (default 12 →
+                           every 30°).
+        allow_out_of_plane: If True, also sample positions above/below the
+                           molecular plane.
+        num_passes:        Number of full sweeps over all H atoms (default 2).
+
+    Returns:
+        The (possibly modified) coordinate array (same object as *all_coords*).
+    """
+    excluded = _get_excluded_pairs(mol)
+
+    def _min_nb_dist(h_idx: int, h_pos: np.ndarray) -> float:
+        """Minimum distance from *h_pos* to any non-excluded, non-self atom."""
+        min_d = float("inf")
+        for j in range(mol.GetNumAtoms()):
+            if j == h_idx:
+                continue
+            pair = (min(h_idx, j), max(h_idx, j))
+            if pair in excluded:
+                continue
+            d = float(np.linalg.norm(h_pos - all_coords[j]))
+            if d < min_d:
+                min_d = d
+        return min_d
+
+    # Out-of-plane z-offsets (Å): 0 = flat (in-plane); ±Δz = above/below sheet.
+    z_offsets: List[float] = [0.0]
+    if allow_out_of_plane:
+        z_offsets += [0.3, -0.3, 0.6, -0.6, 0.9, -0.9]
+
+    angles = np.linspace(0.0, 2.0 * np.pi, num_angles, endpoint=False)
+
+    for _pass in range(num_passes):
+        for atom in mol.GetAtoms():
+            if atom.GetAtomicNum() != 1:
+                continue
+            h_idx = atom.GetIdx()
+            h_pos = all_coords[h_idx].copy()
+
+            # Only optimise H atoms that currently have a short contact
+            if _min_nb_dist(h_idx, h_pos) >= threshold:
+                continue
+
+            # Parent (O or C that this H is bonded to)
+            nbrs = atom.GetNeighbors()
+            if not nbrs:
+                continue
+            parent = nbrs[0]
+            par_idx = parent.GetIdx()
+            par_pos = all_coords[par_idx].copy()
+
+            # Grandparent: first heavy-atom neighbour of parent (excludes self)
+            grand_nbrs = [
+                n for n in parent.GetNeighbors()
+                if n.GetAtomicNum() != 1 and n.GetIdx() != h_idx
+            ]
+            if not grand_nbrs:
+                continue
+            grand_pos = all_coords[grand_nbrs[0].GetIdx()].copy()
+
+            # Rotation axis = grandparent → parent (normalised)
+            axis = par_pos - grand_pos
+            a_norm = float(np.linalg.norm(axis))
+            if a_norm < 1e-8:
+                continue
+            axis = axis / a_norm
+
+            # Decompose h_vec into components along / perpendicular to the axis
+            h_vec = h_pos - par_pos
+            bl = float(np.linalg.norm(h_vec))
+            if bl < 1e-8:
+                continue
+
+            h_par = np.dot(h_vec, axis) * axis    # component along rotation axis
+            h_perp = h_vec - h_par                 # component in the sweep plane
+            perp_norm = float(np.linalg.norm(h_perp))
+
+            # Orthonormal basis in the sweep plane
+            u_hat = (h_perp / perp_norm if perp_norm > 1e-8
+                     else _perpendicular_unit(axis))
+            v_hat = np.cross(axis, u_hat)
+
+            best_pos = h_pos.copy()
+            best_d = _min_nb_dist(h_idx, h_pos)
+
+            for z_off in z_offsets:
+                z_vec = np.array([0.0, 0.0, z_off])
+                for theta in angles:
+                    new_perp = perp_norm * (
+                        np.cos(theta) * u_hat + np.sin(theta) * v_hat
+                    )
+                    candidate = par_pos + h_par + new_perp + z_vec
+                    # Rescale to the original O-H / C-H bond length
+                    cv = candidate - par_pos
+                    cv_norm = float(np.linalg.norm(cv))
+                    if cv_norm > 1e-8:
+                        candidate = par_pos + cv * (bl / cv_norm)
+                    d = _min_nb_dist(h_idx, candidate)
+                    if d > best_d:
+                        best_d = d
+                        best_pos = candidate.copy()
+
+            all_coords[h_idx] = best_pos
+
+    return all_coords
+
+
 class CoordinateGenerator:
     """Generate valid 3D coordinates for molecules."""
 
     def __init__(self, seed: int = None):
         self.seed = seed
+        # Set to True after generate_3d_coordinates() if hex-lattice positions
+        # (from carbon_skeleton init_x / init_y props) were used.  When True,
+        # callers should skip any subsequent force-field minimization because
+        # running MMFF/UFF on the dearomatized mol (all-SINGLE bonds) would
+        # incorrectly treat sp2 carbons as sp3 and buckle the flat sheet.
+        self.used_hex_lattice: bool = False
         if seed is not None:
             np.random.seed(seed)
 
@@ -79,29 +444,70 @@ class CoordinateGenerator:
         best_mol = None
         best_energy = float('inf')
         best_converged = False
+        self.used_hex_lattice = False  # reset each call
 
         if use_2d_first:
-            mol_copy = Chem.RWMol(mol)
+            # Produce a kekulized (or de-aromatized) working copy so that
+            # Compute2DCoords, FF setup, etc. don't raise KekulizeException
+            # on non-kekulizable biochar graphs (all 100+ atoms flagged).
+            mol_copy = Chem.RWMol(_kekulize_or_dearomatize(mol))
             try:
                 # 2D-first embedding for large flat aromatics:
                 #  1. Compute 2D layout on the heavy-atom-only scaffold
                 #  2. Place heavy atoms at z=0 (flat PAH)
                 #  3. Compute H positions geometrically (not from 2D conventions)
                 #  4. FF minimization to relax H and functional groups
-
-                # Map heavy-atom index in mol_copy -> position in mol_no_h
                 heavy_atom_indices = [
                     a.GetIdx() for a in mol_copy.GetAtoms() if a.GetAtomicNum() != 1
                 ]
-                mol_no_h = Chem.RemoveAllHs(mol_copy.GetMol())
-                AllChem.Compute2DCoords(mol_no_h)
-                conf_2d = mol_no_h.GetConformer(0)
+                mol_no_h = Chem.RemoveAllHs(mol_copy.GetMol(), sanitize=False)
 
-                # Scale factor: RDKit 2D uses ~1.5 Å for C-C bonds; keep as-is (already Å)
-                heavy_pos = {}  # mol_copy_idx -> np.array([x, y, 0])
+                # --- Layout strategy (priority order) ---
+                # 1. Hex-lattice positions threaded from carbon_skeleton.py
+                #    via atom props init_x / init_y.  Gives perfect 1.42 Å
+                #    aromatic bonds and planar hex geometry for all sizes.
+                # 2. Kamada-Kawai spring layout (fallback when props absent).
+                #    Works well up to ~100 atoms; degrades at 200-500 atoms.
+                skel_pos = _read_skeleton_positions(mol_no_h)
+                n_carbons_nh = sum(
+                    1 for a in mol_no_h.GetAtoms() if a.GetAtomicNum() == 6
+                )
+                use_skel = bool(skel_pos) and len(skel_pos) >= n_carbons_nh
+                if use_skel:
+                    self.used_hex_lattice = True
+
+                flat_heavy = np.zeros((mol_no_h.GetNumAtoms(), 3))
+                if use_skel:
+                    # Carbon positions come directly from hex-lattice geometry.
+                    # Oxygens / other heteroatoms are placed by radiating from
+                    # their tagged parent carbon.
+                    placed: dict = {}
+                    # First pass: place carbons (all tagged)
+                    for atom in mol_no_h.GetAtoms():
+                        idx = atom.GetIdx()
+                        if idx in skel_pos:
+                            flat_heavy[idx] = skel_pos[idx]
+                            placed[idx] = skel_pos[idx]
+                    # Second pass: place untagged heteroatoms (oxygens)
+                    for atom in mol_no_h.GetAtoms():
+                        idx = atom.GetIdx()
+                        if idx not in placed:
+                            pos = _place_untagged_heavy_atom(
+                                mol_no_h, idx, placed,
+                                fallback_pos=flat_heavy[max(placed, key=lambda k: k)] + np.array([1.36, 0.0, 0.0])
+                                if placed else np.zeros(3),
+                            )
+                            flat_heavy[idx] = pos
+                            placed[idx] = pos
+                else:
+                    # Fallback: kamada-kawai spring layout
+                    flat_heavy = _heavy_atom_flat_layout(mol_no_h, seed=self.seed)
+
+                # Map mol_no_h atom indices (0..Nheavy-1) back to mol_copy
+                # heavy-atom indices (which can interleave with H indices).
+                heavy_pos = {}  # mol_copy_idx -> np.array([x, y, z])
                 for nh_idx, orig_idx in enumerate(heavy_atom_indices):
-                    p = conf_2d.GetAtomPosition(nh_idx)
-                    heavy_pos[orig_idx] = np.array([p.x, p.y, 0.0])
+                    heavy_pos[orig_idx] = flat_heavy[nh_idx].copy()
 
                 # Build full coordinate array; start with heavy atoms
                 all_coords = np.zeros((mol_copy.GetNumAtoms(), 3))
@@ -139,6 +545,12 @@ class CoordinateGenerator:
                     bl = 1.09 if par_elem == 6 else 0.96  # C-H or O-H
                     all_coords[idx] = par_pos + h_dir * bl
 
+                # Rotate clashing H atoms to minimise non-bonded contacts.
+                # Called for both the hex-lattice (use_skel=True) and the
+                # Kamada-Kawai fallback paths: both produce a flat z=0 layout,
+                # so out-of-plane sampling (z ≠ 0) is safe and effective.
+                _optimize_h_positions(mol_copy, all_coords)
+
                 # Create 3D conformer
                 conf3d = Chem.Conformer(mol_copy.GetNumAtoms())
                 for i, xyz in enumerate(all_coords):
@@ -147,27 +559,47 @@ class CoordinateGenerator:
                 mol_copy.AddConformer(conf3d, assignId=True)
                 best_mol = mol_copy
 
-                # FF minimization to relax H positions
-                for ff_getter in [
-                    lambda m: AllChem.MMFFGetMoleculeForceField(m),
-                    lambda m: AllChem.UFFGetMoleculeForceField(m),
-                ]:
+                # FF minimization:
+                # When hex-lattice positions are used (use_skel=True) we SKIP the
+                # force field entirely.  The hex lattice gives perfect 1.42 Å CC
+                # bonds; running MMFF/UFF on the dearomatized mol (all-SINGLE bonds)
+                # would incorrectly treat carbons as sp3 and buckle the sheet into a
+                # 3D blob.  H and O positions from geometric placement are good enough
+                # for GROMACS input — the production MD run will relax them further.
+                #
+                # For the KK fallback (use_skel=False) the FF is still useful to
+                # refine bond lengths from the spring layout.
+                if not use_skel:
                     try:
-                        ff = ff_getter(mol_copy.GetMol())
+                        mol_for_ff = mol_copy.GetMol()
+                        mmff_props = AllChem.MMFFGetMoleculeProperties(mol_for_ff)
+                        ff = (
+                            AllChem.MMFFGetMoleculeForceField(mol_for_ff, mmff_props)
+                            if mmff_props is not None
+                            else None
+                        )
+                        if ff is None:
+                            ff = AllChem.UFFGetMoleculeForceField(mol_for_ff)
                         if ff is not None:
                             minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-4)
                             best_converged = minimize_result == 0
                             best_energy = ff.CalcEnergy()
-                            if best_energy < float('inf'):
-                                break
+                            # Pull minimized coordinates back into mol_copy
+                            conf_min = mol_for_ff.GetConformer(0)
+                            conf_target = mol_copy.GetConformer(0)
+                            for i in range(mol_for_ff.GetNumAtoms()):
+                                conf_target.SetAtomPosition(i, conf_min.GetAtomPosition(i))
                     except Exception:
                         pass
             except Exception:
                 best_mol = None
         else:
+            # Kekulize (or de-aromatize on failure) once outside the retry loop
+            # so EmbedMolecule / MMFF don't throw on the same issue repeatedly.
+            mol_safe = _kekulize_or_dearomatize(mol)
             for attempt in range(max_embedding_attempts):
                 seed = (self.seed + attempt) if self.seed is not None else attempt
-                mol_copy = Chem.RWMol(mol)
+                mol_copy = Chem.RWMol(mol_safe)
 
                 result = -1
                 for params_fn in [
@@ -187,12 +619,15 @@ class CoordinateGenerator:
 
                 ff_converged = False
                 ff_energy = float('inf')
+                # MMFF first — requires MMFFMolProperties, else call throws.
                 try:
-                    ff = AllChem.MMFFGetMoleculeForceField(mol_copy)
-                    if ff is not None:
-                        minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
-                        ff_converged = minimize_result == 0
-                        ff_energy = ff.CalcEnergy()
+                    mmff_props = AllChem.MMFFGetMoleculeProperties(mol_copy)
+                    if mmff_props is not None:
+                        ff = AllChem.MMFFGetMoleculeForceField(mol_copy, mmff_props)
+                        if ff is not None:
+                            minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
+                            ff_converged = minimize_result == 0
+                            ff_energy = ff.CalcEnergy()
                 except Exception:
                     pass
 
@@ -310,17 +745,20 @@ class CoordinateGenerator:
         mol.RemoveAllConformers()
         mol.AddConformer(conf)
 
-        # Try MMFF94 force field
+        # Try MMFF94 force field.
+        # NOTE: MMFFGetMoleculeForceField requires MMFFMolProperties.
         try:
-            ff = AllChem.MMFFGetMoleculeForceField(mol)
-            if ff is not None:
-                result = ff.Minimize(maxIts=max_iterations)
-                converged = result == 0
-                conf = mol.GetConformer(0)
-                relaxed_coords = np.array([
-                    list(conf.GetAtomPosition(i)) for i in range(mol.GetNumAtoms())
-                ])
-                return relaxed_coords, converged
+            mmff_props = AllChem.MMFFGetMoleculeProperties(mol)
+            if mmff_props is not None:
+                ff = AllChem.MMFFGetMoleculeForceField(mol, mmff_props)
+                if ff is not None:
+                    result = ff.Minimize(maxIts=max_iterations)
+                    converged = result == 0
+                    conf = mol.GetConformer(0)
+                    relaxed_coords = np.array([
+                        list(conf.GetAtomPosition(i)) for i in range(mol.GetNumAtoms())
+                    ])
+                    return relaxed_coords, converged
         except Exception:
             pass
 
@@ -414,6 +852,11 @@ class ClashResolver:
         """
         Detect steric clashes between atoms.
 
+        1-2 (bonded) and 1-3 (angle) atom pairs are excluded because in flat
+        graphene-like sheets the 1-3 C-C distance is ≈2.46 Å — below the
+        0.75 × vdW threshold (2.55 Å) — so they would produce hundreds of
+        false positives.
+
         Args:
             mol: RDKit molecule
             coords: 3D coordinates
@@ -422,27 +865,32 @@ class ClashResolver:
         Returns:
             List of (atom_i, atom_j) pairs with clashes
         """
+        # Pre-compute 1-2 and 1-3 exclusions (see _get_excluded_pairs).
+        excluded = _get_excluded_pairs(mol)
         clashes = []
         distances = squareform(pdist(coords))
 
         for i in range(mol.GetNumAtoms()):
             for j in range(i + 1, mol.GetNumAtoms()):
-                # Skip bonded atoms
-                if mol.GetBondBetweenAtoms(i, j) is not None:
+                if (i, j) in excluded:
                     continue
 
                 if use_vdw_radii:
-                    # Use Van der Waals radii with 0.2 Å buffer
+                    # A "clash" is real overlap — use 0.75 × vdW-sum as the hard
+                    # threshold. Adding +0.2 to the vdW sum (as the old code did)
+                    # flagged every peri-H in a PAH as a clash, and the resolver
+                    # then destroyed bond geometry trying to fix "clashes" that
+                    # were just normal aromatic-ring proximity.
                     atom_i = mol.GetAtomWithIdx(i)
                     atom_j = mol.GetAtomWithIdx(j)
                     symbol_i = atom_i.GetSymbol()
                     symbol_j = atom_j.GetSymbol()
                     r_vdw_i = VDW_RADII.get(symbol_i, 1.70)
                     r_vdw_j = VDW_RADII.get(symbol_j, 1.70)
-                    min_distance = r_vdw_i + r_vdw_j + 0.2
+                    min_distance = 0.75 * (r_vdw_i + r_vdw_j)
                 else:
                     # Use fixed threshold
-                    min_distance = 2.0
+                    min_distance = 1.5
 
                 if distances[i, j] < min_distance:
                     clashes.append((i, j))
@@ -503,6 +951,12 @@ class GeometryValidator:
         Returns:
             List of error messages with clash severity
         """
+        # Pre-compute 1-2 and 1-3 exclusions: in a flat graphene sheet the
+        # 1-3 C-C distance (≈2.46 Å) falls below the 0.75×vdW threshold
+        # (2.55 Å), so without this exclusion every angle neighbour pair is
+        # reported as a clash.
+        excluded = _get_excluded_pairs(mol)
+
         errors = []
         clashes = []
 
@@ -511,19 +965,20 @@ class GeometryValidator:
 
         for i in range(mol.GetNumAtoms()):
             for j in range(i + 1, mol.GetNumAtoms()):
-                # Skip bonded atoms
-                if mol.GetBondBetweenAtoms(i, j) is not None:
+                if (i, j) in excluded:
                     continue
 
                 atom_i = mol.GetAtomWithIdx(i)
                 atom_j = mol.GetAtomWithIdx(j)
 
-                # Get Van der Waals radii
+                # Get Van der Waals radii. A real clash is atom overlap — use
+                # 0.75 × vdW-sum so that normal non-bonded proximity (e.g. peri
+                # H-H ≈ 1.95 Å in PAHs) is not flagged as a clash.
                 symbol_i = atom_i.GetSymbol()
                 symbol_j = atom_j.GetSymbol()
                 r_vdw_i = VDW_RADII.get(symbol_i, 1.70)
                 r_vdw_j = VDW_RADII.get(symbol_j, 1.70)
-                min_distance = r_vdw_i + r_vdw_j + 0.2  # Use realistic Van der Waals sum
+                min_distance = 0.75 * (r_vdw_i + r_vdw_j)
 
                 distance = distances[i, j]
                 if distance < min_distance:

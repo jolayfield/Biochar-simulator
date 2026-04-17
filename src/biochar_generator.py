@@ -280,14 +280,25 @@ class BiocharGenerator:
         valid, errors = GeometryValidator.validate_geometry(mol, coords)
         steric_clashes = [e for e in errors if "Steric clash" in e]
 
-        # Resolve clashes if found
-        if steric_clashes:
+        # Resolve clashes if found.
+        #
+        # When hex-lattice positions are used (generator.used_hex_lattice is
+        # True), skip ALL clash resolution and FF passes.  The hex lattice
+        # gives perfect 1.42 Å CC bonds; the "clashes" reported are physical
+        # features of fused PAH geometry:
+        #   * Peri C-C at 2.44 Å (bay regions) — real PAH geometry, not a
+        #     clash; below the 0.75×vdW threshold (2.55 Å) but chemically fine.
+        #   * Peri H-C: also within expected PAH ranges.
+        # Displacing ring carbons via the resolver would shatter the ring
+        # geometry.  GROMACS energy minimisation (gmx grompp + em) will relax
+        # H/O positions further before any production MD run.
+        if steric_clashes and not generator.used_hex_lattice:
             # First pass: iterative clash resolution
             coords = ClashResolver.resolve_clashes(
                 mol, coords, max_iterations=15, displacement_step=0.15, use_vdw_radii=True
             )
 
-            # Second pass: force field refinement to optimize geometry
+            # Second pass: force-field refinement.
             coords, _ = generator.validate_and_relax(mol, coords, max_iterations=200)
 
             # Third pass: final clash resolution if needed
@@ -298,6 +309,7 @@ class BiocharGenerator:
                 coords = ClashResolver.resolve_clashes(
                     mol, coords, max_iterations=10, displacement_step=0.08, use_vdw_radii=True
                 )
+                coords, _ = generator.validate_and_relax(mol, coords, max_iterations=200)
 
             # Final validation
             valid, errors = GeometryValidator.validate_geometry(mol, coords)

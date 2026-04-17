@@ -60,6 +60,38 @@ class GROFileWriter:
         if len(molecule_name) > 5:
             print(f"Warning: Residue name '{molecule_name}' exceeds 5 character limit, truncating to '{residue_name}'")
 
+        # Convert coordinates from Ångströms (RDKit) to nanometers (GROMACS)
+        coords_nm = coords * 0.1
+
+        # Compute a valid bounding box and shift so the molecule sits inside it.
+        # A zero-size box (0.0 0.0 0.0) is invalid for VMD/PyMOL/GROMACS — they can't
+        # draw the periodic cell or run minimization. When no box is supplied, build
+        # an orthogonal box around the molecule with 1 nm padding and shift the
+        # coordinates so all atoms are at positive (in-box) positions.
+        if box_vectors is None:
+            mins = coords_nm.min(axis=0)
+            maxs = coords_nm.max(axis=0)
+            extent = maxs - mins
+            padding = 1.0  # nm on each side
+            box = np.maximum(extent + 2.0 * padding, 1.0)
+            shift = padding - mins  # places mins at +padding inside the box
+            coords_nm = coords_nm + shift
+            box_line = f"{box[0]:.5f} {box[1]:.5f} {box[2]:.5f}\n"
+        else:
+            if box_vectors.shape == (3,):
+                box_line = (
+                    f"{box_vectors[0]:.5f} {box_vectors[1]:.5f} "
+                    f"{box_vectors[2]:.5f}\n"
+                )
+            else:
+                box_line = (
+                    f"{box_vectors[0,0]:.5f} {box_vectors[1,1]:.5f} "
+                    f"{box_vectors[2,2]:.5f} {box_vectors[0,1]:.5f} "
+                    f"{box_vectors[0,2]:.5f} {box_vectors[1,0]:.5f} "
+                    f"{box_vectors[1,2]:.5f} {box_vectors[2,0]:.5f} "
+                    f"{box_vectors[2,1]:.5f}\n"
+                )
+
         with open(filepath, "w") as f:
             # Title line
             f.write(f"{title}\n")
@@ -68,15 +100,12 @@ class GROFileWriter:
             f.write(f"{num_atoms:5d}\n")
 
             # Atom lines
-            # Note: RDKit outputs coordinates in Ångströms, but GROMACS expects nanometers
-            # Convert: 1 Å = 0.1 nm
             for atom_idx, atom in enumerate(mol.GetAtoms()):
                 residue_num = 1
                 atom_name = f"{atom.GetSymbol()}{atom_idx:d}"[:5]  # Truncate to 5 chars max
                 atom_num = atom_idx + 1
 
-                # Convert from Ångströms (RDKit) to nanometers (GROMACS)
-                x, y, z = coords[atom_idx] * 0.1
+                x, y, z = coords_nm[atom_idx]
 
                 # Format: residue number, residue name, atom name, atom number, x, y, z
                 # Columns: 1-5 (resnum), 6-10 (resname), 11-15 (atomname), 16-20 (atomnum)
@@ -88,25 +117,8 @@ class GROFileWriter:
                     f"{x:8.3f}{y:8.3f}{z:8.3f}\n"
                 )
 
-            # Box vectors
-            # Note: box_vectors should be in nanometers (nm)
-            if box_vectors is None:
-                # Default: no periodic box
-                f.write("0.0 0.0 0.0\n")
-            else:
-                # Write box vectors (3 numbers: v1x v2y v3z [v1y v1z v2x v2z v3x v3y])
-                # For orthogonal box: just write diagonal (in nm)
-                if box_vectors.shape == (3,):
-                    f.write(f"{box_vectors[0]:.5f} {box_vectors[1]:.5f} {box_vectors[2]:.5f}\n")
-                else:
-                    # Triclinic box (in nm)
-                    f.write(
-                        f"{box_vectors[0,0]:.5f} {box_vectors[1,1]:.5f} "
-                        f"{box_vectors[2,2]:.5f} {box_vectors[0,1]:.5f} "
-                        f"{box_vectors[0,2]:.5f} {box_vectors[1,0]:.5f} "
-                        f"{box_vectors[1,2]:.5f} {box_vectors[2,0]:.5f} "
-                        f"{box_vectors[2,1]:.5f}\n"
-                    )
+            # Box vectors line (nm). Always emit a valid non-zero box.
+            f.write(box_line)
 
 
 class TOPFileWriter:

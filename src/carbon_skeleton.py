@@ -6,14 +6,28 @@ Generates aromatic carbon frameworks for biochar structures using PAHs or random
 
 import math
 import random
-from typing import List, Tuple, Set, Optional
-from dataclasses import dataclass
+from typing import List, Tuple, Set, Optional, Dict
+from dataclasses import dataclass, field
 
 import networkx as nx
+import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors, RWMol
 
 from .constants import PAH_LIBRARY
+
+
+# Target aromatic C–C bond length (Å) for hex-lattice layout.  Used to
+# rescale seed 2D coords from RDKit (which returns ~1.5 Å bonds) and as the
+# edge length for all ring-fusion geometry.
+_AROMATIC_CC_BOND = 1.42
+
+# When position-tracking is active, two computed ring-vertex positions that
+# lie within this distance (Å) of each other are treated as the same atom.
+# This handles shared corners between adjacent hexagons in a fused lattice:
+# both growth fronts independently predict the same Cartesian coordinate for
+# what is physically one carbon atom.
+_POSITION_MERGE_TOLERANCE = 0.05  # Å
 
 
 @dataclass
@@ -25,6 +39,91 @@ class CarbonSkeleton:
     num_carbons: int
     num_aromatic_carbons: int
     aromaticity_percent: float
+
+
+# ---------------------------------------------------------------------------
+# Ring-fusion geometry helpers (propagate hex-lattice positions during growth)
+# ---------------------------------------------------------------------------
+
+def _compute_fused_ring_positions(
+    pu: Tuple[float, float],
+    pv: Tuple[float, float],
+    outward: Tuple[float, float],
+    n_sides: int,
+    num_new: int,
+) -> List[Tuple[float, float]]:
+    """
+    Compute Cartesian positions for *num_new* new vertices of a regular
+    *n_sides*-gon sharing edge (pu, pv), placed on the *outward* side.
+
+    Returns positions in the order matching ``_fuse_hexagon`` /
+    ``_fuse_pentagon``:  v → new[0] → new[1] → … → new[num_new-1] → u.
+    """
+    pu_a = np.array(pu, dtype=float)
+    pv_a = np.array(pv, dtype=float)
+    edge = pv_a - pu_a
+    L = float(np.linalg.norm(edge))
+    if L < 1e-8:
+        # Degenerate; fall back to a small lattice step along +y
+        return [(pu_a[0], pu_a[1] + (i + 1) * _AROMATIC_CC_BOND) for i in range(num_new)]
+
+    e_hat = edge / L
+    # Perpendicular (right-handed in 2D)
+    n_right = np.array([-e_hat[1], e_hat[0]])
+    out = np.array(outward, dtype=float)
+    if np.linalg.norm(out) < 1e-8:
+        out = n_right
+    n_hat = n_right if float(np.dot(n_right, out)) >= 0.0 else -n_right
+
+    apothem = L / (2.0 * math.tan(math.pi / n_sides))
+    R = L / (2.0 * math.sin(math.pi / n_sides))
+    midpoint = (pu_a + pv_a) / 2.0
+    center = midpoint + n_hat * apothem
+
+    theta_v = math.atan2(pv_a[1] - center[1], pv_a[0] - center[0])
+    # Choose angular direction (CCW or CW) so traversal wraps AWAY from the
+    # shared edge (through the new vertices) rather than across it to u.
+    cross = e_hat[0] * n_hat[1] - e_hat[1] * n_hat[0]
+    direction = 1.0 if cross > 0 else -1.0
+
+    step = 2.0 * math.pi / n_sides
+    positions = []
+    for k in range(num_new):
+        theta = theta_v + direction * (k + 1) * step
+        px = center[0] + R * math.cos(theta)
+        py = center[1] + R * math.sin(theta)
+        positions.append((float(px), float(py)))
+    return positions
+
+
+def _outward_direction(
+    G: nx.Graph,
+    positions: Dict[int, Tuple[float, float]],
+    u: int,
+    v: int,
+) -> Tuple[float, float]:
+    """
+    Estimate the outward normal direction at fusable edge (u, v).
+
+    A fusable edge has both endpoints at degree 2.  Each endpoint has
+    exactly one "other neighbour" in the existing graph; those neighbours
+    sit on the interior side.  The outward direction points from their
+    centroid toward the edge midpoint.
+    """
+    mid = ((positions[u][0] + positions[v][0]) / 2.0,
+           (positions[u][1] + positions[v][1]) / 2.0)
+    interior = []
+    for nbr in G.neighbors(u):
+        if nbr != v and nbr in positions:
+            interior.append(positions[nbr])
+    for nbr in G.neighbors(v):
+        if nbr != u and nbr in positions:
+            interior.append(positions[nbr])
+    if not interior:
+        return (0.0, 1.0)
+    cx = sum(p[0] for p in interior) / len(interior)
+    cy = sum(p[1] for p in interior) / len(interior)
+    return (mid[0] - cx, mid[1] - cy)
 
 
 # ---------------------------------------------------------------------------
@@ -44,19 +143,37 @@ def _mol_to_graph(mol: Chem.Mol) -> nx.Graph:
     return G
 
 
-def _graph_to_mol(G: nx.Graph) -> Optional[Chem.Mol]:
+def _graph_to_mol(
+    G: nx.Graph,
+    positions: Optional[Dict[int, Tuple[float, float]]] = None,
+) -> Optional[Chem.Mol]:
     """
     Convert a NetworkX carbon graph to an RDKit Mol.
 
     Uses aromatic bond type so RDKit handles kekulization internally,
     which correctly perceives all fused-ring aromatic carbons.
     Falls back to max-matching Kekule assignment if sanitization fails.
+
+    If *positions* is provided, each carbon atom is tagged with double
+    properties ``init_x`` / ``init_y`` so downstream geometry generation
+    can use the hex-lattice layout directly (bypassing Compute2DCoords /
+    kamada-kawai on large fused graphs).
     """
     if G.number_of_nodes() == 0:
         return None
 
     node_list = sorted(G.nodes())
     node_to_idx = {n: i for i, n in enumerate(node_list)}
+
+    def _attach_positions(m: Chem.Mol) -> None:
+        if positions is None:
+            return
+        for orig_node, idx in node_to_idx.items():
+            if orig_node in positions:
+                x, y = positions[orig_node]
+                atom = m.GetAtomWithIdx(idx)
+                atom.SetDoubleProp("init_x", float(x))
+                atom.SetDoubleProp("init_y", float(y))
 
     # Primary: all-aromatic bonds, let SanitizeMol kekulize
     rwmol = RWMol()
@@ -70,6 +187,7 @@ def _graph_to_mol(G: nx.Graph) -> Optional[Chem.Mol]:
     try:
         Chem.SanitizeMol(mol)
         Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
+        _attach_positions(mol)
         return mol
     except Exception:
         pass
@@ -94,6 +212,7 @@ def _graph_to_mol(G: nx.Graph) -> Optional[Chem.Mol]:
     try:
         Chem.SanitizeMol(mol2)
         Chem.SetAromaticity(mol2, Chem.AromaticityModel.AROMATICITY_MDL)
+        _attach_positions(mol2)
         return mol2
     except Exception:
         return None
@@ -193,29 +312,132 @@ def _hex_spiral(n: int) -> List[Tuple[int, int]]:
 # Ring-growth engine (shared by PAHAssembler and RandomGraphGenerator)
 # ---------------------------------------------------------------------------
 
-def _fuse_hexagon(G: nx.Graph, u: int, v: int, next_node: int) -> int:
-    """Fuse a 6-membered ring onto edge (u, v), adding 4 new nodes. Returns next free node id."""
-    new_nodes = list(range(next_node, next_node + 4))
-    for n in new_nodes:
-        G.add_node(n)
-    G.add_edge(v, new_nodes[0])
-    G.add_edge(new_nodes[0], new_nodes[1])
-    G.add_edge(new_nodes[1], new_nodes[2])
-    G.add_edge(new_nodes[2], new_nodes[3])
-    G.add_edge(new_nodes[3], u)
-    return next_node + 4
+def _find_node_at_position(
+    positions: Dict[int, Tuple[float, float]],
+    target: Tuple[float, float],
+    tolerance: float = _POSITION_MERGE_TOLERANCE,
+) -> Optional[int]:
+    """
+    Return the id of a node already at *target* (within *tolerance* Å),
+    or ``None`` if no such node exists.
+
+    Called during ring fusion to detect shared corners in the hex lattice:
+    when a newly-computed vertex position coincides with an existing node the
+    two should be the same atom, not independent duplicates.
+    """
+    tx, ty = target
+    for node_id, (px, py) in positions.items():
+        if math.hypot(px - tx, py - ty) < tolerance:
+            return node_id
+    return None
 
 
-def _fuse_pentagon(G: nx.Graph, u: int, v: int, next_node: int) -> int:
-    """Fuse a 5-membered ring onto edge (u, v), adding 3 new nodes. Returns next free node id."""
-    new_nodes = list(range(next_node, next_node + 3))
-    for n in new_nodes:
-        G.add_node(n)
-    G.add_edge(v, new_nodes[0])
-    G.add_edge(new_nodes[0], new_nodes[1])
-    G.add_edge(new_nodes[1], new_nodes[2])
-    G.add_edge(new_nodes[2], u)
-    return next_node + 3
+def _fuse_hexagon(
+    G: nx.Graph,
+    u: int,
+    v: int,
+    next_node: int,
+    positions: Optional[Dict[int, Tuple[float, float]]] = None,
+) -> int:
+    """
+    Fuse a 6-membered ring onto edge (u, v).
+
+    When *positions* is provided the four ring vertices are located
+    analytically **before** any graph modification.  If a computed position
+    coincides with an existing node (within ``_POSITION_MERGE_TOLERANCE``)
+    that node is **reused** rather than duplicated — correctly modelling the
+    shared-corner topology of a graphene lattice when two growth fronts meet.
+
+    Returns the next free node id.
+    """
+    if positions is not None and u in positions and v in positions:
+        # 1. Compute the four vertex positions of the new ring FIRST.
+        outward = _outward_direction(G, positions, u, v)
+        new_pos_list = _compute_fused_ring_positions(
+            positions[u], positions[v], outward, n_sides=6, num_new=4
+        )
+
+        # 2. For each vertex: reuse an existing node if the position is
+        #    already occupied, otherwise allocate a fresh node.
+        new_nodes: List[int] = []
+        for pos in new_pos_list:
+            existing = _find_node_at_position(positions, pos)
+            if existing is not None:
+                new_nodes.append(existing)
+            else:
+                G.add_node(next_node)
+                positions[next_node] = pos
+                new_nodes.append(next_node)
+                next_node += 1
+
+        # 3. Add the ring edges (nx.Graph silently ignores duplicate edges).
+        ring_seq = [v, new_nodes[0], new_nodes[1], new_nodes[2], new_nodes[3], u]
+        for a, b in zip(ring_seq, ring_seq[1:]):
+            G.add_edge(a, b)
+
+        return next_node
+
+    else:
+        # No position tracking: original behaviour (always allocate 4 new nodes).
+        new_nodes = list(range(next_node, next_node + 4))
+        for n in new_nodes:
+            G.add_node(n)
+        G.add_edge(v, new_nodes[0])
+        G.add_edge(new_nodes[0], new_nodes[1])
+        G.add_edge(new_nodes[1], new_nodes[2])
+        G.add_edge(new_nodes[2], new_nodes[3])
+        G.add_edge(new_nodes[3], u)
+        return next_node + 4
+
+
+def _fuse_pentagon(
+    G: nx.Graph,
+    u: int,
+    v: int,
+    next_node: int,
+    positions: Optional[Dict[int, Tuple[float, float]]] = None,
+) -> int:
+    """
+    Fuse a 5-membered ring onto edge (u, v).
+
+    Applies the same position-merge logic as ``_fuse_hexagon``: computed
+    vertices that coincide with existing nodes are reused rather than
+    duplicated.
+
+    Returns the next free node id.
+    """
+    if positions is not None and u in positions and v in positions:
+        outward = _outward_direction(G, positions, u, v)
+        new_pos_list = _compute_fused_ring_positions(
+            positions[u], positions[v], outward, n_sides=5, num_new=3
+        )
+
+        new_nodes: List[int] = []
+        for pos in new_pos_list:
+            existing = _find_node_at_position(positions, pos)
+            if existing is not None:
+                new_nodes.append(existing)
+            else:
+                G.add_node(next_node)
+                positions[next_node] = pos
+                new_nodes.append(next_node)
+                next_node += 1
+
+        ring_seq = [v, new_nodes[0], new_nodes[1], new_nodes[2], u]
+        for a, b in zip(ring_seq, ring_seq[1:]):
+            G.add_edge(a, b)
+
+        return next_node
+
+    else:
+        new_nodes = list(range(next_node, next_node + 3))
+        for n in new_nodes:
+            G.add_node(n)
+        G.add_edge(v, new_nodes[0])
+        G.add_edge(new_nodes[0], new_nodes[1])
+        G.add_edge(new_nodes[1], new_nodes[2])
+        G.add_edge(new_nodes[2], u)
+        return next_node + 3
 
 
 def _grow_graph(
@@ -223,6 +445,7 @@ def _grow_graph(
     target_nodes: int,
     seed: Optional[int] = None,
     defect_fraction: float = 0.0,
+    positions: Optional[Dict[int, Tuple[float, float]]] = None,
 ) -> nx.Graph:
     """
     Grow a carbon graph by iteratively fusing rings.
@@ -256,10 +479,18 @@ def _grow_graph(
     rng = random.Random(seed)
     next_node = max(G.nodes()) + 1 if G.nodes() else 0
 
-    # Minimum nodes added per step (3 for pentagon, 4 for hexagon)
-    min_step = 3 if defect_fraction > 0 else 4
+    # When position-tracking is active some ring fusions add zero new nodes
+    # (shared corners are merged into existing nodes).  We must therefore
+    # continue the loop until the *unique* node count reaches target_nodes,
+    # not merely until we've attempted target/min_step iterations.
+    #
+    # For the common no-merging case the two conditions are equivalent:
+    # the seed is chosen so (target - seed) % 4 == 0, each step adds
+    # exactly 4 nodes, and we reach target_nodes on the last iteration
+    # regardless of whether the guard reads  "< target"  or
+    # "+ 4 <= target".
 
-    while G.number_of_nodes() + min_step <= target_nodes:
+    while G.number_of_nodes() < target_nodes:
         fusable = _get_fusable_edges(G)
         if not fusable:
             break
@@ -270,13 +501,11 @@ def _grow_graph(
 
         nodes_remaining = target_nodes - G.number_of_nodes()
 
-        # Decide ring size for this step:
-        # - Use a pentagon if defect_fraction says so AND at least 4 nodes remain
-        #   (so we can't accidentally overshoot by going pentagon when only 3 remain
-        #    and a hexagon would have been fine — a pentagon is always used when
-        #    exactly 3 nodes remain and defects are enabled).
+        # Decide ring size for this step.
+        # Pentagon adds ≤ 3 new nodes; hexagon adds ≤ 4.
+        # In defect mode: if exactly 3 slots remain use a pentagon so we
+        # land on the target rather than overshooting by 1.
         if defect_fraction > 0 and nodes_remaining == 3:
-            # Only a pentagon fits exactly; hexagon would overshoot
             use_pentagon = True
         elif defect_fraction > 0 and nodes_remaining >= 4:
             use_pentagon = rng.random() < defect_fraction
@@ -284,24 +513,68 @@ def _grow_graph(
             use_pentagon = False
 
         if use_pentagon:
-            next_node = _fuse_pentagon(G, u, v, next_node)
+            next_node = _fuse_pentagon(G, u, v, next_node, positions=positions)
         else:
-            next_node = _fuse_hexagon(G, u, v, next_node)
+            next_node = _fuse_hexagon(G, u, v, next_node, positions=positions)
+
+    # When position-tracking was active, some ring fusions may have created
+    # non-adjacent pairs at bond distance (1.42 Å) that were never directly
+    # bonded (see ``_add_missing_lattice_bonds`` docstring).  Fix these before
+    # building the mol so the graph has the correct topology.  The 1.45 Å
+    # tolerance safely distinguishes genuine bonds from all non-bonded C-C
+    # pairs (min non-bonded = 2.30 Å in pentagons, 2.46 Å in hexagons).
+    if positions is not None:
+        _add_missing_lattice_bonds(G, positions)
 
     # Parity guard: ensure even node count for Kekulé assignment.
-    if G.number_of_nodes() % 2 != 0:
+    # Run as a bounded loop: when position-merging is active a single ring
+    # fusion may add zero new nodes (all corners merged), leaving the count
+    # still odd — we must try additional edges until parity is restored or
+    # no more fusable edges remain.
+    _parity_limit = max(10, G.number_of_nodes())
+    for _ in range(_parity_limit):
+        if G.number_of_nodes() % 2 == 0:
+            break
         fusable = _get_fusable_edges(G)
-        if fusable:
-            fusable.sort(key=lambda e: (-_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
-            u, v = fusable[0]
-            if defect_fraction > 0:
-                # Pentagon adds 3 (odd) → odd + 3 = even  ✓
-                next_node = _fuse_pentagon(G, u, v, next_node)
-            else:
-                # Hexagon adds 4 (even) → pure-hexagon safety net
-                next_node = _fuse_hexagon(G, u, v, next_node)
+        if not fusable:
+            break
+        fusable.sort(key=lambda e: (-_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
+        u, v = fusable[0]
+        if defect_fraction > 0:
+            # Pentagon adds odd → odd + odd = even  ✓
+            next_node = _fuse_pentagon(G, u, v, next_node, positions=positions)
+        else:
+            # Hexagon adds even → pure-hexagon safety net
+            next_node = _fuse_hexagon(G, u, v, next_node, positions=positions)
 
     return G
+
+
+def _add_missing_lattice_bonds(
+    G: nx.Graph,
+    positions: Dict[int, Tuple[float, float]],
+    tolerance: float = 1.45,
+) -> None:
+    """
+    Add any bond-distance C-C bonds that are missing from the graph.
+
+    This can occur when position-merging places two existing nodes at adjacent
+    hex-lattice sites (1.42 Å) as non-adjacent members of the same fused ring
+    (e.g. positions new[0] and new[3]).  The ring-sequence edges connect them
+    through intermediates but not directly; the direct edge must be added here.
+
+    The tolerance (1.45 Å < 2.46 Å = min non-bonded distance in graphene)
+    guarantees that only genuine lattice bonds are added, never spurious ones.
+
+    Operates **in place** on G.
+    """
+    pos_list = [(n, positions[n]) for n in G.nodes() if n in positions]
+    for i, (na, (ax, ay)) in enumerate(pos_list):
+        for nb, (bx, by) in pos_list[i + 1:]:
+            if G.has_edge(na, nb):
+                continue
+            if math.hypot(ax - bx, ay - by) < tolerance:
+                G.add_edge(na, nb)
 
 
 def _get_fusable_edges(G: nx.Graph) -> List[Tuple[int, int]]:
@@ -355,6 +628,52 @@ class PAHAssembler:
                 [(info["num_carbons"], name) for name, info in self.pahs.items()]
             )
 
+    @staticmethod
+    def _compute_seed_positions(
+        seed_mol: Chem.Mol,
+    ) -> Optional[Dict[int, Tuple[float, float]]]:
+        """
+        Generate 2D positions for a library PAH seed and rescale so the
+        mean C–C bond length equals ``_AROMATIC_CC_BOND``.
+
+        Works reliably on small library PAHs (benzene, naphthalene,
+        pyrene, coronene, …) where RDKit's Compute2DCoords produces a
+        clean hexagonal layout.  Returns ``None`` if the layout can't be
+        computed.
+        """
+        try:
+            mol = Chem.Mol(seed_mol)
+            AllChem.Compute2DCoords(mol)
+            conf = mol.GetConformer()
+            positions: Dict[int, Tuple[float, float]] = {}
+            for atom in mol.GetAtoms():
+                if atom.GetAtomicNum() != 6:
+                    continue
+                p = conf.GetAtomPosition(atom.GetIdx())
+                positions[atom.GetIdx()] = (float(p.x), float(p.y))
+            if not positions:
+                return None
+
+            # Rescale so mean bond length ≈ _AROMATIC_CC_BOND (RDKit's 2D
+            # coords come out with ~1.5 Å bonds; we want 1.42 Å).
+            bond_lengths = []
+            for bond in mol.GetBonds():
+                a, b = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+                if a in positions and b in positions:
+                    dx = positions[a][0] - positions[b][0]
+                    dy = positions[a][1] - positions[b][1]
+                    bond_lengths.append(math.hypot(dx, dy))
+            if bond_lengths:
+                mean_bl = sum(bond_lengths) / len(bond_lengths)
+                if mean_bl > 1e-6:
+                    scale = _AROMATIC_CC_BOND / mean_bl
+                    positions = {
+                        k: (v[0] * scale, v[1] * scale) for k, v in positions.items()
+                    }
+            return positions
+        except Exception:
+            return None
+
     def generate(
         self,
         target_num_carbons: int,
@@ -381,6 +700,17 @@ class PAHAssembler:
             for name, info in self.pahs.items():
                 if info["num_carbons"] == target_num_carbons:
                     mol = Chem.Mol(info["mol"])
+                    # Attach hex-lattice positions from Compute2DCoords so
+                    # downstream geometry generation preserves planarity and
+                    # uniform bond lengths.
+                    seed_positions = self._compute_seed_positions(mol)
+                    if seed_positions:
+                        for atom in mol.GetAtoms():
+                            idx = atom.GetIdx()
+                            if idx in seed_positions:
+                                x, y = seed_positions[idx]
+                                atom.SetDoubleProp("init_x", x)
+                                atom.SetDoubleProp("init_y", y)
                     break
 
         # --- Route 2: library seed + graph growth (with optional pentagons) ---
@@ -390,6 +720,14 @@ class PAHAssembler:
         # --- Fallback: pyrene (no pentagons) ---
         if mol is None:
             mol = Chem.Mol(self.pahs["pyrene"]["mol"])
+            seed_positions = self._compute_seed_positions(mol)
+            if seed_positions:
+                for atom in mol.GetAtoms():
+                    idx = atom.GetIdx()
+                    if idx in seed_positions:
+                        x, y = seed_positions[idx]
+                        atom.SetDoubleProp("init_x", x)
+                        atom.SetDoubleProp("init_y", y)
 
         Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
         return self._make_skeleton(mol)
@@ -434,12 +772,27 @@ class PAHAssembler:
                 seed_mol = Chem.MolFromSmiles(PAH_LIBRARY["benzene"]["smiles"])
                 seed_carbons = 6
 
+            seed_positions = self._compute_seed_positions(seed_mol)
+
             if seed_carbons >= target:
-                return Chem.Mol(seed_mol)
+                out = Chem.Mol(seed_mol)
+                if seed_positions:
+                    for atom in out.GetAtoms():
+                        idx = atom.GetIdx()
+                        if idx in seed_positions:
+                            x, y = seed_positions[idx]
+                            atom.SetDoubleProp("init_x", x)
+                            atom.SetDoubleProp("init_y", y)
+                return out
 
             G = _mol_to_graph(seed_mol)
-            G = _grow_graph(G, target, seed=self.seed, defect_fraction=0.0)
-            return _graph_to_mol(G)
+            # Copy positions so _grow_graph / _fuse_* can mutate in place
+            grown_positions = dict(seed_positions) if seed_positions else None
+            G = _grow_graph(
+                G, target, seed=self.seed, defect_fraction=0.0,
+                positions=grown_positions,
+            )
+            return _graph_to_mol(G, positions=grown_positions)
 
         else:
             # --- Defect mode: relax parity, retry on kekulization failure ---
@@ -456,18 +809,30 @@ class PAHAssembler:
                 seed_mol = Chem.MolFromSmiles(PAH_LIBRARY["benzene"]["smiles"])
                 seed_carbons = 6
 
+            seed_positions = self._compute_seed_positions(seed_mol)
+
             if seed_carbons >= target:
-                return Chem.Mol(seed_mol)
+                out = Chem.Mol(seed_mol)
+                if seed_positions:
+                    for atom in out.GetAtoms():
+                        idx = atom.GetIdx()
+                        if idx in seed_positions:
+                            x, y = seed_positions[idx]
+                            atom.SetDoubleProp("init_x", x)
+                            atom.SetDoubleProp("init_y", y)
+                return out
 
             base_seed = self.seed if self.seed is not None else 0
             for attempt in range(_MAX_DEFECT_RETRIES):
                 G = _mol_to_graph(seed_mol)
+                grown_positions = dict(seed_positions) if seed_positions else None
                 G = _grow_graph(
                     G, target,
                     seed=base_seed + attempt,
                     defect_fraction=defect_fraction,
+                    positions=grown_positions,
                 )
-                mol = _graph_to_mol(G)
+                mol = _graph_to_mol(G, positions=grown_positions)
                 if mol is not None:
                     return mol
                 # kekulization failed — try again with a different sub-seed
