@@ -62,6 +62,10 @@ class GeneratorConfig:
     # Random seed for reproducibility
     seed: Optional[int] = None
 
+    # Ring defects: probability [0, 1) that each ring addition is a pentagon.
+    # 0.0 = pure hexagonal PAH (default).  0.1 ≈ 10% pentagons.
+    defect_fraction: float = 0.0
+
     def __post_init__(self):
         # functional_groups defaults to None → O_C_ratio-driven phenolic placement
         # (no default list here; OxygenAssigner handles the None case)
@@ -221,6 +225,7 @@ class BiocharGenerator:
         skeleton = assembler.generate(
             self.config.target_num_carbons,
             self.config.aromaticity_percent,
+            defect_fraction=self.config.defect_fraction,
         )
 
         # Validate skeleton
@@ -355,6 +360,7 @@ def generate_biochar(
     O_C_ratio: float = 0.1,
     aromaticity_percent: float = 90.0,
     functional_groups: Optional[Dict[str, int]] = None,
+    defect_fraction: float = 0.0,
     output_directory: str = ".",
     basename: str = "biochar",
     molecule_name: str = "BC",
@@ -384,6 +390,10 @@ def generate_biochar(
 
             If ``None`` (default), the total oxygen count is derived from
             *O_C_ratio* and placed as phenolic (–OH) groups.
+        defect_fraction: Probability [0, 1) that each ring added during
+            skeleton growth is a 5-membered (pentagon) ring rather than a
+            hexagon.  0.0 (default) = pure hexagonal PAH.  Values ~0.1–0.2
+            introduce realistic topological disorder.
         output_directory: Output directory for GROMACS files.
         basename: Base filename for output files.
         molecule_name: Residue name (max 5 chars). Suggested: BC400, BC600,
@@ -399,6 +409,7 @@ def generate_biochar(
         O_C_ratio=O_C_ratio,
         aromaticity_percent=aromaticity_percent,
         functional_groups=functional_groups,
+        defect_fraction=defect_fraction,
         molecule_name=molecule_name,
         seed=seed,
     )
@@ -593,6 +604,7 @@ def generate_surface(
     H_C_ratio: float = 0.3,
     O_C_ratio: float = 0.05,
     functional_groups: Optional[Dict[str, int]] = None,
+    defect_fraction: float = 0.0,
     pore_diameter: float = 10.0,
     num_sheets: int = 2,
     sheet_overrides: Optional[List[Dict]] = None,
@@ -664,6 +676,7 @@ def generate_surface(
         O_C_ratio=O_C_ratio,
         functional_groups=functional_groups,
         aromaticity_percent=95.0,
+        defect_fraction=defect_fraction,
         pore_type="slit",
         num_sheets=num_sheets,
         pore_diameter=pore_diameter,

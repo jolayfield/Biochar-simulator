@@ -193,21 +193,61 @@ def _hex_spiral(n: int) -> List[Tuple[int, int]]:
 # Ring-growth engine (shared by PAHAssembler and RandomGraphGenerator)
 # ---------------------------------------------------------------------------
 
-def _grow_graph(G: nx.Graph, target_nodes: int, seed: Optional[int] = None) -> nx.Graph:
+def _fuse_hexagon(G: nx.Graph, u: int, v: int, next_node: int) -> int:
+    """Fuse a 6-membered ring onto edge (u, v), adding 4 new nodes. Returns next free node id."""
+    new_nodes = list(range(next_node, next_node + 4))
+    for n in new_nodes:
+        G.add_node(n)
+    G.add_edge(v, new_nodes[0])
+    G.add_edge(new_nodes[0], new_nodes[1])
+    G.add_edge(new_nodes[1], new_nodes[2])
+    G.add_edge(new_nodes[2], new_nodes[3])
+    G.add_edge(new_nodes[3], u)
+    return next_node + 4
+
+
+def _fuse_pentagon(G: nx.Graph, u: int, v: int, next_node: int) -> int:
+    """Fuse a 5-membered ring onto edge (u, v), adding 3 new nodes. Returns next free node id."""
+    new_nodes = list(range(next_node, next_node + 3))
+    for n in new_nodes:
+        G.add_node(n)
+    G.add_edge(v, new_nodes[0])
+    G.add_edge(new_nodes[0], new_nodes[1])
+    G.add_edge(new_nodes[1], new_nodes[2])
+    G.add_edge(new_nodes[2], u)
+    return next_node + 3
+
+
+def _grow_graph(
+    G: nx.Graph,
+    target_nodes: int,
+    seed: Optional[int] = None,
+    defect_fraction: float = 0.0,
+) -> nx.Graph:
     """
-    Grow a carbon graph by iteratively fusing 6-membered rings.
+    Grow a carbon graph by iteratively fusing rings.
 
-    Each new ring shares one edge with the existing graph and adds 4
-    new carbon nodes.  The algorithm prefers edges whose neighbours have
-    higher total degree, promoting compact 2D growth.
+    By default only 6-membered rings are added (+4 nodes each).  When
+    *defect_fraction* > 0 the algorithm occasionally fuses a 5-membered
+    ring (+3 nodes) instead, introducing pentagonal defects analogous to
+    those observed in disordered graphitic carbon.
 
-    A parity guard ensures the graph always has an even number of nodes
-    (required for Kekule / perfect-matching assignment).
+    Each new ring shares one edge with the existing graph.  The algorithm
+    prefers edges whose neighbours have higher total degree, promoting
+    compact 2D growth.
+
+    A parity guard ensures the final graph has an even number of nodes
+    (required for a valid Kekulé / perfect-matching assignment):
+      - Pure hexagon mode (defect_fraction == 0): adds one extra hexagon.
+      - Defect mode (defect_fraction >  0): adds one extra pentagon
+        because odd + 3 = even, whereas odd + 4 remains odd.
 
     Args:
         G: Seed graph (will NOT be mutated; a copy is made).
         target_nodes: Desired number of nodes.
-        seed: Optional RNG seed for tie-breaking.
+        seed: Optional RNG seed for tie-breaking and pentagon selection.
+        defect_fraction: Probability [0, 1) that any given ring addition
+            is a 5-membered (pentagon) ring rather than a 6-membered ring.
 
     Returns:
         Grown graph (new object).
@@ -216,7 +256,10 @@ def _grow_graph(G: nx.Graph, target_nodes: int, seed: Optional[int] = None) -> n
     rng = random.Random(seed)
     next_node = max(G.nodes()) + 1 if G.nodes() else 0
 
-    while G.number_of_nodes() + 4 <= target_nodes:
+    # Minimum nodes added per step (3 for pentagon, 4 for hexagon)
+    min_step = 3 if defect_fraction > 0 else 4
+
+    while G.number_of_nodes() + min_step <= target_nodes:
         fusable = _get_fusable_edges(G)
         if not fusable:
             break
@@ -225,31 +268,38 @@ def _grow_graph(G: nx.Graph, target_nodes: int, seed: Optional[int] = None) -> n
         fusable.sort(key=lambda e: (-_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
         u, v = fusable[0]
 
-        # Add 4 new nodes forming a new 6-membered ring sharing edge u-v
-        new_nodes = list(range(next_node, next_node + 4))
-        next_node += 4
-        for n in new_nodes:
-            G.add_node(n)
-        G.add_edge(v, new_nodes[0])
-        G.add_edge(new_nodes[0], new_nodes[1])
-        G.add_edge(new_nodes[1], new_nodes[2])
-        G.add_edge(new_nodes[2], new_nodes[3])
-        G.add_edge(new_nodes[3], u)
+        nodes_remaining = target_nodes - G.number_of_nodes()
 
-    # Parity guard: if odd node count, try adding one more ring
+        # Decide ring size for this step:
+        # - Use a pentagon if defect_fraction says so AND at least 4 nodes remain
+        #   (so we can't accidentally overshoot by going pentagon when only 3 remain
+        #    and a hexagon would have been fine — a pentagon is always used when
+        #    exactly 3 nodes remain and defects are enabled).
+        if defect_fraction > 0 and nodes_remaining == 3:
+            # Only a pentagon fits exactly; hexagon would overshoot
+            use_pentagon = True
+        elif defect_fraction > 0 and nodes_remaining >= 4:
+            use_pentagon = rng.random() < defect_fraction
+        else:
+            use_pentagon = False
+
+        if use_pentagon:
+            next_node = _fuse_pentagon(G, u, v, next_node)
+        else:
+            next_node = _fuse_hexagon(G, u, v, next_node)
+
+    # Parity guard: ensure even node count for Kekulé assignment.
     if G.number_of_nodes() % 2 != 0:
         fusable = _get_fusable_edges(G)
         if fusable:
             fusable.sort(key=lambda e: (-_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
             u, v = fusable[0]
-            new_nodes = list(range(next_node, next_node + 4))
-            for n in new_nodes:
-                G.add_node(n)
-            G.add_edge(v, new_nodes[0])
-            G.add_edge(new_nodes[0], new_nodes[1])
-            G.add_edge(new_nodes[1], new_nodes[2])
-            G.add_edge(new_nodes[2], new_nodes[3])
-            G.add_edge(new_nodes[3], u)
+            if defect_fraction > 0:
+                # Pentagon adds 3 (odd) → odd + 3 = even  ✓
+                next_node = _fuse_pentagon(G, u, v, next_node)
+            else:
+                # Hexagon adds 4 (even) → pure-hexagon safety net
+                next_node = _fuse_hexagon(G, u, v, next_node)
 
     return G
 
@@ -310,21 +360,34 @@ class PAHAssembler:
         target_num_carbons: int,
         target_aromaticity: float = 100.0,
         prefer_larger_pahs: bool = True,
+        defect_fraction: float = 0.0,
     ) -> CarbonSkeleton:
-        """Generate a PAH carbon skeleton of approximately *target_num_carbons*."""
+        """
+        Generate a carbon skeleton of approximately *target_num_carbons*.
+
+        Args:
+            target_num_carbons: Desired carbon count.
+            target_aromaticity: Unused (kept for backward compatibility).
+                Aromaticity is an output determined by the ring topology.
+            defect_fraction: Probability [0, 1) that any ring addition
+                during graph growth is a 5-membered (pentagon) ring.
+                0.0 = pure hexagonal PAH (default).
+                0.1 = roughly 10% pentagons.
+        """
         mol = None
 
-        # --- Route 1: exact library match ---
-        for name, info in self.pahs.items():
-            if info["num_carbons"] == target_num_carbons:
-                mol = Chem.Mol(info["mol"])
-                break
+        if defect_fraction <= 0.0:
+            # --- Route 1: exact library match (only for pure hexagon mode) ---
+            for name, info in self.pahs.items():
+                if info["num_carbons"] == target_num_carbons:
+                    mol = Chem.Mol(info["mol"])
+                    break
 
-        # --- Route 2: library seed + graph growth ---
+        # --- Route 2: library seed + graph growth (with optional pentagons) ---
         if mol is None:
-            mol = self._build_from_seed(target_num_carbons)
+            mol = self._build_from_seed(target_num_carbons, defect_fraction)
 
-        # --- Fallback: pyrene ---
+        # --- Fallback: pyrene (no pentagons) ---
         if mol is None:
             mol = Chem.Mol(self.pahs["pyrene"]["mol"])
 
@@ -335,39 +398,81 @@ class PAHAssembler:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _build_from_seed(self, target: int) -> Optional[Chem.Mol]:
+    def _build_from_seed(
+        self, target: int, defect_fraction: float = 0.0
+    ) -> Optional[Chem.Mol]:
         """
-        Build a PAH of *target* carbons using a library seed plus graph growth.
+        Build a carbon skeleton of *target* carbons using a library seed
+        plus ring-growth.
 
-        Seed selection uses parity: each ring addition in _grow_graph adds
-        exactly 4 nodes, so we need (target - seed_size) % 4 == 0.  Starting
-        from an even seed and adding 4 at a time always produces an even node
-        count, which is required for a valid Kekule structure.
+        Pure hexagon mode (defect_fraction == 0):
+            Each ring addition adds exactly 4 nodes, so seed selection uses
+            the parity constraint (target - seed_size) % 4 == 0.
+
+        Defect mode (defect_fraction > 0):
+            Pentagon additions add 3 nodes, so the parity constraint is
+            relaxed — any even-count seed works because the growth loop
+            handles parity itself.  Up to *_MAX_DEFECT_RETRIES* attempts
+            are made with different sub-seeds if kekulization fails.
         """
-        # Pick the largest library PAH where (target - nC) % 4 == 0 and nC <= target
-        seed_mol = None
-        seed_carbons = 0
-        for nC, name in reversed(self._SIZE_INDEX):
-            if nC <= target and (target - nC) % 4 == 0 and name in self.pahs:
-                seed_mol = self.pahs[name]["mol"]
-                seed_carbons = nC
-                break
+        _MAX_DEFECT_RETRIES = 5
 
-        if seed_mol is None:
-            # No library match with correct parity; round target up to nearest valid size
-            # from benzene (6C): valid targets are 6 + 4k
-            rem = (target - 6) % 4
-            if rem != 0:
-                target = target + (4 - rem)
-            seed_mol = Chem.MolFromSmiles(PAH_LIBRARY["benzene"]["smiles"])
-            seed_carbons = 6
+        if defect_fraction <= 0.0:
+            # --- Pure hexagon: strict parity constraint ---
+            seed_mol = None
+            seed_carbons = 0
+            for nC, name in reversed(self._SIZE_INDEX):
+                if nC <= target and (target - nC) % 4 == 0 and name in self.pahs:
+                    seed_mol = self.pahs[name]["mol"]
+                    seed_carbons = nC
+                    break
 
-        if seed_carbons >= target:
-            return Chem.Mol(seed_mol)
+            if seed_mol is None:
+                rem = (target - 6) % 4
+                if rem != 0:
+                    target = target + (4 - rem)
+                seed_mol = Chem.MolFromSmiles(PAH_LIBRARY["benzene"]["smiles"])
+                seed_carbons = 6
 
-        G = _mol_to_graph(seed_mol)
-        G = _grow_graph(G, target, seed=self.seed)
-        return _graph_to_mol(G)
+            if seed_carbons >= target:
+                return Chem.Mol(seed_mol)
+
+            G = _mol_to_graph(seed_mol)
+            G = _grow_graph(G, target, seed=self.seed, defect_fraction=0.0)
+            return _graph_to_mol(G)
+
+        else:
+            # --- Defect mode: relax parity, retry on kekulization failure ---
+            # Use the largest even-count library seed that fits
+            seed_mol = None
+            seed_carbons = 0
+            for nC, name in reversed(self._SIZE_INDEX):
+                if nC <= target and name in self.pahs:
+                    seed_mol = self.pahs[name]["mol"]
+                    seed_carbons = nC
+                    break
+
+            if seed_mol is None:
+                seed_mol = Chem.MolFromSmiles(PAH_LIBRARY["benzene"]["smiles"])
+                seed_carbons = 6
+
+            if seed_carbons >= target:
+                return Chem.Mol(seed_mol)
+
+            base_seed = self.seed if self.seed is not None else 0
+            for attempt in range(_MAX_DEFECT_RETRIES):
+                G = _mol_to_graph(seed_mol)
+                G = _grow_graph(
+                    G, target,
+                    seed=base_seed + attempt,
+                    defect_fraction=defect_fraction,
+                )
+                mol = _graph_to_mol(G)
+                if mol is not None:
+                    return mol
+                # kekulization failed — try again with a different sub-seed
+
+            return None  # all retries exhausted
 
     @staticmethod
     def _make_skeleton(mol: Chem.Mol) -> CarbonSkeleton:

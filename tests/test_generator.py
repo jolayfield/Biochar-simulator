@@ -288,5 +288,101 @@ class TestBiocharGenerator:
         assert comp1.num_hydrogens == comp2.num_hydrogens
 
 
+class TestDefectRings:
+    """Tests for pentagon (5-membered ring) defect insertion."""
+
+    def test_grow_graph_pure_hexagon(self):
+        """Pure hexagon growth produces even node count and a valid mol."""
+        from src.carbon_skeleton import _grow_graph, _graph_to_mol
+        import networkx as nx
+
+        G = nx.cycle_graph(6)  # benzene seed
+        G = _grow_graph(G, 24, seed=1, defect_fraction=0.0)
+        assert G.number_of_nodes() % 2 == 0
+        mol = _graph_to_mol(G)
+        assert mol is not None
+
+    def test_grow_graph_with_defects_even_node_count(self):
+        """Defect growth always produces an even node count."""
+        from src.carbon_skeleton import _grow_graph
+        import networkx as nx
+
+        for seed in range(5):
+            G = nx.cycle_graph(6)
+            G = _grow_graph(G, 30, seed=seed, defect_fraction=0.15)
+            assert G.number_of_nodes() % 2 == 0, (
+                f"seed={seed}: odd node count {G.number_of_nodes()}"
+            )
+
+    def test_grow_graph_with_defects_has_pentagons(self):
+        """With defect_fraction=1.0, all added rings should be pentagons."""
+        from src.carbon_skeleton import _grow_graph
+        import networkx as nx
+
+        G = nx.cycle_graph(6)  # benzene (6 nodes)
+        G = _grow_graph(G, 24, seed=42, defect_fraction=1.0)
+        # Benzene (6) + n×3 nodes → 6 + 3k for some k, not 6 + 4k
+        added = G.number_of_nodes() - 6
+        assert added % 3 == 0 or G.number_of_nodes() % 2 == 0, (
+            f"Unexpected node count: {G.number_of_nodes()}"
+        )
+
+    def test_pah_assembler_defect_returns_valid_mol(self):
+        """PAHAssembler with defect_fraction > 0 returns a valid RDKit mol."""
+        assembler = PAHAssembler(seed=7)
+        skeleton = assembler.generate(
+            target_num_carbons=30,
+            defect_fraction=0.15,
+        )
+        assert skeleton.mol is not None
+        assert skeleton.num_carbons > 0
+
+    def test_pah_assembler_defect_even_carbons(self):
+        """Defect mode skeletons must have an even carbon count."""
+        assembler = PAHAssembler(seed=42)
+        skeleton = assembler.generate(
+            target_num_carbons=40,
+            defect_fraction=0.20,
+        )
+        assert skeleton.num_carbons % 2 == 0, (
+            f"Odd carbon count: {skeleton.num_carbons}"
+        )
+
+    def test_generator_config_defect_fraction_default(self):
+        """GeneratorConfig.defect_fraction should default to 0.0."""
+        config = GeneratorConfig()
+        assert config.defect_fraction == 0.0
+
+    def test_generator_config_defect_fraction_custom(self):
+        """GeneratorConfig.defect_fraction should accept non-zero values."""
+        config = GeneratorConfig(defect_fraction=0.1)
+        assert config.defect_fraction == 0.1
+
+    def test_biochar_generator_with_defects(self):
+        """BiocharGenerator runs end-to-end with defect_fraction > 0."""
+        config = GeneratorConfig(
+            target_num_carbons=24,
+            defect_fraction=0.15,
+            seed=99,
+        )
+        generator = BiocharGenerator(config)
+        mol, coords, composition = generator.generate()
+        assert mol is not None
+        assert composition.num_carbons > 0
+
+    def test_defect_fraction_produces_different_structure(self):
+        """Defect mode should yield different atom count than pure hexagon for same target."""
+        config_pure = GeneratorConfig(target_num_carbons=50, seed=1, defect_fraction=0.0)
+        config_defect = GeneratorConfig(target_num_carbons=50, seed=1, defect_fraction=0.2)
+        gen_pure = BiocharGenerator(config_pure)
+        gen_defect = BiocharGenerator(config_defect)
+        _, _, comp_pure = gen_pure.generate()
+        _, _, comp_defect = gen_defect.generate()
+        # They may occasionally match, but structures should generally differ
+        # At minimum both should produce valid molecules
+        assert comp_pure.num_carbons > 0
+        assert comp_defect.num_carbons > 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

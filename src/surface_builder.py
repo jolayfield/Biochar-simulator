@@ -73,6 +73,11 @@ class SurfaceConfig:
     # --- Reproducibility ----------------------------------------------------
     seed: Optional[int] = None
 
+    # --- Ring defects -------------------------------------------------------
+    # Probability [0, 1) that each ring addition is a 5-membered pentagon.
+    # 0.0 = pure hexagonal (default).
+    defect_fraction: float = 0.0
+
     def __post_init__(self):
         self._validate()
 
@@ -268,6 +273,7 @@ class SurfaceBuilder:
             O_C_ratio=self.config.O_C_ratio,
             aromaticity_percent=self.config.aromaticity_percent,
             functional_groups=self.config.functional_groups,
+            defect_fraction=self.config.defect_fraction,
             seed=self.config.seed,
         )
 
