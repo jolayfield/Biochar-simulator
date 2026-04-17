@@ -304,6 +304,49 @@ from src.biochar_generator import generate_biochar
 
 ---
 
+## Pentagon Ring Defects (defect_fraction)
+
+### What Are Ring Defects?
+
+By default, all ring additions during graph growth are hexagons (6 carbons). Setting `defect_fraction > 0` inserts occasional pentagons (5 carbons), producing topologically disordered structures that mimic amorphous graphitic biochar.
+
+### Usage
+
+```python
+# 10% of rings will be pentagons
+mol, coords, gro, top, itp = generate_biochar(
+    target_num_carbons=60,
+    defect_fraction=0.10,
+    seed=42,
+)
+
+# In batch generation
+configs = [
+    {"molecule_name": "BC800", "defect_fraction": 0.0},  # pure hexagonal
+    {"molecule_name": "BC8D5", "defect_fraction": 0.05}, # 5% defects
+    {"molecule_name": "BC8D15", "defect_fraction": 0.15}, # 15% defects
+]
+
+results = generate_biochar_series(configs)
+```
+
+### Key Points
+
+- **Range**: 0.0 (pure hexagon) to 1.0 (all pentagons)
+- **Typical values**: 0.05–0.20 (5–20% pentagons)
+- **Parity handling**: Pentagon additions (+3 nodes, odd) automatically fix parity constraints
+- **Kekulization**: Non-bipartite graphs may fail kekulization; up to 5 retries with different sub-seeds
+- **Reproducibility**: Use same `seed` to get identical defect patterns
+
+### Effects
+
+- Introduces curvature and topological disorder
+- Maintains aromaticity and valence validity
+- Produces slightly different atom counts than pure hexagon mode
+- More realistic model of amorphous biochar
+
+---
+
 ## Known Limitations (v1.2)
 
 1. **Carbon count matching for large targets**: Structures with >50 requested carbons may be smaller than requested (70–90% accuracy). The generator still produces chemically valid structures.
@@ -324,4 +367,4 @@ from src.biochar_generator import generate_biochar
 |---------|-------------|
 | v1.0 | Initial release — PAH assembly, GROMACS output |
 | v1.1 | Valence system, coordinate unit fix (Å → nm) |
-| v1.2 | **Min+max valence enforcement**, hydrogen assignment fix, correct imports |
+| v1.2 | **Pentagon ring defects** (`defect_fraction`), **porous surface generation** (`generate_surface`), min+max valence enforcement, hydrogen assignment fix |

@@ -6,13 +6,14 @@ A Python package for generating realistic biochar molecular structures for GROMA
 
 ## Overview
 
-The Biochar Simulator builds polycyclic aromatic hydrocarbon (PAH) structures with user-specified compositional parameters and exports GROMACS-ready force field files.
+The Biochar Simulator builds polycyclic aromatic hydrocarbon (PAH) structures with user-specified compositional parameters and exports GROMACS-ready force field files. Supports both pure hexagonal aromatic skeletons and topologically disordered structures with pentagon ring defects.
 
 **Key capabilities:**
 
 - **Size**: 6 to 200+ carbons (exact count for most targets)
 - **Composition**: H/C and O/C ratios with configurable tolerances
-- **Aromaticity**: 100% aromatic skeleton (graphene-nanoflake topology)
+- **Aromaticity**: 100% aromatic skeleton (graphene-nanoflake topology, or defective with pentagons)
+- **Ring Defects**: Optional pentagon insertion during graph growth (`defect_fraction` parameter)
 - **Functional Groups**: Exact counts via dict API — phenolic, carboxyl, ether, carbonyl, quinone, lactone, hydroxyl
 - **Porous Surfaces**: Slit-pore systems of stacked PAH sheets with user-controlled pore diameter
 - **Output**: GROMACS `.gro`, `.top`, `.itp` files with OPLS-AA force field
@@ -66,6 +67,23 @@ mol, coords, gro, top, itp = generate_biochar(
 ```
 
 When `functional_groups` is `None` (default), total oxygen is controlled by `O_C_ratio` and placed as phenolic groups.
+
+### With pentagon ring defects
+
+Add topological disorder by inserting 5-membered rings during growth:
+
+```python
+# ~15% of rings will be pentagons instead of hexagons
+mol, coords, gro, top, itp = generate_biochar(
+    target_num_carbons=60,
+    defect_fraction=0.15,  # probability per ring addition
+    output_directory="output",
+    basename="biochar_defects",
+    seed=42,
+)
+```
+
+`defect_fraction` ranges from 0.0 (pure hexagonal PAH) to 1.0 (all pentagons). Typical values: 0.1–0.2.
 
 ### Slit-pore surface
 
@@ -135,6 +153,7 @@ gmx mdrun -deffnm topol
 | `O_C_tolerance` | float | 0.10 | Allowed O/C error (fraction) |
 | `aromaticity_percent` | float | 90.0 | Target % aromatic carbons |
 | `functional_groups` | dict\|None | `None` | Exact group counts, e.g. `{"phenolic": 2}` |
+| `defect_fraction` | float | 0.0 | Probability [0, 1) each ring is a pentagon |
 | `molecule_name` | str | `"BC"` | Residue name (≤5 chars for GROMACS) |
 | `periodic_box` | bool | False | Add periodic box vectors to `.gro` |
 | `seed` | int\|None | None | RNG seed for reproducibility |
@@ -147,6 +166,7 @@ gmx mdrun -deffnm topol
 | `H_C_ratio` | float | 0.3 | Target H/C per sheet |
 | `O_C_ratio` | float | 0.05 | Target O/C per sheet |
 | `functional_groups` | dict\|None | `None` | Groups applied to all sheets |
+| `defect_fraction` | float | 0.0 | Pentagon probability per ring per sheet |
 | `pore_diameter` | float | 10.0 | Gap between sheet surfaces (Å) |
 | `num_sheets` | int | 2 | Number of parallel sheets |
 | `sheet_overrides` | list\|None | `None` | Per-sheet config dicts (length = `num_sheets`) |

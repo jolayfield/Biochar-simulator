@@ -2,38 +2,53 @@
 
 ## 🎉 What's Implemented
 
-A complete, production-ready biochar molecular structure generator for GROMACS simulations.
+A complete, production-ready biochar molecular structure generator for GROMACS simulations with support for pure hexagonal and defect-containing topologies.
 
 ### ✅ Core Features
 
 1. **Structure Generation**
    - PAH-based carbon skeleton assembly (benzene → pyrene → coronene)
+   - Pure hexagonal (default) or pentagon-defective ring growth
    - Oxygen functional group placement (hydroxyl, carboxyl, ether, carbonyl, etc.)
    - Hydrogen saturation to match H/C ratios
    - 3D coordinate generation with aromatic planarity constraints
 
-2. **OPLS-AA Integration**
+2. **Ring Defects** ⭐ NEW
+   - Pentagon insertion during graph growth (`defect_fraction` parameter)
+   - Parity-aware pentagon/hexagon selection for valid Kekulé structures
+   - Retry mechanism for kekulization of non-bipartite graphs
+   - Produces topologically disordered graphitic structures
+
+3. **Porous Surfaces** ⭐ NEW
+   - Slit-pore systems: parallel graphene-like sheets with controllable pore diameter
+   - Per-sheet functional group and composition control
+   - Identical/asymmetric pore support
+   - SVD-based sheet flattening and z-positioning
+
+4. **OPLS-AA Integration**
    - Automatic atom type assignment (CA, HA, OH, OC, OS, etc.)
    - Partial charge calculation from OPLS-AA parameters
    - Bond/angle/dihedral definitions
 
-3. **GROMACS Export**
-   - `.gro` structure files (GROMACS format)
+5. **GROMACS Export**
+   - `.gro` structure files (GROMACS format, coordinates in nm)
    - `.top` topology files (full forcefield includes)
    - `.itp` molecule definition files (reusable)
+   - Multi-sheet systems with proper residue numbering
    - Proper 5-character residue naming for format compliance
 
-4. **Batch Generation** ⭐ NEW
+6. **Batch Generation**
    - `generate_biochar_series()` for multiple structures
    - Automatic combined topology file generation
    - Perfect for temperature series, composition studies, mixed simulations
    - Configurable residue naming (BC400, BC600, BCH05, BC001, etc.)
 
-5. **Validation**
+7. **Validation**
    - 3-stage validation (composition, chemistry, structure)
+   - Valence checking (min/max bonds per atom)
    - Aromaticity checking
    - Ring planarity measurement
-   - Geometry and valence validation
+   - Geometry and connectivity validation
 
 ### 📦 Project Structure
 
@@ -263,8 +278,8 @@ Provided for research purposes.
 
 ---
 
-**Release Date**: March 31, 2026
-**Version**: 1.0.0
+**Release Date**: April 16, 2026
+**Version**: 1.2.0
 **Status**: ✅ Production Ready
 
-All core functionality implemented and tested.
+All core functionality implemented and tested. Pentagon ring defects and porous surface generation now available.

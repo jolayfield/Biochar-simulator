@@ -214,7 +214,45 @@ results = generate_biochar_series(
 )
 ```
 
-## Example 3: Mixed System
+## Example 3: With Ring Defects
+
+```python
+# Compare pure hexagonal vs defective structures
+configs = [
+    {
+        "molecule_name": "BC800",
+        "target_num_carbons": 80,
+        "H_C_ratio": 0.40,
+        "O_C_ratio": 0.05,
+        "defect_fraction": 0.0,    # Pure hexagonal
+        "seed": 501,
+    },
+    {
+        "molecule_name": "BD805",  # BD = Biochar Disordered
+        "target_num_carbons": 80,
+        "H_C_ratio": 0.40,
+        "O_C_ratio": 0.05,
+        "defect_fraction": 0.05,   # 5% pentagons
+        "seed": 502,
+    },
+    {
+        "molecule_name": "BD815",
+        "target_num_carbons": 80,
+        "H_C_ratio": 0.40,
+        "O_C_ratio": 0.05,
+        "defect_fraction": 0.15,   # 15% pentagons
+        "seed": 503,
+    },
+]
+
+results = generate_biochar_series(
+    configurations=configs,
+    output_directory="output/defect_study",
+    create_combined_top=True,
+)
+```
+
+## Example 4: Mixed System
 
 ```python
 # Combine different biochar types in one simulation
@@ -312,7 +350,8 @@ generate_biochar_series(
 | `H_C_ratio` | float | 0.5 | Target H/C ratio |
 | `O_C_ratio` | float | 0.1 | Target O/C ratio |
 | `aromaticity_percent` | float | 90.0 | Target aromaticity % |
-| `functional_groups` | list | default | Custom functional groups |
+| `functional_groups` | dict | default | Custom functional groups |
+| `defect_fraction` | float | 0.0 | Probability each ring is a pentagon |
 | `seed` | int | random | Random seed (reproducible if set) |
 
 ## Best Practices
