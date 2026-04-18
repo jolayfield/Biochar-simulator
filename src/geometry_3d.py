@@ -239,38 +239,33 @@ def _optimize_h_positions(
     num_passes: int = 2,
 ) -> np.ndarray:
     """
-    Reduce steric clashes for hydrogen atoms by rotating them around the bond
-    from their grandparent to their parent atom.
+    Rotate hydroxyl (O-H) hydrogens to minimise steric clashes, optionally
+    lifting them out of the aromatic plane.
 
-    For each H atom whose nearest non-bonded neighbour is closer than
+    **Scope**: Only H atoms bonded to a heteroatom (O, N, S …) are touched.
+    Aromatic C-H bonds are geometrically locked in the sp2 ring plane —
+    rotating them out of plane produces an unphysical sp3-like geometry and
+    is the wrong fix.  Peri C-H contacts that survive this step are small
+    enough (<2 Å) for GROMACS energy minimisation to resolve.
+
+    For each eligible H whose nearest non-bonded neighbour is closer than
     *threshold* Å, the H is swept through *num_angles* equally-spaced dihedral
-    angles around the grandparent→parent bond axis (e.g. the C–O axis for a
-    phenolic OH, or the ring-C bond for a peripheral C-H).  The position that
+    angles around the grandparent→parent bond axis (e.g. C–O for phenolic OH).
+    When *allow_out_of_plane* is True, positions at z-offsets ±0.3, ±0.6,
+    and ±0.9 Å above/below the sheet are also sampled.  The position that
     maximises the minimum non-bonded distance is kept.
 
-    When *allow_out_of_plane* is True, off-plane positions (z ≠ 0, valid
-    because hex-lattice molecules lie flat in the xy plane) are sampled at
-    ±0.3, ±0.6, and ±0.9 Å above/below the sheet.  This is the primary fix
-    for OH hydrogens that are pushed into the ring plane by geometric placement.
-
-    *num_passes* sweeps are performed (default 2).  A second pass is necessary
-    because optimising H_i changes the non-bonded environment seen by H_j
-    (which may be H_i's nearest neighbour), so H_j may need to be re-evaluated
-    after H_i has moved.
-
-    Clashing H atoms are processed sequentially within each pass; each update
-    is immediately visible to subsequent H optimisations in the same pass.
+    *num_passes* sweeps are performed (default 2) so that moving H_i updates
+    the environment seen by H_j before H_j is evaluated.
 
     Args:
-        mol:               RDKit molecule (used for connectivity only).
+        mol:               RDKit molecule (connectivity only).
         all_coords:        (N, 3) coordinate array in Å — **modified in place**.
-        threshold:         Minimum non-bonded distance (Å) that triggers
+        threshold:         Nearest non-bonded contact (Å) that triggers
                            optimisation.  Default 1.8 Å.
-        num_angles:        Number of in-plane dihedral samples (default 12 →
-                           every 30°).
-        allow_out_of_plane: If True, also sample positions above/below the
-                           molecular plane.
-        num_passes:        Number of full sweeps over all H atoms (default 2).
+        num_angles:        In-plane dihedral samples (default 12 → every 30°).
+        allow_out_of_plane: Sample z ≠ 0 positions (default True).
+        num_passes:        Full sweeps over eligible H atoms (default 2).
 
     Returns:
         The (possibly modified) coordinate array (same object as *all_coords*).
@@ -309,11 +304,22 @@ def _optimize_h_positions(
             if _min_nb_dist(h_idx, h_pos) >= threshold:
                 continue
 
-            # Parent (O or C that this H is bonded to)
+            # Parent atom (O, N, C, …)
             nbrs = atom.GetNeighbors()
             if not nbrs:
                 continue
             parent = nbrs[0]
+
+            # ── Key constraint ──────────────────────────────────────────────
+            # Skip C-H bonds.  In a flat aromatic (sp2) system the C-H bond
+            # direction is uniquely determined by the ring geometry; rotating
+            # it produces an unphysical geometry and would push the H out of
+            # the molecular plane.  Only O-H (and N-H, S-H …) bonds have
+            # genuine dihedral freedom around the heteroatom–carbon bond.
+            if parent.GetAtomicNum() == 6:
+                continue
+            # ────────────────────────────────────────────────────────────────
+
             par_idx = parent.GetIdx()
             par_pos = all_coords[par_idx].copy()
 
