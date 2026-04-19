@@ -1,0 +1,16 @@
+name: biochar-docs
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - rdkit>=2023.9.1
+  - networkx>=3.1
+  - numpy>=1.24.0
+  - scipy>=1.10.0
+  - pip
+  - pip:
+      - sphinx>=7.0
+      - sphinx-rtd-theme
+      - sphinx-autodoc-typehints
+      - myst-parser
