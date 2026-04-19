@@ -31,7 +31,22 @@ from .opls_typing import AtomTyper, ChargeAssigner
 
 @dataclass
 class SheetResult:
-    """Result of generating a single sheet."""
+    """
+    Result of generating and positioning a single sheet.
+
+    Attributes:
+        mol: RDKit molecule with 3-D conformer and OPLS-AA types.
+        coords: Atomic coordinates in Ångströms, shape ``(N, 3)``.
+            Updated in-place by :meth:`SurfaceBuilder.build` to world
+            coordinates (translated along *z* after flattening).
+        composition: Atom counts and ratios
+            (:class:`~heteroatom_assignment.CompositionInfo`).
+        atom_types: Mapping of atom index → OPLS-AA type string.
+        charges: Mapping of atom index → partial charge (electrons).
+        molecule_name: Residue name used in ``.gro`` and ``.itp`` files.
+            Identical for all sheets when *sheet_overrides* is ``None``;
+            indexed (e.g. ``SHT1``, ``SHT2``) for distinct sheets.
+    """
 
     mol: Chem.Mol
     coords: np.ndarray  # Angstroms
@@ -43,7 +58,43 @@ class SheetResult:
 
 @dataclass
 class SurfaceConfig:
-    """Configuration for porous surface generation."""
+    """
+    Configuration for :class:`SurfaceBuilder`.
+
+    Attributes:
+        target_num_carbons: Carbon atoms per sheet (passed to
+            :class:`~biochar_generator.BiocharGenerator`).
+        H_C_ratio: Target H/C ratio for each sheet.
+        O_C_ratio: Target O/C ratio (used when *functional_groups* is
+            ``None``).
+        functional_groups: Functional groups applied to every sheet, e.g.
+            ``{"phenolic": 2, "ether": 1}``.  Overridden per-sheet via
+            *sheet_overrides*.
+        aromaticity_percent: Target aromatic carbon fraction (percentage).
+        pore_type: Pore geometry.  Only ``"slit"`` is supported in Phase 1;
+            ``"amorphous"`` is reserved for Phase 2.
+        num_sheets: Number of parallel sheets.  Must be ≥ 2.
+        pore_diameter: Gap between the inner van-der-Waals surfaces of
+            adjacent sheets, in Ångströms.  The centre-to-centre sheet
+            separation is ``pore_diameter + 3.4 Å``.
+        sheet_overrides: Per-sheet configuration overrides.  If provided,
+            must be a list of dicts (one per sheet) with keys matching
+            :class:`~biochar_generator.GeneratorConfig` fields.  If ``None``,
+            all sheets are chemically identical (one ``.itp`` with
+            ``count = num_sheets``).
+        box_padding_xy: Padding added to each side of the bounding box in
+            *x* and *y*, in nm.
+        box_padding_z: Padding added to each side of the bounding box in
+            *z*, in nm.
+        system_name: Name written to the ``[ system ]`` section of the
+            ``.top`` file.
+        sheet_base_name: Residue name prefix for sheet molecules.  Must be
+            ≤ 3 characters so that the full name (prefix + digit) fits within
+            GROMACS' 5-character residue-name limit.
+        seed: Random seed passed to each :class:`~biochar_generator.BiocharGenerator`.
+        defect_fraction: Pentagon insertion probability for each sheet (see
+            :attr:`~biochar_generator.GeneratorConfig.defect_fraction`).
+    """
 
     # --- Sheet chemistry (passed through to BiocharGenerator) ---------------
     target_num_carbons: int = 50
@@ -142,7 +193,43 @@ def _rotation_matrix_from_vectors(a: np.ndarray, b: np.ndarray) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 class SurfaceBuilder:
-    """Build porous surface systems from parallel biochar sheets."""
+    """
+    Build slit-pore surface systems from parallel biochar sheets.
+
+    The builder orchestrates a three-phase pipeline:
+
+    1. **Sheet generation** — creates each sheet via :class:`BiocharGenerator`,
+       assigns OPLS-AA types and charges, then flattens the sheet to the *xy*
+       plane using SVD.
+    2. **Positioning** — translates sheet *i* to
+       ``z = i × (pore_diameter + 3.4 Å)`` so consecutive sheets are separated
+       by the requested pore gap.
+    3. **Box computation** — wraps all sheets in an orthogonal periodic box
+       padded by :attr:`SurfaceConfig.box_padding_xy` (nm) in *x*/*y* and
+       :attr:`SurfaceConfig.box_padding_z` (nm) in *z*, then centres the
+       system inside the box.
+
+    When :attr:`SurfaceConfig.sheet_overrides` is ``None`` all sheets are
+    chemically identical: only the first sheet is generated; the rest are
+    deep-copied.  A single ``.itp`` is produced and the ``.top`` lists it
+    with ``count = num_sheets``.
+
+    Use :func:`~biochar_generator.generate_surface` for a one-call convenience
+    wrapper.
+
+    Examples::
+
+        config = SurfaceConfig(
+            target_num_carbons=60,
+            functional_groups={"phenolic": 2},
+            pore_diameter=12.0,
+            num_sheets=2,
+            seed=42,
+        )
+        builder = SurfaceBuilder(config)
+        sheets, box_nm = builder.build()
+        gro, top, itps = builder.export_gromacs("output", "slit_pore")
+    """
 
     def __init__(self, config: SurfaceConfig):
         self.config = config

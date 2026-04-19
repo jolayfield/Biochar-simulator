@@ -27,7 +27,50 @@ from .validation import ValidationEngine
 
 @dataclass
 class GeneratorConfig:
-    """Configuration for biochar generator."""
+    """
+    Configuration for :class:`BiocharGenerator`.
+
+    All parameters are optional — defaults produce a 50-carbon, mostly-aromatic
+    biochar with a moderate hydrogen content and no oxygen.
+
+    Attributes:
+        target_num_carbons: Target number of carbon atoms in the skeleton.
+            The generator grows the PAH graph until it reaches a count within
+            *size_tolerance* of this value.  Minimum 6 (benzene).
+        size_tolerance: Fractional tolerance on *target_num_carbons*
+            (e.g. 0.10 = ±10 %).
+        H_C_ratio: Target hydrogen-to-carbon atomic ratio.
+        H_C_tolerance: Fractional tolerance on *H_C_ratio*.
+        O_C_ratio: Target oxygen-to-carbon atomic ratio.  Ignored when
+            *functional_groups* is not ``None``.
+        O_C_tolerance: Fractional tolerance on *O_C_ratio*.
+        aromaticity_percent: Target fraction of carbon atoms that are
+            aromatic, as a percentage (0–100).
+        aromaticity_tolerance: Absolute tolerance on *aromaticity_percent*
+            in percentage-point units.
+        functional_groups: Explicit dict mapping functional group name to
+            exact placement count, e.g. ``{"phenolic": 3, "carboxyl": 1}``.
+            Supported groups: ``phenolic``, ``hydroxyl``, ``carboxyl``,
+            ``ether``.  If ``None``, total oxygen is derived from *O_C_ratio*
+            and placed as phenolic groups.
+        periodic_box: If ``True``, include periodic boundary box vectors in
+            the exported ``.gro`` file.
+        box_size: Explicit box size in nm as a 3-element array.  Used only
+            when *periodic_box* is ``True`` and box_size is not ``None``.
+        molecule_name: Residue name written to ``.gro`` / ``.itp`` (max 5
+            characters — GROMACS hard limit).  Suggested naming: ``BC400``,
+            ``BC600``, ``BC800`` (pyrolysis temperature series).
+        seed: Integer random seed for reproducibility.  ``None`` = random.
+        defect_fraction: Probability [0, 1) that each ring added during
+            skeleton growth is a 5-membered pentagon rather than a hexagon.
+            0.0 = pure hexagonal PAH.  Values 0.05–0.20 introduce realistic
+            topological disorder seen in low-temperature biochar.
+        max_ether_span: Maximum C–C shortest-path distance (in bonds) between
+            the two ring carbons bridged by each ether oxygen.  Controls the
+            ring size of the C–O–C bridge (ring size = max_ether_span + 2).
+            Default 3 → 5-membered furan-like ring (always geometrically flat).
+            Larger values may fold the aromatic sheet.
+    """
 
     # Size parameters
     target_num_carbons: int = 50
@@ -86,14 +129,38 @@ class GeneratorConfig:
 
 
 class BiocharGenerator:
-    """Main biochar structure generator."""
+    """
+    Generate a single biochar molecule and export it to GROMACS files.
+
+    The generator runs a five-step pipeline:
+
+    1. **Carbon skeleton** — grows a PAH graph to the requested carbon count
+       using hexagonal ring expansion (or defective with pentagons).
+    2. **Heteroatom assignment** — places oxygen-containing functional groups
+       then fills remaining valences with hydrogen.
+    3. **3D coordinates** — embeds the molecule in 3D; flattens large sheets
+       via the hex-lattice path and optimises O–H hydrogen positions.
+    4. **OPLS-AA typing** — assigns atom types and partial charges.
+    5. **Validation** — checks composition ratios and geometry.
+
+    Use :func:`generate_biochar` for a one-call convenience wrapper.
+
+    Examples::
+
+        config = GeneratorConfig(target_num_carbons=80, H_C_ratio=0.4,
+                                 O_C_ratio=0.1, seed=42)
+        gen = BiocharGenerator(config)
+        mol, coords, composition = gen.generate()
+        gro, top, itp = gen.export_gromacs(output_directory="output")
+    """
 
     def __init__(self, config: Optional[GeneratorConfig] = None):
         """
-        Initialize generator.
+        Initialise the generator.
 
         Args:
-            config: GeneratorConfig object
+            config: Generator configuration.  Uses :class:`GeneratorConfig`
+                defaults if ``None``.
         """
         self.config = config or GeneratorConfig()
         self.mol = None
@@ -105,10 +172,20 @@ class BiocharGenerator:
 
     def generate(self) -> Tuple[Chem.Mol, np.ndarray, CompositionInfo]:
         """
-        Generate biochar structure.
+        Run the full generation pipeline and return the molecular structure.
 
         Returns:
-            (molecule, coordinates, composition_info)
+            Tuple of:
+
+            * **mol** (:class:`rdkit.Chem.Mol`) — molecule with 3-D
+              conformer and OPLS-AA atom types assigned.
+            * **coords** (:class:`numpy.ndarray`, shape ``(N, 3)``) —
+              atomic coordinates in Ångströms.
+            * **composition** (:class:`~heteroatom_assignment.CompositionInfo`)
+              — atom counts, H/C and O/C ratios, and functional-group census.
+
+        Raises:
+            RuntimeError: If carbon skeleton growth fails after retries.
         """
         # Step 1: Generate carbon skeleton
         print(f"Generating carbon skeleton with {self.config.target_num_carbons} carbons...")
@@ -159,14 +236,23 @@ class BiocharGenerator:
         basename: str = "biochar",
     ) -> Tuple[Path, Path, Path]:
         """
-        Export to GROMACS files.
+        Write GROMACS structure and topology files.
+
+        Must be called after :meth:`generate`.
 
         Args:
-            output_directory: Output directory path
-            basename: Base filename
+            output_directory: Directory in which to write output files.
+                Created if it does not exist.
+            basename: Stem for output filenames
+                (e.g. ``"bc400"`` → ``bc400.gro``, ``bc400.top``,
+                ``bc400.itp``).
 
         Returns:
-            (gro_path, top_path, itp_path)
+            Tuple of :class:`~pathlib.Path` objects
+            ``(gro_path, top_path, itp_path)``.
+
+        Raises:
+            RuntimeError: If :meth:`generate` has not been called yet.
         """
         if self.mol is None or self.coords is None:
             raise RuntimeError("Must call generate() before export_gromacs()")

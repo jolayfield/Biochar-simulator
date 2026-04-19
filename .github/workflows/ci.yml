@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge,defaults
+          channel-priority: strict
+          activate-environment: biochar-test
+          auto-activate-base: false
+
+      - name: Install dependencies
+        shell: bash -el {0}
+        run: |
+          conda install -y rdkit networkx numpy scipy
+          pip install pytest pytest-cov
+
+      - name: Install package (editable)
+        shell: bash -el {0}
+        run: pip install -e . --no-deps
+
+      - name: Run tests
+        shell: bash -el {0}
+        run: pytest tests/ -v --tb=short --cov=src --cov-report=term-missing
+
+      - name: Upload coverage
+        if: matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: false
