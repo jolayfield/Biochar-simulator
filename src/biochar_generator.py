@@ -66,6 +66,16 @@ class GeneratorConfig:
     # 0.0 = pure hexagonal PAH (default).  0.1 ≈ 10% pentagons.
     defect_fraction: float = 0.0
 
+    # Maximum graph distance (in bonds along the carbon skeleton) between the
+    # two ring carbons that an ether oxygen may bridge.  The ring formed by the
+    # C-O-C bridge has (max_ether_span + 2) members.  Minimum enforced = 3
+    # (5-membered, furan-like) to avoid strained smaller rings.
+    #   3 → 5-membered ring (furan/benzofuran-like) ← default, always flat
+    #   4 → 6-membered ring (pyran/chromene-like)   — may cause minor strain
+    #   5 → 7-membered ring                         — risk of sheet folding
+    # Values > 5 risk cross-sheet bridges that fold the sheet into a nanotube.
+    max_ether_span: int = 3
+
     def __post_init__(self):
         # functional_groups defaults to None → O_C_ratio-driven phenolic placement
         # (no default list here; OxygenAssigner handles the None case)
@@ -237,7 +247,8 @@ class BiocharGenerator:
 
     def _assign_oxygens(self, mol: Chem.Mol) -> Tuple[Chem.Mol, CompositionInfo]:
         """Assign oxygen atoms. Returns (mol, composition) including functional-group counts."""
-        assigner = OxygenAssigner(seed=self.config.seed)
+        assigner = OxygenAssigner(seed=self.config.seed,
+                                  max_ether_span=self.config.max_ether_span)
         mol, comp = assigner.assign_oxygens(
             mol,
             self.config.O_C_ratio,
@@ -373,6 +384,7 @@ def generate_biochar(
     aromaticity_percent: float = 90.0,
     functional_groups: Optional[Dict[str, int]] = None,
     defect_fraction: float = 0.0,
+    max_ether_span: int = 5,
     output_directory: str = ".",
     basename: str = "biochar",
     molecule_name: str = "BC",
@@ -406,6 +418,12 @@ def generate_biochar(
             skeleton growth is a 5-membered (pentagon) ring rather than a
             hexagon.  0.0 (default) = pure hexagonal PAH.  Values ~0.1–0.2
             introduce realistic topological disorder.
+        max_ether_span: Maximum number of C–C bonds between the two ring
+            carbons bridged by each ether oxygen.  Controls the ring size of
+            the C–O–C bridge (ring size = max_ether_span + 2).  Default 3
+            (5-membered furan/benzofuran-like ring — always stays flat).
+            Use 4 for pyran/chromene-like (6-membered) or 5 for 7-membered;
+            larger values risk cross-sheet bridges that fold the molecule.
         output_directory: Output directory for GROMACS files.
         basename: Base filename for output files.
         molecule_name: Residue name (max 5 chars). Suggested: BC400, BC600,
@@ -422,6 +440,7 @@ def generate_biochar(
         aromaticity_percent=aromaticity_percent,
         functional_groups=functional_groups,
         defect_fraction=defect_fraction,
+        max_ether_span=max_ether_span,
         molecule_name=molecule_name,
         seed=seed,
     )

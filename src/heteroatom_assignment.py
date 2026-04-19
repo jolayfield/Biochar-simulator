@@ -120,8 +120,15 @@ class OxygenAssigner:
         assigner.assign_oxygens(mol, target_O_C_ratio=0.1)
     """
 
-    def __init__(self, seed: int = None):
+    def __init__(self, seed: int = None, max_ether_span: int = 3):
         self.seed = seed
+        # Maximum C-skeleton shortest-path distance (bonds) between the two
+        # ring carbons that an ether oxygen may bridge.  Enforced minimum = 3
+        # (5-membered ring); the ring formed has (max_ether_span + 2) members.
+        #   3 → 5-membered ring (furan/benzofuran-like) ← safe default
+        #   4 → 6-membered ring (pyran/chromene-like)
+        #   5 → 7-membered ring
+        self._max_ether_span = max_ether_span
         if seed is not None:
             random.seed(seed)
 
@@ -290,16 +297,31 @@ class OxygenAssigner:
             return True, emol.GetMol(), emol, 2, {c_ring}
 
         elif group == "ether":
-            # Ar-O-Ar bridge: two NON-ADJACENT edge C atoms connected through one O.
-            # Adjacent C atoms would create a 3-membered ring whose C-O bonds can be
-            # miscategorised as aromatic by RDKit's aromaticity model.
+            # Ar-O-Ar bridge: two edge C atoms connected through one O.
+            #
+            # Ring size formed = span + 2  (span intermediate C atoms + the
+            # two bridged C atoms + the O).
+            #   span 1 → 3-membered ring (epoxide-like, forbidden)
+            #   span 2 → 4-membered ring (too strained, forbidden)
+            #   span 3 → 5-membered ring (furan/benzofuran-like — minimum)
+            #   span 4 → 6-membered ring (pyran/chromene-like)
+            #   span 5 → 7-membered ring (default maximum)
+            #
+            # Large spans fold the flat sheet into a tube; enforce max_ether_span.
+            max_span = getattr(self, "_max_ether_span", 5)
             c1, c2 = None, None
             for i in range(len(free_sites)):
                 for j in range(i + 1, len(free_sites)):
                     s1, s2 = free_sites[i], free_sites[j]
-                    if new_mol.GetBondBetweenAtoms(s1, s2) is None:
-                        c1, c2 = s1, s2
-                        break
+                    # Shortest C-skeleton path must be within the allowed span
+                    path = Chem.GetShortestPath(new_mol, s1, s2)
+                    path_len = len(path) - 1  # number of bonds
+                    # Minimum 3: span < 3 gives strained 3- or 4-membered rings
+                    # that are geometrically incompatible with the flat hex lattice.
+                    if path_len < 3 or path_len > max_span:
+                        continue
+                    c1, c2 = s1, s2
+                    break
                 if c1 is not None:
                     break
             if c1 is None:
