@@ -11,7 +11,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from biochar_simulator.biochar_generator import BiocharGenerator, GeneratorConfig, generate_biochar
+from biochar.biochar_generator import BiocharGenerator, GeneratorConfig, generate_biochar
 
 
 def example_1_basic_generation():
@@ -166,7 +166,7 @@ def example_6_porous_surface():
     print("EXAMPLE 6: Porous Slit-Pore Surface")
     print("=" * 70)
 
-    from biochar_simulator.biochar_generator import generate_surface
+    from biochar.biochar_generator import generate_surface
 
     sheets, gro_path, top_path, itp_paths = generate_surface(
         target_num_carbons=40,

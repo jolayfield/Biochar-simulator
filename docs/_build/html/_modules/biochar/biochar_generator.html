@@ -1,0 +1,1138 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>biochar.biochar_generator &mdash; Biochar Simulator 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Biochar Simulator
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#recommended-conda-conda-forge">Recommended: conda (conda-forge)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#from-pypi">From PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#development-install">Development install</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#single-molecule">Single molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#with-functional-groups">With functional groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#with-pentagon-defects">With pentagon defects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#slit-pore-surface">Slit-pore surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#run-in-gromacs">Run in GROMACS</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/single_molecule.html">Single Molecule Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#generation-pipeline">Generation pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#controlling-size">Controlling size</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/single_molecule.html#pah-library-seed-molecules">PAH library (seed molecules)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#controlling-composition">Controlling composition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#reproducibility">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#using-the-class-api">Using the class API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/functional_groups.html">Functional Groups</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#two-modes">Two modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#available-groups">Available groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#ether-bridge-geometry">Ether bridge geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#mixing-group-types">Mixing group types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/surfaces.html">Porous Surface Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#symmetric-slit-pore">Symmetric slit pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#asymmetric-pore">Asymmetric pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#multi-sheet-stacking">Multi-sheet stacking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#using-the-class-api">Using the class API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#output-files">Output files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/batch_generation.html">Batch Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/batch_generation.html#temperature-series">Temperature series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/batch_generation.html#configuration-dict-keys">Configuration dict keys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/batch_generation.html#running-a-mixed-gromacs-simulation">Running a mixed GROMACS simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/gromacs_workflow.html">GROMACS Workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#generate-the-structure">1. Generate the structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#energy-minimisation">2. Energy minimisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#visualise">3. Visualise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#solvation-optional">4. Solvation (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#production-md">5. Production MD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#force-field-notes">Force field notes</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/biochar_generator.html">biochar_generator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/biochar_generator.html#convenience-functions">Convenience functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.generate_biochar"><code class="docutils literal notranslate"><span class="pre">generate_biochar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.generate_surface"><code class="docutils literal notranslate"><span class="pre">generate_surface()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.generate_biochar_series"><code class="docutils literal notranslate"><span class="pre">generate_biochar_series()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/biochar_generator.html#configuration">Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.size_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.size_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.H_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.O_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.aromaticity_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.functional_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.periodic_box"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.periodic_box</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.box_size"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.box_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.molecule_name"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.molecule_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.seed"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.max_ether_span"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.max_ether_span</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/biochar_generator.html#class-api">Class API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator.generate"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator.export_gromacs"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.export_gromacs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator.print_summary"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.print_summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/surface_builder.html">surface_builder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/surface_builder.html#configuration-data-classes">Configuration &amp; data classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.functional_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.pore_type"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.num_sheets"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.num_sheets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.pore_diameter"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_diameter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.sheet_overrides"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_overrides</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.box_padding_xy"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_xy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.box_padding_z"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_z</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.system_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.system_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.sheet_base_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_base_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.seed"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.defect_fraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult"><code class="docutils literal notranslate"><span class="pre">SheetResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.mol"><code class="docutils literal notranslate"><span class="pre">SheetResult.mol</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.coords"><code class="docutils literal notranslate"><span class="pre">SheetResult.coords</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.composition"><code class="docutils literal notranslate"><span class="pre">SheetResult.composition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.atom_types"><code class="docutils literal notranslate"><span class="pre">SheetResult.atom_types</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.charges"><code class="docutils literal notranslate"><span class="pre">SheetResult.charges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.molecule_name"><code class="docutils literal notranslate"><span class="pre">SheetResult.molecule_name</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/surface_builder.html#builder">Builder</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceBuilder"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceBuilder.build"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceBuilder.export_gromacs"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.export_gromacs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gromacs_export.html">gromacs_export</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.GromacsExporter"><code class="docutils literal notranslate"><span class="pre">GromacsExporter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.GromacsExporter.export"><code class="docutils literal notranslate"><span class="pre">GromacsExporter.export()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.GROFileWriter"><code class="docutils literal notranslate"><span class="pre">GROFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.GROFileWriter.write"><code class="docutils literal notranslate"><span class="pre">GROFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.TOPFileWriter"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.TOPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.ITPFileWriter"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.ITPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.MultiSheetGROWriter"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.MultiSheetGROWriter.write"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.SurfaceTopologyWriter"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.SurfaceTopologyWriter.write"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/opls_typing.html">opls_typing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.AtomTyper"><code class="docutils literal notranslate"><span class="pre">AtomTyper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.AtomTyper.assign_atom_types"><code class="docutils literal notranslate"><span class="pre">AtomTyper.assign_atom_types()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.AtomTyper.get_bond_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_bond_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.AtomTyper.get_angle_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_angle_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.ChargeAssigner"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.ChargeAssigner.assign_charges"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner.assign_charges()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/constants.html">constants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/constants.html#biochar.constants.get_atom_mass"><code class="docutils literal notranslate"><span class="pre">get_atom_mass()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/constants.html#biochar.constants.get_vdw_radius"><code class="docutils literal notranslate"><span class="pre">get_vdw_radius()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/constants.html#biochar.constants.get_covalent_radius"><code class="docutils literal notranslate"><span class="pre">get_covalent_radius()</span></code></a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">0.1.1 (2026-04-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id2">0.1.0 (2026-04-17)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Biochar Simulator</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">biochar.biochar_generator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for biochar.biochar_generator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Biochar Structure Generator</span>
+
+<span class="sd">Main API for generating biochar building blocks for GROMACS simulations.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.carbon_skeleton</span><span class="w"> </span><span class="kn">import</span> <span class="n">PAHAssembler</span><span class="p">,</span> <span class="n">SkeletonValidator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.heteroatom_assignment</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">OxygenAssigner</span><span class="p">,</span>
+    <span class="n">HydrogenAssigner</span><span class="p">,</span>
+    <span class="n">HeteroatomValidator</span><span class="p">,</span>
+    <span class="n">CompositionInfo</span><span class="p">,</span>
+    <span class="n">_fix_heteroatom_bond_types</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.geometry_3d</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoordinateGenerator</span><span class="p">,</span> <span class="n">GeometryValidator</span><span class="p">,</span> <span class="n">ClashResolver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.opls_typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">AtomTyper</span><span class="p">,</span> <span class="n">ChargeAssigner</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.gromacs_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">GromacsExporter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationEngine</span>
+
+
+<div class="viewcode-block" id="GeneratorConfig">
+<a class="viewcode-back" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeneratorConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration for :class:`BiocharGenerator`.</span>
+
+<span class="sd">    All parameters are optional — defaults produce a 50-carbon, mostly-aromatic</span>
+<span class="sd">    biochar with a moderate hydrogen content and no oxygen.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        target_num_carbons: Target number of carbon atoms in the skeleton.</span>
+<span class="sd">            The generator grows the PAH graph until it reaches a count within</span>
+<span class="sd">            *size_tolerance* of this value.  Minimum 6 (benzene).</span>
+<span class="sd">        size_tolerance: Fractional tolerance on *target_num_carbons*</span>
+<span class="sd">            (e.g. 0.10 = ±10 %).</span>
+<span class="sd">        H_C_ratio: Target hydrogen-to-carbon atomic ratio.</span>
+<span class="sd">        H_C_tolerance: Fractional tolerance on *H_C_ratio*.</span>
+<span class="sd">        O_C_ratio: Target oxygen-to-carbon atomic ratio.  Ignored when</span>
+<span class="sd">            *functional_groups* is not ``None``.</span>
+<span class="sd">        O_C_tolerance: Fractional tolerance on *O_C_ratio*.</span>
+<span class="sd">        aromaticity_percent: Target fraction of carbon atoms that are</span>
+<span class="sd">            aromatic, as a percentage (0–100).</span>
+<span class="sd">        aromaticity_tolerance: Absolute tolerance on *aromaticity_percent*</span>
+<span class="sd">            in percentage-point units.</span>
+<span class="sd">        functional_groups: Explicit dict mapping functional group name to</span>
+<span class="sd">            exact placement count, e.g. ``{&quot;phenolic&quot;: 3, &quot;carboxyl&quot;: 1}``.</span>
+<span class="sd">            Supported groups: ``phenolic``, ``hydroxyl``, ``carboxyl``,</span>
+<span class="sd">            ``ether``.  If ``None``, total oxygen is derived from *O_C_ratio*</span>
+<span class="sd">            and placed as phenolic groups.</span>
+<span class="sd">        periodic_box: If ``True``, include periodic boundary box vectors in</span>
+<span class="sd">            the exported ``.gro`` file.</span>
+<span class="sd">        box_size: Explicit box size in nm as a 3-element array.  Used only</span>
+<span class="sd">            when *periodic_box* is ``True`` and box_size is not ``None``.</span>
+<span class="sd">        molecule_name: Residue name written to ``.gro`` / ``.itp`` (max 5</span>
+<span class="sd">            characters — GROMACS hard limit).  Suggested naming: ``BC400``,</span>
+<span class="sd">            ``BC600``, ``BC800`` (pyrolysis temperature series).</span>
+<span class="sd">        seed: Integer random seed for reproducibility.  ``None`` = random.</span>
+<span class="sd">        defect_fraction: Probability [0, 1) that each ring added during</span>
+<span class="sd">            skeleton growth is a 5-membered pentagon rather than a hexagon.</span>
+<span class="sd">            0.0 = pure hexagonal PAH.  Values 0.05–0.20 introduce realistic</span>
+<span class="sd">            topological disorder seen in low-temperature biochar.</span>
+<span class="sd">        max_ether_span: Maximum C–C shortest-path distance (in bonds) between</span>
+<span class="sd">            the two ring carbons bridged by each ether oxygen.  Controls the</span>
+<span class="sd">            ring size of the C–O–C bridge (ring size = max_ether_span + 2).</span>
+<span class="sd">            Default 3 → 5-membered furan-like ring (always geometrically flat).</span>
+<span class="sd">            Larger values may fold the aromatic sheet.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Size parameters</span>
+    <span class="n">target_num_carbons</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">size_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.10</span>
+
+    <span class="c1"># Composition parameters</span>
+    <span class="n">H_C_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">H_C_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.10</span>
+    <span class="n">O_C_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">O_C_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.10</span>
+
+    <span class="c1"># Structural parameters</span>
+    <span class="n">aromaticity_percent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">90.0</span>
+    <span class="n">aromaticity_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+
+    <span class="c1"># Functional groups — dict mapping group name → exact count to place.</span>
+    <span class="c1"># e.g. {&quot;phenolic&quot;: 3, &quot;carboxyl&quot;: 1}</span>
+    <span class="c1"># Valid keys: phenolic, hydroxyl, carboxyl, ether,</span>
+    <span class="c1">#             carbonyl*, quinone*, lactone*   (* fall back to phenolic)</span>
+    <span class="c1"># If None, O_C_ratio controls total oxygen using phenolic groups.</span>
+    <span class="n">functional_groups</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># System setup</span>
+    <span class="n">periodic_box</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">box_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Naming and identification</span>
+    <span class="c1"># Residue name (max 5 chars for GROMACS .gro format)</span>
+    <span class="c1"># Suggested: BC400, BC600, BC800 (temperature), BCH05, BCO10 (composition)</span>
+    <span class="n">molecule_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;BC&quot;</span>
+
+    <span class="c1"># Random seed for reproducibility</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Ring defects: probability [0, 1) that each ring addition is a pentagon.</span>
+    <span class="c1"># 0.0 = pure hexagonal PAH (default).  0.1 ≈ 10% pentagons.</span>
+    <span class="n">defect_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># Maximum graph distance (in bonds along the carbon skeleton) between the</span>
+    <span class="c1"># two ring carbons that an ether oxygen may bridge.  The ring formed by the</span>
+    <span class="c1"># C-O-C bridge has (max_ether_span + 2) members.  Minimum enforced = 3</span>
+    <span class="c1"># (5-membered, furan-like) to avoid strained smaller rings.</span>
+    <span class="c1">#   3 → 5-membered ring (furan/benzofuran-like) ← default, always flat</span>
+    <span class="c1">#   4 → 6-membered ring (pyran/chromene-like)   — may cause minor strain</span>
+    <span class="c1">#   5 → 7-membered ring                         — risk of sheet folding</span>
+    <span class="c1"># Values &gt; 5 risk cross-sheet bridges that fold the sheet into a nanotube.</span>
+    <span class="n">max_ether_span</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># functional_groups defaults to None → O_C_ratio-driven phenolic placement</span>
+        <span class="c1"># (no default list here; OxygenAssigner handles the None case)</span>
+
+        <span class="c1"># Validate molecule name length</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">molecule_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;molecule_name must be ≤5 characters (GROMACS .gro format), got &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">molecule_name</span><span class="si">}</span><span class="s2">&#39; (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">molecule_name</span><span class="p">)</span><span class="si">}</span><span class="s2"> chars)&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BiocharGenerator">
+<a class="viewcode-back" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BiocharGenerator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a single biochar molecule and export it to GROMACS files.</span>
+
+<span class="sd">    The generator runs a five-step pipeline:</span>
+
+<span class="sd">    1. **Carbon skeleton** — grows a PAH graph to the requested carbon count</span>
+<span class="sd">       using hexagonal ring expansion (or defective with pentagons).</span>
+<span class="sd">    2. **Heteroatom assignment** — places oxygen-containing functional groups</span>
+<span class="sd">       then fills remaining valences with hydrogen.</span>
+<span class="sd">    3. **3D coordinates** — embeds the molecule in 3D; flattens large sheets</span>
+<span class="sd">       via the hex-lattice path and optimises O–H hydrogen positions.</span>
+<span class="sd">    4. **OPLS-AA typing** — assigns atom types and partial charges.</span>
+<span class="sd">    5. **Validation** — checks composition ratios and geometry.</span>
+
+<span class="sd">    Use :func:`generate_biochar` for a one-call convenience wrapper.</span>
+
+<span class="sd">    Examples::</span>
+
+<span class="sd">        config = GeneratorConfig(target_num_carbons=80, H_C_ratio=0.4,</span>
+<span class="sd">                                 O_C_ratio=0.1, seed=42)</span>
+<span class="sd">        gen = BiocharGenerator(config)</span>
+<span class="sd">        mol, coords, composition = gen.generate()</span>
+<span class="sd">        gro, top, itp = gen.export_gromacs(output_directory=&quot;output&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeneratorConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise the generator.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: Generator configuration.  Uses :class:`GeneratorConfig`</span>
+<span class="sd">                defaults if ``None``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeneratorConfig</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atom_types</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charges</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="BiocharGenerator.generate">
+<a class="viewcode-back" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator.generate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">CompositionInfo</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the full generation pipeline and return the molecular structure.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of:</span>
+
+<span class="sd">            * **mol** (:class:`rdkit.Chem.Mol`) — molecule with 3-D</span>
+<span class="sd">              conformer and OPLS-AA atom types assigned.</span>
+<span class="sd">            * **coords** (:class:`numpy.ndarray`, shape ``(N, 3)``) —</span>
+<span class="sd">              atomic coordinates in Ångströms.</span>
+<span class="sd">            * **composition** (:class:`~heteroatom_assignment.CompositionInfo`)</span>
+<span class="sd">              — atom counts, H/C and O/C ratios, and functional-group census.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If carbon skeleton growth fails after retries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Step 1: Generate carbon skeleton</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating carbon skeleton with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target_num_carbons</span><span class="si">}</span><span class="s2"> carbons...&quot;</span><span class="p">)</span>
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_carbon_skeleton</span><span class="p">()</span>
+
+        <span class="c1"># Step 2: Assign heteroatoms (O, then H)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assigning oxygen atoms...&quot;</span><span class="p">)</span>
+        <span class="n">mol</span><span class="p">,</span> <span class="n">o_composition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assign_oxygens</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assigning hydrogen atoms...&quot;</span><span class="p">)</span>
+        <span class="n">mol</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assign_hydrogens</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="c1"># Carry functional-group bookkeeping from the oxygen step into the</span>
+        <span class="c1"># final composition (HydrogenAssigner resets it to {}).</span>
+        <span class="n">composition</span><span class="o">.</span><span class="n">functional_groups</span> <span class="o">=</span> <span class="n">o_composition</span><span class="o">.</span><span class="n">functional_groups</span>
+
+        <span class="c1"># Step 3: Generate 3D coordinates</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating 3D coordinates...&quot;</span><span class="p">)</span>
+        <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_geometry</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="c1"># Force field computation (inside geometry) internally re-sanitizes the</span>
+        <span class="c1"># mol with RDKit&#39;s default aromaticity model, which can mark ether C-O</span>
+        <span class="c1"># bonds as AROMATIC.  Restore correct single-bond types before typing.</span>
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">_fix_heteroatom_bond_types</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="c1"># Step 4: Assign OPLS types and charges</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assigning OPLS-AA atom types and charges...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_opls_properties</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="c1"># Step 5: Validate</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Validating structure...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">composition</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+
+        <span class="c1"># validation.py calls Chem.SanitizeMol() which can re-mark ether C-O</span>
+        <span class="c1"># bonds as AROMATIC using RDKit&#39;s default model.  Fix again.</span>
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">_fix_heteroatom_bond_types</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="c1"># Store results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="o">=</span> <span class="n">mol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="o">=</span> <span class="n">composition</span>
+
+        <span class="k">return</span> <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">composition</span></div>
+
+
+<div class="viewcode-block" id="BiocharGenerator.export_gromacs">
+<a class="viewcode-back" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator.export_gromacs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_gromacs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">output_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+        <span class="n">basename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;biochar&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write GROMACS structure and topology files.</span>
+
+<span class="sd">        Must be called after :meth:`generate`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            output_directory: Directory in which to write output files.</span>
+<span class="sd">                Created if it does not exist.</span>
+<span class="sd">            basename: Stem for output filenames</span>
+<span class="sd">                (e.g. ``&quot;bc400&quot;`` → ``bc400.gro``, ``bc400.top``,</span>
+<span class="sd">                ``bc400.itp``).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of :class:`~pathlib.Path` objects</span>
+<span class="sd">            ``(gro_path, top_path, itp_path)``.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If :meth:`generate` has not been called yet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Must call generate() before export_gromacs()&quot;</span><span class="p">)</span>
+
+        <span class="n">exporter</span> <span class="o">=</span> <span class="n">GromacsExporter</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span>
+        <span class="n">gro_path</span><span class="p">,</span> <span class="n">top_path</span><span class="p">,</span> <span class="n">itp_path</span> <span class="o">=</span> <span class="n">exporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">atom_types</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">charges</span><span class="p">,</span>
+            <span class="n">molecule_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">molecule_name</span><span class="p">,</span>
+            <span class="n">basename</span><span class="o">=</span><span class="n">basename</span><span class="p">,</span>
+            <span class="n">include_periodic_box</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">periodic_box</span><span class="p">,</span>
+            <span class="n">box_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">GROMACS files written:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Structure:  </span><span class="si">{</span><span class="n">gro_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Topology:   </span><span class="si">{</span><span class="n">top_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Include:    </span><span class="si">{</span><span class="n">itp_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gro_path</span><span class="p">,</span> <span class="n">top_path</span><span class="p">,</span> <span class="n">itp_path</span></div>
+
+
+<div class="viewcode-block" id="BiocharGenerator.print_summary">
+<a class="viewcode-back" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator.print_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print summary of generated structure.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No structure generated yet. Call generate() first.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;BIOCHAR STRUCTURE SUMMARY&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Composition:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Carbons:     </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_carbons</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Hydrogens:   </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_hydrogens</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Oxygens:     </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_oxygens</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Ratios:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  H/C ratio:   </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">H_C_ratio</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> (target: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">H_C_ratio</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  O/C ratio:   </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">O_C_ratio</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> (target: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">O_C_ratio</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Functional Groups:&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">functional_groups</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">group_name</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">functional_groups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">group_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  None&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Validation:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Status: </span><span class="si">{</span><span class="s1">&#39;VALID&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;INVALID&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Errors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="mi">3</span><span class="p">]:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Warnings: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span><span class="p">[</span><span class="mi">2</span><span class="p">][:</span><span class="mi">3</span><span class="p">]:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    - </span><span class="si">{</span><span class="n">warning</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Private methods</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_carbon_skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate aromatic carbon skeleton.&quot;&quot;&quot;</span>
+        <span class="n">assembler</span> <span class="o">=</span> <span class="n">PAHAssembler</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">skeleton</span> <span class="o">=</span> <span class="n">assembler</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target_num_carbons</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">aromaticity_percent</span><span class="p">,</span>
+            <span class="n">defect_fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">defect_fraction</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Validate skeleton</span>
+        <span class="n">valid</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">SkeletonValidator</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">skeleton</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Skeleton validation issues: </span><span class="si">{</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">skeleton</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assign_oxygens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span> <span class="n">CompositionInfo</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign oxygen atoms. Returns (mol, composition) including functional-group counts.&quot;&quot;&quot;</span>
+        <span class="n">assigner</span> <span class="o">=</span> <span class="n">OxygenAssigner</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                                  <span class="n">max_ether_span</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_ether_span</span><span class="p">)</span>
+        <span class="n">mol</span><span class="p">,</span> <span class="n">comp</span> <span class="o">=</span> <span class="n">assigner</span><span class="o">.</span><span class="n">assign_oxygens</span><span class="p">(</span>
+            <span class="n">mol</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">O_C_ratio</span><span class="p">,</span>
+            <span class="n">O_C_tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">O_C_tolerance</span><span class="p">,</span>
+            <span class="n">functional_group_preference</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">functional_groups</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">mol</span><span class="p">,</span> <span class="n">comp</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assign_hydrogens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span> <span class="n">CompositionInfo</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign hydrogen atoms.&quot;&quot;&quot;</span>
+        <span class="n">assigner</span> <span class="o">=</span> <span class="n">HydrogenAssigner</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">mol</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="n">assigner</span><span class="o">.</span><span class="n">assign_hydrogens</span><span class="p">(</span>
+            <span class="n">mol</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">H_C_ratio</span><span class="p">,</span>
+            <span class="n">H_C_tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">H_C_tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Validate</span>
+        <span class="n">valid</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">HeteroatomValidator</span><span class="o">.</span><span class="n">validate_ratios</span><span class="p">(</span>
+            <span class="n">composition</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">H_C_ratio</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">O_C_ratio</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">H_C_tolerance</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">O_C_tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Composition validation issues: </span><span class="si">{</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mol</span><span class="p">,</span> <span class="n">composition</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate 3D coordinates with clash resolution.&quot;&quot;&quot;</span>
+        <span class="n">generator</span> <span class="o">=</span> <span class="n">CoordinateGenerator</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_3d_coordinates</span><span class="p">(</span>
+            <span class="n">mol</span><span class="p">,</span>
+            <span class="n">force_aromatic_planarity</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Validate and detect clashes</span>
+        <span class="n">valid</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">GeometryValidator</span><span class="o">.</span><span class="n">validate_geometry</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+        <span class="n">steric_clashes</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errors</span> <span class="k">if</span> <span class="s2">&quot;Steric clash&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">]</span>
+
+        <span class="c1"># Resolve clashes if found.</span>
+        <span class="c1">#</span>
+        <span class="c1"># When hex-lattice positions are used (generator.used_hex_lattice is</span>
+        <span class="c1"># True), skip ALL clash resolution and FF passes.  The hex lattice</span>
+        <span class="c1"># gives perfect 1.42 Å CC bonds; the &quot;clashes&quot; reported are physical</span>
+        <span class="c1"># features of fused PAH geometry:</span>
+        <span class="c1">#   * Peri C-C at 2.44 Å (bay regions) — real PAH geometry, not a</span>
+        <span class="c1">#     clash; below the 0.75×vdW threshold (2.55 Å) but chemically fine.</span>
+        <span class="c1">#   * Peri H-C: also within expected PAH ranges.</span>
+        <span class="c1"># Displacing ring carbons via the resolver would shatter the ring</span>
+        <span class="c1"># geometry.  GROMACS energy minimisation (gmx grompp + em) will relax</span>
+        <span class="c1"># H/O positions further before any production MD run.</span>
+        <span class="k">if</span> <span class="n">steric_clashes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">generator</span><span class="o">.</span><span class="n">used_hex_lattice</span><span class="p">:</span>
+            <span class="c1"># First pass: iterative clash resolution</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">ClashResolver</span><span class="o">.</span><span class="n">resolve_clashes</span><span class="p">(</span>
+                <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">displacement_step</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">use_vdw_radii</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Second pass: force-field refinement.</span>
+            <span class="n">coords</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">validate_and_relax</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+
+            <span class="c1"># Third pass: final clash resolution if needed</span>
+            <span class="n">valid_check</span><span class="p">,</span> <span class="n">errors_check</span> <span class="o">=</span> <span class="n">GeometryValidator</span><span class="o">.</span><span class="n">validate_geometry</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+            <span class="n">steric_clashes_after_ff</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errors_check</span> <span class="k">if</span> <span class="s2">&quot;Steric clash&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">steric_clashes_after_ff</span><span class="p">:</span>
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">ClashResolver</span><span class="o">.</span><span class="n">resolve_clashes</span><span class="p">(</span>
+                    <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">displacement_step</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span> <span class="n">use_vdw_radii</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="n">coords</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">validate_and_relax</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+
+            <span class="c1"># Final validation</span>
+            <span class="n">valid</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">GeometryValidator</span><span class="o">.</span><span class="n">validate_geometry</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+            <span class="n">steric_clashes_after</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errors</span> <span class="k">if</span> <span class="s2">&quot;Steric clash&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">]</span>
+            <span class="n">clashes_resolved</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">steric_clashes</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">steric_clashes_after</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Clash resolution: </span><span class="si">{</span><span class="n">clashes_resolved</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">steric_clashes</span><span class="p">)</span><span class="si">}</span><span class="s2"> clashes resolved&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Geometry validation issues:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">[:</span><span class="mi">3</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Measure planarity</span>
+        <span class="n">planarity</span><span class="p">,</span> <span class="n">assessment</span> <span class="o">=</span> <span class="n">GeometryValidator</span><span class="o">.</span><span class="n">measure_ring_planarity</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Ring planarity: </span><span class="si">{</span><span class="n">assessment</span><span class="si">}</span><span class="s2"> (deviation: </span><span class="si">{</span><span class="n">planarity</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> Å)&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assign_opls_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign OPLS-AA atom types and charges.&quot;&quot;&quot;</span>
+        <span class="n">typer</span> <span class="o">=</span> <span class="n">AtomTyper</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atom_types</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">assign_atom_types</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="n">charger</span> <span class="o">=</span> <span class="n">ChargeAssigner</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charges</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">assign_charges</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_types</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Atom types assigned: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_types</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span><span class="si">}</span><span class="s2"> unique types&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Total charge: </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">charges</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> e&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span> <span class="n">composition</span><span class="p">:</span> <span class="n">CompositionInfo</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate complete structure.&quot;&quot;&quot;</span>
+        <span class="n">is_valid</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">warnings</span><span class="p">,</span> <span class="n">metrics</span> <span class="o">=</span> <span class="n">ValidationEngine</span><span class="o">.</span><span class="n">validate_complete</span><span class="p">(</span>
+            <span class="n">mol</span><span class="p">,</span>
+            <span class="n">composition</span><span class="p">,</span>
+            <span class="n">coords</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">H_C_ratio</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">O_C_ratio</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">aromaticity_percent</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">H_C_tolerance</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">O_C_tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">validation_report</span> <span class="o">=</span> <span class="p">(</span><span class="n">is_valid</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">warnings</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Validation FAILED with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span><span class="si">}</span><span class="s2"> error(s):&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Validation PASSED&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">warnings</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">warnings</span><span class="p">)</span><span class="si">}</span><span class="s2"> warning(s)&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generate_biochar">
+<a class="viewcode-back" href="../../api/biochar_generator.html#biochar.biochar_generator.generate_biochar">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_biochar</span><span class="p">(</span>
+    <span class="n">target_num_carbons</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="n">H_C_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">O_C_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">aromaticity_percent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">90.0</span><span class="p">,</span>
+    <span class="n">functional_groups</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">defect_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">max_ether_span</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">output_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+    <span class="n">basename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;biochar&quot;</span><span class="p">,</span>
+    <span class="n">molecule_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;BC&quot;</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function to generate and export biochar in one call.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        target_num_carbons: Target number of carbon atoms.</span>
+<span class="sd">        H_C_ratio: Target hydrogen-to-carbon ratio.</span>
+<span class="sd">        O_C_ratio: Target oxygen-to-carbon ratio.  Used to determine total</span>
+<span class="sd">            oxygen when *functional_groups* is None.</span>
+<span class="sd">        aromaticity_percent: Target aromaticity percentage.</span>
+<span class="sd">        functional_groups: Dict mapping functional group name → exact count,</span>
+<span class="sd">            e.g. ``{&quot;phenolic&quot;: 3, &quot;carboxyl&quot;: 1}``.</span>
+
+<span class="sd">            Supported groups:</span>
+
+<span class="sd">            * ``phenolic``  — aromatic C–OH             (1 O per group)</span>
+<span class="sd">            * ``hydroxyl``  — same as phenolic for pure aromatic PAH (1 O)</span>
+<span class="sd">            * ``carboxyl``  — aromatic C–C(=O)(OH)      (2 O per group)</span>
+<span class="sd">            * ``ether``     — aromatic C–O–C bridge     (1 O per group)</span>
+<span class="sd">            * ``carbonyl``  — not supported; substituted with phenolic</span>
+<span class="sd">            * ``quinone``   — not supported; substituted with phenolic</span>
+<span class="sd">            * ``lactone``   — not supported; substituted with phenolic</span>
+
+<span class="sd">            If ``None`` (default), the total oxygen count is derived from</span>
+<span class="sd">            *O_C_ratio* and placed as phenolic (–OH) groups.</span>
+<span class="sd">        defect_fraction: Probability [0, 1) that each ring added during</span>
+<span class="sd">            skeleton growth is a 5-membered (pentagon) ring rather than a</span>
+<span class="sd">            hexagon.  0.0 (default) = pure hexagonal PAH.  Values ~0.1–0.2</span>
+<span class="sd">            introduce realistic topological disorder.</span>
+<span class="sd">        max_ether_span: Maximum number of C–C bonds between the two ring</span>
+<span class="sd">            carbons bridged by each ether oxygen.  Controls the ring size of</span>
+<span class="sd">            the C–O–C bridge (ring size = max_ether_span + 2).  Default 3</span>
+<span class="sd">            (5-membered furan/benzofuran-like ring — always stays flat).</span>
+<span class="sd">            Use 4 for pyran/chromene-like (6-membered) or 5 for 7-membered;</span>
+<span class="sd">            larger values risk cross-sheet bridges that fold the molecule.</span>
+<span class="sd">        output_directory: Output directory for GROMACS files.</span>
+<span class="sd">        basename: Base filename for output files.</span>
+<span class="sd">        molecule_name: Residue name (max 5 chars). Suggested: BC400, BC600,</span>
+<span class="sd">            BCH05, BCO10.</span>
+<span class="sd">        seed: Random seed for reproducibility.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (molecule, coordinates, gro_path, top_path, itp_path)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">GeneratorConfig</span><span class="p">(</span>
+        <span class="n">target_num_carbons</span><span class="o">=</span><span class="n">target_num_carbons</span><span class="p">,</span>
+        <span class="n">H_C_ratio</span><span class="o">=</span><span class="n">H_C_ratio</span><span class="p">,</span>
+        <span class="n">O_C_ratio</span><span class="o">=</span><span class="n">O_C_ratio</span><span class="p">,</span>
+        <span class="n">aromaticity_percent</span><span class="o">=</span><span class="n">aromaticity_percent</span><span class="p">,</span>
+        <span class="n">functional_groups</span><span class="o">=</span><span class="n">functional_groups</span><span class="p">,</span>
+        <span class="n">defect_fraction</span><span class="o">=</span><span class="n">defect_fraction</span><span class="p">,</span>
+        <span class="n">max_ether_span</span><span class="o">=</span><span class="n">max_ether_span</span><span class="p">,</span>
+        <span class="n">molecule_name</span><span class="o">=</span><span class="n">molecule_name</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">BiocharGenerator</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+    <span class="n">generator</span><span class="o">.</span><span class="n">print_summary</span><span class="p">()</span>
+
+    <span class="n">gro_path</span><span class="p">,</span> <span class="n">top_path</span><span class="p">,</span> <span class="n">itp_path</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">export_gromacs</span><span class="p">(</span>
+        <span class="n">output_directory</span><span class="o">=</span><span class="n">output_directory</span><span class="p">,</span>
+        <span class="n">basename</span><span class="o">=</span><span class="n">basename</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">gro_path</span><span class="p">,</span> <span class="n">top_path</span><span class="p">,</span> <span class="n">itp_path</span></div>
+
+
+
+<div class="viewcode-block" id="generate_biochar_series">
+<a class="viewcode-back" href="../../api/biochar_generator.html#biochar.biochar_generator.generate_biochar_series">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_biochar_series</span><span class="p">(</span>
+    <span class="n">configurations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
+    <span class="n">output_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+    <span class="n">create_combined_top</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate multiple biochar structures for mixed simulations.</span>
+
+<span class="sd">    This function is ideal for creating temperature series, composition series,</span>
+<span class="sd">    or mixed biochar systems for GROMACS simulations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        configurations: List of configuration dictionaries. Each dict should contain:</span>
+<span class="sd">            - &#39;molecule_name&#39; (str, required): Residue name (max 5 chars, e.g., &#39;BC400&#39;)</span>
+<span class="sd">            - &#39;target_num_carbons&#39; (int, optional): Default 50</span>
+<span class="sd">            - &#39;H_C_ratio&#39; (float, optional): Default 0.5</span>
+<span class="sd">            - &#39;O_C_ratio&#39; (float, optional): Default 0.1</span>
+<span class="sd">            - &#39;aromaticity_percent&#39; (float, optional): Default 90.0</span>
+<span class="sd">            - &#39;seed&#39; (int, optional): For reproducibility</span>
+<span class="sd">            - &#39;functional_groups&#39; (dict, optional): e.g. {&quot;phenolic&quot;: 3, &quot;carboxyl&quot;: 1}</span>
+
+<span class="sd">        output_directory: Output directory for all files</span>
+<span class="sd">        create_combined_top: If True, generate a combined topology for all structures</span>
+<span class="sd">        verbose: If True, print progress information</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary mapping molecule_name -&gt; (gro_path, top_path, itp_path)</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; configs = [</span>
+<span class="sd">        ...     {&#39;molecule_name&#39;: &#39;BC400&#39;, &#39;H_C_ratio&#39;: 0.65, &#39;O_C_ratio&#39;: 0.20},</span>
+<span class="sd">        ...     {&#39;molecule_name&#39;: &#39;BC600&#39;, &#39;H_C_ratio&#39;: 0.55, &#39;O_C_ratio&#39;: 0.12},</span>
+<span class="sd">        ...     {&#39;molecule_name&#39;: &#39;BC800&#39;, &#39;H_C_ratio&#39;: 0.40, &#39;O_C_ratio&#39;: 0.05},</span>
+<span class="sd">        ... ]</span>
+<span class="sd">        &gt;&gt;&gt; results = generate_biochar_series(configs, output_directory=&#39;output&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create output directory</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span>
+    <span class="n">output_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">itp_files</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">molecule_names</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BATCH BIOCHAR GENERATION - </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">configurations</span><span class="p">)</span><span class="si">}</span><span class="s2"> structures&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">configurations</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Extract configuration</span>
+        <span class="n">molecule_name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;molecule_name&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">molecule_name</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Configuration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> missing required &#39;molecule_name&#39;&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">molecule_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;molecule_name &#39;</span><span class="si">{</span><span class="n">molecule_name</span><span class="si">}</span><span class="s2">&#39; exceeds 5 character limit &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(GROMACS .gro format requirement)&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">target_carbons</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target_num_carbons&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">h_c</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;H_C_ratio&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">o_c</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;O_C_ratio&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">arom</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;aromaticity_percent&quot;</span><span class="p">,</span> <span class="mf">90.0</span><span class="p">)</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">fg</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;functional_groups&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">configurations</span><span class="p">)</span><span class="si">}</span><span class="s2">] Generating </span><span class="si">{</span><span class="n">molecule_name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Parameters: </span><span class="si">{</span><span class="n">target_carbons</span><span class="si">}</span><span class="s2">C, H/C=</span><span class="si">{</span><span class="n">h_c</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, O/C=</span><span class="si">{</span><span class="n">o_c</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">gro_path</span><span class="p">,</span> <span class="n">top_path</span><span class="p">,</span> <span class="n">itp_path</span> <span class="o">=</span> <span class="n">generate_biochar</span><span class="p">(</span>
+                <span class="n">target_num_carbons</span><span class="o">=</span><span class="n">target_carbons</span><span class="p">,</span>
+                <span class="n">H_C_ratio</span><span class="o">=</span><span class="n">h_c</span><span class="p">,</span>
+                <span class="n">O_C_ratio</span><span class="o">=</span><span class="n">o_c</span><span class="p">,</span>
+                <span class="n">aromaticity_percent</span><span class="o">=</span><span class="n">arom</span><span class="p">,</span>
+                <span class="n">functional_groups</span><span class="o">=</span><span class="n">fg</span><span class="p">,</span>
+                <span class="n">output_directory</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">output_path</span><span class="p">),</span>
+                <span class="n">basename</span><span class="o">=</span><span class="n">molecule_name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+                <span class="n">molecule_name</span><span class="o">=</span><span class="n">molecule_name</span><span class="p">,</span>
+                <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">results</span><span class="p">[</span><span class="n">molecule_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gro_path</span><span class="p">,</span> <span class="n">top_path</span><span class="p">,</span> <span class="n">itp_path</span><span class="p">)</span>
+            <span class="n">itp_files</span><span class="p">[</span><span class="n">molecule_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">itp_path</span>
+            <span class="n">molecule_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">molecule_name</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ✓ Successfully generated </span><span class="si">{</span><span class="n">gro_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ✗ Failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+    <span class="c1"># Generate combined topology file if requested</span>
+    <span class="k">if</span> <span class="n">create_combined_top</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">combined_top_path</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="s2">&quot;combined.top&quot;</span>
+        <span class="n">_create_combined_topology</span><span class="p">(</span>
+            <span class="n">itp_files</span><span class="p">,</span> <span class="n">molecule_names</span><span class="p">,</span> <span class="n">combined_top_path</span><span class="p">,</span> <span class="n">verbose</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BATCH GENERATION COMPLETE - </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> structures generated&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">create_combined_top</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Combined topology: </span><span class="si">{</span><span class="n">combined_top_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">To use in GROMACS simulations:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  gmx grompp -f md.mdp -c combined.gro -p combined.top -o topol.tpr&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_combined_topology</span><span class="p">(</span>
+    <span class="n">itp_files</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="n">molecule_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a combined topology file for mixed biochar simulations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        itp_files: Dictionary mapping molecule_name -&gt; itp_path</span>
+<span class="sd">        molecule_names: List of molecule names in order</span>
+<span class="sd">        output_path: Path to write combined .top file</span>
+<span class="sd">        verbose: If True, print status information</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Path to combined topology file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Creating combined topology file...&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="c1"># Header</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;; Combined topology for mixed biochar simulation</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;; Auto-generated by Biochar Generator</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;; Contains </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">molecule_names</span><span class="p">)</span><span class="si">}</span><span class="s2"> biochar structures</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Include forcefield</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;#include &quot;oplsaa.ff/forcefield.itp&quot;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Include all molecule topologies</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;; Molecule definitions</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">mol_name</span> <span class="ow">in</span> <span class="n">molecule_names</span><span class="p">:</span>
+            <span class="n">itp_file</span> <span class="o">=</span> <span class="n">itp_files</span><span class="p">[</span><span class="n">mol_name</span><span class="p">]</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;#include &quot;</span><span class="si">{</span><span class="n">itp_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># System section</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;[ system ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Mixed Biochar System</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Molecules section</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;[ molecules ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;; Name            #molecules</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">mol_name</span> <span class="ow">in</span> <span class="n">molecule_names</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mol_name</span><span class="si">:</span><span class="s2">20s</span><span class="si">}</span><span class="s2"> 1</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Combined topology written to </span><span class="si">{</span><span class="n">output_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output_path</span>
+
+
+<div class="viewcode-block" id="generate_surface">
+<a class="viewcode-back" href="../../api/biochar_generator.html#biochar.biochar_generator.generate_surface">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_surface</span><span class="p">(</span>
+    <span class="n">target_num_carbons</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="n">H_C_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span>
+    <span class="n">O_C_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">functional_groups</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">defect_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">pore_diameter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span>
+    <span class="n">num_sheets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">sheet_overrides</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+    <span class="n">basename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;surface&quot;</span><span class="p">,</span>
+    <span class="n">system_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SLIT&quot;</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a slit-pore surface system and export to GROMACS files.</span>
+
+<span class="sd">    Creates *num_sheets* parallel graphene-like sheets separated by</span>
+<span class="sd">    *pore_diameter* Ångströms, applies functional groups to each sheet,</span>
+<span class="sd">    and writes GROMACS-ready ``.gro`` / ``.top`` / ``.itp`` files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        target_num_carbons: Number of carbon atoms per sheet.</span>
+<span class="sd">        H_C_ratio: Target H/C ratio for each sheet.</span>
+<span class="sd">        O_C_ratio: Target O/C ratio for each sheet (used when</span>
+<span class="sd">            *functional_groups* is ``None``).</span>
+<span class="sd">        functional_groups: Functional groups applied to every sheet,</span>
+<span class="sd">            e.g. ``{&#39;phenolic&#39;: 2, &#39;ether&#39;: 1}``.  Overridden per-sheet</span>
+<span class="sd">            if *sheet_overrides* is provided.</span>
+<span class="sd">        pore_diameter: Gap between sheet inner van-der-Waals surfaces,</span>
+<span class="sd">            in Ångströms.</span>
+<span class="sd">        num_sheets: Number of parallel sheets (default 2 → one slit pore).</span>
+<span class="sd">        sheet_overrides: List of per-sheet config dicts (length must equal</span>
+<span class="sd">            *num_sheets*).  Accepted keys: ``target_num_carbons``,</span>
+<span class="sd">            ``H_C_ratio``, ``O_C_ratio``, ``functional_groups``,</span>
+<span class="sd">            ``aromaticity_percent``, ``seed``.  If ``None``, all sheets</span>
+<span class="sd">            are chemically identical.</span>
+<span class="sd">        output_directory: Directory for output files.</span>
+<span class="sd">        basename: Base filename for ``.gro``/``.top``/``.itp`` files.</span>
+<span class="sd">        system_name: Name written to the ``[ system ]`` section in .top.</span>
+<span class="sd">        seed: Random seed for reproducibility.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``(sheets, gro_path, top_path, itp_paths)``</span>
+
+<span class="sd">        * *sheets* — ``List[SheetResult]`` with mol, coords, composition.</span>
+<span class="sd">        * *gro_path*, *top_path* — :class:`pathlib.Path` objects.</span>
+<span class="sd">        * *itp_paths* — list of :class:`pathlib.Path` (one per unique</span>
+<span class="sd">          sheet type).</span>
+
+<span class="sd">    Examples::</span>
+
+<span class="sd">        # Simple slit pore — two identical sheets, 10 Å pore</span>
+<span class="sd">        sheets, gro, top, itps = generate_surface(</span>
+<span class="sd">            target_num_carbons=40,</span>
+<span class="sd">            functional_groups={&#39;phenolic&#39;: 2, &#39;ether&#39;: 1},</span>
+<span class="sd">            pore_diameter=10.0,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Asymmetric pore — different chemistry on each wall</span>
+<span class="sd">        sheets, gro, top, itps = generate_surface(</span>
+<span class="sd">            pore_diameter=8.0,</span>
+<span class="sd">            sheet_overrides=[</span>
+<span class="sd">                {&#39;functional_groups&#39;: {&#39;phenolic&#39;: 3}, &#39;target_num_carbons&#39;: 40},</span>
+<span class="sd">                {&#39;functional_groups&#39;: {&#39;carboxyl&#39;: 2}, &#39;target_num_carbons&#39;: 50},</span>
+<span class="sd">            ],</span>
+<span class="sd">        )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Import here to avoid circular imports at module level</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.surface_builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">SurfaceBuilder</span><span class="p">,</span> <span class="n">SurfaceConfig</span>
+
+    <span class="n">surface_config</span> <span class="o">=</span> <span class="n">SurfaceConfig</span><span class="p">(</span>
+        <span class="n">target_num_carbons</span><span class="o">=</span><span class="n">target_num_carbons</span><span class="p">,</span>
+        <span class="n">H_C_ratio</span><span class="o">=</span><span class="n">H_C_ratio</span><span class="p">,</span>
+        <span class="n">O_C_ratio</span><span class="o">=</span><span class="n">O_C_ratio</span><span class="p">,</span>
+        <span class="n">functional_groups</span><span class="o">=</span><span class="n">functional_groups</span><span class="p">,</span>
+        <span class="n">aromaticity_percent</span><span class="o">=</span><span class="mf">95.0</span><span class="p">,</span>
+        <span class="n">defect_fraction</span><span class="o">=</span><span class="n">defect_fraction</span><span class="p">,</span>
+        <span class="n">pore_type</span><span class="o">=</span><span class="s2">&quot;slit&quot;</span><span class="p">,</span>
+        <span class="n">num_sheets</span><span class="o">=</span><span class="n">num_sheets</span><span class="p">,</span>
+        <span class="n">pore_diameter</span><span class="o">=</span><span class="n">pore_diameter</span><span class="p">,</span>
+        <span class="n">sheet_overrides</span><span class="o">=</span><span class="n">sheet_overrides</span><span class="p">,</span>
+        <span class="n">system_name</span><span class="o">=</span><span class="n">system_name</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">builder</span> <span class="o">=</span> <span class="n">SurfaceBuilder</span><span class="p">(</span><span class="n">surface_config</span><span class="p">)</span>
+    <span class="n">sheets</span><span class="p">,</span> <span class="n">box_vectors</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+    <span class="n">gro_path</span><span class="p">,</span> <span class="n">top_path</span><span class="p">,</span> <span class="n">itp_paths</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">export_gromacs</span><span class="p">(</span>
+        <span class="n">output_directory</span><span class="o">=</span><span class="n">output_directory</span><span class="p">,</span>
+        <span class="n">basename</span><span class="o">=</span><span class="n">basename</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Surface GROMACS files written:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Structure:  </span><span class="si">{</span><span class="n">gro_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Topology:   </span><span class="si">{</span><span class="n">top_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">itp</span> <span class="ow">in</span> <span class="n">itp_paths</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Include:    </span><span class="si">{</span><span class="n">itp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">To run with GROMACS:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  gmx grompp -f md.mdp -c </span><span class="si">{</span><span class="n">gro_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> -p </span><span class="si">{</span><span class="n">top_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> -o topol.tpr&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sheets</span><span class="p">,</span> <span class="n">gro_path</span><span class="p">,</span> <span class="n">top_path</span><span class="p">,</span> <span class="n">itp_paths</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, jolayfield.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

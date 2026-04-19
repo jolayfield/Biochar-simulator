@@ -40,7 +40,7 @@ pip install -r requirements.txt
 ### Single molecule
 
 ```python
-from biochar_simulator.biochar_generator import generate_biochar
+from biochar.biochar_generator import generate_biochar
 
 mol, coords, gro_path, top_path, itp_path = generate_biochar(
     target_num_carbons=100,
@@ -88,7 +88,7 @@ mol, coords, gro, top, itp = generate_biochar(
 ### Slit-pore surface
 
 ```python
-from biochar_simulator.biochar_generator import generate_surface
+from biochar.biochar_generator import generate_surface
 
 # Two identical sheets, 10 Å pore
 sheets, gro, top, itps = generate_surface(
@@ -115,7 +115,7 @@ sheets, gro, top, itps = generate_surface(
 ### Batch generation (temperature/composition series)
 
 ```python
-from biochar_simulator.biochar_generator import generate_biochar_series
+from biochar.biochar_generator import generate_biochar_series
 
 configs = [
     {"molecule_name": "BC400", "target_num_carbons": 80,  "H_C_ratio": 0.65, "O_C_ratio": 0.20, "seed": 1},

@@ -11,7 +11,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from biochar_simulator.biochar_generator import generate_biochar_series
+from biochar.biochar_generator import generate_biochar_series
 
 
 def example_1_temperature_series():

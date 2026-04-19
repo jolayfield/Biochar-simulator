@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>biochar.constants &mdash; Biochar Simulator 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Biochar Simulator
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#recommended-conda-conda-forge">Recommended: conda (conda-forge)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#from-pypi">From PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#development-install">Development install</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#single-molecule">Single molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#with-functional-groups">With functional groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#with-pentagon-defects">With pentagon defects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#slit-pore-surface">Slit-pore surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#run-in-gromacs">Run in GROMACS</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/single_molecule.html">Single Molecule Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#generation-pipeline">Generation pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#controlling-size">Controlling size</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/single_molecule.html#pah-library-seed-molecules">PAH library (seed molecules)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#controlling-composition">Controlling composition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#reproducibility">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#using-the-class-api">Using the class API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/functional_groups.html">Functional Groups</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#two-modes">Two modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#available-groups">Available groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#ether-bridge-geometry">Ether bridge geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#mixing-group-types">Mixing group types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/surfaces.html">Porous Surface Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#symmetric-slit-pore">Symmetric slit pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#asymmetric-pore">Asymmetric pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#multi-sheet-stacking">Multi-sheet stacking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#using-the-class-api">Using the class API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#output-files">Output files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/batch_generation.html">Batch Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/batch_generation.html#temperature-series">Temperature series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/batch_generation.html#configuration-dict-keys">Configuration dict keys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/batch_generation.html#running-a-mixed-gromacs-simulation">Running a mixed GROMACS simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/gromacs_workflow.html">GROMACS Workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#generate-the-structure">1. Generate the structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#energy-minimisation">2. Energy minimisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#visualise">3. Visualise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#solvation-optional">4. Solvation (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#production-md">5. Production MD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#force-field-notes">Force field notes</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/biochar_generator.html">biochar_generator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/biochar_generator.html#convenience-functions">Convenience functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.generate_biochar"><code class="docutils literal notranslate"><span class="pre">generate_biochar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.generate_surface"><code class="docutils literal notranslate"><span class="pre">generate_surface()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.generate_biochar_series"><code class="docutils literal notranslate"><span class="pre">generate_biochar_series()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/biochar_generator.html#configuration">Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.size_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.size_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.H_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.O_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.aromaticity_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.functional_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.periodic_box"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.periodic_box</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.box_size"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.box_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.molecule_name"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.molecule_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.seed"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.GeneratorConfig.max_ether_span"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.max_ether_span</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/biochar_generator.html#class-api">Class API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator.generate"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator.export_gromacs"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.export_gromacs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar.biochar_generator.BiocharGenerator.print_summary"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.print_summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/surface_builder.html">surface_builder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/surface_builder.html#configuration-data-classes">Configuration &amp; data classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.functional_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.pore_type"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.num_sheets"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.num_sheets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.pore_diameter"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_diameter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.sheet_overrides"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_overrides</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.box_padding_xy"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_xy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.box_padding_z"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_z</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.system_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.system_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.sheet_base_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_base_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.seed"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.defect_fraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult"><code class="docutils literal notranslate"><span class="pre">SheetResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.mol"><code class="docutils literal notranslate"><span class="pre">SheetResult.mol</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.coords"><code class="docutils literal notranslate"><span class="pre">SheetResult.coords</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.composition"><code class="docutils literal notranslate"><span class="pre">SheetResult.composition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.atom_types"><code class="docutils literal notranslate"><span class="pre">SheetResult.atom_types</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.charges"><code class="docutils literal notranslate"><span class="pre">SheetResult.charges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SheetResult.molecule_name"><code class="docutils literal notranslate"><span class="pre">SheetResult.molecule_name</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/surface_builder.html#builder">Builder</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceBuilder"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceBuilder.build"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar.surface_builder.SurfaceBuilder.export_gromacs"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.export_gromacs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gromacs_export.html">gromacs_export</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.GromacsExporter"><code class="docutils literal notranslate"><span class="pre">GromacsExporter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.GromacsExporter.export"><code class="docutils literal notranslate"><span class="pre">GromacsExporter.export()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.GROFileWriter"><code class="docutils literal notranslate"><span class="pre">GROFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.GROFileWriter.write"><code class="docutils literal notranslate"><span class="pre">GROFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.TOPFileWriter"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.TOPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.ITPFileWriter"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.ITPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.MultiSheetGROWriter"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.MultiSheetGROWriter.write"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.SurfaceTopologyWriter"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar.gromacs_export.SurfaceTopologyWriter.write"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/opls_typing.html">opls_typing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.AtomTyper"><code class="docutils literal notranslate"><span class="pre">AtomTyper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.AtomTyper.assign_atom_types"><code class="docutils literal notranslate"><span class="pre">AtomTyper.assign_atom_types()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.AtomTyper.get_bond_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_bond_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.AtomTyper.get_angle_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_angle_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.ChargeAssigner"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar.opls_typing.ChargeAssigner.assign_charges"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner.assign_charges()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/constants.html">constants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/constants.html#biochar.constants.get_atom_mass"><code class="docutils literal notranslate"><span class="pre">get_atom_mass()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/constants.html#biochar.constants.get_vdw_radius"><code class="docutils literal notranslate"><span class="pre">get_vdw_radius()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/constants.html#biochar.constants.get_covalent_radius"><code class="docutils literal notranslate"><span class="pre">get_covalent_radius()</span></code></a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">0.1.1 (2026-04-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id2">0.1.0 (2026-04-17)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Biochar Simulator</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">biochar.constants</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for biochar.constants</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">OPLS-AA Force Field Constants</span>
+
+<span class="sd">Atom types, charges, and masses for OPLS-AA force field.</span>
+<span class="sd">Reference: Jorgensen, W. L., et al. JACS 118.45 (1996): 11225-11236.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># OPLS-AA Atom Types for Biochar Systems</span>
+<span class="c1"># Format: atom_type: (description, mass_amu, default_charge)</span>
+
+<span class="n">OPLS_ATOM_TYPES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># Aromatic carbons and hydrogens</span>
+    <span class="s2">&quot;CA&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Aromatic carbon&quot;</span><span class="p">,</span> <span class="mf">12.01</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.115</span><span class="p">),</span>
+    <span class="s2">&quot;HA&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Aromatic hydrogen&quot;</span><span class="p">,</span> <span class="mf">1.008</span><span class="p">,</span> <span class="mf">0.115</span><span class="p">),</span>
+
+    <span class="c1"># Aliphatic carbons</span>
+    <span class="s2">&quot;CT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Aliphatic C (sp3)&quot;</span><span class="p">,</span> <span class="mf">12.01</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.18</span><span class="p">),</span>
+    <span class="s2">&quot;HC&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;H on aliphatic C&quot;</span><span class="p">,</span> <span class="mf">1.008</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">),</span>
+
+    <span class="c1"># Oxygens</span>
+    <span class="s2">&quot;OC&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Carbonyl oxygen&quot;</span><span class="p">,</span> <span class="mf">15.999</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.56</span><span class="p">),</span>
+    <span class="s2">&quot;OH&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Hydroxyl oxygen&quot;</span><span class="p">,</span> <span class="mf">15.999</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.661</span><span class="p">),</span>
+    <span class="s2">&quot;OS&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Ether oxygen&quot;</span><span class="p">,</span> <span class="mf">15.999</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.322</span><span class="p">),</span>
+    <span class="s2">&quot;OW&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Water oxygen&quot;</span><span class="p">,</span> <span class="mf">15.999</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.820</span><span class="p">),</span>
+
+    <span class="c1"># Hydroxyls and carboxylic acid</span>
+    <span class="s2">&quot;HO&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;H in hydroxyl&quot;</span><span class="p">,</span> <span class="mf">1.008</span><span class="p">,</span> <span class="mf">0.436</span><span class="p">),</span>
+    <span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Carboxylic acid carbonyl C&quot;</span><span class="p">,</span> <span class="mf">12.01</span><span class="p">,</span> <span class="mf">0.620</span><span class="p">),</span>
+    <span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Carboxylic acid carbonyl O&quot;</span><span class="p">,</span> <span class="mf">15.999</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.540</span><span class="p">),</span>
+    <span class="s2">&quot;OH2&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Hydroxyl on carboxylic acid&quot;</span><span class="p">,</span> <span class="mf">15.999</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.540</span><span class="p">),</span>
+    <span class="s2">&quot;HO2&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;H on carboxylic hydroxyl&quot;</span><span class="p">,</span> <span class="mf">1.008</span><span class="p">,</span> <span class="mf">0.436</span><span class="p">),</span>
+
+    <span class="c1"># Nitrogen (for future extensions)</span>
+    <span class="s2">&quot;N&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Tertiary nitrogen&quot;</span><span class="p">,</span> <span class="mf">14.007</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.70</span><span class="p">),</span>
+    <span class="s2">&quot;NT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Quaternary nitrogen&quot;</span><span class="p">,</span> <span class="mf">14.007</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+
+    <span class="c1"># Sulfur (for future extensions)</span>
+    <span class="s2">&quot;S&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Sulfur sp3&quot;</span><span class="p">,</span> <span class="mf">32.065</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20</span><span class="p">),</span>
+    <span class="s2">&quot;SH&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;H on sulfur&quot;</span><span class="p">,</span> <span class="mf">1.008</span><span class="p">,</span> <span class="mf">0.16</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="c1"># OPLS-AA Lennard-Jones Parameters</span>
+<span class="c1"># Format: atom_type -&gt; (sigma_nm, epsilon_kJ/mol)</span>
+<span class="c1"># sigma: van der Waals radius (in nanometers)</span>
+<span class="c1"># epsilon: well depth (in kJ/mol)</span>
+<span class="c1"># Reference: GROMACS OPLS-AA forcefield</span>
+
+<span class="n">OPLS_LJ_PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;CA&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3550</span><span class="p">,</span> <span class="mf">0.2928</span><span class="p">),</span>      <span class="c1"># Aromatic carbon</span>
+    <span class="s2">&quot;HA&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.2600</span><span class="p">,</span> <span class="mf">0.0630</span><span class="p">),</span>      <span class="c1"># Aromatic hydrogen</span>
+    <span class="s2">&quot;CT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3500</span><span class="p">,</span> <span class="mf">0.2761</span><span class="p">),</span>      <span class="c1"># Aliphatic carbon (sp3)</span>
+    <span class="s2">&quot;HC&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.2500</span><span class="p">,</span> <span class="mf">0.0630</span><span class="p">),</span>      <span class="c1"># H on aliphatic C</span>
+    <span class="s2">&quot;OC&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.2960</span><span class="p">,</span> <span class="mf">0.5023</span><span class="p">),</span>      <span class="c1"># Carbonyl oxygen</span>
+    <span class="s2">&quot;OH&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3066</span><span class="p">,</span> <span class="mf">0.7113</span><span class="p">),</span>      <span class="c1"># Hydroxyl oxygen</span>
+    <span class="s2">&quot;OS&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.2960</span><span class="p">,</span> <span class="mf">0.5023</span><span class="p">),</span>      <span class="c1"># Ether oxygen</span>
+    <span class="s2">&quot;OW&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3066</span><span class="p">,</span> <span class="mf">0.6276</span><span class="p">),</span>      <span class="c1"># Water oxygen</span>
+    <span class="s2">&quot;HO&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">),</span>      <span class="c1"># H in hydroxyl (no LJ)</span>
+    <span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3750</span><span class="p">,</span> <span class="mf">0.4392</span><span class="p">),</span>       <span class="c1"># Carboxylic acid carbonyl C</span>
+    <span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.2960</span><span class="p">,</span> <span class="mf">0.5023</span><span class="p">),</span>       <span class="c1"># Carboxylic acid carbonyl O</span>
+    <span class="s2">&quot;OH2&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3066</span><span class="p">,</span> <span class="mf">0.7113</span><span class="p">),</span>     <span class="c1"># Hydroxyl on carboxylic acid</span>
+    <span class="s2">&quot;HO2&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">),</span>     <span class="c1"># H on carboxylic hydroxyl (no LJ)</span>
+    <span class="s2">&quot;N&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3250</span><span class="p">,</span> <span class="mf">0.7113</span><span class="p">),</span>       <span class="c1"># Tertiary nitrogen</span>
+    <span class="s2">&quot;NT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3250</span><span class="p">,</span> <span class="mf">0.7113</span><span class="p">),</span>      <span class="c1"># Quaternary nitrogen</span>
+    <span class="s2">&quot;S&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3550</span><span class="p">,</span> <span class="mf">1.0460</span><span class="p">),</span>       <span class="c1"># Sulfur sp3</span>
+    <span class="s2">&quot;SH&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">),</span>      <span class="c1"># H on sulfur (no LJ)</span>
+<span class="p">}</span>
+
+<span class="c1"># OPLS-AA Bond Parameters (k_bond, r0)</span>
+<span class="c1"># Format: (atom_type1, atom_type2) -&gt; (k_kcal/mol/Angstrom^2, r0_Angstrom)</span>
+<span class="c1"># Values from GROMACS OPLS-AA forcefield</span>
+
+<span class="n">OPLS_BOND_PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">770.0</span><span class="p">,</span> <span class="mf">1.387</span><span class="p">),</span>      <span class="c1"># Aromatic C-C</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;HA&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">367.0</span><span class="p">,</span> <span class="mf">1.084</span><span class="p">),</span>      <span class="c1"># Aromatic C-H</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">268.0</span><span class="p">,</span> <span class="mf">1.529</span><span class="p">),</span>      <span class="c1"># Aliphatic C-C</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;HC&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">367.0</span><span class="p">,</span> <span class="mf">1.084</span><span class="p">),</span>      <span class="c1"># Aliphatic C-H</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">268.0</span><span class="p">,</span> <span class="mf">1.529</span><span class="p">),</span>      <span class="c1"># Aromatic-aliphatic C-C</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;OH&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">320.0</span><span class="p">,</span> <span class="mf">1.410</span><span class="p">),</span>      <span class="c1"># Aliphatic C-OH</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;OH&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">450.0</span><span class="p">,</span> <span class="mf">1.367</span><span class="p">),</span>      <span class="c1"># Aromatic C-OH (phenolic)</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;OS&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">320.0</span><span class="p">,</span> <span class="mf">1.410</span><span class="p">),</span>      <span class="c1"># Aliphatic C-O (ether)</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;OS&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">450.0</span><span class="p">,</span> <span class="mf">1.367</span><span class="p">),</span>      <span class="c1"># Aromatic C-O (ether)</span>
+    <span class="p">(</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;O&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">750.0</span><span class="p">,</span> <span class="mf">1.230</span><span class="p">),</span>        <span class="c1"># Carboxylic carbonyl</span>
+    <span class="p">(</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;OH2&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">320.0</span><span class="p">,</span> <span class="mf">1.364</span><span class="p">),</span>      <span class="c1"># C-OH in carboxylic acid</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;OC&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">320.0</span><span class="p">,</span> <span class="mf">1.410</span><span class="p">),</span>      <span class="c1"># Aliphatic C-carbonyl O</span>
+    <span class="p">(</span><span class="s2">&quot;OH&quot;</span><span class="p">,</span> <span class="s2">&quot;HO&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">367.0</span><span class="p">,</span> <span class="mf">0.960</span><span class="p">),</span>      <span class="c1"># O-H hydroxyl</span>
+    <span class="p">(</span><span class="s2">&quot;OH2&quot;</span><span class="p">,</span> <span class="s2">&quot;HO2&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">367.0</span><span class="p">,</span> <span class="mf">0.960</span><span class="p">),</span>    <span class="c1"># O-H carboxylic</span>
+    <span class="p">(</span><span class="s2">&quot;OS&quot;</span><span class="p">,</span> <span class="s2">&quot;HO&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">367.0</span><span class="p">,</span> <span class="mf">0.960</span><span class="p">),</span>      <span class="c1"># This shouldn&#39;t exist, but for safety</span>
+<span class="p">}</span>
+
+<span class="c1"># OPLS-AA Angle Parameters (k_angle, theta0)</span>
+<span class="c1"># Format: (atom_type1, atom_type2, atom_type3) -&gt; (k_kcal/mol/rad^2, theta0_deg)</span>
+
+<span class="n">OPLS_ANGLE_PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">126.0</span><span class="p">,</span> <span class="mf">120.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;HA&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">70.0</span><span class="p">,</span> <span class="mf">120.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">70.0</span><span class="p">,</span> <span class="mf">120.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;OH&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">70.0</span><span class="p">,</span> <span class="mf">119.7</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;OS&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">70.0</span><span class="p">,</span> <span class="mf">119.7</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;HA&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;HA&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">35.0</span><span class="p">,</span> <span class="mf">120.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">63.0</span><span class="p">,</span> <span class="mf">109.47</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;HC&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">48.0</span><span class="p">,</span> <span class="mf">109.47</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;OH&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">55.0</span><span class="p">,</span> <span class="mf">109.47</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;OS&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">55.0</span><span class="p">,</span> <span class="mf">109.47</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;HC&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;HC&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">35.0</span><span class="p">,</span> <span class="mf">109.47</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;HC&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;OH&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">35.0</span><span class="p">,</span> <span class="mf">109.47</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;OH&quot;</span><span class="p">,</span> <span class="s2">&quot;HO&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">55.0</span><span class="p">,</span> <span class="mf">104.52</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;OH&quot;</span><span class="p">,</span> <span class="s2">&quot;HO&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">70.0</span><span class="p">,</span> <span class="mf">108.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;OS&quot;</span><span class="p">,</span> <span class="s2">&quot;CT&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">60.0</span><span class="p">,</span> <span class="mf">110.7</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;OS&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">70.0</span><span class="p">,</span> <span class="mf">113.2</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CT&quot;</span><span class="p">,</span> <span class="s2">&quot;OS&quot;</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mf">70.0</span><span class="p">,</span> <span class="mf">113.2</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="c1"># Functional groups definitions</span>
+<span class="c1"># Each functional group specifies how to add atoms to the carbon skeleton</span>
+<span class="n">FUNCTIONAL_GROUPS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;hydroxyl&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Hydroxyl group (-OH)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;atoms&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;OH&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="s2">&quot;HO&quot;</span><span class="p">)],</span>  <span class="c1"># (atom_type, group_code)</span>
+        <span class="s2">&quot;connectivity&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>  <span class="c1"># (atom_idx, connect_to, bond_type)</span>
+        <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;H&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="s2">&quot;O_per_group&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;H_per_group&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;carboxyl&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Carboxylic acid group (-COOH)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;atoms&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;O&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;OH2&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="s2">&quot;HO2&quot;</span><span class="p">)],</span>
+        <span class="s2">&quot;connectivity&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>  <span class="c1"># C=O double bond</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>  <span class="c1"># Single bond C-C</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>  <span class="c1"># O-H bond</span>
+            <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;H&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="s2">&quot;O_per_group&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;H_per_group&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;phenolic&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Phenolic group (aromatic -OH)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;atoms&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;OH&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="s2">&quot;HO&quot;</span><span class="p">)],</span>
+        <span class="s2">&quot;connectivity&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
+        <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;H&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="s2">&quot;O_per_group&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;H_per_group&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;ether&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Ether group (-O-)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;atoms&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;OS&quot;</span><span class="p">)],</span>
+        <span class="s2">&quot;connectivity&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>  <span class="c1"># Two C-O bonds</span>
+        <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="s2">&quot;O_per_group&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;H_per_group&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;carbonyl&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Carbonyl group (C=O)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;atoms&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;OC&quot;</span><span class="p">)],</span>
+        <span class="s2">&quot;connectivity&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span>  <span class="c1"># C=O double bond</span>
+        <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="s2">&quot;O_per_group&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;H_per_group&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;lactone&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Lactone group (cyclic ester)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;atoms&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;O&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;OS&quot;</span><span class="p">)],</span>
+        <span class="s2">&quot;connectivity&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+        <span class="s2">&quot;O_per_group&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;H_per_group&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;quinone&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Quinone group (C=O with aromatic C)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;atoms&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;OC&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="s2">&quot;OC&quot;</span><span class="p">)],</span>
+        <span class="s2">&quot;connectivity&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span>
+        <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+        <span class="s2">&quot;O_per_group&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;H_per_group&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># Common PAH structures (SMILES notation)</span>
+<span class="c1"># All entries validated: correct carbon count, 100% aromatic, all atoms in 6-membered rings.</span>
+<span class="c1"># Hex-lattice entries are programmatically generated compact graphene-nanoflake topologies.</span>
+<span class="n">PAH_LIBRARY</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># --- 6 carbons ---</span>
+    <span class="s2">&quot;benzene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccccc1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C6H6&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Basic aromatic ring&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 10 carbons ---</span>
+    <span class="s2">&quot;naphthalene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2ccccc2c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C10H8&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Two fused rings&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 14 carbons ---</span>
+    <span class="s2">&quot;anthracene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2cc3ccccc3cc2c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C14H10&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Three fused rings (linear acene)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;phenanthrene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2ccc3ccccc3c2c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C14H10&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Three fused rings (angular)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 16 carbons ---</span>
+    <span class="s2">&quot;pyrene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1cc2ccc3cccc4ccc(c1)c2c34&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C16H10&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Four fused rings (pericondensed)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 18 carbons ---</span>
+    <span class="s2">&quot;chrysene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2c(c1)cc1ccc3ccccc3c1c2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C18H12&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Four fused rings (chrysene topology)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;tetracene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2cc3cc4ccccc4cc3cc2c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C18H12&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Four fused rings (linear acene, naphthacene)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;triphenylene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2c(c1)c1ccccc1c1ccccc21&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C18H12&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Four fused rings (triphenylene topology)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 22 carbons ---</span>
+    <span class="s2">&quot;pentacene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2cc3cc4cc5ccccc5cc4cc3cc2c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C22H14&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Five fused rings (linear acene)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;picene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2cc3ccc4ccc5ccccc5c4c3cc2c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C22H14&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Five fused rings (picene/[5]helicene topology)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;hex_lattice_22&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1cc2ccc3ccc4ccc5cccc6c(c1)c2c3c4c56&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C22H12&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Six-ring compact graphene nanoflake (hex-lattice seed)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 24 carbons ---</span>
+    <span class="s2">&quot;coronene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1cc2ccc3ccc4ccc5ccc6ccc1c1c2c3c4c5c61&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C24H12&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Seven fused rings (central + 6 surrounding)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 26 carbons ---</span>
+    <span class="s2">&quot;hexacene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2cc3cc4cc5cc6ccccc6cc5cc4cc3cc2c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">26</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">26</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C26H16&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Six fused rings (linear acene)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;dibenzo_bc_ef_coronene&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2cc3cc4ccc5ccc6ccccc6c5c4cc3cc2c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">26</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">26</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C26H14&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Six fused rings (angular pericondensed topology)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 28 carbons ---</span>
+    <span class="s2">&quot;hex_lattice_28&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1ccc2c(c1)c1ccc3ccc4ccc5ccc6ccc2c2c6c5c4c3c12&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">28</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">28</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C28H14&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Eight-ring compact graphene nanoflake (hex-lattice seed)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 30 carbons ---</span>
+    <span class="s2">&quot;hex_lattice_30&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1cc2ccc3cc4ccc5ccc6ccc7ccc8c(c1)c2c3c1c4c5c6c7c81&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C30H14&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Nine-ring compact graphene nanoflake (hex-lattice seed)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 38 carbons ---</span>
+    <span class="s2">&quot;hex_lattice_38&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1cc2cc3ccc4cc5cccc6c7ccc8ccc9ccc</span><span class="si">%10c</span><span class="s2">(c1)c2c1c3c4c(c56)c2c7c8c9c</span><span class="si">%10c</span><span class="s2">12&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">38</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">38</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C38H16&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Twelve-ring compact graphene nanoflake (hex-lattice seed)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># --- 40 carbons ---</span>
+    <span class="s2">&quot;hex_lattice_40&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;smiles&quot;</span><span class="p">:</span> <span class="s2">&quot;c1cc2cc3ccc4cc5ccc6ccc7cc8ccc9ccc</span><span class="si">%10c</span><span class="s2">(c1)c2c1c3c4c2c5c6c7c3c8c9c</span><span class="si">%10c</span><span class="s2">1c32&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_atoms&quot;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span>
+        <span class="s2">&quot;num_aromatic&quot;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span>
+        <span class="s2">&quot;molecular_formula&quot;</span><span class="p">:</span> <span class="s2">&quot;C40H16&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references&quot;</span><span class="p">:</span> <span class="s2">&quot;Thirteen-ring compact graphene nanoflake (hex-lattice seed)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># Atomic masses (in amu)</span>
+<span class="n">ATOMIC_MASSES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;H&quot;</span><span class="p">:</span> <span class="mf">1.008</span><span class="p">,</span>
+    <span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="mf">12.01</span><span class="p">,</span>
+    <span class="s2">&quot;N&quot;</span><span class="p">:</span> <span class="mf">14.007</span><span class="p">,</span>
+    <span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mf">15.999</span><span class="p">,</span>
+    <span class="s2">&quot;S&quot;</span><span class="p">:</span> <span class="mf">32.065</span><span class="p">,</span>
+    <span class="s2">&quot;P&quot;</span><span class="p">:</span> <span class="mf">30.974</span><span class="p">,</span>
+    <span class="s2">&quot;Cl&quot;</span><span class="p">:</span> <span class="mf">35.45</span><span class="p">,</span>
+    <span class="s2">&quot;Br&quot;</span><span class="p">:</span> <span class="mf">79.904</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># Van der Waals radii (in Angstrom) for steric clash detection</span>
+<span class="n">VDW_RADII</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;H&quot;</span><span class="p">:</span> <span class="mf">1.20</span><span class="p">,</span>
+    <span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="mf">1.70</span><span class="p">,</span>
+    <span class="s2">&quot;N&quot;</span><span class="p">:</span> <span class="mf">1.55</span><span class="p">,</span>
+    <span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mf">1.52</span><span class="p">,</span>
+    <span class="s2">&quot;S&quot;</span><span class="p">:</span> <span class="mf">1.80</span><span class="p">,</span>
+    <span class="s2">&quot;P&quot;</span><span class="p">:</span> <span class="mf">1.80</span><span class="p">,</span>
+    <span class="s2">&quot;Cl&quot;</span><span class="p">:</span> <span class="mf">1.75</span><span class="p">,</span>
+    <span class="s2">&quot;Br&quot;</span><span class="p">:</span> <span class="mf">1.85</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># Van der Waals diameter of graphitic carbon (graphite interlayer spacing).</span>
+<span class="c1"># Used as effective sheet thickness when computing slit-pore geometry.</span>
+<span class="n">CARBON_VDW_DIAMETER</span> <span class="o">=</span> <span class="mf">3.4</span>  <span class="c1"># Angstroms</span>
+
+<span class="c1"># Covalent radii (in Angstrom) for bond length validation</span>
+<span class="n">COVALENT_RADII</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;H&quot;</span><span class="p">:</span> <span class="mf">0.31</span><span class="p">,</span>
+    <span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="mf">0.76</span><span class="p">,</span>
+    <span class="s2">&quot;N&quot;</span><span class="p">:</span> <span class="mf">0.71</span><span class="p">,</span>
+    <span class="s2">&quot;O&quot;</span><span class="p">:</span> <span class="mf">0.66</span><span class="p">,</span>
+    <span class="s2">&quot;S&quot;</span><span class="p">:</span> <span class="mf">1.05</span><span class="p">,</span>
+    <span class="s2">&quot;P&quot;</span><span class="p">:</span> <span class="mf">1.07</span><span class="p">,</span>
+    <span class="s2">&quot;Cl&quot;</span><span class="p">:</span> <span class="mf">1.02</span><span class="p">,</span>
+    <span class="s2">&quot;Br&quot;</span><span class="p">:</span> <span class="mf">1.20</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_atom_mass">
+<a class="viewcode-back" href="../../api/constants.html#biochar.constants.get_atom_mass">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_atom_mass</span><span class="p">(</span><span class="n">atom_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get atomic mass from OPLS atom type.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">atom_type</span> <span class="ow">in</span> <span class="n">OPLS_ATOM_TYPES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">OPLS_ATOM_TYPES</span><span class="p">[</span><span class="n">atom_type</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># Extract element from atom type (first character or two)</span>
+    <span class="n">element</span> <span class="o">=</span> <span class="n">atom_type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">atom_type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="k">else</span> <span class="n">atom_type</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ATOMIC_MASSES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="mf">12.01</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_vdw_radius">
+<a class="viewcode-back" href="../../api/constants.html#biochar.constants.get_vdw_radius">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_vdw_radius</span><span class="p">(</span><span class="n">element</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get Van der Waals radius for element.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">VDW_RADII</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="mf">1.70</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_covalent_radius">
+<a class="viewcode-back" href="../../api/constants.html#biochar.constants.get_covalent_radius">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_covalent_radius</span><span class="p">(</span><span class="n">element</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get covalent radius for element.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">COVALENT_RADII</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="mf">0.76</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, jolayfield.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

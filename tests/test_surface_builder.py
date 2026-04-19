@@ -7,8 +7,8 @@ from pathlib import Path
 
 import numpy as np
 
-from biochar_simulator.surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult
-from biochar_simulator.biochar_generator import generate_surface
+from biochar.surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult
+from biochar.biochar_generator import generate_surface
 
 
 # ---------------------------------------------------------------------------

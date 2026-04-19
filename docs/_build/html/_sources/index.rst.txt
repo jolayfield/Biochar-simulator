@@ -6,7 +6,7 @@ for GROMACS molecular dynamics simulations.
 
 .. code-block:: python
 
-   from biochar_simulator.biochar_generator import generate_biochar
+   from biochar.biochar_generator import generate_biochar
 
    mol, coords, gro, top, itp = generate_biochar(
        target_num_carbons=80,

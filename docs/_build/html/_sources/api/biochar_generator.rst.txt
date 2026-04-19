@@ -4,21 +4,21 @@ biochar_generator
 Convenience functions
 ---------------------
 
-.. autofunction:: biochar_simulator.biochar_generator.generate_biochar
+.. autofunction:: biochar.biochar_generator.generate_biochar
 
-.. autofunction:: biochar_simulator.biochar_generator.generate_surface
+.. autofunction:: biochar.biochar_generator.generate_surface
 
-.. autofunction:: biochar_simulator.biochar_generator.generate_biochar_series
+.. autofunction:: biochar.biochar_generator.generate_biochar_series
 
 Configuration
 -------------
 
-.. autoclass:: biochar_simulator.biochar_generator.GeneratorConfig
+.. autoclass:: biochar.biochar_generator.GeneratorConfig
    :no-members:
 
 Class API
 ---------
 
-.. autoclass:: biochar_simulator.biochar_generator.BiocharGenerator
+.. autoclass:: biochar.biochar_generator.BiocharGenerator
    :members: generate, export_gromacs, print_summary
    :show-inheritance:

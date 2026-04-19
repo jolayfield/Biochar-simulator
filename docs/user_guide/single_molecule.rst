@@ -2,8 +2,8 @@ Single Molecule Generation
 ==========================
 
 The primary API for generating a single biochar molecule is
-:func:`~biochar_simulator.biochar_generator.generate_biochar` (convenience function) or
-the lower-level :class:`~biochar_simulator.biochar_generator.BiocharGenerator` class.
+:func:`~biochar.biochar_generator.generate_biochar` (convenience function) or
+the lower-level :class:`~biochar.biochar_generator.BiocharGenerator` class.
 
 Generation pipeline
 -------------------
@@ -43,7 +43,7 @@ up to 40 C, then grows the skeleton by appending fused hexagonal rings.
 
 .. code-block:: python
 
-   from biochar_simulator.biochar_generator import generate_biochar
+   from biochar.biochar_generator import generate_biochar
 
    # Small molecule — exact match from PAH library
    mol, coords, gro, top, itp = generate_biochar(
@@ -122,12 +122,12 @@ Pass an integer ``seed`` to get deterministic output:
 Using the class API
 -------------------
 
-For more control, use :class:`~biochar_simulator.biochar_generator.BiocharGenerator`
+For more control, use :class:`~biochar.biochar_generator.BiocharGenerator`
 directly:
 
 .. code-block:: python
 
-   from biochar_simulator.biochar_generator import BiocharGenerator, GeneratorConfig
+   from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 
    config = GeneratorConfig(
        target_num_carbons=100,

@@ -8,7 +8,7 @@ Generate a biochar molecule and write GROMACS files in one call:
 
 .. code-block:: python
 
-   from biochar_simulator.biochar_generator import generate_biochar
+   from biochar.biochar_generator import generate_biochar
 
    mol, coords, gro, top, itp = generate_biochar(
        target_num_carbons=80,
@@ -61,7 +61,7 @@ Stack two parallel sheets separated by a 10 Å pore:
 
 .. code-block:: python
 
-   from biochar_simulator.biochar_generator import generate_surface
+   from biochar.biochar_generator import generate_surface
 
    sheets, gro, top, itps = generate_surface(
        target_num_carbons=50,

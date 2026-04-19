@@ -30,7 +30,7 @@ From PyPI
 
 .. code-block:: bash
 
-   pip install biochar-simulator
+   pip install biochar
 
 .. note::
    On some platforms the ``rdkit`` wheel from PyPI may not be available.
