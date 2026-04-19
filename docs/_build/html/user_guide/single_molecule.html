@@ -1,0 +1,489 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Single Molecule Generation &mdash; Biochar Simulator 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=a58bc63e"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Functional Groups" href="functional_groups.html" />
+    <link rel="prev" title="Quick Start" href="../quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Biochar Simulator
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#recommended-conda-conda-forge">Recommended: conda (conda-forge)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#from-pypi">From PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#development-install">Development install</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#single-molecule">Single molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#with-functional-groups">With functional groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#with-pentagon-defects">With pentagon defects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#slit-pore-surface">Slit-pore surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#run-in-gromacs">Run in GROMACS</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Single Molecule Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#generation-pipeline">Generation pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#controlling-size">Controlling size</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pah-library-seed-molecules">PAH library (seed molecules)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#controlling-composition">Controlling composition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reproducibility">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-the-class-api">Using the class API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functional_groups.html">Functional Groups</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional_groups.html#two-modes">Two modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_groups.html#available-groups">Available groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_groups.html#ether-bridge-geometry">Ether bridge geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_groups.html#mixing-group-types">Mixing group types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="surfaces.html">Porous Surface Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="surfaces.html#symmetric-slit-pore">Symmetric slit pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="surfaces.html#asymmetric-pore">Asymmetric pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="surfaces.html#multi-sheet-stacking">Multi-sheet stacking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="surfaces.html#using-the-class-api">Using the class API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="surfaces.html#output-files">Output files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="batch_generation.html">Batch Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="batch_generation.html#temperature-series">Temperature series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch_generation.html#configuration-dict-keys">Configuration dict keys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch_generation.html#running-a-mixed-gromacs-simulation">Running a mixed GROMACS simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gromacs_workflow.html">GROMACS Workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_workflow.html#generate-the-structure">1. Generate the structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_workflow.html#energy-minimisation">2. Energy minimisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_workflow.html#visualise">3. Visualise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_workflow.html#solvation-optional">4. Solvation (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_workflow.html#production-md">5. Production MD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_workflow.html#force-field-notes">Force field notes</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/biochar_generator.html">biochar_generator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.generate_biochar"><code class="docutils literal notranslate"><span class="pre">generate_biochar()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.generate_surface"><code class="docutils literal notranslate"><span class="pre">generate_surface()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.generate_biochar_series"><code class="docutils literal notranslate"><span class="pre">generate_biochar_series()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.size_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.size_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.H_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.O_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.aromaticity_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.functional_groups</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.periodic_box"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.periodic_box</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.box_size"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.box_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.molecule_name"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.molecule_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.seed"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.GeneratorConfig.max_ether_span"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.max_ether_span</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id0"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id1"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.size_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id2"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id3"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id4"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id5"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id6"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id7"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id8"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.functional_groups</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id9"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.periodic_box</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id10"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.box_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id11"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.molecule_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id12"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id13"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#id14"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.max_ether_span</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.BiocharGenerator"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.BiocharGenerator.generate"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.generate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.BiocharGenerator.export_gromacs"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.export_gromacs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.BiocharGenerator.print_summary"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.print_summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/surface_builder.html">surface_builder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.functional_groups</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.pore_type"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.num_sheets"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.num_sheets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.pore_diameter"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_diameter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.sheet_overrides"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_overrides</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.box_padding_xy"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_xy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.box_padding_z"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_z</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.system_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.system_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.sheet_base_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_base_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.seed"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id0"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id1"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id2"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id3"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.functional_groups</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id4"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id5"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id6"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.num_sheets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id7"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_diameter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id8"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_overrides</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id9"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_xy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id10"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_z</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id11"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.system_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id12"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_base_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id13"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id14"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.defect_fraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SheetResult"><code class="docutils literal notranslate"><span class="pre">SheetResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SheetResult.mol"><code class="docutils literal notranslate"><span class="pre">SheetResult.mol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SheetResult.coords"><code class="docutils literal notranslate"><span class="pre">SheetResult.coords</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SheetResult.composition"><code class="docutils literal notranslate"><span class="pre">SheetResult.composition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SheetResult.atom_types"><code class="docutils literal notranslate"><span class="pre">SheetResult.atom_types</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SheetResult.charges"><code class="docutils literal notranslate"><span class="pre">SheetResult.charges</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SheetResult.molecule_name"><code class="docutils literal notranslate"><span class="pre">SheetResult.molecule_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id15"><code class="docutils literal notranslate"><span class="pre">SheetResult.mol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id16"><code class="docutils literal notranslate"><span class="pre">SheetResult.coords</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id17"><code class="docutils literal notranslate"><span class="pre">SheetResult.composition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id18"><code class="docutils literal notranslate"><span class="pre">SheetResult.atom_types</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id19"><code class="docutils literal notranslate"><span class="pre">SheetResult.charges</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#id20"><code class="docutils literal notranslate"><span class="pre">SheetResult.molecule_name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceBuilder"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceBuilder.sheets"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.sheets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceBuilder.build"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.build()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/surface_builder.html#src.surface_builder.SurfaceBuilder.export_gromacs"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.export_gromacs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/gromacs_export.html">gromacs_export</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.GromacsExporter"><code class="docutils literal notranslate"><span class="pre">GromacsExporter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.GromacsExporter.export"><code class="docutils literal notranslate"><span class="pre">GromacsExporter.export()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.GROFileWriter"><code class="docutils literal notranslate"><span class="pre">GROFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.GROFileWriter.write"><code class="docutils literal notranslate"><span class="pre">GROFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.TOPFileWriter"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.TOPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.ITPFileWriter"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.ITPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.MultiSheetGROWriter"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.MultiSheetGROWriter.write"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.SurfaceTopologyWriter"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/gromacs_export.html#src.gromacs_export.SurfaceTopologyWriter.write"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/opls_typing.html">opls_typing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/opls_typing.html#src.opls_typing.AtomTyper"><code class="docutils literal notranslate"><span class="pre">AtomTyper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/opls_typing.html#src.opls_typing.AtomTyper.assign_atom_types"><code class="docutils literal notranslate"><span class="pre">AtomTyper.assign_atom_types()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/opls_typing.html#src.opls_typing.AtomTyper.get_bond_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_bond_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/opls_typing.html#src.opls_typing.AtomTyper.get_angle_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_angle_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/opls_typing.html#src.opls_typing.ChargeAssigner"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/opls_typing.html#src.opls_typing.ChargeAssigner.assign_charges"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner.assign_charges()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/constants.html">constants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.OPLS_ATOM_TYPES"><code class="docutils literal notranslate"><span class="pre">OPLS_ATOM_TYPES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.OPLS_LJ_PARAMS"><code class="docutils literal notranslate"><span class="pre">OPLS_LJ_PARAMS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.OPLS_BOND_PARAMS"><code class="docutils literal notranslate"><span class="pre">OPLS_BOND_PARAMS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.OPLS_ANGLE_PARAMS"><code class="docutils literal notranslate"><span class="pre">OPLS_ANGLE_PARAMS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.FUNCTIONAL_GROUPS"><code class="docutils literal notranslate"><span class="pre">FUNCTIONAL_GROUPS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.PAH_LIBRARY"><code class="docutils literal notranslate"><span class="pre">PAH_LIBRARY</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.CARBON_VDW_DIAMETER"><code class="docutils literal notranslate"><span class="pre">CARBON_VDW_DIAMETER</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.get_atom_mass"><code class="docutils literal notranslate"><span class="pre">get_atom_mass()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.get_vdw_radius"><code class="docutils literal notranslate"><span class="pre">get_vdw_radius()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/constants.html#src.constants.get_covalent_radius"><code class="docutils literal notranslate"><span class="pre">get_covalent_radius()</span></code></a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id1">0.1.1 (2026-04-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id2">0.1.0 (2026-04-17)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Biochar Simulator</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Single Molecule Generation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/user_guide/single_molecule.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="single-molecule-generation">
+<h1>Single Molecule Generation<a class="headerlink" href="#single-molecule-generation" title="Link to this heading"></a></h1>
+<p>The primary API for generating a single biochar molecule is
+<a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.generate_biochar" title="src.biochar_generator.generate_biochar"><code class="xref py py-func docutils literal notranslate"><span class="pre">generate_biochar()</span></code></a> (convenience function) or
+the lower-level <a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.BiocharGenerator" title="src.biochar_generator.BiocharGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiocharGenerator</span></code></a> class.</p>
+<section id="generation-pipeline">
+<h2>Generation pipeline<a class="headerlink" href="#generation-pipeline" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>target_num_carbons
+      │
+      ▼
+Carbon skeleton (PAH library seed + ring-growth)
+      │  Parity-aware hex-lattice builder; 100 % aromatic for any size
+      ▼
+Oxygen assignment (functional groups dict or O/C-ratio-driven)
+      │
+      ▼
+Hydrogen assignment (fill valences → target H/C ratio)
+      │
+      ▼
+3D geometry
+      │  ≤ 80 heavy atoms: ETKDGv3 embedding + MMFF94 minimisation
+      │  &gt; 80 heavy atoms: 2-D flat sheet + force-field minimisation
+      ▼
+OPLS-AA atom typing &amp; partial charges
+      │
+      ▼
+Validation (composition, geometry, steric clashes)
+      │
+      ▼
+GROMACS export (.gro / .top / .itp)
+</pre></div>
+</div>
+</section>
+<section id="controlling-size">
+<h2>Controlling size<a class="headerlink" href="#controlling-size" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">target_num_carbons</span></code> parameter controls skeleton size.
+The generator uses the built-in <a class="reference internal" href="#pah-library"><span class="std std-ref">PAH library</span></a> for sizes
+up to 40 C, then grows the skeleton by appending fused hexagonal rings.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">src.biochar_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_biochar</span>
+
+<span class="c1"># Small molecule — exact match from PAH library</span>
+<span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">itp</span> <span class="o">=</span> <span class="n">generate_biochar</span><span class="p">(</span>
+    <span class="n">target_num_carbons</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>   <span class="c1"># coronene</span>
+    <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Large sheet — hex-lattice growth path</span>
+<span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">itp</span> <span class="o">=</span> <span class="n">generate_biochar</span><span class="p">(</span>
+    <span class="n">target_num_carbons</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+    <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<section id="pah-library-seed-molecules">
+<span id="pah-library"></span><h3>PAH library (seed molecules)<a class="headerlink" href="#pah-library-seed-molecules" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Molecule</p></th>
+<th class="head"><p>C</p></th>
+<th class="head"><p>Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>benzene</p></td>
+<td><p>6</p></td>
+<td><p>Classic</p></td>
+</tr>
+<tr class="row-odd"><td><p>naphthalene</p></td>
+<td><p>10</p></td>
+<td><p>Classic</p></td>
+</tr>
+<tr class="row-even"><td><p>anthracene / phenanthrene</p></td>
+<td><p>14</p></td>
+<td><p>Linear / angular</p></td>
+</tr>
+<tr class="row-odd"><td><p>pyrene</p></td>
+<td><p>16</p></td>
+<td><p>Pericondensed</p></td>
+</tr>
+<tr class="row-even"><td><p>chrysene / tetracene</p></td>
+<td><p>18</p></td>
+<td><p>Various</p></td>
+</tr>
+<tr class="row-odd"><td><p>coronene</p></td>
+<td><p>24</p></td>
+<td><p>7-ring compact</p></td>
+</tr>
+<tr class="row-even"><td><p>hex_lattice_28/30/38/40</p></td>
+<td><p>28–40</p></td>
+<td><p>Graphene flakes</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="controlling-composition">
+<h2>Controlling composition<a class="headerlink" href="#controlling-composition" title="Link to this heading"></a></h2>
+<p>H/C and O/C ratios are set as targets with configurable tolerances:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">itp</span> <span class="o">=</span> <span class="n">generate_biochar</span><span class="p">(</span>
+    <span class="n">target_num_carbons</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+    <span class="n">H_C_ratio</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>       <span class="c1"># high H → lower pyrolysis temperature</span>
+    <span class="n">H_C_tolerance</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>   <span class="c1"># accept ± 10 %</span>
+    <span class="n">O_C_ratio</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span>       <span class="c1"># high O → more functional groups</span>
+    <span class="n">O_C_tolerance</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Typical values by pyrolysis temperature:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Temperature</p></th>
+<th class="head"><p>H/C</p></th>
+<th class="head"><p>O/C</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>300–400 °C</p></td>
+<td><p>0.6–0.8</p></td>
+<td><p>0.15–0.25</p></td>
+</tr>
+<tr class="row-odd"><td><p>500–600 °C</p></td>
+<td><p>0.4–0.6</p></td>
+<td><p>0.08–0.15</p></td>
+</tr>
+<tr class="row-even"><td><p>700–800 °C</p></td>
+<td><p>0.2–0.4</p></td>
+<td><p>0.02–0.08</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="reproducibility">
+<h2>Reproducibility<a class="headerlink" href="#reproducibility" title="Link to this heading"></a></h2>
+<p>Pass an integer <code class="docutils literal notranslate"><span class="pre">seed</span></code> to get deterministic output:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">itp</span> <span class="o">=</span> <span class="n">generate_biochar</span><span class="p">(</span>
+    <span class="n">target_num_carbons</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="using-the-class-api">
+<h2>Using the class API<a class="headerlink" href="#using-the-class-api" title="Link to this heading"></a></h2>
+<p>For more control, use <a class="reference internal" href="../api/biochar_generator.html#src.biochar_generator.BiocharGenerator" title="src.biochar_generator.BiocharGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiocharGenerator</span></code></a>
+directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">src.biochar_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">BiocharGenerator</span><span class="p">,</span> <span class="n">GeneratorConfig</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">GeneratorConfig</span><span class="p">(</span>
+    <span class="n">target_num_carbons</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">H_C_ratio</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+    <span class="n">O_C_ratio</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span>
+    <span class="n">functional_groups</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;phenolic&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;carboxyl&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">99</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">BiocharGenerator</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+<span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+<span class="n">gen</span><span class="o">.</span><span class="n">print_summary</span><span class="p">()</span>
+<span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">itp</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">export_gromacs</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;bc_custom&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../quickstart.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="functional_groups.html" class="btn btn-neutral float-right" title="Functional Groups" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, jolayfield.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

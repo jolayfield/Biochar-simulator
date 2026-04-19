@@ -1,0 +1,746 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>biochar_generator &mdash; Biochar Simulator 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=a58bc63e"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="surface_builder" href="surface_builder.html" />
+    <link rel="prev" title="GROMACS Workflow" href="../user_guide/gromacs_workflow.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Biochar Simulator
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#recommended-conda-conda-forge">Recommended: conda (conda-forge)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#from-pypi">From PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#development-install">Development install</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#single-molecule">Single molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#with-functional-groups">With functional groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#with-pentagon-defects">With pentagon defects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#slit-pore-surface">Slit-pore surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#run-in-gromacs">Run in GROMACS</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/single_molecule.html">Single Molecule Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#generation-pipeline">Generation pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#controlling-size">Controlling size</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user_guide/single_molecule.html#pah-library-seed-molecules">PAH library (seed molecules)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#controlling-composition">Controlling composition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#reproducibility">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#using-the-class-api">Using the class API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/functional_groups.html">Functional Groups</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/functional_groups.html#two-modes">Two modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/functional_groups.html#available-groups">Available groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/functional_groups.html#ether-bridge-geometry">Ether bridge geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/functional_groups.html#mixing-group-types">Mixing group types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/surfaces.html">Porous Surface Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#symmetric-slit-pore">Symmetric slit pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#asymmetric-pore">Asymmetric pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#multi-sheet-stacking">Multi-sheet stacking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#using-the-class-api">Using the class API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#output-files">Output files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/batch_generation.html">Batch Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/batch_generation.html#temperature-series">Temperature series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/batch_generation.html#configuration-dict-keys">Configuration dict keys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/batch_generation.html#running-a-mixed-gromacs-simulation">Running a mixed GROMACS simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/gromacs_workflow.html">GROMACS Workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#generate-the-structure">1. Generate the structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#energy-minimisation">2. Energy minimisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#visualise">3. Visualise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#solvation-optional">4. Solvation (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#production-md">5. Production MD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#force-field-notes">Force field notes</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">biochar_generator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#convenience-functions">Convenience functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.biochar_generator.generate_biochar"><code class="docutils literal notranslate"><span class="pre">generate_biochar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.biochar_generator.generate_surface"><code class="docutils literal notranslate"><span class="pre">generate_surface()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.biochar_generator.generate_biochar_series"><code class="docutils literal notranslate"><span class="pre">generate_biochar_series()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.size_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.size_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.H_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.O_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.aromaticity_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.functional_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.periodic_box"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.periodic_box</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.box_size"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.box_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.molecule_name"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.molecule_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.seed"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.GeneratorConfig.max_ether_span"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.max_ether_span</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#class-api">Class API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.biochar_generator.BiocharGenerator"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.BiocharGenerator.generate"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.BiocharGenerator.export_gromacs"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.export_gromacs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.biochar_generator.BiocharGenerator.print_summary"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.print_summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="surface_builder.html">surface_builder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="surface_builder.html#configuration-data-classes">Configuration &amp; data classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.functional_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.pore_type"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.num_sheets"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.num_sheets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.pore_diameter"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_diameter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.sheet_overrides"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_overrides</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.box_padding_xy"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_xy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.box_padding_z"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_z</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.system_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.system_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.sheet_base_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_base_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.seed"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.defect_fraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult"><code class="docutils literal notranslate"><span class="pre">SheetResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.mol"><code class="docutils literal notranslate"><span class="pre">SheetResult.mol</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.coords"><code class="docutils literal notranslate"><span class="pre">SheetResult.coords</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.composition"><code class="docutils literal notranslate"><span class="pre">SheetResult.composition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.atom_types"><code class="docutils literal notranslate"><span class="pre">SheetResult.atom_types</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.charges"><code class="docutils literal notranslate"><span class="pre">SheetResult.charges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.molecule_name"><code class="docutils literal notranslate"><span class="pre">SheetResult.molecule_name</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="surface_builder.html#builder">Builder</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceBuilder"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceBuilder.build"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceBuilder.export_gromacs"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.export_gromacs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gromacs_export.html">gromacs_export</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.GromacsExporter"><code class="docutils literal notranslate"><span class="pre">GromacsExporter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.GromacsExporter.export"><code class="docutils literal notranslate"><span class="pre">GromacsExporter.export()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.GROFileWriter"><code class="docutils literal notranslate"><span class="pre">GROFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.GROFileWriter.write"><code class="docutils literal notranslate"><span class="pre">GROFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.TOPFileWriter"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.TOPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.ITPFileWriter"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.ITPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.MultiSheetGROWriter"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.MultiSheetGROWriter.write"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.SurfaceTopologyWriter"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gromacs_export.html#src.gromacs_export.SurfaceTopologyWriter.write"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="opls_typing.html">opls_typing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="opls_typing.html#src.opls_typing.AtomTyper"><code class="docutils literal notranslate"><span class="pre">AtomTyper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="opls_typing.html#src.opls_typing.AtomTyper.assign_atom_types"><code class="docutils literal notranslate"><span class="pre">AtomTyper.assign_atom_types()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="opls_typing.html#src.opls_typing.AtomTyper.get_bond_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_bond_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="opls_typing.html#src.opls_typing.AtomTyper.get_angle_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_angle_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="opls_typing.html#src.opls_typing.ChargeAssigner"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="opls_typing.html#src.opls_typing.ChargeAssigner.assign_charges"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner.assign_charges()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="constants.html">constants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.get_atom_mass"><code class="docutils literal notranslate"><span class="pre">get_atom_mass()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.get_vdw_radius"><code class="docutils literal notranslate"><span class="pre">get_vdw_radius()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.get_covalent_radius"><code class="docutils literal notranslate"><span class="pre">get_covalent_radius()</span></code></a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id1">0.1.1 (2026-04-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id2">0.1.0 (2026-04-17)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Biochar Simulator</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">biochar_generator</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/biochar_generator.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="biochar-generator">
+<h1>biochar_generator<a class="headerlink" href="#biochar-generator" title="Link to this heading"></a></h1>
+<section id="convenience-functions">
+<h2>Convenience functions<a class="headerlink" href="#convenience-functions" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.biochar_generator.generate_biochar">
+<span class="sig-prename descclassname"><span class="pre">src.biochar_generator.</span></span><span class="sig-name descname"><span class="pre">generate_biochar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_num_carbons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H_C_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">O_C_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aromaticity_percent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functional_groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defect_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ether_span</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'biochar'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecule_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/biochar_generator.html#generate_biochar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.biochar_generator.generate_biochar" title="Link to this definition"></a></dt>
+<dd><p>Convenience function to generate and export biochar in one call.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul>
+<li><p><strong>target_num_carbons</strong> – Target number of carbon atoms.</p></li>
+<li><p><strong>H_C_ratio</strong> – Target hydrogen-to-carbon ratio.</p></li>
+<li><p><strong>O_C_ratio</strong> – Target oxygen-to-carbon ratio.  Used to determine total
+oxygen when <em>functional_groups</em> is None.</p></li>
+<li><p><strong>aromaticity_percent</strong> – Target aromaticity percentage.</p></li>
+<li><p><strong>functional_groups</strong> – Dict mapping functional group name → exact count,
+e.g. <code class="docutils literal notranslate"><span class="pre">{&quot;phenolic&quot;:</span> <span class="pre">3,</span> <span class="pre">&quot;carboxyl&quot;:</span> <span class="pre">1}</span></code>.</p>
+<p>Supported groups:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phenolic</span></code>  — aromatic C–OH             (1 O per group)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydroxyl</span></code>  — same as phenolic for pure aromatic PAH (1 O)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">carboxyl</span></code>  — aromatic C–C(=O)(OH)      (2 O per group)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ether</span></code>     — aromatic C–O–C bridge     (1 O per group)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">carbonyl</span></code>  — not supported; substituted with phenolic</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">quinone</span></code>   — not supported; substituted with phenolic</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lactone</span></code>   — not supported; substituted with phenolic</p></li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">None</span></code> (default), the total oxygen count is derived from
+<em>O_C_ratio</em> and placed as phenolic (–OH) groups.</p>
+</li>
+<li><p><strong>defect_fraction</strong> – Probability [0, 1) that each ring added during
+skeleton growth is a 5-membered (pentagon) ring rather than a
+hexagon.  0.0 (default) = pure hexagonal PAH.  Values ~0.1–0.2
+introduce realistic topological disorder.</p></li>
+<li><p><strong>max_ether_span</strong> – Maximum number of C–C bonds between the two ring
+carbons bridged by each ether oxygen.  Controls the ring size of
+the C–O–C bridge (ring size = max_ether_span + 2).  Default 3
+(5-membered furan/benzofuran-like ring — always stays flat).
+Use 4 for pyran/chromene-like (6-membered) or 5 for 7-membered;
+larger values risk cross-sheet bridges that fold the molecule.</p></li>
+<li><p><strong>output_directory</strong> – Output directory for GROMACS files.</p></li>
+<li><p><strong>basename</strong> – Base filename for output files.</p></li>
+<li><p><strong>molecule_name</strong> – Residue name (max 5 chars). Suggested: BC400, BC600,
+BCH05, BCO10.</p></li>
+<li><p><strong>seed</strong> – Random seed for reproducibility.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://www.rdkit.org/docs/source/rdkit.Chem.rdchem.html#rdkit.Chem.rdchem.Mol" title="(in The RDKit v2025.09)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mol</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(molecule, coordinates, gro_path, top_path, itp_path)</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>target_num_carbons</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>H_C_ratio</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>O_C_ratio</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>aromaticity_percent</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>functional_groups</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>defect_fraction</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>max_ether_span</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>output_directory</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>basename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>molecule_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.biochar_generator.generate_surface">
+<span class="sig-prename descclassname"><span class="pre">src.biochar_generator.</span></span><span class="sig-name descname"><span class="pre">generate_surface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_num_carbons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H_C_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">O_C_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functional_groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defect_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pore_diameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_sheets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheet_overrides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'surface'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SLIT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/biochar_generator.html#generate_surface"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.biochar_generator.generate_surface" title="Link to this definition"></a></dt>
+<dd><p>Generate a slit-pore surface system and export to GROMACS files.</p>
+<p>Creates <em>num_sheets</em> parallel graphene-like sheets separated by
+<em>pore_diameter</em> Ångströms, applies functional groups to each sheet,
+and writes GROMACS-ready <code class="docutils literal notranslate"><span class="pre">.gro</span></code> / <code class="docutils literal notranslate"><span class="pre">.top</span></code> / <code class="docutils literal notranslate"><span class="pre">.itp</span></code> files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_num_carbons</strong> – Number of carbon atoms per sheet.</p></li>
+<li><p><strong>H_C_ratio</strong> – Target H/C ratio for each sheet.</p></li>
+<li><p><strong>O_C_ratio</strong> – Target O/C ratio for each sheet (used when
+<em>functional_groups</em> is <code class="docutils literal notranslate"><span class="pre">None</span></code>).</p></li>
+<li><p><strong>functional_groups</strong> – Functional groups applied to every sheet,
+e.g. <code class="docutils literal notranslate"><span class="pre">{'phenolic':</span> <span class="pre">2,</span> <span class="pre">'ether':</span> <span class="pre">1}</span></code>.  Overridden per-sheet
+if <em>sheet_overrides</em> is provided.</p></li>
+<li><p><strong>pore_diameter</strong> – Gap between sheet inner van-der-Waals surfaces,
+in Ångströms.</p></li>
+<li><p><strong>num_sheets</strong> – Number of parallel sheets (default 2 → one slit pore).</p></li>
+<li><p><strong>sheet_overrides</strong> – List of per-sheet config dicts (length must equal
+<em>num_sheets</em>).  Accepted keys: <code class="docutils literal notranslate"><span class="pre">target_num_carbons</span></code>,
+<code class="docutils literal notranslate"><span class="pre">H_C_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">O_C_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">functional_groups</span></code>,
+<code class="docutils literal notranslate"><span class="pre">aromaticity_percent</span></code>, <code class="docutils literal notranslate"><span class="pre">seed</span></code>.  If <code class="docutils literal notranslate"><span class="pre">None</span></code>, all sheets
+are chemically identical.</p></li>
+<li><p><strong>output_directory</strong> – Directory for output files.</p></li>
+<li><p><strong>basename</strong> – Base filename for <code class="docutils literal notranslate"><span class="pre">.gro</span></code>/<code class="docutils literal notranslate"><span class="pre">.top</span></code>/<code class="docutils literal notranslate"><span class="pre">.itp</span></code> files.</p></li>
+<li><p><strong>system_name</strong> – Name written to the <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">system</span> <span class="pre">]</span></code> section in .top.</p></li>
+<li><p><strong>seed</strong> – Random seed for reproducibility.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p><code class="docutils literal notranslate"><span class="pre">(sheets,</span> <span class="pre">gro_path,</span> <span class="pre">top_path,</span> <span class="pre">itp_paths)</span></code></p>
+<ul class="simple">
+<li><p><em>sheets</em> — <code class="docutils literal notranslate"><span class="pre">List[SheetResult]</span></code> with mol, coords, composition.</p></li>
+<li><p><em>gro_path</em>, <em>top_path</em> — <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.Path</span></code></a> objects.</p></li>
+<li><p><em>itp_paths</em> — list of <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.Path</span></code></a> (one per unique
+sheet type).</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>target_num_carbons</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>H_C_ratio</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>O_C_ratio</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>functional_groups</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>defect_fraction</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>pore_diameter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>num_sheets</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>sheet_overrides</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>output_directory</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>basename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>system_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Simple slit pore — two identical sheets, 10 Å pore</span>
+<span class="n">sheets</span><span class="p">,</span> <span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">itps</span> <span class="o">=</span> <span class="n">generate_surface</span><span class="p">(</span>
+    <span class="n">target_num_carbons</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+    <span class="n">functional_groups</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;phenolic&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;ether&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="n">pore_diameter</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Asymmetric pore — different chemistry on each wall</span>
+<span class="n">sheets</span><span class="p">,</span> <span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">itps</span> <span class="o">=</span> <span class="n">generate_surface</span><span class="p">(</span>
+    <span class="n">pore_diameter</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>
+    <span class="n">sheet_overrides</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s1">&#39;functional_groups&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;phenolic&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span> <span class="s1">&#39;target_num_carbons&#39;</span><span class="p">:</span> <span class="mi">40</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;functional_groups&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;carboxyl&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="s1">&#39;target_num_carbons&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.biochar_generator.generate_biochar_series">
+<span class="sig-prename descclassname"><span class="pre">src.biochar_generator.</span></span><span class="sig-name descname"><span class="pre">generate_biochar_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configurations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_combined_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/biochar_generator.html#generate_biochar_series"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.biochar_generator.generate_biochar_series" title="Link to this definition"></a></dt>
+<dd><p>Generate multiple biochar structures for mixed simulations.</p>
+<p>This function is ideal for creating temperature series, composition series,
+or mixed biochar systems for GROMACS simulations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>configurations</strong> – List of configuration dictionaries. Each dict should contain:
+- ‘molecule_name’ (str, required): Residue name (max 5 chars, e.g., ‘BC400’)
+- ‘target_num_carbons’ (int, optional): Default 50
+- ‘H_C_ratio’ (float, optional): Default 0.5
+- ‘O_C_ratio’ (float, optional): Default 0.1
+- ‘aromaticity_percent’ (float, optional): Default 90.0
+- ‘seed’ (int, optional): For reproducibility
+- ‘functional_groups’ (dict, optional): e.g. {“phenolic”: 3, “carboxyl”: 1}</p></li>
+<li><p><strong>output_directory</strong> – Output directory for all files</p></li>
+<li><p><strong>create_combined_top</strong> – If True, generate a combined topology for all structures</p></li>
+<li><p><strong>verbose</strong> – If True, print progress information</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary mapping molecule_name -&gt; (gro_path, top_path, itp_path)</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>configurations</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>]</em>)</p></li>
+<li><p><strong>output_directory</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>create_combined_top</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">configs</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="p">{</span><span class="s1">&#39;molecule_name&#39;</span><span class="p">:</span> <span class="s1">&#39;BC400&#39;</span><span class="p">,</span> <span class="s1">&#39;H_C_ratio&#39;</span><span class="p">:</span> <span class="mf">0.65</span><span class="p">,</span> <span class="s1">&#39;O_C_ratio&#39;</span><span class="p">:</span> <span class="mf">0.20</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="p">{</span><span class="s1">&#39;molecule_name&#39;</span><span class="p">:</span> <span class="s1">&#39;BC600&#39;</span><span class="p">,</span> <span class="s1">&#39;H_C_ratio&#39;</span><span class="p">:</span> <span class="mf">0.55</span><span class="p">,</span> <span class="s1">&#39;O_C_ratio&#39;</span><span class="p">:</span> <span class="mf">0.12</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="p">{</span><span class="s1">&#39;molecule_name&#39;</span><span class="p">:</span> <span class="s1">&#39;BC800&#39;</span><span class="p">,</span> <span class="s1">&#39;H_C_ratio&#39;</span><span class="p">:</span> <span class="mf">0.40</span><span class="p">,</span> <span class="s1">&#39;O_C_ratio&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">},</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">generate_biochar_series</span><span class="p">(</span><span class="n">configs</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s1">&#39;output&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.biochar_generator.</span></span><span class="sig-name descname"><span class="pre">GeneratorConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_num_carbons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H_C_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H_C_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">O_C_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">O_C_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aromaticity_percent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aromaticity_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functional_groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic_box</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecule_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defect_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ether_span</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/biochar_generator.html#GeneratorConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.biochar_generator.GeneratorConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Configuration for <a class="reference internal" href="#src.biochar_generator.BiocharGenerator" title="src.biochar_generator.BiocharGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiocharGenerator</span></code></a>.</p>
+<p>All parameters are optional — defaults produce a 50-carbon, mostly-aromatic
+biochar with a moderate hydrogen content and no oxygen.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_num_carbons</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>size_tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>H_C_ratio</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>H_C_tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>O_C_ratio</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>O_C_tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>aromaticity_percent</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>aromaticity_tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>functional_groups</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>periodic_box</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>box_size</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>molecule_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>defect_fraction</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+<li><p><strong>max_ether_span</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.target_num_carbons">
+<span class="sig-name descname"><span class="pre">target_num_carbons</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.target_num_carbons" title="Link to this definition"></a></dt>
+<dd><p>Target number of carbon atoms in the skeleton.
+The generator grows the PAH graph until it reaches a count within
+<em>size_tolerance</em> of this value.  Minimum 6 (benzene).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.size_tolerance">
+<span class="sig-name descname"><span class="pre">size_tolerance</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.size_tolerance" title="Link to this definition"></a></dt>
+<dd><p>Fractional tolerance on <em>target_num_carbons</em>
+(e.g. 0.10 = ±10 %).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.H_C_ratio">
+<span class="sig-name descname"><span class="pre">H_C_ratio</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.H_C_ratio" title="Link to this definition"></a></dt>
+<dd><p>Target hydrogen-to-carbon atomic ratio.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.H_C_tolerance">
+<span class="sig-name descname"><span class="pre">H_C_tolerance</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.H_C_tolerance" title="Link to this definition"></a></dt>
+<dd><p>Fractional tolerance on <em>H_C_ratio</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.O_C_ratio">
+<span class="sig-name descname"><span class="pre">O_C_ratio</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.O_C_ratio" title="Link to this definition"></a></dt>
+<dd><p>Target oxygen-to-carbon atomic ratio.  Ignored when
+<em>functional_groups</em> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.O_C_tolerance">
+<span class="sig-name descname"><span class="pre">O_C_tolerance</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.O_C_tolerance" title="Link to this definition"></a></dt>
+<dd><p>Fractional tolerance on <em>O_C_ratio</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.aromaticity_percent">
+<span class="sig-name descname"><span class="pre">aromaticity_percent</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.aromaticity_percent" title="Link to this definition"></a></dt>
+<dd><p>Target fraction of carbon atoms that are
+aromatic, as a percentage (0–100).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.aromaticity_tolerance">
+<span class="sig-name descname"><span class="pre">aromaticity_tolerance</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.aromaticity_tolerance" title="Link to this definition"></a></dt>
+<dd><p>Absolute tolerance on <em>aromaticity_percent</em>
+in percentage-point units.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.functional_groups">
+<span class="sig-name descname"><span class="pre">functional_groups</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.functional_groups" title="Link to this definition"></a></dt>
+<dd><p>Explicit dict mapping functional group name to
+exact placement count, e.g. <code class="docutils literal notranslate"><span class="pre">{&quot;phenolic&quot;:</span> <span class="pre">3,</span> <span class="pre">&quot;carboxyl&quot;:</span> <span class="pre">1}</span></code>.
+Supported groups: <code class="docutils literal notranslate"><span class="pre">phenolic</span></code>, <code class="docutils literal notranslate"><span class="pre">hydroxyl</span></code>, <code class="docutils literal notranslate"><span class="pre">carboxyl</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ether</span></code>.  If <code class="docutils literal notranslate"><span class="pre">None</span></code>, total oxygen is derived from <em>O_C_ratio</em>
+and placed as phenolic groups.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.periodic_box">
+<span class="sig-name descname"><span class="pre">periodic_box</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.periodic_box" title="Link to this definition"></a></dt>
+<dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, include periodic boundary box vectors in
+the exported <code class="docutils literal notranslate"><span class="pre">.gro</span></code> file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.box_size">
+<span class="sig-name descname"><span class="pre">box_size</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.box_size" title="Link to this definition"></a></dt>
+<dd><p>Explicit box size in nm as a 3-element array.  Used only
+when <em>periodic_box</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code> and box_size is not <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.molecule_name">
+<span class="sig-name descname"><span class="pre">molecule_name</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.molecule_name" title="Link to this definition"></a></dt>
+<dd><p>Residue name written to <code class="docutils literal notranslate"><span class="pre">.gro</span></code> / <code class="docutils literal notranslate"><span class="pre">.itp</span></code> (max 5
+characters — GROMACS hard limit).  Suggested naming: <code class="docutils literal notranslate"><span class="pre">BC400</span></code>,
+<code class="docutils literal notranslate"><span class="pre">BC600</span></code>, <code class="docutils literal notranslate"><span class="pre">BC800</span></code> (pyrolysis temperature series).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.seed" title="Link to this definition"></a></dt>
+<dd><p>Integer random seed for reproducibility.  <code class="docutils literal notranslate"><span class="pre">None</span></code> = random.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.defect_fraction">
+<span class="sig-name descname"><span class="pre">defect_fraction</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.defect_fraction" title="Link to this definition"></a></dt>
+<dd><p>Probability [0, 1) that each ring added during
+skeleton growth is a 5-membered pentagon rather than a hexagon.
+0.0 = pure hexagonal PAH.  Values 0.05–0.20 introduce realistic
+topological disorder seen in low-temperature biochar.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.biochar_generator.GeneratorConfig.max_ether_span">
+<span class="sig-name descname"><span class="pre">max_ether_span</span></span><a class="headerlink" href="#src.biochar_generator.GeneratorConfig.max_ether_span" title="Link to this definition"></a></dt>
+<dd><p>Maximum C–C shortest-path distance (in bonds) between
+the two ring carbons bridged by each ether oxygen.  Controls the
+ring size of the C–O–C bridge (ring size = max_ether_span + 2).
+Default 3 → 5-membered furan-like ring (always geometrically flat).
+Larger values may fold the aromatic sheet.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="class-api">
+<h2>Class API<a class="headerlink" href="#class-api" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.biochar_generator.BiocharGenerator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.biochar_generator.</span></span><span class="sig-name descname"><span class="pre">BiocharGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/biochar_generator.html#BiocharGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.biochar_generator.BiocharGenerator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Generate a single biochar molecule and export it to GROMACS files.</p>
+<p>The generator runs a five-step pipeline:</p>
+<ol class="arabic simple">
+<li><p><strong>Carbon skeleton</strong> — grows a PAH graph to the requested carbon count
+using hexagonal ring expansion (or defective with pentagons).</p></li>
+<li><p><strong>Heteroatom assignment</strong> — places oxygen-containing functional groups
+then fills remaining valences with hydrogen.</p></li>
+<li><p><strong>3D coordinates</strong> — embeds the molecule in 3D; flattens large sheets
+via the hex-lattice path and optimises O–H hydrogen positions.</p></li>
+<li><p><strong>OPLS-AA typing</strong> — assigns atom types and partial charges.</p></li>
+<li><p><strong>Validation</strong> — checks composition ratios and geometry.</p></li>
+</ol>
+<p>Use <a class="reference internal" href="#src.biochar_generator.generate_biochar" title="src.biochar_generator.generate_biochar"><code class="xref py py-func docutils literal notranslate"><span class="pre">generate_biochar()</span></code></a> for a one-call convenience wrapper.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">GeneratorConfig</span><span class="p">(</span><span class="n">target_num_carbons</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">H_C_ratio</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+                         <span class="n">O_C_ratio</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">BiocharGenerator</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+<span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+<span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">itp</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">export_gromacs</span><span class="p">(</span><span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#src.biochar_generator.GeneratorConfig" title="src.biochar_generator.GeneratorConfig"><em>GeneratorConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.biochar_generator.BiocharGenerator.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/biochar_generator.html#BiocharGenerator.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.biochar_generator.BiocharGenerator.generate" title="Link to this definition"></a></dt>
+<dd><p>Run the full generation pipeline and return the molecular structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://www.rdkit.org/docs/source/rdkit.Chem.rdchem.html#rdkit.Chem.rdchem.Mol" title="(in The RDKit v2025.09)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mol</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">CompositionInfo</span></code>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><em>Tuple of</em> –</p>
+<ul class="simple">
+<li><p><strong>mol</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">rdkit.Chem.Mol</span></code>) — molecule with 3-D
+conformer and OPLS-AA atom types assigned.</p></li>
+<li><p><strong>coords</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, shape <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">3)</span></code>) —
+atomic coordinates in Ångströms.</p></li>
+<li><p><strong>composition</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">CompositionInfo</span></code>)
+— atom counts, H/C and O/C ratios, and functional-group census.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If carbon skeleton growth fails after retries.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.biochar_generator.BiocharGenerator.export_gromacs">
+<span class="sig-name descname"><span class="pre">export_gromacs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'biochar'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/biochar_generator.html#BiocharGenerator.export_gromacs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.biochar_generator.BiocharGenerator.export_gromacs" title="Link to this definition"></a></dt>
+<dd><p>Write GROMACS structure and topology files.</p>
+<p>Must be called after <a class="reference internal" href="#src.biochar_generator.BiocharGenerator.generate" title="src.biochar_generator.BiocharGenerator.generate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_directory</strong> – Directory in which to write output files.
+Created if it does not exist.</p></li>
+<li><p><strong>basename</strong> – Stem for output filenames
+(e.g. <code class="docutils literal notranslate"><span class="pre">&quot;bc400&quot;</span></code> → <code class="docutils literal notranslate"><span class="pre">bc400.gro</span></code>, <code class="docutils literal notranslate"><span class="pre">bc400.top</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bc400.itp</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple of <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> objects
+<code class="docutils literal notranslate"><span class="pre">(gro_path,</span> <span class="pre">top_path,</span> <span class="pre">itp_path)</span></code>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If <a class="reference internal" href="#src.biochar_generator.BiocharGenerator.generate" title="src.biochar_generator.BiocharGenerator.generate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate()</span></code></a> has not been called yet.</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_directory</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>basename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.biochar_generator.BiocharGenerator.print_summary">
+<span class="sig-name descname"><span class="pre">print_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/biochar_generator.html#BiocharGenerator.print_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.biochar_generator.BiocharGenerator.print_summary" title="Link to this definition"></a></dt>
+<dd><p>Print summary of generated structure.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../user_guide/gromacs_workflow.html" class="btn btn-neutral float-left" title="GROMACS Workflow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="surface_builder.html" class="btn btn-neutral float-right" title="surface_builder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, jolayfield.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

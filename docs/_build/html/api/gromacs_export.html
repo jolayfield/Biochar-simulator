@@ -1,0 +1,579 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gromacs_export &mdash; Biochar Simulator 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=a58bc63e"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="opls_typing" href="opls_typing.html" />
+    <link rel="prev" title="surface_builder" href="surface_builder.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Biochar Simulator
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#recommended-conda-conda-forge">Recommended: conda (conda-forge)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#from-pypi">From PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#development-install">Development install</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#single-molecule">Single molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#with-functional-groups">With functional groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#with-pentagon-defects">With pentagon defects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#slit-pore-surface">Slit-pore surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#run-in-gromacs">Run in GROMACS</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/single_molecule.html">Single Molecule Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#generation-pipeline">Generation pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#controlling-size">Controlling size</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user_guide/single_molecule.html#pah-library-seed-molecules">PAH library (seed molecules)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#controlling-composition">Controlling composition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#reproducibility">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/single_molecule.html#using-the-class-api">Using the class API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/functional_groups.html">Functional Groups</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/functional_groups.html#two-modes">Two modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/functional_groups.html#available-groups">Available groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/functional_groups.html#ether-bridge-geometry">Ether bridge geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/functional_groups.html#mixing-group-types">Mixing group types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/surfaces.html">Porous Surface Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#symmetric-slit-pore">Symmetric slit pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#asymmetric-pore">Asymmetric pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#multi-sheet-stacking">Multi-sheet stacking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#using-the-class-api">Using the class API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/surfaces.html#output-files">Output files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/batch_generation.html">Batch Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/batch_generation.html#temperature-series">Temperature series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/batch_generation.html#configuration-dict-keys">Configuration dict keys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/batch_generation.html#running-a-mixed-gromacs-simulation">Running a mixed GROMACS simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/gromacs_workflow.html">GROMACS Workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#generate-the-structure">1. Generate the structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#energy-minimisation">2. Energy minimisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#visualise">3. Visualise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#solvation-optional">4. Solvation (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#production-md">5. Production MD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/gromacs_workflow.html#force-field-notes">Force field notes</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="biochar_generator.html">biochar_generator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.generate_biochar"><code class="docutils literal notranslate"><span class="pre">generate_biochar()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.generate_surface"><code class="docutils literal notranslate"><span class="pre">generate_surface()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.generate_biochar_series"><code class="docutils literal notranslate"><span class="pre">generate_biochar_series()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.size_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.size_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.H_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.O_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.aromaticity_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.functional_groups</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.periodic_box"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.periodic_box</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.box_size"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.box_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.molecule_name"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.molecule_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.seed"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.GeneratorConfig.max_ether_span"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.max_ether_span</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id0"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id1"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.size_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id2"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id3"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id4"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id5"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id6"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id7"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_tolerance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id8"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.functional_groups</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id9"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.periodic_box</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id10"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.box_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id11"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.molecule_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id12"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id13"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#id14"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.max_ether_span</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.BiocharGenerator"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.BiocharGenerator.generate"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.generate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.BiocharGenerator.export_gromacs"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.export_gromacs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="biochar_generator.html#src.biochar_generator.BiocharGenerator.print_summary"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.print_summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="surface_builder.html">surface_builder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.functional_groups</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.pore_type"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.num_sheets"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.num_sheets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.pore_diameter"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_diameter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.sheet_overrides"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_overrides</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.box_padding_xy"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_xy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.box_padding_z"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_z</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.system_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.system_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.sheet_base_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_base_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.seed"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id0"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id1"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id2"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id3"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.functional_groups</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id4"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id5"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id6"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.num_sheets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id7"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_diameter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id8"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_overrides</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id9"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_xy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id10"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_z</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id11"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.system_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id12"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_base_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id13"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id14"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.defect_fraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult"><code class="docutils literal notranslate"><span class="pre">SheetResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.mol"><code class="docutils literal notranslate"><span class="pre">SheetResult.mol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.coords"><code class="docutils literal notranslate"><span class="pre">SheetResult.coords</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.composition"><code class="docutils literal notranslate"><span class="pre">SheetResult.composition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.atom_types"><code class="docutils literal notranslate"><span class="pre">SheetResult.atom_types</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.charges"><code class="docutils literal notranslate"><span class="pre">SheetResult.charges</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SheetResult.molecule_name"><code class="docutils literal notranslate"><span class="pre">SheetResult.molecule_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id15"><code class="docutils literal notranslate"><span class="pre">SheetResult.mol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id16"><code class="docutils literal notranslate"><span class="pre">SheetResult.coords</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id17"><code class="docutils literal notranslate"><span class="pre">SheetResult.composition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id18"><code class="docutils literal notranslate"><span class="pre">SheetResult.atom_types</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id19"><code class="docutils literal notranslate"><span class="pre">SheetResult.charges</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#id20"><code class="docutils literal notranslate"><span class="pre">SheetResult.molecule_name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceBuilder"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceBuilder.sheets"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.sheets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceBuilder.build"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.build()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="surface_builder.html#src.surface_builder.SurfaceBuilder.export_gromacs"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.export_gromacs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">gromacs_export</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#src.gromacs_export.GromacsExporter"><code class="docutils literal notranslate"><span class="pre">GromacsExporter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.gromacs_export.GromacsExporter.export"><code class="docutils literal notranslate"><span class="pre">GromacsExporter.export()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#src.gromacs_export.GROFileWriter"><code class="docutils literal notranslate"><span class="pre">GROFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.gromacs_export.GROFileWriter.write"><code class="docutils literal notranslate"><span class="pre">GROFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#src.gromacs_export.TOPFileWriter"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.gromacs_export.TOPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#src.gromacs_export.ITPFileWriter"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.gromacs_export.ITPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#src.gromacs_export.MultiSheetGROWriter"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.gromacs_export.MultiSheetGROWriter.write"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#src.gromacs_export.SurfaceTopologyWriter"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.gromacs_export.SurfaceTopologyWriter.write"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="opls_typing.html">opls_typing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="opls_typing.html#src.opls_typing.AtomTyper"><code class="docutils literal notranslate"><span class="pre">AtomTyper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="opls_typing.html#src.opls_typing.AtomTyper.assign_atom_types"><code class="docutils literal notranslate"><span class="pre">AtomTyper.assign_atom_types()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="opls_typing.html#src.opls_typing.AtomTyper.get_bond_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_bond_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="opls_typing.html#src.opls_typing.AtomTyper.get_angle_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_angle_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="opls_typing.html#src.opls_typing.ChargeAssigner"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="opls_typing.html#src.opls_typing.ChargeAssigner.assign_charges"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner.assign_charges()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="constants.html">constants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.OPLS_ATOM_TYPES"><code class="docutils literal notranslate"><span class="pre">OPLS_ATOM_TYPES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.OPLS_LJ_PARAMS"><code class="docutils literal notranslate"><span class="pre">OPLS_LJ_PARAMS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.OPLS_BOND_PARAMS"><code class="docutils literal notranslate"><span class="pre">OPLS_BOND_PARAMS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.OPLS_ANGLE_PARAMS"><code class="docutils literal notranslate"><span class="pre">OPLS_ANGLE_PARAMS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.FUNCTIONAL_GROUPS"><code class="docutils literal notranslate"><span class="pre">FUNCTIONAL_GROUPS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.PAH_LIBRARY"><code class="docutils literal notranslate"><span class="pre">PAH_LIBRARY</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.CARBON_VDW_DIAMETER"><code class="docutils literal notranslate"><span class="pre">CARBON_VDW_DIAMETER</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.get_atom_mass"><code class="docutils literal notranslate"><span class="pre">get_atom_mass()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.get_vdw_radius"><code class="docutils literal notranslate"><span class="pre">get_vdw_radius()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#src.constants.get_covalent_radius"><code class="docutils literal notranslate"><span class="pre">get_covalent_radius()</span></code></a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id1">0.1.1 (2026-04-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id2">0.1.0 (2026-04-17)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Biochar Simulator</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">gromacs_export</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/gromacs_export.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gromacs-export">
+<h1>gromacs_export<a class="headerlink" href="#gromacs-export" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.gromacs_export.GromacsExporter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.gromacs_export.</span></span><span class="sig-name descname"><span class="pre">GromacsExporter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/gromacs_export.html#GromacsExporter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.GromacsExporter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>High-level interface for exporting to GROMACS files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>output_directory</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.gromacs_export.GromacsExporter.export">
+<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecule_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'structure'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_periodic_box</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/gromacs_export.html#GromacsExporter.export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.GromacsExporter.export" title="Link to this definition"></a></dt>
+<dd><p>Export molecule to GROMACS files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mol</strong> – RDKit molecule</p></li>
+<li><p><strong>coords</strong> – 3D coordinates</p></li>
+<li><p><strong>atom_types</strong> – Atom type mapping</p></li>
+<li><p><strong>charges</strong> – Charge mapping</p></li>
+<li><p><strong>molecule_name</strong> – Molecule name</p></li>
+<li><p><strong>basename</strong> – Base filename (without extension)</p></li>
+<li><p><strong>include_periodic_box</strong> – If True, create periodic box</p></li>
+<li><p><strong>box_size</strong> – Box dimensions [Lx, Ly, Lz]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(gro_path, top_path, itp_path)</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>mol</strong> (<a class="reference external" href="https://www.rdkit.org/docs/source/rdkit.Chem.rdchem.html#rdkit.Chem.rdchem.Mol" title="(in The RDKit v2025.09)"><em>Mol</em></a>)</p></li>
+<li><p><strong>coords</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>atom_types</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p></li>
+<li><p><strong>charges</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>)</p></li>
+<li><p><strong>molecule_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>basename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>include_periodic_box</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>box_size</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.gromacs_export.GROFileWriter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.gromacs_export.</span></span><span class="sig-name descname"><span class="pre">GROFileWriter</span></span><a class="reference internal" href="../_modules/src/gromacs_export.html#GROFileWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.GROFileWriter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Write GROMACS structure (.gro) files.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.gromacs_export.GROFileWriter.write">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecule_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_vectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/gromacs_export.html#GROFileWriter.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.GROFileWriter.write" title="Link to this definition"></a></dt>
+<dd><p>Write .gro structure file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filepath</strong> – Output file path</p></li>
+<li><p><strong>mol</strong> – RDKit molecule</p></li>
+<li><p><strong>coords</strong> – 3D coordinates (in Ångströms, will be converted to nanometers)</p></li>
+<li><p><strong>molecule_name</strong> – Name of molecule in GRO file (max 5 chars for .gro format)</p></li>
+<li><p><strong>box_vectors</strong> – Box vectors (3x3 matrix) for periodic systems (in nm)</p></li>
+<li><p><strong>title</strong> – Optional title line</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>mol</strong> (<a class="reference external" href="https://www.rdkit.org/docs/source/rdkit.Chem.rdchem.html#rdkit.Chem.rdchem.Mol" title="(in The RDKit v2025.09)"><em>Mol</em></a>)</p></li>
+<li><p><strong>coords</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>molecule_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>box_vectors</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Residue names in GROMACS .gro format are limited to 5 characters.
+Suggested naming conventions for mixed biochar simulations:
+- Temperature-based: BC400, BC600, BC800
+- Composition: BCH05 (H/C=0.5), BCO10 (O/C=0.10)
+- Sequential: BC001, BC002, BC003</p>
+<p>Coordinate Units:
+- Input: RDKit coordinates (Ångströms, Å)
+- Output: GROMACS coordinates (nanometers, nm)
+- Conversion: 1 Å = 0.1 nm</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.gromacs_export.TOPFileWriter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.gromacs_export.</span></span><span class="sig-name descname"><span class="pre">TOPFileWriter</span></span><a class="reference internal" href="../_modules/src/gromacs_export.html#TOPFileWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.TOPFileWriter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Write GROMACS topology (.top) files.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.gromacs_export.TOPFileWriter.write">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecule_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIOCHAR'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forcefield_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'oplsaa.ff/forcefield.itp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_dihedrals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/gromacs_export.html#TOPFileWriter.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.TOPFileWriter.write" title="Link to this definition"></a></dt>
+<dd><p>Write .top topology file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filepath</strong> – Output file path</p></li>
+<li><p><strong>mol</strong> – RDKit molecule</p></li>
+<li><p><strong>atom_types</strong> – Dictionary of {atom_idx: opls_type}</p></li>
+<li><p><strong>charges</strong> – Dictionary of {atom_idx: charge}</p></li>
+<li><p><strong>molecule_name</strong> – Name of molecule/residue</p></li>
+<li><p><strong>forcefield_path</strong> – Path to forcefield file (relative or absolute)</p></li>
+<li><p><strong>include_dihedrals</strong> – If True, include dihedral section</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>mol</strong> (<a class="reference external" href="https://www.rdkit.org/docs/source/rdkit.Chem.rdchem.html#rdkit.Chem.rdchem.Mol" title="(in The RDKit v2025.09)"><em>Mol</em></a>)</p></li>
+<li><p><strong>atom_types</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p></li>
+<li><p><strong>charges</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>)</p></li>
+<li><p><strong>molecule_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>forcefield_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>include_dihedrals</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.gromacs_export.ITPFileWriter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.gromacs_export.</span></span><span class="sig-name descname"><span class="pre">ITPFileWriter</span></span><a class="reference internal" href="../_modules/src/gromacs_export.html#ITPFileWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.ITPFileWriter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Write GROMACS include topology (.itp) files.</p>
+<p>Note: .itp files are typically included in a .top file that defines atom types.
+We don’t include [ atomtypes ] here to avoid duplication.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.gromacs_export.ITPFileWriter.write">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecule_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIOCHAR'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_dihedrals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/gromacs_export.html#ITPFileWriter.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.ITPFileWriter.write" title="Link to this definition"></a></dt>
+<dd><p>Write .itp molecule definition file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filepath</strong> – Output file path</p></li>
+<li><p><strong>mol</strong> – RDKit molecule</p></li>
+<li><p><strong>atom_types</strong> – Dictionary of {atom_idx: opls_type}</p></li>
+<li><p><strong>charges</strong> – Dictionary of {atom_idx: charge}</p></li>
+<li><p><strong>molecule_name</strong> – Name of molecule</p></li>
+<li><p><strong>include_dihedrals</strong> – If True, include dihedral section</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>mol</strong> (<a class="reference external" href="https://www.rdkit.org/docs/source/rdkit.Chem.rdchem.html#rdkit.Chem.rdchem.Mol" title="(in The RDKit v2025.09)"><em>Mol</em></a>)</p></li>
+<li><p><strong>atom_types</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p></li>
+<li><p><strong>charges</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>)</p></li>
+<li><p><strong>molecule_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>include_dihedrals</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The .itp file includes atom type definitions for standalone use.
+When included in a .top file, the atom types will be shared.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.gromacs_export.MultiSheetGROWriter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.gromacs_export.</span></span><span class="sig-name descname"><span class="pre">MultiSheetGROWriter</span></span><a class="reference internal" href="../_modules/src/gromacs_export.html#MultiSheetGROWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.MultiSheetGROWriter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Write a multi-residue .gro file for surface systems.</p>
+<p>Each sheet occupies a separate residue with an incrementing residue
+number.  Atom numbering is global and contiguous across all sheets.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.gromacs_export.MultiSheetGROWriter.write">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_vectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/gromacs_export.html#MultiSheetGROWriter.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.MultiSheetGROWriter.write" title="Link to this definition"></a></dt>
+<dd><p>Write a single .gro containing atoms from multiple sheets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filepath</strong> – Output path.</p></li>
+<li><p><strong>sheets</strong> – List of SheetResult objects.  Each must expose
+<code class="docutils literal notranslate"><span class="pre">.mol</span></code> (RDKit Mol), <code class="docutils literal notranslate"><span class="pre">.coords</span></code> (Å, shape N×3),
+and <code class="docutils literal notranslate"><span class="pre">.molecule_name</span></code> (str ≤ 5 chars).</p></li>
+<li><p><strong>box_vectors</strong> – Periodic box vectors in nm (orthogonal 1-D or
+full 3×3 triclinic).</p></li>
+<li><p><strong>title</strong> – Optional title line.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>sheets</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a>)</p></li>
+<li><p><strong>box_vectors</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.gromacs_export.SurfaceTopologyWriter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.gromacs_export.</span></span><span class="sig-name descname"><span class="pre">SurfaceTopologyWriter</span></span><a class="reference internal" href="../_modules/src/gromacs_export.html#SurfaceTopologyWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.SurfaceTopologyWriter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Write .top files for multi-sheet surface systems.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.gromacs_export.SurfaceTopologyWriter.write">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itp_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheets_identical</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Slit</span> <span class="pre">Pore</span> <span class="pre">Surface'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forcefield_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'oplsaa.ff/forcefield.itp'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/gromacs_export.html#SurfaceTopologyWriter.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.gromacs_export.SurfaceTopologyWriter.write" title="Link to this definition"></a></dt>
+<dd><p>Write a combined .top for a surface system.</p>
+<dl class="simple">
+<dt>When <em>sheets_identical</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code>:</dt><dd><ul class="simple">
+<li><p>One <code class="docutils literal notranslate"><span class="pre">#include</span></code> for the single .itp.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">molecules</span> <span class="pre">]</span></code> lists the molecule name once with count = N.</p></li>
+</ul>
+</dd>
+<dt>When <em>sheets_identical</em> is <code class="docutils literal notranslate"><span class="pre">False</span></code>:</dt><dd><ul class="simple">
+<li><p>One <code class="docutils literal notranslate"><span class="pre">#include</span></code> per distinct .itp.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">molecules</span> <span class="pre">]</span></code> lists each molecule name once with count = 1.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>sheets</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a>)</p></li>
+<li><p><strong>itp_paths</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a>)</p></li>
+<li><p><strong>sheets_identical</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>system_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>forcefield_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="surface_builder.html" class="btn btn-neutral float-left" title="surface_builder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="opls_typing.html" class="btn btn-neutral float-right" title="opls_typing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, jolayfield.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
