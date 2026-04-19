@@ -1,7 +1,7 @@
 Batch Generation
 ================
 
-:func:`~src.biochar_generator.generate_biochar_series` generates multiple
+:func:`~biochar_simulator.biochar_generator.generate_biochar_series` generates multiple
 biochar structures in one call and optionally writes a combined topology
 suitable for running a mixed-molecule GROMACS simulation.
 
@@ -10,7 +10,7 @@ Temperature series
 
 .. code-block:: python
 
-   from src.biochar_generator import generate_biochar_series
+   from biochar_simulator.biochar_generator import generate_biochar_series
 
    configs = [
        {"molecule_name": "BC400", "target_num_carbons": 80,

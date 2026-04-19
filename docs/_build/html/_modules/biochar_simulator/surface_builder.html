@@ -1,0 +1,779 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>biochar_simulator.surface_builder &mdash; Biochar Simulator 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Biochar Simulator
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#recommended-conda-conda-forge">Recommended: conda (conda-forge)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#from-pypi">From PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#development-install">Development install</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#single-molecule">Single molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#with-functional-groups">With functional groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#with-pentagon-defects">With pentagon defects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#slit-pore-surface">Slit-pore surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#run-in-gromacs">Run in GROMACS</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/single_molecule.html">Single Molecule Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#generation-pipeline">Generation pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#controlling-size">Controlling size</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/single_molecule.html#pah-library-seed-molecules">PAH library (seed molecules)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#controlling-composition">Controlling composition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#reproducibility">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/single_molecule.html#using-the-class-api">Using the class API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/functional_groups.html">Functional Groups</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#two-modes">Two modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#available-groups">Available groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#ether-bridge-geometry">Ether bridge geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/functional_groups.html#mixing-group-types">Mixing group types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/surfaces.html">Porous Surface Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#symmetric-slit-pore">Symmetric slit pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#asymmetric-pore">Asymmetric pore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#multi-sheet-stacking">Multi-sheet stacking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#using-the-class-api">Using the class API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/surfaces.html#output-files">Output files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/batch_generation.html">Batch Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/batch_generation.html#temperature-series">Temperature series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/batch_generation.html#configuration-dict-keys">Configuration dict keys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/batch_generation.html#running-a-mixed-gromacs-simulation">Running a mixed GROMACS simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/gromacs_workflow.html">GROMACS Workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#generate-the-structure">1. Generate the structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#energy-minimisation">2. Energy minimisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#visualise">3. Visualise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#solvation-optional">4. Solvation (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#production-md">5. Production MD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/gromacs_workflow.html#force-field-notes">Force field notes</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/biochar_generator.html">biochar_generator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/biochar_generator.html#convenience-functions">Convenience functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.generate_biochar"><code class="docutils literal notranslate"><span class="pre">generate_biochar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.generate_surface"><code class="docutils literal notranslate"><span class="pre">generate_surface()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.generate_biochar_series"><code class="docutils literal notranslate"><span class="pre">generate_biochar_series()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/biochar_generator.html#configuration">Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.size_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.size_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.H_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.H_C_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.O_C_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.O_C_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.aromaticity_tolerance"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.aromaticity_tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.functional_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.periodic_box"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.periodic_box</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.box_size"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.box_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.molecule_name"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.molecule_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.seed"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.defect_fraction</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.GeneratorConfig.max_ether_span"><code class="docutils literal notranslate"><span class="pre">GeneratorConfig.max_ether_span</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/biochar_generator.html#class-api">Class API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.BiocharGenerator"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.BiocharGenerator.generate"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.BiocharGenerator.export_gromacs"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.export_gromacs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/biochar_generator.html#biochar_simulator.biochar_generator.BiocharGenerator.print_summary"><code class="docutils literal notranslate"><span class="pre">BiocharGenerator.print_summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/surface_builder.html">surface_builder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/surface_builder.html#configuration-data-classes">Configuration &amp; data classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.target_num_carbons"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.target_num_carbons</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.H_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.H_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.O_C_ratio"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.O_C_ratio</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.functional_groups"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.functional_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.aromaticity_percent"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.aromaticity_percent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.pore_type"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.num_sheets"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.num_sheets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.pore_diameter"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.pore_diameter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.sheet_overrides"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_overrides</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.box_padding_xy"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_xy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.box_padding_z"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.box_padding_z</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.system_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.system_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.sheet_base_name"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.sheet_base_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.seed"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig.defect_fraction"><code class="docutils literal notranslate"><span class="pre">SurfaceConfig.defect_fraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SheetResult"><code class="docutils literal notranslate"><span class="pre">SheetResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SheetResult.mol"><code class="docutils literal notranslate"><span class="pre">SheetResult.mol</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SheetResult.coords"><code class="docutils literal notranslate"><span class="pre">SheetResult.coords</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SheetResult.composition"><code class="docutils literal notranslate"><span class="pre">SheetResult.composition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SheetResult.atom_types"><code class="docutils literal notranslate"><span class="pre">SheetResult.atom_types</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SheetResult.charges"><code class="docutils literal notranslate"><span class="pre">SheetResult.charges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SheetResult.molecule_name"><code class="docutils literal notranslate"><span class="pre">SheetResult.molecule_name</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/surface_builder.html#builder">Builder</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceBuilder"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceBuilder.build"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceBuilder.export_gromacs"><code class="docutils literal notranslate"><span class="pre">SurfaceBuilder.export_gromacs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gromacs_export.html">gromacs_export</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.GromacsExporter"><code class="docutils literal notranslate"><span class="pre">GromacsExporter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.GromacsExporter.export"><code class="docutils literal notranslate"><span class="pre">GromacsExporter.export()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.GROFileWriter"><code class="docutils literal notranslate"><span class="pre">GROFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.GROFileWriter.write"><code class="docutils literal notranslate"><span class="pre">GROFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.TOPFileWriter"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.TOPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">TOPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.ITPFileWriter"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.ITPFileWriter.write"><code class="docutils literal notranslate"><span class="pre">ITPFileWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.MultiSheetGROWriter"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.MultiSheetGROWriter.write"><code class="docutils literal notranslate"><span class="pre">MultiSheetGROWriter.write()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.SurfaceTopologyWriter"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gromacs_export.html#biochar_simulator.gromacs_export.SurfaceTopologyWriter.write"><code class="docutils literal notranslate"><span class="pre">SurfaceTopologyWriter.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/opls_typing.html">opls_typing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/opls_typing.html#biochar_simulator.opls_typing.AtomTyper"><code class="docutils literal notranslate"><span class="pre">AtomTyper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar_simulator.opls_typing.AtomTyper.assign_atom_types"><code class="docutils literal notranslate"><span class="pre">AtomTyper.assign_atom_types()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar_simulator.opls_typing.AtomTyper.get_bond_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_bond_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar_simulator.opls_typing.AtomTyper.get_angle_parameters"><code class="docutils literal notranslate"><span class="pre">AtomTyper.get_angle_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/opls_typing.html#biochar_simulator.opls_typing.ChargeAssigner"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/opls_typing.html#biochar_simulator.opls_typing.ChargeAssigner.assign_charges"><code class="docutils literal notranslate"><span class="pre">ChargeAssigner.assign_charges()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/constants.html">constants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/constants.html#biochar_simulator.constants.get_atom_mass"><code class="docutils literal notranslate"><span class="pre">get_atom_mass()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/constants.html#biochar_simulator.constants.get_vdw_radius"><code class="docutils literal notranslate"><span class="pre">get_vdw_radius()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/constants.html#biochar_simulator.constants.get_covalent_radius"><code class="docutils literal notranslate"><span class="pre">get_covalent_radius()</span></code></a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">0.1.1 (2026-04-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id2">0.1.0 (2026-04-17)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Biochar Simulator</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">biochar_simulator.surface_builder</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for biochar_simulator.surface_builder</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Surface Builder for Porous Biochar Systems</span>
+
+<span class="sd">Generates slit-pore (Phase 1) and amorphous (Phase 2, deferred) surface</span>
+<span class="sd">systems consisting of multiple parallel PAH sheets. Each sheet is an</span>
+<span class="sd">independent biochar molecule produced by the existing BiocharGenerator</span>
+<span class="sd">pipeline. The builder positions the sheets in 3D, applies periodic</span>
+<span class="sd">boundary conditions, and exports GROMACS-ready files.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.biochar_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">BiocharGenerator</span><span class="p">,</span> <span class="n">GeneratorConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">CARBON_VDW_DIAMETER</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.gromacs_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">ITPFileWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.heteroatom_assignment</span><span class="w"> </span><span class="kn">import</span> <span class="n">_fix_heteroatom_bond_types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.opls_typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">AtomTyper</span><span class="p">,</span> <span class="n">ChargeAssigner</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Data classes</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SheetResult">
+<a class="viewcode-back" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SheetResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SheetResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Result of generating and positioning a single sheet.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        mol: RDKit molecule with 3-D conformer and OPLS-AA types.</span>
+<span class="sd">        coords: Atomic coordinates in Ångströms, shape ``(N, 3)``.</span>
+<span class="sd">            Updated in-place by :meth:`SurfaceBuilder.build` to world</span>
+<span class="sd">            coordinates (translated along *z* after flattening).</span>
+<span class="sd">        composition: Atom counts and ratios</span>
+<span class="sd">            (:class:`~heteroatom_assignment.CompositionInfo`).</span>
+<span class="sd">        atom_types: Mapping of atom index → OPLS-AA type string.</span>
+<span class="sd">        charges: Mapping of atom index → partial charge (electrons).</span>
+<span class="sd">        molecule_name: Residue name used in ``.gro`` and ``.itp`` files.</span>
+<span class="sd">            Identical for all sheets when *sheet_overrides* is ``None``;</span>
+<span class="sd">            indexed (e.g. ``SHT1``, ``SHT2``) for distinct sheets.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span>
+    <span class="n">coords</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>  <span class="c1"># Angstroms</span>
+    <span class="n">composition</span><span class="p">:</span> <span class="nb">object</span>  <span class="c1"># CompositionInfo — avoid circular import</span>
+    <span class="n">atom_types</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="n">charges</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">molecule_name</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># e.g. &quot;SHT&quot; (identical) or &quot;SHT1&quot; (distinct)</span></div>
+
+
+
+<div class="viewcode-block" id="SurfaceConfig">
+<a class="viewcode-back" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SurfaceConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration for :class:`SurfaceBuilder`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        target_num_carbons: Carbon atoms per sheet (passed to</span>
+<span class="sd">            :class:`~biochar_generator.BiocharGenerator`).</span>
+<span class="sd">        H_C_ratio: Target H/C ratio for each sheet.</span>
+<span class="sd">        O_C_ratio: Target O/C ratio (used when *functional_groups* is</span>
+<span class="sd">            ``None``).</span>
+<span class="sd">        functional_groups: Functional groups applied to every sheet, e.g.</span>
+<span class="sd">            ``{&quot;phenolic&quot;: 2, &quot;ether&quot;: 1}``.  Overridden per-sheet via</span>
+<span class="sd">            *sheet_overrides*.</span>
+<span class="sd">        aromaticity_percent: Target aromatic carbon fraction (percentage).</span>
+<span class="sd">        pore_type: Pore geometry.  Only ``&quot;slit&quot;`` is supported in Phase 1;</span>
+<span class="sd">            ``&quot;amorphous&quot;`` is reserved for Phase 2.</span>
+<span class="sd">        num_sheets: Number of parallel sheets.  Must be ≥ 2.</span>
+<span class="sd">        pore_diameter: Gap between the inner van-der-Waals surfaces of</span>
+<span class="sd">            adjacent sheets, in Ångströms.  The centre-to-centre sheet</span>
+<span class="sd">            separation is ``pore_diameter + 3.4 Å``.</span>
+<span class="sd">        sheet_overrides: Per-sheet configuration overrides.  If provided,</span>
+<span class="sd">            must be a list of dicts (one per sheet) with keys matching</span>
+<span class="sd">            :class:`~biochar_generator.GeneratorConfig` fields.  If ``None``,</span>
+<span class="sd">            all sheets are chemically identical (one ``.itp`` with</span>
+<span class="sd">            ``count = num_sheets``).</span>
+<span class="sd">        box_padding_xy: Padding added to each side of the bounding box in</span>
+<span class="sd">            *x* and *y*, in nm.</span>
+<span class="sd">        box_padding_z: Padding added to each side of the bounding box in</span>
+<span class="sd">            *z*, in nm.</span>
+<span class="sd">        system_name: Name written to the ``[ system ]`` section of the</span>
+<span class="sd">            ``.top`` file.</span>
+<span class="sd">        sheet_base_name: Residue name prefix for sheet molecules.  Must be</span>
+<span class="sd">            ≤ 3 characters so that the full name (prefix + digit) fits within</span>
+<span class="sd">            GROMACS&#39; 5-character residue-name limit.</span>
+<span class="sd">        seed: Random seed passed to each :class:`~biochar_generator.BiocharGenerator`.</span>
+<span class="sd">        defect_fraction: Pentagon insertion probability for each sheet (see</span>
+<span class="sd">            :attr:`~biochar_generator.GeneratorConfig.defect_fraction`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># --- Sheet chemistry (passed through to BiocharGenerator) ---------------</span>
+    <span class="n">target_num_carbons</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">H_C_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="n">O_C_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">functional_groups</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">aromaticity_percent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">95.0</span>
+
+    <span class="c1"># --- Pore geometry ------------------------------------------------------</span>
+    <span class="n">pore_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;slit&quot;</span>  <span class="c1"># &quot;slit&quot; (Phase 1); &quot;amorphous&quot; reserved</span>
+    <span class="n">num_sheets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pore_diameter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span>  <span class="c1"># Angstroms — gap between inner vdW surfaces</span>
+
+    <span class="c1"># --- Per-sheet overrides ------------------------------------------------</span>
+    <span class="c1"># If provided, must be a list of dicts (one per sheet) with keys matching</span>
+    <span class="c1"># GeneratorConfig fields.  If None, all sheets are chemically identical.</span>
+    <span class="n">sheet_overrides</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># --- Box padding (nm) ---------------------------------------------------</span>
+    <span class="n">box_padding_xy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">box_padding_z</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="c1"># --- Naming -------------------------------------------------------------</span>
+    <span class="n">system_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SLIT&quot;</span>
+    <span class="n">sheet_base_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SHT&quot;</span>  <span class="c1"># max 3 chars (+ digit ≤ 5 GROMACS limit)</span>
+
+    <span class="c1"># --- Reproducibility ----------------------------------------------------</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># --- Ring defects -------------------------------------------------------</span>
+    <span class="c1"># Probability [0, 1) that each ring addition is a 5-membered pentagon.</span>
+    <span class="c1"># 0.0 = pure hexagonal (default).</span>
+    <span class="n">defect_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pore_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;slit&quot;</span><span class="p">,):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;pore_type must be &#39;slit&#39; (got &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pore_type</span><span class="si">}</span><span class="s2">&#39;). &quot;</span>
+                <span class="s2">&quot;Amorphous packing is not yet implemented.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_sheets</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;num_sheets must be &gt;= 2 (got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_sheets</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pore_diameter</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pore_diameter must be &gt; 0 (got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pore_diameter</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sheet_base_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;sheet_base_name must be &lt;= 3 chars for GROMACS compatibility &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(got &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sheet_base_name</span><span class="si">}</span><span class="s2">&#39;, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sheet_base_name</span><span class="p">)</span><span class="si">}</span><span class="s2"> chars)&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sheet_overrides</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sheet_overrides</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_sheets</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;sheet_overrides length (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sheet_overrides</span><span class="p">)</span><span class="si">}</span><span class="s2">) &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;must equal num_sheets (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_sheets</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Rotation helper</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rotation_matrix_from_vectors</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute rotation matrix *R* such that ``R @ a = b`` (both unit vectors).</span>
+
+<span class="sd">    Uses Rodrigues&#39; rotation formula.  Handles degenerate cases where</span>
+<span class="sd">    *a* and *b* are parallel or anti-parallel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-8</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1"># 180-degree rotation: pick any perpendicular axis</span>
+        <span class="n">perp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">0.9</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+        <span class="n">perp</span> <span class="o">=</span> <span class="n">perp</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">perp</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span>
+        <span class="n">perp</span> <span class="o">=</span> <span class="n">perp</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">perp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">perp</span><span class="p">,</span> <span class="n">perp</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="n">vx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+        <span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">vx</span> <span class="o">+</span> <span class="n">vx</span> <span class="o">@</span> <span class="n">vx</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">c</span><span class="p">)</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Surface builder</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SurfaceBuilder">
+<a class="viewcode-back" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceBuilder">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SurfaceBuilder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build slit-pore surface systems from parallel biochar sheets.</span>
+
+<span class="sd">    The builder orchestrates a three-phase pipeline:</span>
+
+<span class="sd">    1. **Sheet generation** — creates each sheet via :class:`BiocharGenerator`,</span>
+<span class="sd">       assigns OPLS-AA types and charges, then flattens the sheet to the *xy*</span>
+<span class="sd">       plane using SVD.</span>
+<span class="sd">    2. **Positioning** — translates sheet *i* to</span>
+<span class="sd">       ``z = i × (pore_diameter + 3.4 Å)`` so consecutive sheets are separated</span>
+<span class="sd">       by the requested pore gap.</span>
+<span class="sd">    3. **Box computation** — wraps all sheets in an orthogonal periodic box</span>
+<span class="sd">       padded by :attr:`SurfaceConfig.box_padding_xy` (nm) in *x*/*y* and</span>
+<span class="sd">       :attr:`SurfaceConfig.box_padding_z` (nm) in *z*, then centres the</span>
+<span class="sd">       system inside the box.</span>
+
+<span class="sd">    When :attr:`SurfaceConfig.sheet_overrides` is ``None`` all sheets are</span>
+<span class="sd">    chemically identical: only the first sheet is generated; the rest are</span>
+<span class="sd">    deep-copied.  A single ``.itp`` is produced and the ``.top`` lists it</span>
+<span class="sd">    with ``count = num_sheets``.</span>
+
+<span class="sd">    Use :func:`~biochar_generator.generate_surface` for a one-call convenience</span>
+<span class="sd">    wrapper.</span>
+
+<span class="sd">    Examples::</span>
+
+<span class="sd">        config = SurfaceConfig(</span>
+<span class="sd">            target_num_carbons=60,</span>
+<span class="sd">            functional_groups={&quot;phenolic&quot;: 2},</span>
+<span class="sd">            pore_diameter=12.0,</span>
+<span class="sd">            num_sheets=2,</span>
+<span class="sd">            seed=42,</span>
+<span class="sd">        )</span>
+<span class="sd">        builder = SurfaceBuilder(config)</span>
+<span class="sd">        sheets, box_nm = builder.build()</span>
+<span class="sd">        gro, top, itps = builder.export_gromacs(&quot;output&quot;, &quot;slit_pore&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">SurfaceConfig</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SheetResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_box_vectors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># nm</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Public API</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SurfaceBuilder.build">
+<a class="viewcode-back" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceBuilder.build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">SheetResult</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate all sheets and compute their positioned coordinates.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``(list_of_SheetResult, box_vectors_nm)``</span>
+
+<span class="sd">        Each :class:`SheetResult`.coords is updated **in place** to world</span>
+<span class="sd">        coordinates (translated along *z* so sheets are stacked with the</span>
+<span class="sd">        requested pore gap).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_sheets</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">60</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating sheet </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_sheets</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">60</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sheet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_single_sheet</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_position_sheets</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_box_vectors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_box_vectors</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centre_in_box</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_box_vectors</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_box_vectors</span></div>
+
+
+<div class="viewcode-block" id="SurfaceBuilder.export_gromacs">
+<a class="viewcode-back" href="../../api/surface_builder.html#biochar_simulator.surface_builder.SurfaceBuilder.export_gromacs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_gromacs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">output_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+        <span class="n">basename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;surface&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Path</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export the positioned surface system to GROMACS files.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``(gro_path, top_path, list_of_itp_paths)``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Must call build() before export_gromacs()&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Import here to avoid circular imports at module level</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.gromacs_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiSheetGROWriter</span><span class="p">,</span> <span class="n">SurfaceTopologyWriter</span>
+
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span>
+        <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">sheets_identical</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sheet_overrides</span> <span class="ow">is</span> <span class="kc">None</span>
+
+        <span class="c1"># --- Write .itp files -----------------------------------------------</span>
+        <span class="n">itp_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">sheets_identical</span><span class="p">:</span>
+            <span class="n">itp_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">basename</span><span class="si">}</span><span class="s2">_sheet.itp&quot;</span>
+            <span class="n">ITPFileWriter</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">itp_path</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">atom_types</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">charges</span><span class="p">,</span>
+                <span class="n">molecule_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">molecule_name</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">itp_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">itp_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span>
+                <span class="n">itp_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">basename</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">sheet</span><span class="o">.</span><span class="n">molecule_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">.itp&quot;</span>
+                <span class="n">ITPFileWriter</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">itp_path</span><span class="p">),</span>
+                    <span class="n">sheet</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span>
+                    <span class="n">sheet</span><span class="o">.</span><span class="n">atom_types</span><span class="p">,</span>
+                    <span class="n">sheet</span><span class="o">.</span><span class="n">charges</span><span class="p">,</span>
+                    <span class="n">molecule_name</span><span class="o">=</span><span class="n">sheet</span><span class="o">.</span><span class="n">molecule_name</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">itp_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">itp_path</span><span class="p">)</span>
+
+        <span class="c1"># --- Write combined .gro --------------------------------------------</span>
+        <span class="n">gro_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">basename</span><span class="si">}</span><span class="s2">.gro&quot;</span>
+        <span class="n">MultiSheetGROWriter</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">gro_path</span><span class="p">),</span>
+            <span class="n">sheets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">,</span>
+            <span class="n">box_vectors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_box_vectors</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Slit pore surface, pore_diameter=&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pore_diameter</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> A, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_sheets</span><span class="si">}</span><span class="s2"> sheets&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># --- Write .top -----------------------------------------------------</span>
+        <span class="n">top_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">basename</span><span class="si">}</span><span class="s2">.top&quot;</span>
+        <span class="n">SurfaceTopologyWriter</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">top_path</span><span class="p">),</span>
+            <span class="n">sheets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">,</span>
+            <span class="n">itp_paths</span><span class="o">=</span><span class="n">itp_paths</span><span class="p">,</span>
+            <span class="n">sheets_identical</span><span class="o">=</span><span class="n">sheets_identical</span><span class="p">,</span>
+            <span class="n">system_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">system_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gro_path</span><span class="p">,</span> <span class="n">top_path</span><span class="p">,</span> <span class="n">itp_paths</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Sheet generation</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_single_sheet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sheet_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SheetResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a single biochar sheet (or deep-copy if identical).&quot;&quot;&quot;</span>
+        <span class="c1"># Identical-sheet optimisation: copy first sheet for indices &gt; 0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sheet_overrides</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">sheet_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">SheetResult</span><span class="p">(</span>
+                <span class="n">mol</span><span class="o">=</span><span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">mol</span><span class="p">),</span>
+                <span class="n">coords</span><span class="o">=</span><span class="n">base</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                <span class="n">composition</span><span class="o">=</span><span class="n">base</span><span class="o">.</span><span class="n">composition</span><span class="p">,</span>
+                <span class="n">atom_types</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">atom_types</span><span class="p">),</span>
+                <span class="n">charges</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">charges</span><span class="p">),</span>
+                <span class="n">molecule_name</span><span class="o">=</span><span class="n">base</span><span class="o">.</span><span class="n">molecule_name</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Build GeneratorConfig for this sheet</span>
+        <span class="n">gen_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">target_num_carbons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">target_num_carbons</span><span class="p">,</span>
+            <span class="n">H_C_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">H_C_ratio</span><span class="p">,</span>
+            <span class="n">O_C_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">O_C_ratio</span><span class="p">,</span>
+            <span class="n">aromaticity_percent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">aromaticity_percent</span><span class="p">,</span>
+            <span class="n">functional_groups</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">functional_groups</span><span class="p">,</span>
+            <span class="n">defect_fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">defect_fraction</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Apply per-sheet overrides if present</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sheet_overrides</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">overrides</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sheet_overrides</span><span class="p">[</span><span class="n">sheet_index</span><span class="p">]</span>
+            <span class="n">gen_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
+
+        <span class="c1"># Molecule name: same for identical sheets, indexed for distinct</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sheet_overrides</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mol_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sheet_base_name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mol_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sheet_base_name</span><span class="si">}{</span><span class="n">sheet_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">gen_kwargs</span><span class="p">[</span><span class="s2">&quot;molecule_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mol_name</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="n">GeneratorConfig</span><span class="p">(</span><span class="o">**</span><span class="n">gen_kwargs</span><span class="p">)</span>
+        <span class="n">generator</span> <span class="o">=</span> <span class="n">BiocharGenerator</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+
+        <span class="c1"># Ensure clean bond types after pipeline</span>
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">_fix_heteroatom_bond_types</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="c1"># OPLS typing (using public classes directly)</span>
+        <span class="n">typer</span> <span class="o">=</span> <span class="n">AtomTyper</span><span class="p">()</span>
+        <span class="n">atom_types</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">assign_atom_types</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+        <span class="n">charger</span> <span class="o">=</span> <span class="n">ChargeAssigner</span><span class="p">()</span>
+        <span class="n">charges</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">assign_charges</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">atom_types</span><span class="p">)</span>
+
+        <span class="c1"># Flatten sheet to xy plane</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flatten_to_xy</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">SheetResult</span><span class="p">(</span>
+            <span class="n">mol</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span>
+            <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span>
+            <span class="n">composition</span><span class="o">=</span><span class="n">composition</span><span class="p">,</span>
+            <span class="n">atom_types</span><span class="o">=</span><span class="n">atom_types</span><span class="p">,</span>
+            <span class="n">charges</span><span class="o">=</span><span class="n">charges</span><span class="p">,</span>
+            <span class="n">molecule_name</span><span class="o">=</span><span class="n">mol_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Geometry helpers</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_flatten_to_xy</span><span class="p">(</span><span class="n">coords</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rotate coordinates so the best-fit plane coincides with z=0,</span>
+<span class="sd">        then translate centroid to origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">centroid</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">centred</span> <span class="o">=</span> <span class="n">coords</span> <span class="o">-</span> <span class="n">centroid</span>
+
+        <span class="c1"># SVD: smallest singular vector = plane normal</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">vt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">centred</span><span class="p">)</span>
+        <span class="n">normal</span> <span class="o">=</span> <span class="n">vt</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="c1"># Rotation to align normal with z-axis</span>
+        <span class="n">z_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">_rotation_matrix_from_vectors</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">z_axis</span><span class="p">)</span>
+        <span class="n">rotated</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span> <span class="o">@</span> <span class="n">centred</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># Zero residual z drift</span>
+        <span class="n">rotated</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-=</span> <span class="n">rotated</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">rotated</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_position_sheets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Translate each sheet along z to create slit pore gaps.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">):</span>
+            <span class="n">z_offset</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pore_diameter</span> <span class="o">+</span> <span class="n">CARBON_VDW_DIAMETER</span><span class="p">)</span>
+            <span class="n">sheet</span><span class="o">.</span><span class="n">coords</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">z_offset</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_box_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute orthogonal periodic box vectors in nm.</span>
+
+<span class="sd">        x, y: span of all sheets + 2 * box_padding_xy</span>
+<span class="sd">        z: span of all sheets + 2 * box_padding_z</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">coords</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">])</span>  <span class="c1"># Angstroms</span>
+        <span class="n">all_coords_nm</span> <span class="o">=</span> <span class="n">all_coords</span> <span class="o">*</span> <span class="mf">0.1</span>
+
+        <span class="n">min_xyz</span> <span class="o">=</span> <span class="n">all_coords_nm</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">max_xyz</span> <span class="o">=</span> <span class="n">all_coords_nm</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">extent</span> <span class="o">=</span> <span class="n">max_xyz</span> <span class="o">-</span> <span class="n">min_xyz</span>
+
+        <span class="n">box</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">box_padding_xy</span><span class="p">,</span>
+            <span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">box_padding_xy</span><span class="p">,</span>
+            <span class="n">extent</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">box_padding_z</span><span class="p">,</span>
+        <span class="p">])</span>
+        <span class="k">return</span> <span class="n">box</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_centre_in_box</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">box_nm</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Translate all sheet coordinates so the system is centred in the box.</span>
+
+<span class="sd">        Coordinates remain in Angstroms internally; *box_nm* is in nm.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">coords</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">])</span>
+        <span class="n">min_xyz_A</span> <span class="o">=</span> <span class="n">all_coords</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">max_xyz_A</span> <span class="o">=</span> <span class="n">all_coords</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">current_centre</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_xyz_A</span> <span class="o">+</span> <span class="n">max_xyz_A</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">box_centre_A</span> <span class="o">=</span> <span class="p">(</span><span class="n">box_nm</span> <span class="o">*</span> <span class="mf">10.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>  <span class="c1"># nm -&gt; Angstroms</span>
+        <span class="n">shift</span> <span class="o">=</span> <span class="n">box_centre_A</span> <span class="o">-</span> <span class="n">current_centre</span>
+        <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span>
+            <span class="n">sheet</span><span class="o">.</span><span class="n">coords</span> <span class="o">+=</span> <span class="n">shift</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, jolayfield.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

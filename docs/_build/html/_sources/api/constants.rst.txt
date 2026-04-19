@@ -40,8 +40,8 @@ used throughout the package.
 
 .. rubric:: Helper functions
 
-.. autofunction:: src.constants.get_atom_mass
+.. autofunction:: biochar_simulator.constants.get_atom_mass
 
-.. autofunction:: src.constants.get_vdw_radius
+.. autofunction:: biochar_simulator.constants.get_vdw_radius
 
-.. autofunction:: src.constants.get_covalent_radius
+.. autofunction:: biochar_simulator.constants.get_covalent_radius

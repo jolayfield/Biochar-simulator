@@ -40,7 +40,7 @@ deep-copied.  A single ``.itp`` is produced with ``count = 2`` in the
 
 .. code-block:: python
 
-   from src.biochar_generator import generate_surface
+   from biochar_simulator.biochar_generator import generate_surface
 
    sheets, gro, top, itps = generate_surface(
        target_num_carbons=50,
@@ -98,12 +98,12 @@ More than two sheets create multiple consecutive pores with equal gaps:
 Using the class API
 -------------------
 
-For programmatic control, use :class:`~src.surface_builder.SurfaceBuilder`
+For programmatic control, use :class:`~biochar_simulator.surface_builder.SurfaceBuilder`
 directly:
 
 .. code-block:: python
 
-   from src.surface_builder import SurfaceBuilder, SurfaceConfig
+   from biochar_simulator.surface_builder import SurfaceBuilder, SurfaceConfig
 
    config = SurfaceConfig(
        target_num_carbons=60,

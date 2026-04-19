@@ -4,15 +4,15 @@ surface_builder
 Configuration & data classes
 -----------------------------
 
-.. autoclass:: src.surface_builder.SurfaceConfig
+.. autoclass:: biochar_simulator.surface_builder.SurfaceConfig
    :no-members:
 
-.. autoclass:: src.surface_builder.SheetResult
+.. autoclass:: biochar_simulator.surface_builder.SheetResult
    :no-members:
 
 Builder
 -------
 
-.. autoclass:: src.surface_builder.SurfaceBuilder
+.. autoclass:: biochar_simulator.surface_builder.SurfaceBuilder
    :members: build, export_gromacs
    :show-inheritance:

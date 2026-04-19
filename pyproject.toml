@@ -51,10 +51,7 @@ Repository = "https://github.com/jolayfield/Biochar-simulator"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*"]
-
-[tool.setuptools.package-dir]
-"" = "."
+include = ["biochar_simulator*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -63,5 +60,5 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["biochar_simulator"]
 omit = ["tests/*", "examples/*"]

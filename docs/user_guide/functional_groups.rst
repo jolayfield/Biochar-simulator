@@ -13,7 +13,7 @@ exact placement count.  The ``O_C_ratio`` parameter is ignored.
 
 .. code-block:: python
 
-   from src.biochar_generator import generate_biochar
+   from biochar_simulator.biochar_generator import generate_biochar
 
    # Ratio-driven: 10 % O/C, all placed as phenolic
    mol, coords, gro, top, itp = generate_biochar(

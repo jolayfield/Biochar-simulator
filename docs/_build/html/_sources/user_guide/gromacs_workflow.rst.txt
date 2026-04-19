@@ -9,7 +9,7 @@ production MD using GROMACS.
 
 .. code-block:: python
 
-   from src.biochar_generator import generate_biochar
+   from biochar_simulator.biochar_generator import generate_biochar
 
    mol, coords, gro, top, itp = generate_biochar(
        target_num_carbons=80,

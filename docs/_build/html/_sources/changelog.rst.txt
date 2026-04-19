@@ -15,16 +15,16 @@ Changelog
 
 **Slit-pore surface generation**
 
-- New :class:`~src.surface_builder.SurfaceBuilder` and
-  :class:`~src.surface_builder.SurfaceConfig` for parallel-sheet slit pores
-- New :func:`~src.biochar_generator.generate_surface` convenience function
-- :class:`~src.gromacs_export.MultiSheetGROWriter` and
-  :class:`~src.gromacs_export.SurfaceTopologyWriter` in ``gromacs_export``
+- New :class:`~biochar_simulator.surface_builder.SurfaceBuilder` and
+  :class:`~biochar_simulator.surface_builder.SurfaceConfig` for parallel-sheet slit pores
+- New :func:`~biochar_simulator.biochar_generator.generate_surface` convenience function
+- :class:`~biochar_simulator.gromacs_export.MultiSheetGROWriter` and
+  :class:`~biochar_simulator.gromacs_export.SurfaceTopologyWriter` in ``gromacs_export``
 - Identical-sheet optimisation: one ``.itp``, ``count = N`` in ``.top``
 
 **Ether bridge span limit**
 
-- :class:`~src.biochar_generator.GeneratorConfig` gains ``max_ether_span``
+- :class:`~biochar_simulator.biochar_generator.GeneratorConfig` gains ``max_ether_span``
   (default 3 → furan-like 5-membered ring)
 - Prevents long-range C–O–C bridges that fold the aromatic sheet into a
   nanotube shape

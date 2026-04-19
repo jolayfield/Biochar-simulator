@@ -8,18 +8,18 @@ import pytest
 
 from rdkit import Chem
 
-from src.constants import OPLS_ATOM_TYPES, PAH_LIBRARY
-from src.carbon_skeleton import PAHAssembler, SkeletonValidator
-from src.heteroatom_assignment import (
+from biochar_simulator.constants import OPLS_ATOM_TYPES, PAH_LIBRARY
+from biochar_simulator.carbon_skeleton import PAHAssembler, SkeletonValidator
+from biochar_simulator.heteroatom_assignment import (
     OxygenAssigner,
     HydrogenAssigner,
     HeteroatomValidator,
     CompositionInfo,
 )
-from src.geometry_3d import CoordinateGenerator, GeometryValidator
-from src.opls_typing import AtomTyper, ChargeAssigner
-from src.validation import ValidationEngine
-from src.biochar_generator import BiocharGenerator, GeneratorConfig
+from biochar_simulator.geometry_3d import CoordinateGenerator, GeometryValidator
+from biochar_simulator.opls_typing import AtomTyper, ChargeAssigner
+from biochar_simulator.validation import ValidationEngine
+from biochar_simulator.biochar_generator import BiocharGenerator, GeneratorConfig
 
 
 class TestConstants:
@@ -293,7 +293,7 @@ class TestDefectRings:
 
     def test_grow_graph_pure_hexagon(self):
         """Pure hexagon growth produces even node count and a valid mol."""
-        from src.carbon_skeleton import _grow_graph, _graph_to_mol
+        from biochar_simulator.carbon_skeleton import _grow_graph, _graph_to_mol
         import networkx as nx
 
         G = nx.cycle_graph(6)  # benzene seed
@@ -304,7 +304,7 @@ class TestDefectRings:
 
     def test_grow_graph_with_defects_even_node_count(self):
         """Defect growth always produces an even node count."""
-        from src.carbon_skeleton import _grow_graph
+        from biochar_simulator.carbon_skeleton import _grow_graph
         import networkx as nx
 
         for seed in range(5):
@@ -316,7 +316,7 @@ class TestDefectRings:
 
     def test_grow_graph_with_defects_has_pentagons(self):
         """With defect_fraction=1.0, all added rings should be pentagons."""
-        from src.carbon_skeleton import _grow_graph
+        from biochar_simulator.carbon_skeleton import _grow_graph
         import networkx as nx
 
         G = nx.cycle_graph(6)  # benzene (6 nodes)
