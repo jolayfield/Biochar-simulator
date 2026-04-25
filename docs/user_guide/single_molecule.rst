@@ -107,6 +107,43 @@ Typical values by pyrolysis temperature:
 | 700–800 °C  | 0.2–0.4  | 0.02–0.08|
 +-------------+----------+----------+
 
+Pentagon ring defects
+---------------------
+
+Real biochar contains both 6-membered (hexagonal) and 5-membered (pentagonal)
+rings due to incomplete graphitization.  The ``defect_fraction`` parameter
+controls the probability that each ring added during skeleton growth is a
+pentagon instead of a hexagon.
+
+.. code-block:: python
+
+   mol, coords, gro, top, itp = generate_biochar(
+       target_num_carbons=80,
+       H_C_ratio=0.4,
+       O_C_ratio=0.05,
+       defect_fraction=0.15,   # ~15 % of rings will be pentagons
+       output_directory="output",
+       seed=42,
+   )
+
+Guidance on ``defect_fraction`` values:
+
++------------------+------------------------------------------------------+
+| Value            | Effect                                               |
++==================+======================================================+
+| 0.0 (default)    | Pure hexagonal PAH — flat graphene-like sheet        |
++------------------+------------------------------------------------------+
+| 0.05–0.10        | Mild disorder — a few curvature-inducing defects     |
++------------------+------------------------------------------------------+
+| 0.10–0.20        | Realistic amorphous biochar topology                 |
++------------------+------------------------------------------------------+
+| > 0.30           | Highly disordered — may need more retries to kekulize|
++------------------+------------------------------------------------------+
+
+Pentagon rings introduce curvature and parity constraints.  The generator
+automatically handles parity (even/odd node count) to ensure each structure
+can be kekulized, retrying with a different sub-seed up to 5 times if needed.
+
 Reproducibility
 ---------------
 
