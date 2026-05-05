@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash"
+    ],
+    "deny": [
+      "Bash(rm *)",
+      "Bash(rm -r*)",
+      "Bash(rmdir *)",
+      "Bash(git push*)",
+      "Bash(git reset*)",
+      "Bash(git clean*)",
+      "Bash(git checkout -- *)",
+      "Bash(git restore*)",
+      "Bash(sudo rm*)",
+      "Bash(shred *)",
+      "Bash(truncate *)"
+    ]
+  }
+}

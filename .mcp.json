@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "gromacs-mcp": {
+      "command": "/opt/miniconda3/envs/biochar/bin/gromacs-mcp"
+    }
+  }
+}
