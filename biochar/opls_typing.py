@@ -8,7 +8,6 @@ from typing import Dict, Tuple, List, Optional
 from dataclasses import dataclass
 
 from rdkit import Chem
-from rdkit.Chem import Descriptors
 
 from .constants import OPLS_ATOM_TYPES, OPLS_BOND_PARAMS, OPLS_ANGLE_PARAMS
 
@@ -66,7 +65,13 @@ class AtomTyper:
 
         # Carbon
         if atomic_num == 6:
-            if is_aromatic:
+            # For large fused-ring systems RDKit Kekulization can fail, leaving
+            # is_aromatic=False on all atoms.  Fall back to ring membership +
+            # degree-3 connectivity (2 ring C neighbours + 1 H or O, or 3 ring C
+            # neighbours for interior junction atoms) as a reliable proxy.
+            ring_info = mol.GetRingInfo()
+            in_ring = ring_info.NumAtomRings(atom.GetIdx()) > 0
+            if is_aromatic or (in_ring and atom.GetDegree() == 3):
                 return "CA"
             else:
                 # Check if connected to C=O
