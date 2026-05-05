@@ -4,7 +4,7 @@ GROMACS File Export
 Write biochar structures to GROMACS format files (.gro, .top, .itp).
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 from pathlib import Path
 from datetime import datetime
 
@@ -12,7 +12,7 @@ import numpy as np
 from rdkit import Chem
 
 from .opls_typing import OPLSPropertyTable
-from .constants import OPLS_LJ_PARAMS
+from .constants import GROMACS_OPLS_TYPE_MAP, OPLS_ATOM_TYPES, OPLS_LJ_PARAMS
 
 
 class GROFileWriter:
@@ -188,14 +188,18 @@ class TOPFileWriter:
 
             # Only define atom types if not already in forcefield
             if not TOPFileWriter._forcefield_has_atom_types(forcefield_path):
-                from .constants import OPLS_ATOM_TYPES
                 f.write("[ atomtypes ]\n")
                 f.write("; name  mass  charge  particle_type  sigma  epsilon\n")
-                for atom_type in sorted(OPLS_ATOM_TYPES.keys()):
-                    desc, mass, default_charge = OPLS_ATOM_TYPES[atom_type]
-                    sigma, epsilon = OPLS_LJ_PARAMS.get(atom_type, (0.0, 0.0))
+                written: set[str] = set()
+                for generic in sorted(OPLS_ATOM_TYPES.keys()):
+                    gromacs_name = GROMACS_OPLS_TYPE_MAP.get(generic, generic)
+                    if gromacs_name in written:
+                        continue
+                    written.add(gromacs_name)
+                    desc, mass, default_charge = OPLS_ATOM_TYPES[generic]
+                    sigma, epsilon = OPLS_LJ_PARAMS.get(generic, (0.0, 0.0))
                     f.write(
-                        f"{atom_type:5s}  {mass:7.3f}  {default_charge:8.4f}  A  "
+                        f"{gromacs_name:10s}  {mass:7.3f}  {default_charge:8.4f}  A  "
                         f"{sigma:8.5f}  {epsilon:10.5f}\n"
                     )
                 f.write("\n")
@@ -212,7 +216,7 @@ class TOPFileWriter:
 
             for prop in prop_table.get_properties():
                 atom_num = prop.atom_idx + 1
-                opls_type = prop.opls_type
+                opls_type = GROMACS_OPLS_TYPE_MAP.get(prop.opls_type, prop.opls_type)
                 residue_num = 1
                 residue_name = molecule_name
                 atom_name = f"{prop.symbol}{prop.atom_idx}"
@@ -345,7 +349,7 @@ class ITPFileWriter:
 
             for prop in prop_table.get_properties():
                 atom_num = prop.atom_idx + 1
-                opls_type = prop.opls_type
+                opls_type = GROMACS_OPLS_TYPE_MAP.get(prop.opls_type, prop.opls_type)
                 residue_num = 1
                 residue_name = molecule_name
                 atom_name = f"{prop.symbol}{prop.atom_idx}"

@@ -5,7 +5,6 @@ Atom types, charges, and masses for OPLS-AA force field.
 Reference: Jorgensen, W. L., et al. JACS 118.45 (1996): 11225-11236.
 """
 
-import numpy as np
 
 # OPLS-AA Atom Types for Biochar Systems
 # Format: atom_type: (description, mass_amu, default_charge)
@@ -65,6 +64,26 @@ OPLS_LJ_PARAMS = {
     "NT": (0.3250, 0.7113),      # Quaternary nitrogen
     "S": (0.3550, 1.0460),       # Sulfur sp3
     "SH": (0.0000, 0.0000),      # H on sulfur (no LJ)
+}
+
+# Mapping from internal generic type names to GROMACS OPLS-AA opls_XXX names.
+# Internal names (CA, HA, etc.) are used throughout the biochar generation pipeline.
+# At GROMACS export time, these are translated so the topology is compatible with
+# the standard oplsaa.ff forcefield shipped with GROMACS.
+GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
+    "CA":  "opls_145",   # aromatic carbon, benzene-type
+    "HA":  "opls_146",   # aromatic hydrogen
+    "CT":  "opls_135",   # aliphatic sp3 carbon
+    "HC":  "opls_140",   # hydrogen on aliphatic carbon
+    "OH":  "opls_154",   # phenol / alcohol oxygen
+    "HO":  "opls_155",   # phenol / alcohol O-H hydrogen
+    "OS":  "opls_467",   # aryl ether oxygen (Ar-O-Ar or Ar-O-R)
+    "OC":  "opls_278",   # ketone / aldehyde C=O oxygen
+    "C":   "opls_267",   # carboxylic acid carbonyl carbon
+    "O":   "opls_269",   # carboxylic acid C=O oxygen
+    "OH2": "opls_268",   # carboxylic acid -OH oxygen
+    "HO2": "opls_270",   # carboxylic acid -OH hydrogen
+    "OW":  "opls_116",   # SPC/E water oxygen
 }
 
 # OPLS-AA Bond Parameters (k_bond, r0)
