@@ -449,7 +449,6 @@ class CoordinateGenerator:
 
         best_mol = None
         best_energy = float('inf')
-        best_converged = False
         self.used_hex_lattice = False  # reset each call
 
         if use_2d_first:
@@ -587,8 +586,7 @@ class CoordinateGenerator:
                         if ff is None:
                             ff = AllChem.UFFGetMoleculeForceField(mol_for_ff)
                         if ff is not None:
-                            minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-4)
-                            best_converged = minimize_result == 0
+                            ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-4)
                             best_energy = ff.CalcEnergy()
                             # Pull minimized coordinates back into mol_copy
                             conf_min = mol_for_ff.GetConformer(0)
@@ -623,7 +621,6 @@ class CoordinateGenerator:
                 if result != 0:
                     continue
 
-                ff_converged = False
                 ff_energy = float('inf')
                 # MMFF first — requires MMFFMolProperties, else call throws.
                 try:
@@ -631,8 +628,7 @@ class CoordinateGenerator:
                     if mmff_props is not None:
                         ff = AllChem.MMFFGetMoleculeForceField(mol_copy, mmff_props)
                         if ff is not None:
-                            minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
-                            ff_converged = minimize_result == 0
+                            ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
                             ff_energy = ff.CalcEnergy()
                 except Exception:
                     pass
@@ -641,8 +637,7 @@ class CoordinateGenerator:
                     try:
                         ff = AllChem.UFFGetMoleculeForceField(mol_copy)
                         if ff is not None:
-                            minimize_result = ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
-                            ff_converged = minimize_result == 0
+                            ff.Minimize(maxIts=max_ff_iterations, forceTol=1e-6)
                             ff_energy = ff.CalcEnergy()
                     except Exception:
                         pass
@@ -650,7 +645,6 @@ class CoordinateGenerator:
                 if ff_energy < best_energy:
                     best_energy = ff_energy
                     best_mol = mol_copy
-                    best_converged = ff_converged
 
         # Use best embedding, or fall back to 2D if all attempts failed
         if best_mol is not None:

@@ -5,11 +5,10 @@ Ensures all atoms maintain proper valence (maximum bonds per atom).
 Based on standard chemistry valence rules and periodic table properties.
 """
 
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 from dataclasses import dataclass
 
 from rdkit import Chem
-from rdkit.Chem import BondType
 
 
 @dataclass
@@ -397,7 +396,7 @@ class ValenceReport:
         """Print summary report."""
         summary = ValenceReport.get_summary(mol)
 
-        print(f"\nValence Summary:")
+        print("\nValence Summary:")
         print(f"  Total atoms: {summary['total_atoms']}")
         print(f"  Valid atoms: {summary['valid_atoms']}")
         print(f"  Invalid atoms: {summary['invalid_atoms']}")

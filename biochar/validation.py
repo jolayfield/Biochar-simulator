@@ -12,7 +12,7 @@ import numpy as np
 
 from .heteroatom_assignment import CompositionInfo
 from .geometry_3d import GeometryValidator
-from .valence import ValenceValidator, ValenceReport
+from .valence import ValenceValidator
 
 
 @dataclass

@@ -269,7 +269,7 @@ class BiocharGenerator:
             box_size=self.config.box_size,
         )
 
-        print(f"\nGROMACS files written:")
+        print("\nGROMACS files written:")
         print(f"  Structure:  {gro_path}")
         print(f"  Topology:   {top_path}")
         print(f"  Include:    {itp_path}")
@@ -285,14 +285,14 @@ class BiocharGenerator:
         print("\n" + "=" * 60)
         print("BIOCHAR STRUCTURE SUMMARY")
         print("=" * 60)
-        print(f"\nComposition:")
+        print("\nComposition:")
         print(f"  Carbons:     {self.composition.num_carbons}")
         print(f"  Hydrogens:   {self.composition.num_hydrogens}")
         print(f"  Oxygens:     {self.composition.num_oxygens}")
-        print(f"\nRatios:")
+        print("\nRatios:")
         print(f"  H/C ratio:   {self.composition.H_C_ratio:.3f} (target: {self.config.H_C_ratio:.3f})")
         print(f"  O/C ratio:   {self.composition.O_C_ratio:.3f} (target: {self.config.O_C_ratio:.3f})")
-        print(f"\nFunctional Groups:")
+        print("\nFunctional Groups:")
         if self.composition.functional_groups:
             for group_name, count in self.composition.functional_groups.items():
                 print(f"  {group_name}: {count}")
@@ -300,7 +300,7 @@ class BiocharGenerator:
             print("  None")
 
         if self.validation_report:
-            print(f"\nValidation:")
+            print("\nValidation:")
             print(f"  Status: {'VALID' if self.validation_report[0] else 'INVALID'}")
             if self.validation_report[1]:
                 print(f"  Errors: {len(self.validation_report[1])}")
@@ -415,7 +415,7 @@ class BiocharGenerator:
             print(f"  Clash resolution: {clashes_resolved}/{len(steric_clashes)} clashes resolved")
 
         if not valid:
-            print(f"Warning: Geometry validation issues:")
+            print("Warning: Geometry validation issues:")
             for error in errors[:3]:
                 print(f"  - {error}")
 
@@ -458,7 +458,7 @@ class BiocharGenerator:
             for error in errors:
                 print(f"    - {error}")
         else:
-            print(f"  Validation PASSED")
+            print("  Validation PASSED")
             if warnings:
                 print(f"  {len(warnings)} warning(s)")
 
@@ -656,7 +656,7 @@ def generate_biochar_series(
         if create_combined_top and len(results) > 1:
             print(f"Combined topology: {combined_top_path}")
             print("\nTo use in GROMACS simulations:")
-            print(f"  gmx grompp -f md.mdp -c combined.gro -p combined.top -o topol.tpr")
+            print("  gmx grompp -f md.mdp -c combined.gro -p combined.top -o topol.tpr")
             print()
 
     return results
@@ -681,7 +681,7 @@ def _create_combined_topology(
         Path to combined topology file
     """
     if verbose:
-        print(f"\nCreating combined topology file...")
+        print("\nCreating combined topology file...")
 
     with open(output_path, "w") as f:
         # Header
@@ -810,12 +810,12 @@ def generate_surface(
         basename=basename,
     )
 
-    print(f"\nSurface GROMACS files written:")
+    print("\nSurface GROMACS files written:")
     print(f"  Structure:  {gro_path}")
     print(f"  Topology:   {top_path}")
     for itp in itp_paths:
         print(f"  Include:    {itp}")
-    print(f"\nTo run with GROMACS:")
+    print("\nTo run with GROMACS:")
     print(f"  gmx grompp -f md.mdp -c {gro_path.name} -p {top_path.name} -o topol.tpr")
 
     return sheets, gro_path, top_path, itp_paths

@@ -10,8 +10,7 @@ boundary conditions, and exports GROMACS-ready files.
 
 from __future__ import annotations
 
-import copy
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 

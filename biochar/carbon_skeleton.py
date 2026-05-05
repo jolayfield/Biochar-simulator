@@ -7,12 +7,12 @@ Generates aromatic carbon frameworks for biochar structures using PAHs or random
 import math
 import random
 from typing import List, Tuple, Set, Optional, Dict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import networkx as nx
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import AllChem, Descriptors, RWMol
+from rdkit.Chem import AllChem, RWMol
 
 from .constants import PAH_LIBRARY
 

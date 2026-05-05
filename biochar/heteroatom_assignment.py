@@ -10,10 +10,9 @@ from typing import List, Dict, Tuple, Optional, Set
 from dataclasses import dataclass
 
 from rdkit import Chem
-from rdkit.Chem import AllChem, Descriptors
 
 from .constants import FUNCTIONAL_GROUPS
-from .valence import ValenceValidator, SafeBondAdder, ValenceReport
+from .valence import ValenceValidator
 
 
 @dataclass
