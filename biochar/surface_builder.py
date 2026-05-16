@@ -128,6 +128,10 @@ class SurfaceConfig:
     # 0.0 = pure hexagonal (default).
     defect_fraction: float = 0.0
 
+    # --- Strict validation --------------------------------------------------
+    # Propagated to each sheet's GeneratorConfig.  Set False for lenient mode.
+    strict: bool = True
+
     def __post_init__(self):
         self._validate()
 
@@ -361,6 +365,7 @@ class SurfaceBuilder:
             functional_groups=self.config.functional_groups,
             defect_fraction=self.config.defect_fraction,
             seed=self.config.seed,
+            strict=self.config.strict,
         )
 
         # Apply per-sheet overrides if present

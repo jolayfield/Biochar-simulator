@@ -7,7 +7,7 @@ Respects valence constraints for all atoms.
 
 import random
 from typing import List, Dict, Tuple, Optional, Set
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from rdkit import Chem
 
@@ -16,15 +16,26 @@ from .valence import ValenceValidator
 
 
 @dataclass
-class CompositionInfo:
-    """Information about molecular composition."""
+class CompositionResult:
+    """
+    Mutable composition record threaded through the generation pipeline.
 
-    num_carbons: int
-    num_hydrogens: int
-    num_oxygens: int
-    H_C_ratio: float
-    O_C_ratio: float
-    functional_groups: Dict[str, int]  # group_name -> count
+    Created by :class:`OxygenAssigner` and updated in-place by
+    :class:`HydrogenAssigner`, so callers always hold one authoritative object.
+    """
+
+    num_carbons: int = 0
+    num_hydrogens: int = 0
+    num_oxygens: int = 0
+    H_C_ratio: float = 0.0
+    O_C_ratio: float = 0.0
+    functional_groups: Dict[str, int] = field(default_factory=dict)
+    placed_counts: Dict[str, int] = field(default_factory=dict)   # groups actually placed
+    requested_counts: Dict[str, int] = field(default_factory=dict)  # groups requested
+
+
+# Backward-compatible alias
+CompositionInfo = CompositionResult
 
 
 # Flags for sanitisation that skip SANITIZE_KEKULIZE and SANITIZE_SETAROMATICITY.
@@ -141,7 +152,7 @@ class OxygenAssigner:
         target_O_C_ratio: float,
         O_C_tolerance: float = 0.10,
         functional_group_preference: Optional[Dict[str, int]] = None,
-    ) -> Tuple[Chem.Mol, CompositionInfo]:
+    ) -> Tuple[Chem.Mol, CompositionResult]:
         """
         Assign oxygen-containing functional groups to the molecule.
 
@@ -155,7 +166,9 @@ class OxygenAssigner:
                 If None, places phenolic groups to reach target_O_C_ratio.
 
         Returns:
-            (modified_mol, composition_info)
+            (modified_mol, composition_result) where composition_result carries
+            ``placed_counts`` (groups actually placed) and ``requested_counts``
+            (groups requested after normalisation).
         """
         num_carbons = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 6)
 
@@ -166,11 +179,13 @@ class OxygenAssigner:
         else:
             target_num_oxygens = int(round(num_carbons * target_O_C_ratio))
             if target_num_oxygens <= 0:
-                return mol, self._calculate_composition(mol, {})
+                return mol, self._calculate_composition(mol, {}, {}, {})
             groups_spec = {"phenolic": target_num_oxygens}
 
         if not groups_spec:
-            return mol, self._calculate_composition(mol, {})
+            return mol, self._calculate_composition(mol, {}, {}, {})
+
+        requested_counts: Dict[str, int] = dict(groups_spec)
 
         # ── Build edge-site pool ───────────────────────────────────────────
         site_pool = self._get_edge_sites(mol)
@@ -207,7 +222,9 @@ class OxygenAssigner:
         # Fix any heteroatom bonds spuriously marked AROMATIC (e.g., ether O
         # closing a ring that satisfies Hückel's rule through the PAH system).
         new_mol = _fix_heteroatom_bond_types(new_mol)
-        return new_mol, self._calculate_composition(new_mol, functional_groups_added)
+        return new_mol, self._calculate_composition(
+            new_mol, functional_groups_added, functional_groups_added, requested_counts
+        )
 
     # ------------------------------------------------------------------ #
     #  Private helpers                                                    #
@@ -343,8 +360,12 @@ class OxygenAssigner:
         return sites
 
     def _calculate_composition(
-        self, mol: Chem.Mol, functional_groups: Dict[str, int]
-    ) -> CompositionInfo:
+        self,
+        mol: Chem.Mol,
+        functional_groups: Dict[str, int],
+        placed_counts: Dict[str, int],
+        requested_counts: Dict[str, int],
+    ) -> CompositionResult:
         """Calculate composition information from molecule."""
         num_C = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 6)
         num_H = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 1)
@@ -353,13 +374,15 @@ class OxygenAssigner:
         H_C_ratio = num_H / max(num_C, 1)
         O_C_ratio = num_O / max(num_C, 1)
 
-        return CompositionInfo(
+        return CompositionResult(
             num_carbons=num_C,
             num_hydrogens=num_H,
             num_oxygens=num_O,
             H_C_ratio=H_C_ratio,
             O_C_ratio=O_C_ratio,
             functional_groups=functional_groups,
+            placed_counts=placed_counts,
+            requested_counts=requested_counts,
         )
 
 
@@ -382,7 +405,8 @@ class HydrogenAssigner:
         mol: Chem.Mol,
         target_H_C_ratio: float,
         H_C_tolerance: float = 0.10,
-    ) -> Tuple[Chem.Mol, CompositionInfo]:
+        result: Optional[CompositionResult] = None,
+    ) -> Tuple[Chem.Mol, CompositionResult]:
         """
         Assign hydrogens to molecule to satisfy minimum valence and target H/C ratio.
 
@@ -395,9 +419,14 @@ class HydrogenAssigner:
             mol: RDKit molecule (may already have oxygens)
             target_H_C_ratio: Target hydrogen-to-carbon ratio
             H_C_tolerance: Tolerance for ratio
+            result: Existing :class:`CompositionResult` from the oxygen step.
+                If provided, its hydrogen-related fields are updated in-place and
+                the same object is returned, preserving ``functional_groups``,
+                ``placed_counts``, and ``requested_counts`` set earlier.
+                If ``None``, a new :class:`CompositionResult` is created.
 
         Returns:
-            (modified_mol_with_H, composition_info)
+            (modified_mol_with_H, composition_result)
         """
         num_carbons = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 6)
         target_num_hydrogens = int(round(num_carbons * target_H_C_ratio))
@@ -422,7 +451,7 @@ class HydrogenAssigner:
         # carbons can be spuriously marked AROMATIC.  Fix them back to SINGLE.
         mol_with_H = _fix_heteroatom_bond_types(mol_with_H)
 
-        composition = self._calculate_composition(mol_with_H)
+        composition = self._update_composition(mol_with_H, result)
         return mol_with_H, composition
 
     def _saturate_valences(self, mol: Chem.Mol) -> Chem.Mol:
@@ -472,8 +501,15 @@ class HydrogenAssigner:
 
         return emol.GetMol()
 
-    def _calculate_composition(self, mol: Chem.Mol) -> CompositionInfo:
-        """Calculate composition information."""
+    def _update_composition(
+        self, mol: Chem.Mol, result: Optional[CompositionResult] = None
+    ) -> CompositionResult:
+        """
+        Update hydrogen-related fields on *result* in-place, or create a new one.
+
+        Preserves ``functional_groups``, ``placed_counts``, and
+        ``requested_counts`` from the oxygen step when *result* is provided.
+        """
         num_C = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 6)
         num_H = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 1)
         num_O = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 8)
@@ -481,7 +517,15 @@ class HydrogenAssigner:
         H_C_ratio = num_H / max(num_C, 1)
         O_C_ratio = num_O / max(num_C, 1)
 
-        return CompositionInfo(
+        if result is not None:
+            result.num_carbons = num_C
+            result.num_hydrogens = num_H
+            result.num_oxygens = num_O
+            result.H_C_ratio = H_C_ratio
+            result.O_C_ratio = O_C_ratio
+            return result
+
+        return CompositionResult(
             num_carbons=num_C,
             num_hydrogens=num_H,
             num_oxygens=num_O,

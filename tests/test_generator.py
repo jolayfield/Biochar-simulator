@@ -248,6 +248,7 @@ class TestBiocharGenerator:
             H_C_ratio=0.5,
             O_C_ratio=0.05,
             seed=42,
+            strict=False,
         )
 
         generator = BiocharGenerator(config)
@@ -272,6 +273,7 @@ class TestBiocharGenerator:
         config1 = GeneratorConfig(
             target_num_carbons=30,
             seed=12345,
+            strict=False,
         )
         generator1 = BiocharGenerator(config1)
         mol1, coords1, comp1 = generator1.generate()
@@ -279,6 +281,7 @@ class TestBiocharGenerator:
         config2 = GeneratorConfig(
             target_num_carbons=30,
             seed=12345,
+            strict=False,
         )
         generator2 = BiocharGenerator(config2)
         mol2, coords2, comp2 = generator2.generate()
@@ -364,6 +367,7 @@ class TestDefectRings:
             target_num_carbons=24,
             defect_fraction=0.15,
             seed=99,
+            strict=False,
         )
         generator = BiocharGenerator(config)
         mol, coords, composition = generator.generate()
@@ -372,8 +376,8 @@ class TestDefectRings:
 
     def test_defect_fraction_produces_different_structure(self):
         """Defect mode should yield different atom count than pure hexagon for same target."""
-        config_pure = GeneratorConfig(target_num_carbons=50, seed=1, defect_fraction=0.0)
-        config_defect = GeneratorConfig(target_num_carbons=50, seed=1, defect_fraction=0.2)
+        config_pure = GeneratorConfig(target_num_carbons=50, seed=1, defect_fraction=0.0, strict=False)
+        config_defect = GeneratorConfig(target_num_carbons=50, seed=1, defect_fraction=0.2, strict=False)
         gen_pure = BiocharGenerator(config_pure)
         gen_defect = BiocharGenerator(config_defect)
         _, _, comp_pure = gen_pure.generate()

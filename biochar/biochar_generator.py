@@ -17,8 +17,13 @@ from .heteroatom_assignment import (
     HydrogenAssigner,
     HeteroatomValidator,
     CompositionInfo,
+    CompositionResult,
     _fix_heteroatom_bond_types,
 )
+
+
+class ValidationError(Exception):
+    """Raised in strict mode when the generated structure fails validation."""
 from .geometry_3d import CoordinateGenerator, GeometryValidator, ClashResolver
 from .opls_typing import AtomTyper, ChargeAssigner
 from .gromacs_export import GromacsExporter
@@ -119,6 +124,16 @@ class GeneratorConfig:
     # Values > 5 risk cross-sheet bridges that fold the sheet into a nanotube.
     max_ether_span: int = 3
 
+    # Strict validation mode (default True).
+    # When True, :meth:`BiocharGenerator.generate` raises :class:`ValidationError`
+    # if:
+    #   * any explicitly-requested functional group type is completely unplaceable
+    #     (zero instances placed despite >0 requested), or
+    #   * the final structure fails composition or geometry validation (ratio
+    #     drift beyond tolerance, or steric clashes remaining after resolution).
+    # Set to False to restore the previous lenient behaviour (print-and-continue).
+    strict: bool = True
+
     def __post_init__(self):
         # functional_groups defaults to None → O_C_ratio-driven phenolic placement
         # (no default list here; OxygenAssigner handles the None case)
@@ -170,7 +185,7 @@ class BiocharGenerator:
         self.charges = None
         self.validation_report = None
 
-    def generate(self) -> Tuple[Chem.Mol, np.ndarray, CompositionInfo]:
+    def generate(self) -> Tuple[Chem.Mol, np.ndarray, CompositionResult]:
         """
         Run the full generation pipeline and return the molecular structure.
 
@@ -193,14 +208,10 @@ class BiocharGenerator:
 
         # Step 2: Assign heteroatoms (O, then H)
         print("Assigning oxygen atoms...")
-        mol, o_composition = self._assign_oxygens(skeleton.mol)
+        mol, comp_result = self._assign_oxygens(skeleton.mol)
 
         print("Assigning hydrogen atoms...")
-        mol, composition = self._assign_hydrogens(mol)
-
-        # Carry functional-group bookkeeping from the oxygen step into the
-        # final composition (HydrogenAssigner resets it to {}).
-        composition.functional_groups = o_composition.functional_groups
+        mol = self._assign_hydrogens(mol, comp_result)
 
         # Step 3: Generate 3D coordinates
         print("Generating 3D coordinates...")
@@ -217,7 +228,7 @@ class BiocharGenerator:
 
         # Step 5: Validate
         print("Validating structure...")
-        self._validate(mol, composition, coords)
+        self._validate(mol, comp_result, coords)
 
         # validation.py calls Chem.SanitizeMol() which can re-mark ether C-O
         # bonds as AROMATIC using RDKit's default model.  Fix again.
@@ -226,9 +237,9 @@ class BiocharGenerator:
         # Store results
         self.mol = mol
         self.coords = coords
-        self.composition = composition
+        self.composition = comp_result
 
-        return mol, coords, composition
+        return mol, coords, comp_result
 
     def export_gromacs(
         self,
@@ -331,8 +342,8 @@ class BiocharGenerator:
 
         return skeleton
 
-    def _assign_oxygens(self, mol: Chem.Mol) -> Tuple[Chem.Mol, CompositionInfo]:
-        """Assign oxygen atoms. Returns (mol, composition) including functional-group counts."""
+    def _assign_oxygens(self, mol: Chem.Mol) -> Tuple[Chem.Mol, CompositionResult]:
+        """Assign oxygen atoms. Returns (mol, CompositionResult) with placed/requested counts."""
         assigner = OxygenAssigner(seed=self.config.seed,
                                   max_ether_span=self.config.max_ether_span)
         mol, comp = assigner.assign_oxygens(
@@ -341,20 +352,33 @@ class BiocharGenerator:
             O_C_tolerance=self.config.O_C_tolerance,
             functional_group_preference=self.config.functional_groups,
         )
+
+        if self.config.strict and comp.requested_counts:
+            zero_placed = [
+                g for g, n in comp.requested_counts.items()
+                if n > 0 and comp.placed_counts.get(g, 0) == 0
+            ]
+            if zero_placed:
+                raise ValidationError(
+                    f"Strict mode: could not place any '{', '.join(zero_placed)}' "
+                    f"groups — no suitable edge sites available"
+                )
+
         return mol, comp
 
-    def _assign_hydrogens(self, mol: Chem.Mol) -> Tuple[Chem.Mol, CompositionInfo]:
-        """Assign hydrogen atoms."""
+    def _assign_hydrogens(self, mol: Chem.Mol, comp_result: CompositionResult) -> Chem.Mol:
+        """Assign hydrogen atoms, updating *comp_result* in-place."""
         assigner = HydrogenAssigner(seed=self.config.seed)
-        mol, composition = assigner.assign_hydrogens(
+        mol, _ = assigner.assign_hydrogens(
             mol,
             self.config.H_C_ratio,
             H_C_tolerance=self.config.H_C_tolerance,
+            result=comp_result,
         )
 
         # Validate
         valid, errors = HeteroatomValidator.validate_ratios(
-            composition,
+            comp_result,
             self.config.H_C_ratio,
             self.config.O_C_ratio,
             self.config.H_C_tolerance,
@@ -363,7 +387,7 @@ class BiocharGenerator:
         if not valid:
             print(f"Warning: Composition validation issues: {errors}")
 
-        return mol, composition
+        return mol
 
     def _generate_geometry(self, mol: Chem.Mol) -> Tuple[Chem.Mol, np.ndarray]:
         """Generate 3D coordinates with clash resolution."""
@@ -437,9 +461,9 @@ class BiocharGenerator:
         print(f"  Total charge: {sum(self.charges.values()):.3f} e")
 
     def _validate(
-        self, mol: Chem.Mol, composition: CompositionInfo, coords: np.ndarray
+        self, mol: Chem.Mol, composition: CompositionResult, coords: np.ndarray
     ):
-        """Validate complete structure."""
+        """Validate complete structure; raises ValidationError in strict mode."""
         is_valid, errors, warnings, metrics = ValidationEngine.validate_complete(
             mol,
             composition,
@@ -457,6 +481,11 @@ class BiocharGenerator:
             print(f"  Validation FAILED with {len(errors)} error(s):")
             for error in errors:
                 print(f"    - {error}")
+            if self.config.strict:
+                raise ValidationError(
+                    f"Strict mode: structure failed validation with "
+                    f"{len(errors)} error(s): " + "; ".join(errors)
+                )
         else:
             print("  Validation PASSED")
             if warnings:
@@ -729,6 +758,7 @@ def generate_surface(
     basename: str = "surface",
     system_name: str = "SLIT",
     seed: Optional[int] = None,
+    strict: bool = True,
 ) -> Tuple[list, Path, Path, list]:
     """
     Generate a slit-pore surface system and export to GROMACS files.
@@ -800,6 +830,7 @@ def generate_surface(
         sheet_overrides=sheet_overrides,
         system_name=system_name,
         seed=seed,
+        strict=strict,
     )
 
     builder = SurfaceBuilder(surface_config)

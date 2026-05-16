@@ -64,7 +64,7 @@ class TestSurfaceConfigValidation:
 class TestSheetGeneration:
     def test_single_sheet_flatness(self):
         """After flatten_to_xy, z range of coords should be < 2 Å."""
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         sheet = builder._generate_single_sheet(0)
 
@@ -72,14 +72,14 @@ class TestSheetGeneration:
         assert z_range < 2.0, f"Sheet not flat: z range = {z_range:.2f} Å"
 
     def test_sheet_has_atoms(self):
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         sheet = builder._generate_single_sheet(0)
         assert sheet.mol.GetNumAtoms() > 0
 
     def test_sheet_has_opls_types(self):
         """atom_types dict should be populated."""
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         sheet = builder._generate_single_sheet(0)
         assert len(sheet.atom_types) == sheet.mol.GetNumAtoms()
@@ -91,6 +91,7 @@ class TestSheetGeneration:
             functional_groups={"phenolic": 2},
             num_sheets=2,
             seed=42,
+            strict=False,
         )
         builder = SurfaceBuilder(config)
         sheet = builder._generate_single_sheet(0)
@@ -99,7 +100,7 @@ class TestSheetGeneration:
 
     def test_identical_sheets_copy(self):
         """Second sheet (identical) should be a deep copy, not the same object."""
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         builder.sheets = [builder._generate_single_sheet(0)]
         sheet1 = builder._generate_single_sheet(1)
@@ -122,6 +123,7 @@ class TestSheetPositioning:
             pore_diameter=10.0,
             num_sheets=2,
             seed=42,
+            strict=False,
         )
         builder = SurfaceBuilder(config)
         sheets, _ = builder.build()
@@ -140,6 +142,7 @@ class TestSheetPositioning:
             pore_diameter=8.0,
             num_sheets=3,
             seed=42,
+            strict=False,
         )
         builder = SurfaceBuilder(config)
         sheets, _ = builder.build()
@@ -153,7 +156,7 @@ class TestSheetPositioning:
 
     def test_box_vectors_positive(self):
         """All three box dimensions should be positive."""
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         _, box = builder.build()
         assert all(v > 0 for v in box), f"Non-positive box vector: {box}"
@@ -166,6 +169,7 @@ class TestSheetPositioning:
             box_padding_xy=1.0,
             box_padding_z=1.0,
             seed=42,
+            strict=False,
         )
         builder = SurfaceBuilder(config)
         sheets, box_nm = builder.build()
@@ -183,7 +187,7 @@ class TestSheetPositioning:
 
 class TestGROMACSExportIdentical:
     def test_gro_exists(self, tmp_path):
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         builder.build()
         gro, top, itps = builder.export_gromacs(str(tmp_path), "test")
@@ -191,7 +195,7 @@ class TestGROMACSExportIdentical:
 
     def test_gro_atom_count(self, tmp_path):
         """Second line of .gro must equal total atom count."""
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         builder.build()
         gro, _, _ = builder.export_gromacs(str(tmp_path), "test")
@@ -203,7 +207,7 @@ class TestGROMACSExportIdentical:
 
     def test_gro_residue_numbering(self, tmp_path):
         """First atom should be residue 1, last atom should be residue 2."""
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         builder.build()
         gro, _, _ = builder.export_gromacs(str(tmp_path), "test")
@@ -219,7 +223,7 @@ class TestGROMACSExportIdentical:
 
     def test_gro_box_vectors_positive(self, tmp_path):
         """Last line of .gro must contain three positive floats."""
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         builder.build()
         gro, _, _ = builder.export_gromacs(str(tmp_path), "test")
@@ -229,7 +233,7 @@ class TestGROMACSExportIdentical:
         assert all(v > 0 for v in vals), f"Box vectors not positive: {vals}"
 
     def test_top_exists(self, tmp_path):
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         builder.build()
         _, top, _ = builder.export_gromacs(str(tmp_path), "test")
@@ -237,7 +241,7 @@ class TestGROMACSExportIdentical:
 
     def test_single_itp_for_identical_sheets(self, tmp_path):
         """Identical sheets should produce exactly one .itp file."""
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=2, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         builder.build()
         _, _, itps = builder.export_gromacs(str(tmp_path), "test")
@@ -246,7 +250,7 @@ class TestGROMACSExportIdentical:
 
     def test_top_molecule_count(self, tmp_path):
         """Identical sheets: .top [ molecules ] should list count = num_sheets."""
-        config = SurfaceConfig(target_num_carbons=16, num_sheets=3, seed=42)
+        config = SurfaceConfig(target_num_carbons=16, num_sheets=3, seed=42, strict=False)
         builder = SurfaceBuilder(config)
         builder.build()
         _, top, _ = builder.export_gromacs(str(tmp_path), "test")
@@ -271,6 +275,7 @@ class TestGROMACSExportDistinct:
                 {"functional_groups": {"ether": 1}},
             ],
             seed=42,
+            strict=False,
         )
         builder = SurfaceBuilder(config)
         builder.build()
@@ -289,6 +294,7 @@ class TestGROMACSExportDistinct:
                 {"functional_groups": {"ether": 1}},
             ],
             seed=42,
+            strict=False,
         )
         builder = SurfaceBuilder(config)
         builder.build()
@@ -308,6 +314,7 @@ class TestGROMACSExportDistinct:
                 {"functional_groups": {"phenolic": 1}},
             ],
             seed=42,
+            strict=False,
         )
         builder = SurfaceBuilder(config)
         builder.build()
@@ -331,6 +338,7 @@ class TestGenerateSurface:
             output_directory=str(tmp_path),
             basename="surf",
             seed=42,
+            strict=False,
         )
         assert len(sheets) == 2
         assert gro.exists()
@@ -343,6 +351,7 @@ class TestGenerateSurface:
             target_num_carbons=16,
             output_directory=str(tmp_path),
             seed=42,
+            strict=False,
         )
         for s in sheets:
             assert isinstance(s, SheetResult)
@@ -355,6 +364,7 @@ class TestGenerateSurface:
             pore_diameter=8.0,
             output_directory=str(tmp_path),
             seed=42,
+            strict=False,
         )
         assert len(sheets) == 3
 
@@ -373,5 +383,6 @@ class TestGenerateSurface:
             ],
             output_directory=str(tmp_path),
             seed=42,
+            strict=False,
         )
         assert len(itps) == 2
