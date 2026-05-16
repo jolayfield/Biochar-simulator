@@ -3,18 +3,36 @@
     "allow": [
       "Bash"
     ],
-    "deny": [
+    "ask": [
       "Bash(rm *)",
       "Bash(rm -r*)",
       "Bash(rmdir *)",
+      "Bash(sudo rm*)",
+      "Bash(shred *)",
+      "Bash(truncate *)"
+    ],
+    "deny": [
       "Bash(git push*)",
       "Bash(git reset*)",
       "Bash(git clean*)",
       "Bash(git checkout -- *)",
-      "Bash(git restore*)",
-      "Bash(sudo rm*)",
-      "Bash(shred *)",
-      "Bash(truncate *)"
+      "Bash(git restore*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "conda run -n biochar python -m pytest tests/ -q",
+            "timeout": 120,
+            "statusMessage": "Running test suite before commit..."
+          }
+        ]
+      }
     ]
   }
 }
