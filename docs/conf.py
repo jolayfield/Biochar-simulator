@@ -27,6 +27,7 @@ extensions = [
     "sphinx.ext.intersphinx",       # Cross-link to NumPy, RDKit, etc.
     "sphinx_autodoc_typehints",     # Type hints in signature + body
     "myst_parser",                  # Markdown support for .md files
+    "nbsphinx",                     # Render Jupyter notebooks
 ]
 
 # ---------------------------------------------------------------------------
@@ -94,5 +95,12 @@ html_show_sphinx = False
 # ---------------------------------------------------------------------------
 
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+# ---------------------------------------------------------------------------
+# nbsphinx
+# ---------------------------------------------------------------------------
+
+# Never re-execute notebooks during the Sphinx build — use pre-run outputs.
+nbsphinx_execute = "never"
 pygments_style = "friendly"
 nitpicky = False                    # Don't warn on unresolved cross-refs

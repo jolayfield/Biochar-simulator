@@ -44,6 +44,12 @@ for GROMACS molecular dynamics simulations.
    user_guide/gromacs_workflow
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Examples
+
+   examples/visualization_demo
+
+.. toctree::
    :maxdepth: 2
    :caption: API Reference
 

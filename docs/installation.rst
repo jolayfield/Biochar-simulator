@@ -10,20 +10,22 @@ Requirements
 - SciPy ≥ 1.10
 - NetworkX ≥ 3.1
 
-.. note::
-   RDKit is best installed via **conda-forge**.  A pure-PyPI install is
-   possible via ``rdkit-pypi`` but the conda route is more reliable and
-   gives access to the full toolkit.
+conda (recommended)
+-------------------
 
-Recommended: conda (conda-forge)
----------------------------------
+``biochar`` is available on **conda-forge** and installs all dependencies,
+including RDKit, in a single command:
 
 .. code-block:: bash
 
-   conda create -n biochar python=3.11
+   conda install -c conda-forge biochar
+
+To install into a fresh environment:
+
+.. code-block:: bash
+
+   conda create -n biochar -c conda-forge biochar
    conda activate biochar
-   conda install -c conda-forge rdkit networkx numpy scipy
-   pip install -e ".[dev]"
 
 From PyPI
 ---------

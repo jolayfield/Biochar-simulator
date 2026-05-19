@@ -22,16 +22,23 @@ The Biochar Simulator builds polycyclic aromatic hydrocarbon (PAH) structures wi
 
 ## Installation
 
-### Requirements
-
-- Python 3.8+
-- RDKit
-- NumPy, SciPy
-- NetworkX
+### conda (recommended)
 
 ```bash
-pip install -r requirements.txt
+conda install -c conda-forge biochar
 ```
+
+### PyPI
+
+```bash
+pip install biochar
+```
+
+### Requirements
+
+- Python 3.9+
+- RDKit ≥ 2023.9
+- NumPy ≥ 1.24, SciPy ≥ 1.10, NetworkX ≥ 3.1
 
 ---
 
