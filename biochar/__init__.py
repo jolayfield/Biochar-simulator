@@ -4,11 +4,18 @@ Biochar Simulator Package
 Tools for generating biochar molecular structures for GROMACS simulations.
 """
 
+import logging
+
+# Standard library best practice: add NullHandler so the package never emits
+# "No handler found" warnings when used without logging configured.
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 from .biochar_generator import (
     BiocharGenerator,
     GeneratorConfig,
     ValidationError,
     generate_biochar,
+    generate_biochar_series,
     generate_surface,
     generate_biochar_series,
 )
@@ -23,6 +30,7 @@ __all__ = [
     "CompositionResult",
     "CompositionInfo",
     "generate_biochar",
+    "generate_biochar_series",
     "generate_surface",
     "generate_biochar_series",
     "SurfaceBuilder",

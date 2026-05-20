@@ -89,12 +89,14 @@ class AtomTyper:
             if neighbors:
                 neighbor = neighbors[0]
                 neighbor_type = self._determine_atom_type(mol, neighbor)
-                if neighbor_type in ["CA"]:
+                if neighbor_type == "CA":
                     return "HA"
-                elif neighbor_type in ["OH"]:
+                elif neighbor_type == "OH":
                     return "HO"
-                elif neighbor_type in ["OH2"]:
+                elif neighbor_type == "OH2":
                     return "HO2"
+                elif neighbor_type == "NA":
+                    return "HNA"
                 else:
                     return "HC"
             return "HC"
@@ -125,10 +127,16 @@ class AtomTyper:
                 # Special case for carboxylic acid OH
                 return "OH2"
 
-        # Nitrogen (placeholder)
+        # Nitrogen
         elif atomic_num == 7:
-            num_bonds = len(atom.GetBonds())
-            if num_bonds == 3:
+            neighbors = list(atom.GetNeighbors())
+            h_count = sum(1 for n in neighbors if n.GetAtomicNum() == 1)
+            has_aromatic_c = any(
+                n.GetAtomicNum() == 6 and n.GetIsAromatic() for n in neighbors
+            )
+            if has_aromatic_c and h_count >= 1:
+                return "NA"  # Aniline-type aromatic primary amine (Ar-NH2)
+            elif len(atom.GetBonds()) == 3:
                 return "N"
             else:
                 return "NT"

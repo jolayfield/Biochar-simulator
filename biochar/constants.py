@@ -31,9 +31,11 @@ OPLS_ATOM_TYPES = {
     "OH2": ("Hydroxyl on carboxylic acid", 15.999, -0.540),
     "HO2": ("H on carboxylic hydroxyl", 1.008, 0.436),
 
-    # Nitrogen (for future extensions)
+    # Nitrogen
     "N": ("Tertiary nitrogen", 14.007, -0.70),
     "NT": ("Quaternary nitrogen", 14.007, 0.0),
+    "NA": ("Aromatic amine nitrogen (aniline Ar-NH2)", 14.007, -0.60),
+    "HNA": ("H on aromatic amine nitrogen", 1.008, 0.30),
 
     # Sulfur (for future extensions)
     "S": ("Sulfur sp3", 32.065, -0.20),
@@ -62,6 +64,8 @@ OPLS_LJ_PARAMS = {
     "HO2": (0.0000, 0.0000),     # H on carboxylic hydroxyl (no LJ)
     "N": (0.3250, 0.7113),       # Tertiary nitrogen
     "NT": (0.3250, 0.7113),      # Quaternary nitrogen
+    "NA": (0.3250, 0.7113),      # Aromatic amine N (aniline)
+    "HNA": (0.1000, 0.0000),     # H on aromatic amine (no LJ)
     "S": (0.3550, 1.0460),       # Sulfur sp3
     "SH": (0.0000, 0.0000),      # H on sulfur (no LJ)
 }
@@ -84,6 +88,8 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
     "OH2": "opls_268",   # carboxylic acid -OH oxygen
     "HO2": "opls_270",   # carboxylic acid -OH hydrogen
     "OW":  "opls_116",   # SPC/E water oxygen
+    "NA":  "opls_900",   # primary aromatic amine N (aniline Ar-NH2)
+    "HNA": "opls_901",   # H on primary aromatic amine
 }
 
 # OPLS-AA Bond Parameters (k_bond, r0)
@@ -106,6 +112,8 @@ OPLS_BOND_PARAMS = {
     ("OH", "HO"): (367.0, 0.960),      # O-H hydroxyl
     ("OH2", "HO2"): (367.0, 0.960),    # O-H carboxylic
     ("OS", "HO"): (367.0, 0.960),      # This shouldn't exist, but for safety
+    ("CA", "NA"): (500.0, 1.422),      # Aromatic C-N bond (aniline)
+    ("NA", "HNA"): (434.0, 1.010),     # N-H bond in aniline
 }
 
 # OPLS-AA Angle Parameters (k_angle, theta0)
@@ -129,6 +137,9 @@ OPLS_ANGLE_PARAMS = {
     ("CT", "OS", "CT"): (60.0, 110.7),
     ("CA", "OS", "CA"): (70.0, 113.2),
     ("CT", "OS", "CA"): (70.0, 113.2),
+    ("CA", "CA", "NA"): (70.0, 120.0),   # Ar-C-C-N in aniline
+    ("CA", "NA", "HNA"): (55.0, 113.9),  # Ar-N-H angle
+    ("HNA", "NA", "HNA"): (35.0, 116.0), # H-N-H in aniline
 }
 
 # Functional groups definitions
@@ -198,6 +209,14 @@ FUNCTIONAL_GROUPS = {
         "composition": {"O": 2},
         "O_per_group": 2,
         "H_per_group": 0,
+    },
+    "amino": {
+        "description": "Amino group (-NH2) on aromatic ring",
+        "atoms": [("N", "NA"), ("H", "HNA"), ("H", "HNA")],
+        "connectivity": [(0, "CA", 1), (1, 0, 1), (2, 0, 1)],
+        "composition": {"N": 1, "H": 2},
+        "O_per_group": 0,
+        "H_per_group": 2,
     },
 }
 

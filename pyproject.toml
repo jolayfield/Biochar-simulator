@@ -46,6 +46,9 @@ dev = [
     "nbconvert",
 ]
 
+[project.scripts]
+biochar-gen = "biochar.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/jolayfield/Biochar-simulator"
 Repository = "https://github.com/jolayfield/Biochar-simulator"

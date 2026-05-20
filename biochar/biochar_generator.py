@@ -4,12 +4,16 @@ Biochar Structure Generator
 Main API for generating biochar building blocks for GROMACS simulations.
 """
 
+import dataclasses
+import logging
 from typing import Optional, Tuple, List, Dict
 from dataclasses import dataclass
 from pathlib import Path
 
 from rdkit import Chem
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 from .carbon_skeleton import PAHAssembler, SkeletonValidator
 from .heteroatom_assignment import (
@@ -142,6 +146,21 @@ class GeneratorConfig:
         if len(self.molecule_name) > 5:
             raise ValueError(f"molecule_name must be ≤5 characters (GROMACS .gro format), got '{self.molecule_name}' ({len(self.molecule_name)} chars)")
 
+    def to_dict(self) -> dict:
+        """Return a JSON-serializable dictionary of this configuration."""
+        d = dataclasses.asdict(self)
+        if d.get("box_size") is not None:
+            d["box_size"] = list(d["box_size"])
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "GeneratorConfig":
+        """Reconstruct a GeneratorConfig from a plain dictionary (e.g. loaded from JSON)."""
+        d = dict(d)
+        if d.get("box_size") is not None:
+            d["box_size"] = np.array(d["box_size"])
+        return cls(**d)
+
 
 class BiocharGenerator:
     """
@@ -203,18 +222,16 @@ class BiocharGenerator:
             RuntimeError: If carbon skeleton growth fails after retries.
         """
         # Step 1: Generate carbon skeleton
-        print(f"Generating carbon skeleton with {self.config.target_num_carbons} carbons...")
+        logger.info("Generating carbon skeleton with %d carbons...", self.config.target_num_carbons)
         skeleton = self._generate_carbon_skeleton()
 
         # Step 2: Assign heteroatoms (O, then H)
-        print("Assigning oxygen atoms...")
+        logger.info("Assigning heteroatoms...")
         mol, comp_result = self._assign_oxygens(skeleton.mol)
-
-        print("Assigning hydrogen atoms...")
         mol = self._assign_hydrogens(mol, comp_result)
 
         # Step 3: Generate 3D coordinates
-        print("Generating 3D coordinates...")
+        logger.info("Generating 3D coordinates...")
         mol, coords = self._generate_geometry(mol)
 
         # Force field computation (inside geometry) internally re-sanitizes the
@@ -223,11 +240,11 @@ class BiocharGenerator:
         mol = _fix_heteroatom_bond_types(mol)
 
         # Step 4: Assign OPLS types and charges
-        print("Assigning OPLS-AA atom types and charges...")
+        logger.info("Assigning OPLS-AA atom types and charges...")
         self._assign_opls_properties(mol)
 
         # Step 5: Validate
-        print("Validating structure...")
+        logger.info("Validating structure...")
         self._validate(mol, comp_result, coords)
 
         # validation.py calls Chem.SanitizeMol() which can re-mark ether C-O
@@ -280,10 +297,7 @@ class BiocharGenerator:
             box_size=self.config.box_size,
         )
 
-        print("\nGROMACS files written:")
-        print(f"  Structure:  {gro_path}")
-        print(f"  Topology:   {top_path}")
-        print(f"  Include:    {itp_path}")
+        logger.info("GROMACS files written: %s | %s | %s", gro_path, top_path, itp_path)
 
         return gro_path, top_path, itp_path
 
@@ -300,9 +314,15 @@ class BiocharGenerator:
         print(f"  Carbons:     {self.composition.num_carbons}")
         print(f"  Hydrogens:   {self.composition.num_hydrogens}")
         print(f"  Oxygens:     {self.composition.num_oxygens}")
+        if self.composition.num_nitrogens:
+            print(f"  Nitrogens:   {self.composition.num_nitrogens}")
+        print(f"  Formula:     {self.composition.molecular_formula}")
+        print(f"  MW:          {self.composition.molecular_weight:.1f} g/mol")
         print("\nRatios:")
         print(f"  H/C ratio:   {self.composition.H_C_ratio:.3f} (target: {self.config.H_C_ratio:.3f})")
         print(f"  O/C ratio:   {self.composition.O_C_ratio:.3f} (target: {self.config.O_C_ratio:.3f})")
+        if self.composition.num_nitrogens:
+            print(f"  N/C ratio:   {self.composition.N_C_ratio:.3f}")
         print("\nFunctional Groups:")
         if self.composition.functional_groups:
             for group_name, count in self.composition.functional_groups.items():
@@ -338,7 +358,7 @@ class BiocharGenerator:
         # Validate skeleton
         valid, errors = SkeletonValidator.validate(skeleton)
         if not valid:
-            print(f"Warning: Skeleton validation issues: {errors}")
+            logger.warning("Skeleton validation issues: %s", errors)
 
         return skeleton
 
@@ -385,7 +405,7 @@ class BiocharGenerator:
             self.config.O_C_tolerance,
         )
         if not valid:
-            print(f"Warning: Composition validation issues: {errors}")
+            logger.warning("Composition validation issues: %s", errors)
 
         return mol
 
@@ -457,8 +477,11 @@ class BiocharGenerator:
         charger = ChargeAssigner()
         self.charges = charger.assign_charges(mol, self.atom_types)
 
-        print(f"  Atom types assigned: {len(set(self.atom_types.values()))} unique types")
-        print(f"  Total charge: {sum(self.charges.values()):.3f} e")
+        logger.info(
+            "Atom types assigned: %d unique types, total charge: %.3f e",
+            len(set(self.atom_types.values())),
+            sum(self.charges.values()),
+        )
 
     def _validate(
         self, mol: Chem.Mol, composition: CompositionResult, coords: np.ndarray
@@ -478,18 +501,16 @@ class BiocharGenerator:
         self.validation_report = (is_valid, errors, warnings, metrics)
 
         if not is_valid:
-            print(f"  Validation FAILED with {len(errors)} error(s):")
-            for error in errors:
-                print(f"    - {error}")
+            logger.error("Validation FAILED with %d error(s): %s", len(errors), "; ".join(errors))
             if self.config.strict:
                 raise ValidationError(
                     f"Strict mode: structure failed validation with "
                     f"{len(errors)} error(s): " + "; ".join(errors)
                 )
         else:
-            print("  Validation PASSED")
+            logger.info("Validation PASSED")
             if warnings:
-                print(f"  {len(warnings)} warning(s)")
+                logger.warning("%d validation warning(s): %s", len(warnings), "; ".join(warnings))
 
 
 def generate_biochar(

@@ -1,13 +1,16 @@
 """
 Heteroatom Assignment
 
-Assign hydrogen and oxygen atoms to carbon skeletons to satisfy compositional ratios.
-Respects valence constraints for all atoms.
+Assign hydrogen, oxygen, and nitrogen atoms to carbon skeletons to satisfy
+compositional ratios. Respects valence constraints for all atoms.
 """
 
+import logging
 import random
 from typing import List, Dict, Tuple, Optional, Set
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 from rdkit import Chem
 
@@ -27,11 +30,35 @@ class CompositionResult:
     num_carbons: int = 0
     num_hydrogens: int = 0
     num_oxygens: int = 0
+    num_nitrogens: int = 0
     H_C_ratio: float = 0.0
     O_C_ratio: float = 0.0
+    N_C_ratio: float = 0.0
     functional_groups: Dict[str, int] = field(default_factory=dict)
     placed_counts: Dict[str, int] = field(default_factory=dict)   # groups actually placed
     requested_counts: Dict[str, int] = field(default_factory=dict)  # groups requested
+
+    @property
+    def molecular_formula(self) -> str:
+        """Hill-order molecular formula string, e.g. 'C24H12O2N1'."""
+        parts = [f"C{self.num_carbons}"]
+        if self.num_hydrogens:
+            parts.append(f"H{self.num_hydrogens}")
+        if self.num_oxygens:
+            parts.append(f"O{self.num_oxygens}")
+        if self.num_nitrogens:
+            parts.append(f"N{self.num_nitrogens}")
+        return "".join(parts)
+
+    @property
+    def molecular_weight(self) -> float:
+        """Molecular weight in g/mol."""
+        return (
+            self.num_carbons * 12.011
+            + self.num_hydrogens * 1.008
+            + self.num_oxygens * 15.999
+            + self.num_nitrogens * 14.007
+        )
 
 
 # Backward-compatible alias
@@ -207,9 +234,9 @@ class OxygenAssigner:
                     group, emol, new_mol, free
                 )
                 if not ok:
-                    print(
-                        f"Warning: Could not place all '{group}' groups "
-                        f"({placed}/{count} placed — not enough edge sites)"
+                    logger.warning(
+                        "Could not place all '%s' groups (%d/%d placed — not enough edge sites)",
+                        group, placed, count,
                     )
                     break
                 placed += 1
@@ -242,7 +269,7 @@ class OxygenAssigner:
         # Remove unknown keys
         unknown = [k for k in spec if k not in valid_keys]
         if unknown:
-            print(f"Warning: Unknown functional groups ignored: {unknown}")
+            logger.warning("Unknown functional groups ignored: %s", unknown)
         cleaned: Dict[str, int] = {k: v for k, v in spec.items() if k in valid_keys}
 
         # Substitute unsupported groups (warn once each)
@@ -251,10 +278,11 @@ class OxygenAssigner:
             if g in _FALLBACK_GROUPS:
                 fallback = _FALLBACK_GROUPS[g]
                 if g not in warned:
-                    print(
-                        f"Warning: '{g}' is not supported for pure aromatic PAH "
-                        f"(needs ≥2 free valence on one carbon); "
-                        f"substituting with '{fallback}'"
+                    logger.warning(
+                        "'%s' is not supported for pure aromatic PAH "
+                        "(needs ≥2 free valence on one carbon); "
+                        "substituting with '%s'",
+                        g, fallback,
                     )
                     warned.add(g)
                 cleaned[fallback] = cleaned.get(fallback, 0) + cleaned.pop(g)
@@ -347,6 +375,19 @@ class OxygenAssigner:
             emol.AddBond(c2, o, BT.SINGLE)
             return True, emol.GetMol(), emol, 1, {c1, c2}
 
+        elif group == "amino":
+            # Ar-NH2: single-bond N then two H atoms
+            if not free_sites:
+                return False, new_mol, emol, 0, set()
+            c = free_sites[0]
+            n = emol.AddAtom(Chem.Atom(7))
+            h1 = emol.AddAtom(Chem.Atom(1))
+            h2 = emol.AddAtom(Chem.Atom(1))
+            emol.AddBond(c, n, BT.SINGLE)
+            emol.AddBond(n, h1, BT.SINGLE)
+            emol.AddBond(n, h2, BT.SINGLE)
+            return True, emol.GetMol(), emol, 0, {c}
+
         # Unknown / unsupported (should have been filtered before reaching here)
         return False, new_mol, emol, 0, set()
 
@@ -370,16 +411,20 @@ class OxygenAssigner:
         num_C = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 6)
         num_H = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 1)
         num_O = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 8)
+        num_N = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 7)
 
         H_C_ratio = num_H / max(num_C, 1)
         O_C_ratio = num_O / max(num_C, 1)
+        N_C_ratio = num_N / max(num_C, 1)
 
         return CompositionResult(
             num_carbons=num_C,
             num_hydrogens=num_H,
             num_oxygens=num_O,
+            num_nitrogens=num_N,
             H_C_ratio=H_C_ratio,
             O_C_ratio=O_C_ratio,
+            N_C_ratio=N_C_ratio,
             functional_groups=functional_groups,
             placed_counts=placed_counts,
             requested_counts=requested_counts,
@@ -505,7 +550,7 @@ class HydrogenAssigner:
         self, mol: Chem.Mol, result: Optional[CompositionResult] = None
     ) -> CompositionResult:
         """
-        Update hydrogen-related fields on *result* in-place, or create a new one.
+        Update atom-count fields on *result* in-place, or create a new one.
 
         Preserves ``functional_groups``, ``placed_counts``, and
         ``requested_counts`` from the oxygen step when *result* is provided.
@@ -513,24 +558,30 @@ class HydrogenAssigner:
         num_C = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 6)
         num_H = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 1)
         num_O = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 8)
+        num_N = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 7)
 
         H_C_ratio = num_H / max(num_C, 1)
         O_C_ratio = num_O / max(num_C, 1)
+        N_C_ratio = num_N / max(num_C, 1)
 
         if result is not None:
             result.num_carbons = num_C
             result.num_hydrogens = num_H
             result.num_oxygens = num_O
+            result.num_nitrogens = num_N
             result.H_C_ratio = H_C_ratio
             result.O_C_ratio = O_C_ratio
+            result.N_C_ratio = N_C_ratio
             return result
 
         return CompositionResult(
             num_carbons=num_C,
             num_hydrogens=num_H,
             num_oxygens=num_O,
+            num_nitrogens=num_N,
             H_C_ratio=H_C_ratio,
             O_C_ratio=O_C_ratio,
+            N_C_ratio=N_C_ratio,
             functional_groups={},
         )
 

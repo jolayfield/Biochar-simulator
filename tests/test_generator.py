@@ -388,5 +388,250 @@ class TestDefectRings:
         assert comp_defect.num_carbons > 0
 
 
+class TestCompositionResult:
+    """Test the new CompositionResult properties."""
+
+    def test_molecular_formula_carbon_only(self):
+        from biochar.heteroatom_assignment import CompositionResult
+        comp = CompositionResult(num_carbons=24, num_hydrogens=12)
+        assert comp.molecular_formula == "C24H12"
+
+    def test_molecular_formula_with_oxygen(self):
+        from biochar.heteroatom_assignment import CompositionResult
+        comp = CompositionResult(num_carbons=24, num_hydrogens=12, num_oxygens=2)
+        assert comp.molecular_formula == "C24H12O2"
+
+    def test_molecular_formula_with_nitrogen(self):
+        from biochar.heteroatom_assignment import CompositionResult
+        comp = CompositionResult(num_carbons=24, num_hydrogens=14, num_oxygens=0, num_nitrogens=1)
+        assert comp.molecular_formula == "C24H14N1"
+
+    def test_molecular_weight_coronene(self):
+        from biochar.heteroatom_assignment import CompositionResult
+        # Coronene C24H12: MW = 24*12.011 + 12*1.008 = 288.264 + 12.096 = 300.360
+        comp = CompositionResult(num_carbons=24, num_hydrogens=12)
+        assert abs(comp.molecular_weight - 300.360) < 0.01
+
+    def test_molecular_weight_with_oxygen(self):
+        from biochar.heteroatom_assignment import CompositionResult
+        comp = CompositionResult(num_carbons=10, num_hydrogens=8, num_oxygens=1)
+        expected = 10 * 12.011 + 8 * 1.008 + 1 * 15.999
+        assert abs(comp.molecular_weight - expected) < 0.001
+
+    def test_n_c_ratio_default_zero(self):
+        from biochar.heteroatom_assignment import CompositionResult
+        comp = CompositionResult(num_carbons=20)
+        assert comp.N_C_ratio == 0.0
+        assert comp.num_nitrogens == 0
+
+
+class TestAminoGroup:
+    """Test amino (-NH2) functional group placement and N-doping."""
+
+    def test_amino_group_in_functional_groups_constant(self):
+        from biochar.constants import FUNCTIONAL_GROUPS
+        assert "amino" in FUNCTIONAL_GROUPS
+
+    def test_amino_opls_types_defined(self):
+        from biochar.constants import OPLS_ATOM_TYPES, GROMACS_OPLS_TYPE_MAP
+        assert "NA" in OPLS_ATOM_TYPES
+        assert "HNA" in OPLS_ATOM_TYPES
+        assert "NA" in GROMACS_OPLS_TYPE_MAP
+        assert "HNA" in GROMACS_OPLS_TYPE_MAP
+
+    def test_amino_placement_on_naphthalene(self):
+        from biochar.heteroatom_assignment import OxygenAssigner
+        from rdkit import Chem
+        mol = Chem.MolFromSmiles("c1ccc2ccccc2c1")
+        assert mol is not None
+        assigner = OxygenAssigner(seed=42)
+        mol_out, comp = assigner.assign_oxygens(
+            mol, target_O_C_ratio=0.0,
+            functional_group_preference={"amino": 1},
+        )
+        assert mol_out is not None
+        assert comp.num_nitrogens >= 1
+        assert comp.N_C_ratio > 0.0
+
+    def test_amino_composition_tracking(self):
+        from biochar.heteroatom_assignment import OxygenAssigner
+        from rdkit import Chem
+        mol = Chem.MolFromSmiles("c1ccc2ccc3ccccc3c2c1")  # anthracene
+        assigner = OxygenAssigner(seed=1)
+        mol_out, comp = assigner.assign_oxygens(
+            mol, target_O_C_ratio=0.0,
+            functional_group_preference={"amino": 2},
+        )
+        assert comp.num_nitrogens == 2
+        assert "amino" in comp.placed_counts
+
+    def test_amino_does_not_add_oxygens(self):
+        from biochar.heteroatom_assignment import OxygenAssigner
+        from rdkit import Chem
+        mol = Chem.MolFromSmiles("c1ccc2ccccc2c1")
+        assigner = OxygenAssigner(seed=42)
+        mol_out, comp = assigner.assign_oxygens(
+            mol, target_O_C_ratio=0.0,
+            functional_group_preference={"amino": 1},
+        )
+        assert comp.num_oxygens == 0
+
+    def test_amino_end_to_end_generation(self):
+        # Naphthalene (10C) + 1 amino → H/C = 0.9 exactly
+        config = GeneratorConfig(
+            target_num_carbons=10,
+            H_C_ratio=0.9,
+            functional_groups={"amino": 1},
+            O_C_ratio=0.0,
+            seed=7,
+        )
+        gen = BiocharGenerator(config)
+        mol, coords, comp = gen.generate()
+        assert mol is not None
+        assert comp.num_nitrogens >= 1
+        # molecular_formula should include N
+        assert "N" in comp.molecular_formula
+
+
+class TestGeneratorConfigSerialization:
+    """Test GeneratorConfig.to_dict() and from_dict()."""
+
+    def test_to_dict_returns_dict(self):
+        config = GeneratorConfig(target_num_carbons=30, seed=99)
+        d = config.to_dict()
+        assert isinstance(d, dict)
+        assert d["target_num_carbons"] == 30
+        assert d["seed"] == 99
+
+    def test_round_trip(self):
+        config = GeneratorConfig(
+            target_num_carbons=40,
+            H_C_ratio=0.4,
+            O_C_ratio=0.05,
+            defect_fraction=0.1,
+            molecule_name="BC600",
+            seed=123,
+        )
+        d = config.to_dict()
+        config2 = GeneratorConfig.from_dict(d)
+        assert config2.target_num_carbons == config.target_num_carbons
+        assert config2.H_C_ratio == config.H_C_ratio
+        assert config2.molecule_name == config.molecule_name
+        assert config2.seed == config.seed
+
+    def test_to_dict_json_serializable(self):
+        import json
+        config = GeneratorConfig(target_num_carbons=20, seed=0)
+        d = config.to_dict()
+        # Should not raise
+        json.dumps(d)
+
+    def test_from_dict_with_functional_groups(self):
+        d = {
+            "target_num_carbons": 20,
+            "functional_groups": {"phenolic": 2, "amino": 1},
+        }
+        config = GeneratorConfig.from_dict(d)
+        assert config.functional_groups == {"phenolic": 2, "amino": 1}
+
+
+class TestBiocharSeries:
+    """Integration tests for generate_biochar_series()."""
+
+    # Use naphthalene-size (10C) with H/C=0.8, O/C=0.0 — achievable without tolerance issues
+    _SMALL_CONF = {"target_num_carbons": 10, "H_C_ratio": 0.8, "O_C_ratio": 0.0}
+
+    def test_series_two_structures(self, tmp_path):
+        from biochar import generate_biochar_series
+        configs = [
+            {"molecule_name": "BC400", **self._SMALL_CONF, "seed": 1},
+            {"molecule_name": "BC600", **self._SMALL_CONF, "seed": 2},
+        ]
+        results = generate_biochar_series(
+            configs,
+            output_directory=str(tmp_path),
+            create_combined_top=True,
+            verbose=False,
+        )
+        assert set(results.keys()) == {"BC400", "BC600"}
+
+    def test_series_files_created(self, tmp_path):
+        from biochar import generate_biochar_series
+        configs = [{"molecule_name": "TST", **self._SMALL_CONF, "seed": 5}]
+        results = generate_biochar_series(
+            configs,
+            output_directory=str(tmp_path),
+            create_combined_top=False,
+            verbose=False,
+        )
+        gro, top, itp = results["TST"]
+        assert gro.exists(), f"GRO not found: {gro}"
+        assert top.exists(), f"TOP not found: {top}"
+        assert itp.exists(), f"ITP not found: {itp}"
+
+    def test_series_combined_top_created(self, tmp_path):
+        from biochar import generate_biochar_series
+        configs = [
+            {"molecule_name": "AA", **self._SMALL_CONF, "seed": 10},
+            {"molecule_name": "BB", **self._SMALL_CONF, "seed": 11},
+        ]
+        generate_biochar_series(
+            configs,
+            output_directory=str(tmp_path),
+            create_combined_top=True,
+            verbose=False,
+        )
+        combined = tmp_path / "combined.top"
+        assert combined.exists(), "combined.top was not created"
+        content = combined.read_text()
+        assert "AA" in content
+        assert "BB" in content
+
+    def test_series_combined_top_skipped_for_single(self, tmp_path):
+        from biochar import generate_biochar_series
+        configs = [{"molecule_name": "SOLO", **self._SMALL_CONF, "seed": 3}]
+        generate_biochar_series(
+            configs,
+            output_directory=str(tmp_path),
+            create_combined_top=True,
+            verbose=False,
+        )
+        combined = tmp_path / "combined.top"
+        assert not combined.exists(), "combined.top should not be created for a single structure"
+
+    def test_series_missing_molecule_name_raises(self, tmp_path):
+        from biochar import generate_biochar_series
+        configs = [{"target_num_carbons": 10}]
+        with pytest.raises(ValueError, match="molecule_name"):
+            generate_biochar_series(configs, output_directory=str(tmp_path), verbose=False)
+
+    def test_series_molecule_name_too_long_raises(self, tmp_path):
+        from biochar import generate_biochar_series
+        configs = [{"molecule_name": "TOOLONG", "target_num_carbons": 10}]
+        with pytest.raises(ValueError, match="5 character"):
+            generate_biochar_series(configs, output_directory=str(tmp_path), verbose=False)
+
+    def test_series_with_amino_group(self, tmp_path):
+        from biochar import generate_biochar_series
+        # Naphthalene (10C) + 1 amino: 7 edge-CH + 2 NH2-H = 9H → H/C = 0.9 exactly
+        configs = [
+            {
+                "molecule_name": "NBIO",
+                "target_num_carbons": 10,
+                "H_C_ratio": 0.9,
+                "O_C_ratio": 0.0,
+                "functional_groups": {"amino": 1},
+                "seed": 42,
+            }
+        ]
+        results = generate_biochar_series(
+            configs,
+            output_directory=str(tmp_path),
+            create_combined_top=False,
+            verbose=False,
+        )
+        assert "NBIO" in results
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
