@@ -27,7 +27,7 @@ The system enforces **both minimum and maximum** valence constraints to ensure c
 Core validation class that checks atom valences.
 
 ```python
-from valence import ValenceValidator
+from biochar.valence import ValenceValidator
 
 # Get valence info for specific atom
 val_info = ValenceValidator.get_valence_info(mol, atom_idx=0)
@@ -45,7 +45,7 @@ ValenceValidator.print_valence_report(mol)
 Safely adds bonds while respecting valence constraints.
 
 ```python
-from valence import SafeBondAdder
+from biochar.valence import SafeBondAdder
 
 # Check if bond can be added
 can_add, reason = SafeBondAdder.can_add_bond(
@@ -69,7 +69,7 @@ success, msg = SafeBondAdder.add_bond_safe(
 Generate summary statistics about valence.
 
 ```python
-from valence import ValenceReport
+from biochar.valence import ValenceReport
 
 # Get summary dict
 summary = ValenceReport.get_summary(mol)
@@ -260,7 +260,7 @@ The system includes comprehensive tests:
 
 ```bash
 python3 << 'EOF'
-from valence import ValenceValidator
+from biochar.valence import ValenceValidator
 
 # Test with simple molecules
 mol_methanol = Chem.MolFromSmiles("CO")

@@ -54,7 +54,7 @@ A complete, production-ready biochar molecular structure generator for GROMACS s
 
 ```
 Biochar-simulator/
-├── src/
+├── biochar/
 │   ├── __init__.py
 │   ├── biochar_generator.py       # Main API
 │   ├── carbon_skeleton.py         # PAH assembly
@@ -62,7 +62,9 @@ Biochar-simulator/
 │   ├── geometry_3d.py             # 3D coordinates
 │   ├── opls_typing.py             # Atom typing
 │   ├── gromacs_export.py          # File writing
+│   ├── surface_builder.py         # Slit-pore surface assembly
 │   ├── validation.py              # Multi-stage validation
+│   ├── valence.py                 # Valence checking classes
 │   └── constants.py               # OPLS-AA parameters
 ├── examples/
 │   ├── example_usage.py           # Basic examples
@@ -80,7 +82,7 @@ Biochar-simulator/
 
 ### Single Structure
 ```python
-from biochar_generator import generate_biochar
+from biochar import generate_biochar
 
 mol, coords, gro, top, itp = generate_biochar(
     target_num_carbons=100,
@@ -93,7 +95,7 @@ mol, coords, gro, top, itp = generate_biochar(
 
 ### Batch Generation (NEW)
 ```python
-from biochar_generator import generate_biochar_series
+from biochar.biochar_generator import generate_biochar_series
 
 configs = [
     {"molecule_name": "BC400", "H_C_ratio": 0.65, "O_C_ratio": 0.20},

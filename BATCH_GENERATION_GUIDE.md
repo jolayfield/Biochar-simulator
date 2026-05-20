@@ -12,7 +12,7 @@ The `generate_biochar_series()` function generates multiple biochar structures i
 ## Quick Example
 
 ```python
-from biochar_generator import generate_biochar_series
+from biochar.biochar_generator import generate_biochar_series
 
 # Define configurations
 configs = [
@@ -44,7 +44,7 @@ Each configuration dictionary should contain:
 - `H_C_ratio` (float): Default 0.5
 - `O_C_ratio` (float): Default 0.1
 - `aromaticity_percent` (float): Default 90.0
-- `functional_groups` (list): Default ["hydroxyl", "carboxyl", "ether"]
+- `functional_groups` (dict|None): Default `None` — e.g. `{"phenolic": 2, "ether": 1}`
 - `seed` (int): For reproducibility (no default - random if not set)
 
 ## Naming Conventions
@@ -153,7 +153,7 @@ for mol_name, (gro_path, top_path, itp_path) in results.items():
 ## Example 1: Temperature Series
 
 ```python
-from biochar_generator import generate_biochar_series
+from biochar.biochar_generator import generate_biochar_series
 
 # Typical composition trends with pyrolysis temperature
 configs = [
@@ -294,7 +294,7 @@ results = generate_biochar_series(
 
 ```bash
 # 1. Generate structures
-python3 generate_biochar_series(configs)
+python3 -c "from biochar.biochar_generator import generate_biochar_series; ..."
 
 # 2. Prepare system (using combined.top)
 gmx grompp -f md.mdp -p combined.top -c combined.gro -o topol.tpr
@@ -350,7 +350,7 @@ generate_biochar_series(
 | `H_C_ratio` | float | 0.5 | Target H/C ratio |
 | `O_C_ratio` | float | 0.1 | Target O/C ratio |
 | `aromaticity_percent` | float | 90.0 | Target aromaticity % |
-| `functional_groups` | dict | default | Custom functional groups |
+| `functional_groups` | dict\|None | `None` | Custom functional groups, e.g. `{"phenolic": 2}` |
 | `defect_fraction` | float | 0.0 | Probability each ring is a pentagon |
 | `seed` | int | random | Random seed (reproducible if set) |
 

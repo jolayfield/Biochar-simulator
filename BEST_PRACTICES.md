@@ -11,28 +11,21 @@
 | Valence enforcement (min + max) | ✅ Complete | Detects under- and over-saturation |
 | Oxygen assignment (–OH groups) | ✅ Working | Added to aromatic carbons with available valence |
 | GROMACS file output | ✅ Working | .gro, .top, .itp in nm units |
-| Relative imports | ✅ Fixed | Use `from src.module import ...` |
+| Relative imports | ✅ Fixed | Use `from biochar.module import ...` |
 
 ---
 
 ## Correct Import Pattern
 
-Always run scripts from the **project root** and import from the `src` package:
+Import directly from the `biochar` package (no path manipulation needed):
 
 ```python
-import sys
-from pathlib import Path
-
-# Add project root (NOT src/) to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Import from the src package
-from src.biochar_generator import BiocharGenerator, GeneratorConfig, generate_biochar
-from src.biochar_generator import generate_biochar_series
+from biochar import BiocharGenerator, GeneratorConfig, generate_biochar, generate_surface
+from biochar.biochar_generator import generate_biochar_series
 ```
 
-> ⚠ **Common mistake**: Adding `src/` to the path and importing `from biochar_generator import ...` will
-> fail with `ImportError: attempted relative import with no known parent package`.
+> ⚠ **Common mistake**: `generate_biochar_series` is not re-exported from the top-level `biochar`
+> package — import it from `biochar.biochar_generator` directly.
 
 ---
 
@@ -98,7 +91,7 @@ As of v1.2, all generated structures satisfy both minimum and maximum valence:
 ### How to Verify
 
 ```python
-from src.valence import ValenceValidator
+from biochar.valence import ValenceValidator
 
 # Check after generation
 is_valid, errors = ValenceValidator.validate_molecule(mol)
@@ -113,6 +106,7 @@ else:
 ### Interpreting the Valence Report
 
 ```python
+from biochar.valence import ValenceValidator
 ValenceValidator.print_valence_report(mol)
 ```
 
@@ -282,14 +276,21 @@ config = GeneratorConfig(
 **Cause**: RDKit cannot generate a 3D conformer for a very large or unusual molecule.
 **Fix**: Reduce target size, or use `seed` parameter to try different structures.
 
-### `ImportError: attempted relative import with no known parent package`
+### `ImportError: No module named 'biochar'`
 
-**Cause**: Script is directly importing from inside `src/` directory.
-**Fix**: Add project root to `sys.path`, not `src/`:
+**Cause**: Package not installed in the active environment.
+**Fix**: Install it (editable or normal):
+
+```bash
+pip install -e .
+# or
+pip install biochar
+```
+
+Then import as:
 
 ```python
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from src.biochar_generator import generate_biochar
+from biochar import generate_biochar
 ```
 
 ### `Can't kekulize mol`
@@ -353,7 +354,7 @@ results = generate_biochar_series(configs)
 
 2. **Chrysene/coronene SMILES**: The SMILES strings for chrysene (C18) and coronene (C24) in the PAH library are not validated. The generator avoids these and falls back to smaller templates.
 
-3. **Functional groups beyond –OH**: The oxygen assigner currently only places hydroxyl groups (–OH). Carboxyl, ether, carbonyl, lactone, and quinone groups are defined but not yet fully wired in.
+3. **Carbonyl / quinone / lactone fallback**: These groups require ≥2 free valence on one aromatic edge carbon, which is unavailable on pure PAH edge sites. They silently fall back to phenolic (–OH) with a warning. Phenolic, carboxyl, and ether are fully supported.
 
 4. **Very large structures (>500C)**: May fail with `Bad Conformer Id` from RDKit's 3D embedding. Use periodic boundary boxes and split into multiple smaller molecules.
 
