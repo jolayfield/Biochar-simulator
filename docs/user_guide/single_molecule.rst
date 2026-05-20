@@ -43,7 +43,7 @@ up to 40 C, then grows the skeleton by appending fused hexagonal rings.
 
 .. code-block:: python
 
-   from biochar.biochar_generator import generate_biochar
+   from biochar import generate_biochar
 
    # Small molecule — exact match from PAH library
    mol, coords, gro, top, itp = generate_biochar(
@@ -164,7 +164,7 @@ directly:
 
 .. code-block:: python
 
-   from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+   from biochar import BiocharGenerator, GeneratorConfig
 
    config = GeneratorConfig(
        target_num_carbons=100,

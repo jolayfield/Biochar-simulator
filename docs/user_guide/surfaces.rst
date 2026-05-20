@@ -40,7 +40,7 @@ deep-copied.  A single ``.itp`` is produced with ``count = 2`` in the
 
 .. code-block:: python
 
-   from biochar.biochar_generator import generate_surface
+   from biochar import generate_surface
 
    sheets, gro, top, itps = generate_surface(
        target_num_carbons=50,
@@ -103,7 +103,7 @@ directly:
 
 .. code-block:: python
 
-   from biochar.surface_builder import SurfaceBuilder, SurfaceConfig
+   from biochar import SurfaceBuilder, SurfaceConfig
 
    config = SurfaceConfig(
        target_num_carbons=60,

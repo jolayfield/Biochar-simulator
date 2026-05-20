@@ -10,7 +10,7 @@ Temperature series
 
 .. code-block:: python
 
-   from biochar.biochar_generator import generate_biochar_series
+   from biochar import generate_biochar_series
 
    configs = [
        {"molecule_name": "BC400", "target_num_carbons": 80,

@@ -5,13 +5,7 @@ Demonstrates how to use the BiocharGenerator to create biochar building blocks
 for GROMACS molecular dynamics simulations.
 """
 
-import sys
-from pathlib import Path
-
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from biochar.biochar_generator import BiocharGenerator, GeneratorConfig, generate_biochar
+from biochar import BiocharGenerator, GeneratorConfig, generate_biochar
 
 
 def example_1_basic_generation():
@@ -166,7 +160,7 @@ def example_6_porous_surface():
     print("EXAMPLE 6: Porous Slit-Pore Surface")
     print("=" * 70)
 
-    from biochar.biochar_generator import generate_surface
+    from biochar import generate_surface
 
     sheets, gro_path, top_path, itp_paths = generate_surface(
         target_num_carbons=40,

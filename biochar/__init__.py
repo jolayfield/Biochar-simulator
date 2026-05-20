@@ -9,6 +9,7 @@ from .biochar_generator import (
     GeneratorConfig,
     generate_biochar,
     generate_surface,
+    generate_biochar_series,
 )
 from .surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult
 
@@ -18,6 +19,7 @@ __all__ = [
     "GeneratorConfig",
     "generate_biochar",
     "generate_surface",
+    "generate_biochar_series",
     "SurfaceBuilder",
     "SurfaceConfig",
     "SheetResult",

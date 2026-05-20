@@ -5,13 +5,7 @@ Demonstrates how to generate multiple biochar structures for mixed simulations.
 Useful for temperature series, composition studies, or combined systems.
 """
 
-import sys
-from pathlib import Path
-
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from biochar.biochar_generator import generate_biochar_series
+from biochar import generate_biochar_series
 
 
 def example_1_temperature_series():
