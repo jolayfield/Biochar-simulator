@@ -39,7 +39,7 @@ jobs:
 
       - name: Run tests
         shell: bash -el {0}
-        run: pytest tests/ -v --tb=short --cov=src --cov-report=term-missing
+        run: conda run --no-capture-output -n biochar-test pytest tests/ -v --tb=short --cov=biochar --cov-report=term-missing
 
       - name: Upload coverage
         if: matrix.python-version == '3.11'
