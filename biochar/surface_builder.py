@@ -1,7 +1,7 @@
 """
 Surface Builder for Porous Biochar Systems
 
-Generates slit-pore (Phase 1) and amorphous (Phase 2, deferred) surface
+Generates slit-pore (Phase 1) and amorphous (Phase 2, deferred — see #1) surface
 systems consisting of multiple parallel PAH sheets. Each sheet is an
 independent biochar molecule produced by the existing BiocharGenerator
 pipeline. The builder positions the sheets in 3D, applies periodic
@@ -71,7 +71,7 @@ class SurfaceConfig:
             *sheet_overrides*.
         aromaticity_percent: Target aromatic carbon fraction (percentage).
         pore_type: Pore geometry.  Only ``"slit"`` is supported in Phase 1;
-            ``"amorphous"`` is reserved for Phase 2.
+            ``"amorphous"`` is reserved for Phase 2 (see #1).
         num_sheets: Number of parallel sheets.  Must be ≥ 2.
         pore_diameter: Gap between the inner van-der-Waals surfaces of
             adjacent sheets, in Ångströms.  The centre-to-centre sheet
@@ -103,7 +103,7 @@ class SurfaceConfig:
     aromaticity_percent: float = 95.0
 
     # --- Pore geometry ------------------------------------------------------
-    pore_type: str = "slit"  # "slit" (Phase 1); "amorphous" reserved
+    pore_type: str = "slit"  # "slit" (Phase 1); "amorphous" reserved (see #1)
     num_sheets: int = 2
     pore_diameter: float = 10.0  # Angstroms — gap between inner vdW surfaces
 
@@ -139,7 +139,7 @@ class SurfaceConfig:
         if self.pore_type not in ("slit",):
             raise ValueError(
                 f"pore_type must be 'slit' (got '{self.pore_type}'). "
-                "Amorphous packing is not yet implemented."
+                "Amorphous packing is not yet implemented (see #1)."
             )
         if self.num_sheets < 2:
             raise ValueError(f"num_sheets must be >= 2 (got {self.num_sheets})")
