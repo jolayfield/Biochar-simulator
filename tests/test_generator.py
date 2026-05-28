@@ -493,6 +493,92 @@ class TestAminoGroup:
         assert "N" in comp.molecular_formula
 
 
+class TestSulfurGroup:
+    """Test thiol (-SH) and thioether (-S-) functional group placement (S-doping)."""
+
+    def test_sulfur_groups_in_functional_groups_constant(self):
+        from biochar.constants import FUNCTIONAL_GROUPS
+        assert "thiol" in FUNCTIONAL_GROUPS
+        assert "thioether" in FUNCTIONAL_GROUPS
+
+    def test_sulfur_opls_types_defined(self):
+        from biochar.constants import OPLS_ATOM_TYPES, GROMACS_OPLS_TYPE_MAP
+        for t in ("SH_", "HSH", "SS"):
+            assert t in OPLS_ATOM_TYPES
+            assert t in GROMACS_OPLS_TYPE_MAP
+
+    def test_molecular_formula_with_sulfur(self):
+        from biochar.heteroatom_assignment import CompositionResult
+        comp = CompositionResult(
+            num_carbons=24, num_hydrogens=14, num_oxygens=0,
+            num_nitrogens=0, num_sulfurs=2,
+        )
+        assert comp.molecular_formula == "C24H14S2"
+
+    def test_s_c_ratio_default_zero(self):
+        from biochar.heteroatom_assignment import CompositionResult
+        comp = CompositionResult(num_carbons=20)
+        assert comp.S_C_ratio == 0.0
+        assert comp.num_sulfurs == 0
+
+    def test_thiol_placement_on_naphthalene(self):
+        from biochar.heteroatom_assignment import OxygenAssigner
+        from rdkit import Chem
+        mol = Chem.MolFromSmiles("c1ccc2ccccc2c1")
+        assigner = OxygenAssigner(seed=42)
+        mol_out, comp = assigner.assign_oxygens(
+            mol, target_O_C_ratio=0.0,
+            functional_group_preference={"thiol": 1},
+        )
+        assert mol_out is not None
+        assert comp.num_sulfurs >= 1
+        assert comp.S_C_ratio > 0.0
+        assert comp.num_oxygens == 0
+
+    def test_thioether_placement(self):
+        from biochar.heteroatom_assignment import OxygenAssigner
+        from rdkit import Chem
+        mol = Chem.MolFromSmiles("c1ccc2ccc3ccccc3c2c1")  # anthracene
+        assigner = OxygenAssigner(seed=1)
+        mol_out, comp = assigner.assign_oxygens(
+            mol, target_O_C_ratio=0.0,
+            functional_group_preference={"thioether": 1},
+        )
+        assert comp.num_sulfurs == 1
+        assert "thioether" in comp.placed_counts
+
+    def test_sulfur_atom_typing(self):
+        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.opls_typing import AtomTyper
+        from rdkit import Chem
+        mol = Chem.MolFromSmiles("c1ccc2ccc3ccccc3c2c1")
+        assigner = OxygenAssigner(seed=3)
+        mol_out, comp = assigner.assign_oxygens(
+            mol, target_O_C_ratio=0.0,
+            functional_group_preference={"thiol": 1, "thioether": 1},
+        )
+        types = set(AtomTyper().assign_atom_types(mol_out).values())
+        assert "SH_" in types   # thiol sulfur
+        assert "HSH" in types   # thiol hydrogen
+        assert "SS" in types    # thioether sulfur
+
+    def test_sulfur_end_to_end_generation(self):
+        # 36C PAH + 2 thiol + 1 thioether → C36H16S3
+        config = GeneratorConfig(
+            target_num_carbons=36,
+            H_C_ratio=0.444,
+            functional_groups={"thiol": 2, "thioether": 1},
+            O_C_ratio=0.0,
+            seed=7,
+        )
+        gen = BiocharGenerator(config)
+        mol, coords, comp = gen.generate()
+        assert mol is not None
+        assert comp.num_sulfurs == 3
+        # molecular_formula should include S with the right count
+        assert "S3" in comp.molecular_formula
+
+
 class TestGeneratorConfigSerialization:
     """Test GeneratorConfig.to_dict() and from_dict()."""
 

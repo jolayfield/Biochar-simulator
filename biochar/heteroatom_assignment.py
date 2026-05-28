@@ -31,9 +31,11 @@ class CompositionResult:
     num_hydrogens: int = 0
     num_oxygens: int = 0
     num_nitrogens: int = 0
+    num_sulfurs: int = 0
     H_C_ratio: float = 0.0
     O_C_ratio: float = 0.0
     N_C_ratio: float = 0.0
+    S_C_ratio: float = 0.0
     functional_groups: Dict[str, int] = field(default_factory=dict)
     placed_counts: Dict[str, int] = field(default_factory=dict)   # groups actually placed
     requested_counts: Dict[str, int] = field(default_factory=dict)  # groups requested
@@ -48,6 +50,8 @@ class CompositionResult:
             parts.append(f"O{self.num_oxygens}")
         if self.num_nitrogens:
             parts.append(f"N{self.num_nitrogens}")
+        if self.num_sulfurs:
+            parts.append(f"S{self.num_sulfurs}")
         return "".join(parts)
 
     @property
@@ -58,6 +62,7 @@ class CompositionResult:
             + self.num_hydrogens * 1.008
             + self.num_oxygens * 15.999
             + self.num_nitrogens * 14.007
+            + self.num_sulfurs * 32.06
         )
 
 
@@ -145,6 +150,9 @@ class OxygenAssigner:
         hydroxyl  — Ar-OH (= phenolic for pure PAH)  (1 O)
         carboxyl  — Ar-C(=O)(OH)    (2 O)
         ether     — Ar-O-Ar bridge  (1 O, needs 2 edge sites)
+        amino     — Ar-NH2           (0 O, 1 N)
+        thiol     — Ar-SH            (0 O, 1 S)
+        thioether — Ar-S-Ar bridge   (0 O, 1 S, needs 2 edge sites)
         carbonyl  — not supported for pure aromatic PAH; falls back to phenolic
         quinone   — not supported for pure aromatic PAH; falls back to phenolic
         lactone   — not supported for pure aromatic PAH; falls back to phenolic
@@ -388,6 +396,41 @@ class OxygenAssigner:
             emol.AddBond(n, h2, BT.SINGLE)
             return True, emol.GetMol(), emol, 0, {c}
 
+        elif group == "thiol":
+            # Ar-SH: single-bond S then one H atom
+            if not free_sites:
+                return False, new_mol, emol, 0, set()
+            c = free_sites[0]
+            s = emol.AddAtom(Chem.Atom(16))
+            h = emol.AddAtom(Chem.Atom(1))
+            emol.AddBond(c, s, BT.SINGLE)
+            emol.AddBond(s, h, BT.SINGLE)
+            return True, emol.GetMol(), emol, 0, {c}
+
+        elif group == "thioether":
+            # Ar-S-Ar bridge: two edge C atoms connected through one S.
+            # Mirrors the ether logic; span constraints keep the bridged ring
+            # within a geometrically reasonable 5- to 7-membered size.
+            max_span = getattr(self, "_max_ether_span", 5)
+            c1, c2 = None, None
+            for i in range(len(free_sites)):
+                for j in range(i + 1, len(free_sites)):
+                    s1, s2 = free_sites[i], free_sites[j]
+                    path = Chem.GetShortestPath(new_mol, s1, s2)
+                    path_len = len(path) - 1  # number of bonds
+                    if path_len < 3 or path_len > max_span:
+                        continue
+                    c1, c2 = s1, s2
+                    break
+                if c1 is not None:
+                    break
+            if c1 is None:
+                return False, new_mol, emol, 0, set()
+            s = emol.AddAtom(Chem.Atom(16))
+            emol.AddBond(c1, s, BT.SINGLE)
+            emol.AddBond(c2, s, BT.SINGLE)
+            return True, emol.GetMol(), emol, 0, {c1, c2}
+
         # Unknown / unsupported (should have been filtered before reaching here)
         return False, new_mol, emol, 0, set()
 
@@ -412,19 +455,23 @@ class OxygenAssigner:
         num_H = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 1)
         num_O = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 8)
         num_N = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 7)
+        num_S = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 16)
 
         H_C_ratio = num_H / max(num_C, 1)
         O_C_ratio = num_O / max(num_C, 1)
         N_C_ratio = num_N / max(num_C, 1)
+        S_C_ratio = num_S / max(num_C, 1)
 
         return CompositionResult(
             num_carbons=num_C,
             num_hydrogens=num_H,
             num_oxygens=num_O,
             num_nitrogens=num_N,
+            num_sulfurs=num_S,
             H_C_ratio=H_C_ratio,
             O_C_ratio=O_C_ratio,
             N_C_ratio=N_C_ratio,
+            S_C_ratio=S_C_ratio,
             functional_groups=functional_groups,
             placed_counts=placed_counts,
             requested_counts=requested_counts,
@@ -559,19 +606,23 @@ class HydrogenAssigner:
         num_H = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 1)
         num_O = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 8)
         num_N = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 7)
+        num_S = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 16)
 
         H_C_ratio = num_H / max(num_C, 1)
         O_C_ratio = num_O / max(num_C, 1)
         N_C_ratio = num_N / max(num_C, 1)
+        S_C_ratio = num_S / max(num_C, 1)
 
         if result is not None:
             result.num_carbons = num_C
             result.num_hydrogens = num_H
             result.num_oxygens = num_O
             result.num_nitrogens = num_N
+            result.num_sulfurs = num_S
             result.H_C_ratio = H_C_ratio
             result.O_C_ratio = O_C_ratio
             result.N_C_ratio = N_C_ratio
+            result.S_C_ratio = S_C_ratio
             return result
 
         return CompositionResult(
@@ -579,9 +630,11 @@ class HydrogenAssigner:
             num_hydrogens=num_H,
             num_oxygens=num_O,
             num_nitrogens=num_N,
+            num_sulfurs=num_S,
             H_C_ratio=H_C_ratio,
             O_C_ratio=O_C_ratio,
             N_C_ratio=N_C_ratio,
+            S_C_ratio=S_C_ratio,
             functional_groups={},
         )
 

@@ -53,6 +53,10 @@ def _build_parser() -> argparse.ArgumentParser:
                           help="Number of ether (Ar–O–Ar) bridges")
     fg_group.add_argument("--amino", type=int, default=None, metavar="N",
                           help="Number of amino (Ar–NH2) groups")
+    fg_group.add_argument("--thiol", type=int, default=None, metavar="N",
+                          help="Number of thiol (Ar–SH) groups")
+    fg_group.add_argument("--thioether", type=int, default=None, metavar="N",
+                          help="Number of thioether (Ar–S–Ar) bridges")
 
     # Identity and output
     parser.add_argument(
@@ -124,6 +128,8 @@ def main(argv=None) -> int:
         "carboxyl": args.carboxyl,
         "ether": args.ether,
         "amino": args.amino,
+        "thiol": args.thiol,
+        "thioether": args.thioether,
     }
     functional_groups = {k: v for k, v in fg_map.items() if v is not None} or None
 

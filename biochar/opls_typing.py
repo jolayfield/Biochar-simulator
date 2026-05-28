@@ -97,6 +97,8 @@ class AtomTyper:
                     return "HO2"
                 elif neighbor_type == "NA":
                     return "HNA"
+                elif neighbor_type == "SH_":
+                    return "HSH"
                 else:
                     return "HC"
             return "HC"
@@ -141,12 +143,12 @@ class AtomTyper:
             else:
                 return "NT"
 
-        # Sulfur (placeholder)
+        # Sulfur
         elif atomic_num == 16:
             if any(n.GetAtomicNum() == 1 for n in atom.GetNeighbors()):
-                return "SH"
+                return "SH_"  # Thiol sulfur (Ar-SH)
             else:
-                return "S"
+                return "SS"   # Thioether sulfur (Ar-S-Ar)
 
         # Default
         return f"X{atomic_num}"
