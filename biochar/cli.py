@@ -58,6 +58,18 @@ def _build_parser() -> argparse.ArgumentParser:
     fg_group.add_argument("--thioether", type=int, default=None, metavar="N",
                           help="Number of thioether (Ar–S–Ar) bridges")
 
+    # Ring-substituting nitrogen (replaces ring carbons; not pendant groups)
+    n_group = parser.add_argument_group(
+        "ring nitrogen doping",
+        "Replace ring carbons with nitrogen (pyridinic/pyrrolic/graphitic).",
+    )
+    n_group.add_argument("--pyridinic", type=int, default=0, metavar="N",
+                         help="Number of pyridinic N (edge 6-ring, no H)")
+    n_group.add_argument("--pyrrolic", type=int, default=0, metavar="N",
+                         help="Number of pyrrolic N (5-ring N-H; needs --defects > 0)")
+    n_group.add_argument("--graphitic", type=int, default=0, metavar="N",
+                         help="Number of graphitic/quaternary N (interior 6-ring, no H)")
+
     # Identity and output
     parser.add_argument(
         "--name", type=str, default="BC", metavar="NAME",
@@ -143,10 +155,14 @@ def main(argv=None) -> int:
         "molecule_name": args.name,
         "seed": args.seed,
         "functional_groups": functional_groups,
+        "num_pyridinic": args.pyridinic,
+        "num_pyrrolic": args.pyrrolic,
+        "num_graphitic": args.graphitic,
         **{k: v for k, v in base.items() if k not in {
             "target_num_carbons", "H_C_ratio", "O_C_ratio",
             "aromaticity_percent", "defect_fraction", "molecule_name",
             "seed", "functional_groups",
+            "num_pyridinic", "num_pyrrolic", "num_graphitic",
         }},
     }
 
@@ -173,6 +189,9 @@ def main(argv=None) -> int:
             aromaticity_percent=config.aromaticity_percent,
             functional_groups=config.functional_groups,
             defect_fraction=config.defect_fraction,
+            num_pyridinic=config.num_pyridinic,
+            num_pyrrolic=config.num_pyrrolic,
+            num_graphitic=config.num_graphitic,
             molecule_name=config.molecule_name,
             seed=config.seed,
             output_directory=args.output_dir,

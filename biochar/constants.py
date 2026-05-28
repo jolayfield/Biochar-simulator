@@ -41,6 +41,12 @@ OPLS_ATOM_TYPES = {
     "SH_": ("Aromatic thiol sulfur (Ar-SH)", 32.06, -0.39),    # opls_202
     "HSH": ("H on thiol sulfur", 1.008, 0.21),                 # opls_204
     "SS": ("Thioether sulfur bridging two aryl C (Ar-S-Ar)", 32.06, -0.16),  # opls_209
+    # Ring-substituting nitrogen (biochar N-doping)
+    "NPY": ("Pyridinic N (substituted into 6-ring, no H)", 14.007, -0.36),
+    "NPR": ("Pyrrolic N (substituted into 5-ring, with H)", 14.007, -0.52),
+    "NGR": ("Graphitic/quaternary N (interior 6-ring, no H)", 14.007, 0.02),
+    "HNPR": ("H on pyrrolic nitrogen", 1.008, 0.38),
+
 }
 
 # OPLS-AA Lennard-Jones Parameters
@@ -70,6 +76,10 @@ OPLS_LJ_PARAMS = {
     "SH_": (0.3550, 1.0460),     # Aromatic thiol sulfur (opls_202)
     "HSH": (0.0000, 0.0000),     # H on thiol sulfur (no LJ, opls_204)
     "SS": (0.3550, 1.0460),      # Thioether sulfur (opls_209)
+    "NPY": (0.3250, 0.7113),     # Pyridinic ring N (OPLS pyridine N)
+    "NPR": (0.3250, 0.7113),     # Pyrrolic ring N (OPLS pyrrole N)
+    "NGR": (0.3250, 0.7113),     # Graphitic/quaternary ring N
+    "HNPR": (0.0000, 0.0000),    # H on pyrrolic N (no LJ)
 }
 
 # Mapping from internal generic type names to GROMACS OPLS-AA opls_XXX names.
@@ -95,6 +105,10 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
     "SH_": "opls_202",   # aromatic thiol sulfur (Ar-SH)
     "HSH": "opls_204",   # H on thiol sulfur
     "SS":  "opls_209",   # thioether sulfur bridging two aryl C (Ar-S-Ar)
+    "NPY": "opls_521",   # pyridinic ring N (OPLS-AA pyridine aromatic N)
+    "NPR": "opls_531",   # pyrrolic ring N (OPLS-AA pyrrole N-H nitrogen)
+    "HNPR": "opls_532",  # H on pyrrolic N (OPLS-AA pyrrole N-H hydrogen)
+    "NGR": "opls_520",   # graphitic/quaternary aromatic N (OPLS pyridinium-type ring N)
 }
 
 # OPLS-AA Bond Parameters (k_bond, r0)
@@ -122,6 +136,10 @@ OPLS_BOND_PARAMS = {
     ("CA", "SH_"): (340.0, 1.740),     # Aromatic C-S bond (thiophenol)
     ("SH_", "HSH"): (274.0, 1.336),    # S-H bond in thiol
     ("CA", "SS"): (340.0, 1.740),      # Aromatic C-S bond (aryl thioether)
+    ("CA", "NPY"): (483.0, 1.339),     # Aromatic C-N (pyridinic 6-ring)
+    ("CA", "NPR"): (427.0, 1.381),     # Aromatic C-N (pyrrolic 5-ring)
+    ("CA", "NGR"): (483.0, 1.339),     # Aromatic C-N (graphitic/quaternary)
+    ("NPR", "HNPR"): (434.0, 1.010),   # N-H bond in pyrrole
 }
 
 # OPLS-AA Angle Parameters (k_angle, theta0)
@@ -152,6 +170,14 @@ OPLS_ANGLE_PARAMS = {
     ("CA", "SH_", "HSH"): (44.0, 96.0),  # Ar-S-H angle in thiol
     ("CA", "CA", "SS"): (70.0, 120.0),   # Ar-C-C-S in aryl thioether
     ("CA", "SS", "CA"): (62.0, 104.2),   # Ar-S-Ar angle in thioether
+    # Ring-substituting nitrogen angles
+    ("CA", "NPY", "CA"): (70.0, 117.0),  # C-N-C in pyridinic 6-ring
+    ("CA", "CA", "NPY"): (70.0, 123.0),  # C-C-N (ring) adjacent to pyridinic N
+    ("CA", "NPR", "CA"): (70.0, 109.8),  # C-N-C in pyrrolic 5-ring
+    ("CA", "CA", "NPR"): (70.0, 107.7),  # C-C-N (ring) adjacent to pyrrolic N
+    ("CA", "NPR", "HNPR"): (35.0, 125.1),# C-N-H in pyrrole
+    ("CA", "NGR", "CA"): (70.0, 120.0),  # C-N-C in graphitic/quaternary N
+    ("CA", "CA", "NGR"): (70.0, 120.0),  # C-C-N (ring) adjacent to graphitic N
 }
 
 # Functional groups definitions

@@ -99,6 +99,8 @@ class AtomTyper:
                     return "HNA"
                 elif neighbor_type == "SH_":
                     return "HSH"
+                elif neighbor_type == "NPR":
+                    return "HNPR"
                 else:
                     return "HC"
             return "HC"
@@ -133,9 +135,27 @@ class AtomTyper:
         elif atomic_num == 7:
             neighbors = list(atom.GetNeighbors())
             h_count = sum(1 for n in neighbors if n.GetAtomicNum() == 1)
+            heavy_neighbors = [n for n in neighbors if n.GetAtomicNum() != 1]
             has_aromatic_c = any(
                 n.GetAtomicNum() == 6 and n.GetIsAromatic() for n in neighbors
             )
+
+            # Ring-substituting nitrogen (pyridinic / pyrrolic / graphitic).
+            # A ring N replaced INTO the skeleton is bonded only to ring carbons
+            # (plus, for pyrrolic, one H).  Aniline N (pendant Ar-NH2) is not in
+            # a ring, so it is excluded here.
+            ring_info = mol.GetRingInfo()
+            if ring_info.NumAtomRings(atom.GetIdx()) > 0:
+                ring_sizes = [
+                    len(r) for r in ring_info.AtomRings() if atom.GetIdx() in r
+                ]
+                if h_count >= 1 and 5 in ring_sizes:
+                    return "NPR"  # Pyrrolic N (5-ring, N-H)
+                if h_count == 0 and 6 in ring_sizes:
+                    if len(heavy_neighbors) >= 3:
+                        return "NGR"  # Graphitic / quaternary N (interior)
+                    return "NPY"  # Pyridinic N (edge 6-ring, no H)
+
             if has_aromatic_c and h_count >= 1:
                 return "NA"  # Aniline-type aromatic primary amine (Ar-NH2)
             elif len(atom.GetBonds()) == 3:
