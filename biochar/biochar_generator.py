@@ -774,6 +774,9 @@ def generate_surface(
     defect_fraction: float = 0.0,
     pore_diameter: float = 10.0,
     num_sheets: int = 2,
+    pore_type: str = "slit",
+    max_attempts: int = 500,
+    min_separation: float = 3.0,
     sheet_overrides: Optional[List[Dict]] = None,
     output_directory: str = ".",
     basename: str = "surface",
@@ -799,6 +802,12 @@ def generate_surface(
         pore_diameter: Gap between sheet inner van-der-Waals surfaces,
             in Ångströms.
         num_sheets: Number of parallel sheets (default 2 → one slit pore).
+        pore_type: ``"slit"`` (parallel stacked sheets) or ``"amorphous"``
+            (random rigid-body packing with steric rejection).
+        max_attempts: Max random placement attempts per sheet for
+            ``pore_type="amorphous"`` before raising ``RuntimeError``.
+        min_separation: Minimum inter-sheet atom-atom distance (Å) for
+            ``pore_type="amorphous"``.
         sheet_overrides: List of per-sheet config dicts (length must equal
             *num_sheets*).  Accepted keys: ``target_num_carbons``,
             ``H_C_ratio``, ``O_C_ratio``, ``functional_groups``,
@@ -845,9 +854,11 @@ def generate_surface(
         functional_groups=functional_groups,
         aromaticity_percent=95.0,
         defect_fraction=defect_fraction,
-        pore_type="slit",
+        pore_type=pore_type,
         num_sheets=num_sheets,
         pore_diameter=pore_diameter,
+        max_attempts=max_attempts,
+        min_separation=min_separation,
         sheet_overrides=sheet_overrides,
         system_name=system_name,
         seed=seed,

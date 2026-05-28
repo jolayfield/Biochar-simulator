@@ -22,7 +22,11 @@ class TestSurfaceConfigValidation:
 
     def test_invalid_pore_type(self):
         with pytest.raises(ValueError, match="pore_type"):
-            SurfaceConfig(pore_type="amorphous")
+            SurfaceConfig(pore_type="bogus")
+
+    def test_amorphous_pore_type_valid(self):
+        """'amorphous' is now a supported pore type."""
+        SurfaceConfig(pore_type="amorphous")
 
     def test_invalid_num_sheets_one(self):
         with pytest.raises(ValueError, match="num_sheets"):
@@ -386,3 +390,86 @@ class TestGenerateSurface:
             strict=False,
         )
         assert len(itps) == 2
+
+
+# ---------------------------------------------------------------------------
+# Amorphous packing
+# ---------------------------------------------------------------------------
+
+class TestAmorphousPacking:
+    def test_amorphous_packing_basic(self):
+        """Amorphous build completes, places all sheets, no gross clashes."""
+        config = SurfaceConfig(
+            target_num_carbons=16,
+            num_sheets=4,
+            pore_type="amorphous",
+            seed=42,
+            strict=False,
+        )
+        builder = SurfaceBuilder(config)
+        sheets, box = builder.build()
+
+        assert len(sheets) == 4
+        assert all(v > 0 for v in box)
+
+        # No gross steric clashes between atoms of different sheets.
+        for i in range(len(sheets)):
+            for j in range(i + 1, len(sheets)):
+                ci = sheets[i].coords
+                cj = sheets[j].coords
+                diff = ci[:, None, :] - cj[None, :, :]
+                dmin = np.sqrt((diff * diff).sum(axis=2)).min()
+                assert dmin > 2.5, (
+                    f"Sheets {i} and {j} clash: min distance {dmin:.2f} Å"
+                )
+
+    def test_amorphous_reproducible(self):
+        """Same seed should give identical placements."""
+        def run():
+            config = SurfaceConfig(
+                target_num_carbons=16,
+                num_sheets=3,
+                pore_type="amorphous",
+                seed=7,
+                strict=False,
+            )
+            sheets, _ = SurfaceBuilder(config).build()
+            return np.vstack([s.coords for s in sheets])
+
+        np.testing.assert_allclose(run(), run())
+
+    def test_amorphous_raises_on_impossible(self):
+        """Tiny box + many sheets + large min_separation -> RuntimeError."""
+        config = SurfaceConfig(
+            target_num_carbons=16,
+            num_sheets=8,
+            pore_type="amorphous",
+            box_padding_xy=0.0,
+            min_separation=50.0,  # absurdly large -> cannot pack
+            max_attempts=50,
+            seed=42,
+            strict=False,
+        )
+        builder = SurfaceBuilder(config)
+        with pytest.raises(RuntimeError, match="Failed to place sheet"):
+            builder.build()
+
+    def test_amorphous_via_generate_surface(self, tmp_path):
+        """generate_surface with pore_type='amorphous' writes valid files."""
+        sheets, gro, top, itps = generate_surface(
+            target_num_carbons=16,
+            num_sheets=4,
+            pore_type="amorphous",
+            output_directory=str(tmp_path),
+            basename="amorph",
+            seed=42,
+            strict=False,
+        )
+        assert len(sheets) == 4
+        assert gro.exists() and top.exists()
+        assert all(p.exists() for p in itps)
+
+        lines = gro.read_text().splitlines()
+        total_atoms = int(lines[1].strip())
+        expected = sum(s.mol.GetNumAtoms() for s in sheets)
+        assert total_atoms == expected

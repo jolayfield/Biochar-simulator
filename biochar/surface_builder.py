@@ -70,12 +70,18 @@ class SurfaceConfig:
             ``{"phenolic": 2, "ether": 1}``.  Overridden per-sheet via
             *sheet_overrides*.
         aromaticity_percent: Target aromatic carbon fraction (percentage).
-        pore_type: Pore geometry.  Only ``"slit"`` is supported in Phase 1;
-            ``"amorphous"`` is reserved for Phase 2.
+        pore_type: Pore geometry.  ``"slit"`` stacks parallel sheets along
+            *z*; ``"amorphous"`` performs random rigid-body placement with
+            steric rejection (each sheet independently rotated/translated).
         num_sheets: Number of parallel sheets.  Must be ≥ 2.
         pore_diameter: Gap between the inner van-der-Waals surfaces of
             adjacent sheets, in Ångströms.  The centre-to-centre sheet
-            separation is ``pore_diameter + 3.4 Å``.
+            separation is ``pore_diameter + 3.4 Å`` (slit pore only).
+        max_attempts: Maximum random placement attempts per sheet for
+            ``pore_type="amorphous"`` before raising ``RuntimeError``.
+        min_separation: Minimum allowed inter-sheet atom-atom distance
+            (Ångströms) used as the steric-rejection criterion for
+            ``pore_type="amorphous"``.
         sheet_overrides: Per-sheet configuration overrides.  If provided,
             must be a list of dicts (one per sheet) with keys matching
             :class:`~biochar_generator.GeneratorConfig` fields.  If ``None``,
@@ -103,9 +109,15 @@ class SurfaceConfig:
     aromaticity_percent: float = 95.0
 
     # --- Pore geometry ------------------------------------------------------
-    pore_type: str = "slit"  # "slit" (Phase 1); "amorphous" reserved
+    pore_type: str = "slit"  # "slit" (parallel stack) or "amorphous"
     num_sheets: int = 2
     pore_diameter: float = 10.0  # Angstroms — gap between inner vdW surfaces
+
+    # --- Amorphous packing --------------------------------------------------
+    # Maximum random placement attempts per sheet before giving up.
+    max_attempts: int = 500
+    # Minimum allowed inter-sheet atom-atom distance (Angstroms).
+    min_separation: float = 3.0
 
     # --- Per-sheet overrides ------------------------------------------------
     # If provided, must be a list of dicts (one per sheet) with keys matching
@@ -136,15 +148,21 @@ class SurfaceConfig:
         self._validate()
 
     def _validate(self):
-        if self.pore_type not in ("slit",):
+        if self.pore_type not in ("slit", "amorphous"):
             raise ValueError(
-                f"pore_type must be 'slit' (got '{self.pore_type}'). "
-                "Amorphous packing is not yet implemented."
+                f"pore_type must be 'slit' or 'amorphous' "
+                f"(got '{self.pore_type}')."
             )
         if self.num_sheets < 2:
             raise ValueError(f"num_sheets must be >= 2 (got {self.num_sheets})")
         if self.pore_diameter <= 0:
             raise ValueError(f"pore_diameter must be > 0 (got {self.pore_diameter})")
+        if self.max_attempts < 1:
+            raise ValueError(f"max_attempts must be >= 1 (got {self.max_attempts})")
+        if self.min_separation <= 0:
+            raise ValueError(
+                f"min_separation must be > 0 (got {self.min_separation})"
+            )
         if len(self.sheet_base_name) > 3:
             raise ValueError(
                 f"sheet_base_name must be <= 3 chars for GROMACS compatibility "
@@ -189,6 +207,27 @@ def _rotation_matrix_from_vectors(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         [-v[1], v[0], 0],
     ])
     return np.eye(3) + vx + vx @ vx / (1.0 + c)
+
+
+def _random_rotation_matrix(rng: np.random.Generator) -> np.ndarray:
+    """
+    Draw a uniformly-distributed random rotation matrix in SO(3).
+
+    Samples a uniform random unit quaternion (Shoemake's method) and
+    converts it to a 3x3 rotation matrix.  Self-contained (numpy only).
+    """
+    u1, u2, u3 = rng.random(3)
+    q1 = np.sqrt(1.0 - u1) * np.sin(2.0 * np.pi * u2)
+    q2 = np.sqrt(1.0 - u1) * np.cos(2.0 * np.pi * u2)
+    q3 = np.sqrt(u1) * np.sin(2.0 * np.pi * u3)
+    q4 = np.sqrt(u1) * np.cos(2.0 * np.pi * u3)
+    # Quaternion (x, y, z, w) = (q1, q2, q3, q4) -> rotation matrix
+    x, y, z, w = q1, q2, q3, q4
+    return np.array([
+        [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+        [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+        [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
+    ])
 
 
 # ---------------------------------------------------------------------------
@@ -262,9 +301,16 @@ class SurfaceBuilder:
             sheet = self._generate_single_sheet(i)
             self.sheets.append(sheet)
 
-        self._position_sheets()
-        self._box_vectors = self._compute_box_vectors()
-        self._centre_in_box(self._box_vectors)
+        if self.config.pore_type == "amorphous":
+            # Random rigid-body packing with steric rejection.  The box is
+            # sized to give enough free volume for all sheets, then each
+            # sheet is randomly rotated and translated inside it.
+            self._box_vectors = self._compute_amorphous_box_vectors()
+            self._pack_amorphous(self._box_vectors)
+        else:
+            self._position_sheets()
+            self._box_vectors = self._compute_box_vectors()
+            self._centre_in_box(self._box_vectors)
         return self.sheets, self._box_vectors
 
     def export_gromacs(
@@ -320,9 +366,13 @@ class SurfaceBuilder:
             sheets=self.sheets,
             box_vectors=self._box_vectors,
             title=(
-                f"Slit pore surface, pore_diameter="
-                f"{self.config.pore_diameter:.1f} A, "
-                f"{self.config.num_sheets} sheets"
+                f"Amorphous surface, {self.config.num_sheets} sheets"
+                if self.config.pore_type == "amorphous"
+                else (
+                    f"Slit pore surface, pore_diameter="
+                    f"{self.config.pore_diameter:.1f} A, "
+                    f"{self.config.num_sheets} sheets"
+                )
             ),
         )
 
@@ -473,3 +523,104 @@ class SurfaceBuilder:
         shift = box_centre_A - current_centre
         for sheet in self.sheets:
             sheet.coords += shift
+
+    # ------------------------------------------------------------------
+    # Amorphous packing
+    # ------------------------------------------------------------------
+
+    def _compute_amorphous_box_vectors(self) -> np.ndarray:
+        """
+        Compute a cubic periodic box (nm) for amorphous packing.
+
+        The box must hold *num_sheets* arbitrarily-oriented sheets without
+        forcing overlap, so it is sized from the largest sheet diameter and
+        scaled by the cube root of the sheet count plus padding.
+        """
+        # Largest pairwise extent of any single sheet (its longest diagonal
+        # bounds the sheet under any rotation).
+        max_diag_A = 0.0
+        for sheet in self.sheets:
+            extent = sheet.coords.max(axis=0) - sheet.coords.min(axis=0)
+            diag = float(np.linalg.norm(extent))
+            max_diag_A = max(max_diag_A, diag)
+
+        max_diag_nm = max_diag_A * 0.1
+        # Linear scale so volume grows with sheet count; +1 sheet of margin.
+        scale = (self.config.num_sheets + 1) ** (1.0 / 3.0)
+        side = max_diag_nm * scale + 2 * self.config.box_padding_xy
+        return np.array([side, side, side])
+
+    def _pack_amorphous(self, box_nm: np.ndarray):
+        """
+        Place each sheet with a random rigid-body transform, rejecting
+        placements that bring any two sheets closer than
+        :attr:`SurfaceConfig.min_separation`.
+
+        Each accepted sheet's :attr:`SheetResult.coords` is updated in place
+        to its world coordinates (Ångströms).  Raises ``RuntimeError`` if a
+        sheet cannot be placed within :attr:`SurfaceConfig.max_attempts`.
+        """
+        rng = np.random.default_rng(self.config.seed)
+        box_A = box_nm * 10.0  # nm -> Angstroms
+        min_sep = self.config.min_separation
+
+        placed_coords: List[np.ndarray] = []
+
+        for i, sheet in enumerate(self.sheets):
+            # Centre the sheet at the origin so rotation is about its centroid.
+            base = sheet.coords - sheet.coords.mean(axis=0)
+            radius = float(np.linalg.norm(base, axis=1).max())
+
+            placed = False
+            for _ in range(self.config.max_attempts):
+                R = _random_rotation_matrix(rng)
+                rotated = (R @ base.T).T
+
+                # Keep the sheet fully inside the box: translate the rotated
+                # centroid (origin) to a point at least `radius` from each
+                # wall.  If the sheet is larger than the box, fall back to a
+                # uniform translation across the whole box.
+                lo = np.minimum(radius, box_A / 2.0)
+                hi = np.maximum(box_A - radius, box_A / 2.0)
+                translation = lo + rng.random(3) * (hi - lo)
+                candidate = rotated + translation
+
+                if self._is_clash_free(candidate, placed_coords, min_sep):
+                    sheet.coords = candidate
+                    placed_coords.append(candidate)
+                    placed = True
+                    break
+
+            if not placed:
+                raise RuntimeError(
+                    f"Failed to place sheet {i + 1}/{self.config.num_sheets} "
+                    f"after {self.config.max_attempts} attempts. "
+                    f"Increase the box size (reduce num_sheets, increase "
+                    f"box_padding_xy, or lower min_separation), or raise "
+                    f"max_attempts."
+                )
+
+    @staticmethod
+    def _is_clash_free(
+        candidate: np.ndarray,
+        placed: List[np.ndarray],
+        min_sep: float,
+    ) -> bool:
+        """
+        Return ``True`` if *candidate* (N, 3) keeps every atom at least
+        *min_sep* Å from all atoms of already-*placed* sheets.
+        """
+        for other in placed:
+            # Cheap centroid/radius pre-screen before the full distance check.
+            c_centre = candidate.mean(axis=0)
+            o_centre = other.mean(axis=0)
+            c_rad = np.linalg.norm(candidate - c_centre, axis=1).max()
+            o_rad = np.linalg.norm(other - o_centre, axis=1).max()
+            if np.linalg.norm(c_centre - o_centre) > c_rad + o_rad + min_sep:
+                continue
+            # Full atom-atom minimum distance.
+            diff = candidate[:, None, :] - other[None, :, :]
+            dmin = np.sqrt((diff * diff).sum(axis=2)).min()
+            if dmin < min_sep:
+                return False
+        return True
