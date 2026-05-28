@@ -37,9 +37,10 @@ OPLS_ATOM_TYPES = {
     "NA": ("Aromatic amine nitrogen (aniline Ar-NH2)", 14.007, -0.60),
     "HNA": ("H on aromatic amine nitrogen", 1.008, 0.30),
 
-    # Sulfur (for future extensions)
-    "S": ("Sulfur sp3", 32.065, -0.20),
-    "SH": ("H on sulfur", 1.008, 0.16),
+    # Sulfur
+    "SH_": ("Aromatic thiol sulfur (Ar-SH)", 32.06, -0.39),    # opls_202
+    "HSH": ("H on thiol sulfur", 1.008, 0.21),                 # opls_204
+    "SS": ("Thioether sulfur bridging two aryl C (Ar-S-Ar)", 32.06, -0.16),  # opls_209
 }
 
 # OPLS-AA Lennard-Jones Parameters
@@ -66,8 +67,9 @@ OPLS_LJ_PARAMS = {
     "NT": (0.3250, 0.7113),      # Quaternary nitrogen
     "NA": (0.3250, 0.7113),      # Aromatic amine N (aniline)
     "HNA": (0.1000, 0.0000),     # H on aromatic amine (no LJ)
-    "S": (0.3550, 1.0460),       # Sulfur sp3
-    "SH": (0.0000, 0.0000),      # H on sulfur (no LJ)
+    "SH_": (0.3550, 1.0460),     # Aromatic thiol sulfur (opls_202)
+    "HSH": (0.0000, 0.0000),     # H on thiol sulfur (no LJ, opls_204)
+    "SS": (0.3550, 1.0460),      # Thioether sulfur (opls_209)
 }
 
 # Mapping from internal generic type names to GROMACS OPLS-AA opls_XXX names.
@@ -90,6 +92,9 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
     "OW":  "opls_116",   # SPC/E water oxygen
     "NA":  "opls_900",   # primary aromatic amine N (aniline Ar-NH2)
     "HNA": "opls_901",   # H on primary aromatic amine
+    "SH_": "opls_202",   # aromatic thiol sulfur (Ar-SH)
+    "HSH": "opls_204",   # H on thiol sulfur
+    "SS":  "opls_209",   # thioether sulfur bridging two aryl C (Ar-S-Ar)
 }
 
 # OPLS-AA Bond Parameters (k_bond, r0)
@@ -114,6 +119,9 @@ OPLS_BOND_PARAMS = {
     ("OS", "HO"): (367.0, 0.960),      # This shouldn't exist, but for safety
     ("CA", "NA"): (500.0, 1.422),      # Aromatic C-N bond (aniline)
     ("NA", "HNA"): (434.0, 1.010),     # N-H bond in aniline
+    ("CA", "SH_"): (340.0, 1.740),     # Aromatic C-S bond (thiophenol)
+    ("SH_", "HSH"): (274.0, 1.336),    # S-H bond in thiol
+    ("CA", "SS"): (340.0, 1.740),      # Aromatic C-S bond (aryl thioether)
 }
 
 # OPLS-AA Angle Parameters (k_angle, theta0)
@@ -140,6 +148,10 @@ OPLS_ANGLE_PARAMS = {
     ("CA", "CA", "NA"): (70.0, 120.0),   # Ar-C-C-N in aniline
     ("CA", "NA", "HNA"): (55.0, 113.9),  # Ar-N-H angle
     ("HNA", "NA", "HNA"): (35.0, 116.0), # H-N-H in aniline
+    ("CA", "CA", "SH_"): (70.0, 120.0),  # Ar-C-C-S in thiophenol
+    ("CA", "SH_", "HSH"): (44.0, 96.0),  # Ar-S-H angle in thiol
+    ("CA", "CA", "SS"): (70.0, 120.0),   # Ar-C-C-S in aryl thioether
+    ("CA", "SS", "CA"): (62.0, 104.2),   # Ar-S-Ar angle in thioether
 }
 
 # Functional groups definitions
@@ -217,6 +229,22 @@ FUNCTIONAL_GROUPS = {
         "composition": {"N": 1, "H": 2},
         "O_per_group": 0,
         "H_per_group": 2,
+    },
+    "thiol": {
+        "description": "Thiol group (-SH) on aromatic ring",
+        "atoms": [("S", "SH_"), ("H", "HSH")],
+        "connectivity": [(0, "CA", 1), (1, 0, 1)],
+        "composition": {"S": 1, "H": 1},
+        "O_per_group": 0,
+        "H_per_group": 1,
+    },
+    "thioether": {
+        "description": "Thioether group (-S-) bridging two aromatic carbons",
+        "atoms": [("S", "SS")],
+        "connectivity": [(0, "C", 1), (0, "C", 1)],  # Two C-S bonds
+        "composition": {"S": 1},
+        "O_per_group": 0,
+        "H_per_group": 0,
     },
 }
 

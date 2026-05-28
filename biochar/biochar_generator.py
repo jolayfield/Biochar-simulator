@@ -316,6 +316,8 @@ class BiocharGenerator:
         print(f"  Oxygens:     {self.composition.num_oxygens}")
         if self.composition.num_nitrogens:
             print(f"  Nitrogens:   {self.composition.num_nitrogens}")
+        if self.composition.num_sulfurs:
+            print(f"  Sulfurs:     {self.composition.num_sulfurs}")
         print(f"  Formula:     {self.composition.molecular_formula}")
         print(f"  MW:          {self.composition.molecular_weight:.1f} g/mol")
         print("\nRatios:")
@@ -323,6 +325,8 @@ class BiocharGenerator:
         print(f"  O/C ratio:   {self.composition.O_C_ratio:.3f} (target: {self.config.O_C_ratio:.3f})")
         if self.composition.num_nitrogens:
             print(f"  N/C ratio:   {self.composition.N_C_ratio:.3f}")
+        if self.composition.num_sulfurs:
+            print(f"  S/C ratio:   {self.composition.S_C_ratio:.3f}")
         print("\nFunctional Groups:")
         if self.composition.functional_groups:
             for group_name, count in self.composition.functional_groups.items():
