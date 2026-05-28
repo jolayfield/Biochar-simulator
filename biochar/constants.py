@@ -37,6 +37,12 @@ OPLS_ATOM_TYPES = {
     "NA": ("Aromatic amine nitrogen (aniline Ar-NH2)", 14.007, -0.60),
     "HNA": ("H on aromatic amine nitrogen", 1.008, 0.30),
 
+    # Ring-substituting nitrogen (biochar N-doping)
+    "NPY": ("Pyridinic N (substituted into 6-ring, no H)", 14.007, -0.36),
+    "NPR": ("Pyrrolic N (substituted into 5-ring, with H)", 14.007, -0.52),
+    "NGR": ("Graphitic/quaternary N (interior 6-ring, no H)", 14.007, 0.02),
+    "HNPR": ("H on pyrrolic nitrogen", 1.008, 0.38),
+
     # Sulfur (for future extensions)
     "S": ("Sulfur sp3", 32.065, -0.20),
     "SH": ("H on sulfur", 1.008, 0.16),
@@ -66,6 +72,10 @@ OPLS_LJ_PARAMS = {
     "NT": (0.3250, 0.7113),      # Quaternary nitrogen
     "NA": (0.3250, 0.7113),      # Aromatic amine N (aniline)
     "HNA": (0.1000, 0.0000),     # H on aromatic amine (no LJ)
+    "NPY": (0.3250, 0.7113),     # Pyridinic ring N (OPLS pyridine N)
+    "NPR": (0.3250, 0.7113),     # Pyrrolic ring N (OPLS pyrrole N)
+    "NGR": (0.3250, 0.7113),     # Graphitic/quaternary ring N
+    "HNPR": (0.0000, 0.0000),    # H on pyrrolic N (no LJ)
     "S": (0.3550, 1.0460),       # Sulfur sp3
     "SH": (0.0000, 0.0000),      # H on sulfur (no LJ)
 }
@@ -90,6 +100,10 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
     "OW":  "opls_116",   # SPC/E water oxygen
     "NA":  "opls_900",   # primary aromatic amine N (aniline Ar-NH2)
     "HNA": "opls_901",   # H on primary aromatic amine
+    "NPY": "opls_521",   # pyridinic ring N (OPLS-AA pyridine aromatic N)
+    "NPR": "opls_531",   # pyrrolic ring N (OPLS-AA pyrrole N-H nitrogen)
+    "HNPR": "opls_532",  # H on pyrrolic N (OPLS-AA pyrrole N-H hydrogen)
+    "NGR": "opls_520",   # graphitic/quaternary aromatic N (OPLS pyridinium-type ring N)
 }
 
 # OPLS-AA Bond Parameters (k_bond, r0)
@@ -114,6 +128,10 @@ OPLS_BOND_PARAMS = {
     ("OS", "HO"): (367.0, 0.960),      # This shouldn't exist, but for safety
     ("CA", "NA"): (500.0, 1.422),      # Aromatic C-N bond (aniline)
     ("NA", "HNA"): (434.0, 1.010),     # N-H bond in aniline
+    ("CA", "NPY"): (483.0, 1.339),     # Aromatic C-N (pyridinic 6-ring)
+    ("CA", "NPR"): (427.0, 1.381),     # Aromatic C-N (pyrrolic 5-ring)
+    ("CA", "NGR"): (483.0, 1.339),     # Aromatic C-N (graphitic/quaternary)
+    ("NPR", "HNPR"): (434.0, 1.010),   # N-H bond in pyrrole
 }
 
 # OPLS-AA Angle Parameters (k_angle, theta0)
@@ -140,6 +158,14 @@ OPLS_ANGLE_PARAMS = {
     ("CA", "CA", "NA"): (70.0, 120.0),   # Ar-C-C-N in aniline
     ("CA", "NA", "HNA"): (55.0, 113.9),  # Ar-N-H angle
     ("HNA", "NA", "HNA"): (35.0, 116.0), # H-N-H in aniline
+    # Ring-substituting nitrogen angles
+    ("CA", "NPY", "CA"): (70.0, 117.0),  # C-N-C in pyridinic 6-ring
+    ("CA", "CA", "NPY"): (70.0, 123.0),  # C-C-N (ring) adjacent to pyridinic N
+    ("CA", "NPR", "CA"): (70.0, 109.8),  # C-N-C in pyrrolic 5-ring
+    ("CA", "CA", "NPR"): (70.0, 107.7),  # C-C-N (ring) adjacent to pyrrolic N
+    ("CA", "NPR", "HNPR"): (35.0, 125.1),# C-N-H in pyrrole
+    ("CA", "NGR", "CA"): (70.0, 120.0),  # C-N-C in graphitic/quaternary N
+    ("CA", "CA", "NGR"): (70.0, 120.0),  # C-C-N (ring) adjacent to graphitic N
 }
 
 # Functional groups definitions

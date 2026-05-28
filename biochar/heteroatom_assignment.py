@@ -34,6 +34,11 @@ class CompositionResult:
     H_C_ratio: float = 0.0
     O_C_ratio: float = 0.0
     N_C_ratio: float = 0.0
+    # Ring-substituting nitrogen census.  These are a subset of num_nitrogens
+    # (which counts every N atom, including pendant amino N).
+    num_pyridinic: int = 0
+    num_pyrrolic: int = 0
+    num_graphitic: int = 0
     functional_groups: Dict[str, int] = field(default_factory=dict)
     placed_counts: Dict[str, int] = field(default_factory=dict)   # groups actually placed
     requested_counts: Dict[str, int] = field(default_factory=dict)  # groups requested
@@ -108,8 +113,25 @@ def _fix_heteroatom_bond_types(mol: Chem.Mol) -> Chem.Mol:
     Oxygen, hydrogen, and carboxyl carbons outside the aromatic ring system should
     never have AROMATIC bonds.
 
+    Exception — ring-substituted nitrogen (pyridinic / pyrrolic / graphitic) is a
+    *genuine* aromatic ring member.  Its in-ring C-N bonds are correctly AROMATIC
+    and must NOT be reset to SINGLE.  Such an N is identified by being aromatic
+    and a ring member with at least two heavy (non-H) neighbours.
+
     Returns a new mol with corrected bond types.
     """
+    ring_info = mol.GetRingInfo()
+
+    def _is_aromatic_ring_nitrogen(atom: Chem.Atom) -> bool:
+        if atom.GetAtomicNum() != 7:
+            return False
+        if not atom.GetIsAromatic():
+            return False
+        if ring_info.NumAtomRings(atom.GetIdx()) == 0:
+            return False
+        heavy = sum(1 for n in atom.GetNeighbors() if n.GetAtomicNum() != 1)
+        return heavy >= 2
+
     rwmol = Chem.RWMol(mol)
     changed = False
     for bond in rwmol.GetBonds():
@@ -118,6 +140,9 @@ def _fix_heteroatom_bond_types(mol: Chem.Mol) -> Chem.Mol:
             a2 = bond.GetEndAtom()
             # Only fix bonds where at least one atom is a heteroatom (not C)
             if a1.GetAtomicNum() != 6 or a2.GetAtomicNum() != 6:
+                # Leave aromatic ring nitrogen alone — it belongs in the ring.
+                if _is_aromatic_ring_nitrogen(a1) or _is_aromatic_ring_nitrogen(a2):
+                    continue
                 bond.SetBondType(Chem.BondType.SINGLE)
                 if a1.GetAtomicNum() != 6:
                     a1.SetIsAromatic(False)
@@ -429,6 +454,249 @@ class OxygenAssigner:
             placed_counts=placed_counts,
             requested_counts=requested_counts,
         )
+
+
+class NitrogenSubstitutor:
+    """
+    Substitute ring carbon atoms with nitrogen (biochar N-doping).
+
+    Unlike :class:`OxygenAssigner`, which *adds* pendant heteroatoms to the
+    skeleton, this class *replaces* selected skeleton carbon atoms with
+    nitrogen.  It is run after oxygen assignment but before hydrogen
+    saturation, so that :class:`HydrogenAssigner` can satisfy the new valence
+    requirements correctly.
+
+    Three substitution modes (matching the chemistry of N-doped carbons):
+
+        pyridinic  — edge 6-ring C with exactly one H is swapped for N; the H
+                     is removed.  Pyridine-like N contributes a lone pair to the
+                     sp2 plane and carries no H (2 ring bonds + lone pair).
+        pyrrolic   — a 5-ring C (only present when defect_fraction > 0 created
+                     pentagons) is swapped for N and keeps/gains an H, like the
+                     N-H of pyrrole.
+        graphitic  — an interior ring C (degree 3, no H) is swapped for N
+                     (quaternary / "graphitic" N).
+
+    The substitutor is robust: if fewer suitable sites exist than requested,
+    it places as many as possible, logs a warning, and records the actual
+    counts placed.
+    """
+
+    def __init__(self, seed: Optional[int] = None):
+        self.seed = seed
+        if seed is not None:
+            random.seed(seed)
+        # Number of each N type actually placed in the most recent call.
+        self.placed_pyridinic = 0
+        self.placed_pyrrolic = 0
+        self.placed_graphitic = 0
+
+    def substitute(
+        self,
+        mol: Chem.Mol,
+        n_pyridinic: int = 0,
+        n_pyrrolic: int = 0,
+        n_graphitic: int = 0,
+    ) -> Chem.Mol:
+        """
+        Replace ring carbons with nitrogen.
+
+        Args:
+            mol: RDKit molecule (carbon skeleton, possibly with pendant O groups,
+                before hydrogen saturation).
+            n_pyridinic: Number of pyridinic (edge 6-ring, no-H) N to place.
+            n_pyrrolic: Number of pyrrolic (5-ring, N-H) N to place.
+            n_graphitic: Number of graphitic (interior, no-H) N to place.
+
+        Returns:
+            Modified RDKit molecule.  The actual numbers placed are stored on
+            ``self.placed_pyridinic`` / ``placed_pyrrolic`` / ``placed_graphitic``.
+        """
+        self.placed_pyridinic = 0
+        self.placed_pyrrolic = 0
+        self.placed_graphitic = 0
+
+        if n_pyridinic <= 0 and n_pyrrolic <= 0 and n_graphitic <= 0:
+            return mol
+
+        if self.seed is not None:
+            random.seed(self.seed)
+
+        used: Set[int] = set()
+
+        # Graphitic first: interior atoms are scarcest and most constrained.
+        if n_graphitic > 0:
+            mol, placed = self._substitute_graphitic(mol, n_graphitic, used)
+            self.placed_graphitic = placed
+            if placed < n_graphitic:
+                logger.warning(
+                    "Could only place %d/%d graphitic N (not enough interior "
+                    "ring carbons)", placed, n_graphitic,
+                )
+
+        if n_pyrrolic > 0:
+            mol, placed = self._substitute_pyrrolic(mol, n_pyrrolic, used)
+            self.placed_pyrrolic = placed
+            if placed < n_pyrrolic:
+                logger.warning(
+                    "Could only place %d/%d pyrrolic N (not enough 5-ring "
+                    "carbons — set defect_fraction > 0 to create pentagons)",
+                    placed, n_pyrrolic,
+                )
+
+        if n_pyridinic > 0:
+            mol, placed = self._substitute_pyridinic(mol, n_pyridinic, used)
+            self.placed_pyridinic = placed
+            if placed < n_pyridinic:
+                logger.warning(
+                    "Could only place %d/%d pyridinic N (not enough edge 6-ring "
+                    "carbons with a free H)", placed, n_pyridinic,
+                )
+
+        # NOTE: ring-substituted N (pyridinic / graphitic) is a genuine
+        # aromatic ring member — its in-ring bonds must stay AROMATIC.  We must
+        # NOT call _fix_heteroatom_bond_types here (that helper is for pendant
+        # ether O, which de-aromatises C-O bonds).  Re-perceive aromaticity so
+        # the new N atoms are correctly flagged aromatic and their ring bonds
+        # remain order 1.5.
+        _safe_sanitize(mol)
+        return mol
+
+    # ------------------------------------------------------------------ #
+    #  Private helpers                                                    #
+    # ------------------------------------------------------------------ #
+
+    def _ring_sizes(self, mol: Chem.Mol, idx: int) -> List[int]:
+        """Sizes of all rings containing atom *idx*."""
+        ring_info = mol.GetRingInfo()
+        return [len(r) for r in ring_info.AtomRings() if idx in r]
+
+    def _candidate_carbons(self, mol: Chem.Mol, used: Set[int]) -> List[int]:
+        """Aromatic ring carbons not yet substituted, shuffled."""
+        cands = [
+            a.GetIdx()
+            for a in mol.GetAtoms()
+            if a.GetAtomicNum() == 6
+            and mol.GetRingInfo().NumAtomRings(a.GetIdx()) > 0
+            and a.GetIdx() not in used
+        ]
+        random.shuffle(cands)
+        return cands
+
+    def _swap_carbon_to_nitrogen(
+        self, mol: Chem.Mol, c_idx: int, remove_h: bool, formal_charge: int = 0
+    ) -> Chem.Mol:
+        """
+        Replace the carbon at *c_idx* with nitrogen, optionally removing one
+        bonded hydrogen.  Returns a new mol (atom index of the N is preserved).
+
+        *formal_charge* is applied to the new nitrogen.  Graphitic (quaternary)
+        N has three aromatic ring bonds and must carry a +1 formal charge so the
+        aromatic π system remains closed-shell and RDKit can kekulize it (this
+        is the standard pyridinium-like representation of graphitic N).
+        """
+        rw = Chem.RWMol(mol)
+        # Remove a bonded explicit H first (indices shift only for atoms after
+        # the removed H, and c_idx < any later-added H in our skeletons; we
+        # remove after recording to be safe).
+        h_to_remove = None
+        if remove_h:
+            for nbr in rw.GetAtomWithIdx(c_idx).GetNeighbors():
+                if nbr.GetAtomicNum() == 1:
+                    h_to_remove = nbr.GetIdx()
+                    break
+        n_atom = rw.GetAtomWithIdx(c_idx)
+        n_atom.SetAtomicNum(7)
+        n_atom.SetNoImplicit(False)
+        n_atom.SetFormalCharge(formal_charge)
+        if h_to_remove is not None:
+            rw.RemoveAtom(h_to_remove)
+        return rw.GetMol()
+
+    def _substitute_pyridinic(
+        self, mol: Chem.Mol, count: int, used: Set[int]
+    ) -> Tuple[Chem.Mol, int]:
+        """Edge 6-ring carbon with exactly one H → N, drop the H."""
+        placed = 0
+        for c_idx in self._candidate_carbons(mol, used):
+            atom = mol.GetAtomWithIdx(c_idx)
+            sizes = self._ring_sizes(mol, c_idx)
+            if 6 not in sizes:
+                continue
+            # Edge carbon: degree 2 ring + (implicit or explicit) H available.
+            h_count = atom.GetTotalNumHs() + sum(
+                1 for n in atom.GetNeighbors() if n.GetAtomicNum() == 1
+            )
+            heavy_deg = sum(1 for n in atom.GetNeighbors() if n.GetAtomicNum() != 1)
+            if heavy_deg != 2:
+                continue
+            mol = self._swap_carbon_to_nitrogen(mol, c_idx, remove_h=(h_count >= 1))
+            used.add(c_idx)
+            placed += 1
+            if placed >= count:
+                break
+        return mol, placed
+
+    def _substitute_pyrrolic(
+        self, mol: Chem.Mol, count: int, used: Set[int]
+    ) -> Tuple[Chem.Mol, int]:
+        """
+        5-ring carbon → N with an explicit N-H (pyrrole-like).
+
+        A pyrrolic N donates its lone pair to the aromatic π system, so it forms
+        single σ-bonds to its two ring neighbours plus an N-H (3 σ-bonds total).
+        After aromaticity perception its ring bonds become order 1.5 and the
+        valence checker would otherwise consider it saturated, so we attach the
+        N-H explicitly here (and pin it with SetNoImplicit) rather than relying
+        on HydrogenAssigner.
+        """
+        placed = 0
+        for c_idx in self._candidate_carbons(mol, used):
+            sizes = self._ring_sizes(mol, c_idx)
+            if 5 not in sizes:
+                continue
+            mol = self._swap_carbon_to_nitrogen(mol, c_idx, remove_h=False)
+            # Attach an explicit N-H and forbid implicit Hs on this nitrogen.
+            rw = Chem.RWMol(mol)
+            n_atom = rw.GetAtomWithIdx(c_idx)
+            h_idx = rw.AddAtom(Chem.Atom(1))
+            rw.AddBond(c_idx, h_idx, Chem.BondType.SINGLE)
+            n_atom.SetNumExplicitHs(0)
+            n_atom.SetNoImplicit(True)
+            mol = rw.GetMol()
+            used.add(c_idx)
+            placed += 1
+            if placed >= count:
+                break
+        return mol, placed
+
+    def _substitute_graphitic(
+        self, mol: Chem.Mol, count: int, used: Set[int]
+    ) -> Tuple[Chem.Mol, int]:
+        """Interior ring carbon (3 heavy neighbours, no H) → N."""
+        placed = 0
+        for c_idx in self._candidate_carbons(mol, used):
+            atom = mol.GetAtomWithIdx(c_idx)
+            sizes = self._ring_sizes(mol, c_idx)
+            if 6 not in sizes:
+                continue
+            heavy_deg = sum(1 for n in atom.GetNeighbors() if n.GetAtomicNum() != 1)
+            h_count = atom.GetTotalNumHs() + sum(
+                1 for n in atom.GetNeighbors() if n.GetAtomicNum() == 1
+            )
+            # Interior junction: 3 heavy ring neighbours, no hydrogen.
+            if heavy_deg != 3 or h_count != 0:
+                continue
+            # Graphitic N is pyridinium-like → formal +1 keeps the ring
+            # closed-shell and kekulizable.
+            mol = self._swap_carbon_to_nitrogen(
+                mol, c_idx, remove_h=False, formal_charge=1
+            )
+            used.add(c_idx)
+            placed += 1
+            if placed >= count:
+                break
+        return mol, placed
 
 
 class HydrogenAssigner:

@@ -447,6 +447,21 @@ class CoordinateGenerator:
         #   4. Run force field minimization
         use_2d_first = mol.GetNumHeavyAtoms() > 80
 
+        # Ring-substituting nitrogen (pyridinic/pyrrolic/graphitic) is best
+        # embedded via the flat hex-lattice path: ETKDGv3 tends to buckle the
+        # sheet around the substituted ring atom, producing irreducible steric
+        # clashes.  When such an N is present AND the skeleton carries
+        # hex-lattice positions, use the 2D-first (flat) path regardless of size.
+        ring_info = mol.GetRingInfo()
+        has_ring_nitrogen = any(
+            a.GetAtomicNum() == 7
+            and ring_info.NumAtomRings(a.GetIdx()) > 0
+            and sum(1 for n in a.GetNeighbors() if n.GetAtomicNum() != 1) >= 2
+            for a in mol.GetAtoms()
+        )
+        if has_ring_nitrogen:
+            use_2d_first = True
+
         best_mol = None
         best_energy = float('inf')
         self.used_hex_lattice = False  # reset each call
