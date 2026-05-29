@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 from .carbon_skeleton import PAHAssembler, SkeletonValidator
 from .heteroatom_assignment import (
     OxygenAssigner,
+    NitrogenSubstitutor,
     HydrogenAssigner,
     HeteroatomValidator,
     CompositionInfo,
@@ -128,6 +129,17 @@ class GeneratorConfig:
     # Values > 5 risk cross-sheet bridges that fold the sheet into a nanotube.
     max_ether_span: int = 3
 
+    # Ring-substituting nitrogen doping (counts of ring C atoms replaced by N).
+    #   num_pyridinic — edge 6-ring N, no H (pyridine-like)
+    #   num_pyrrolic  — 5-ring N-H (requires defect_fraction > 0 for pentagons)
+    #   num_graphitic — interior 6-ring N, no H (quaternary / graphitic)
+    # Substitution runs after oxygen assignment, before hydrogen saturation.
+    # If too few suitable sites exist, as many as possible are placed and a
+    # warning is logged (does not raise).
+    num_pyridinic: int = 0
+    num_pyrrolic: int = 0
+    num_graphitic: int = 0
+
     # Strict validation mode (default True).
     # When True, :meth:`BiocharGenerator.generate` raises :class:`ValidationError`
     # if:
@@ -225,9 +237,10 @@ class BiocharGenerator:
         logger.info("Generating carbon skeleton with %d carbons...", self.config.target_num_carbons)
         skeleton = self._generate_carbon_skeleton()
 
-        # Step 2: Assign heteroatoms (O, then H)
+        # Step 2: Assign heteroatoms (O, then ring N substitution, then H)
         logger.info("Assigning heteroatoms...")
         mol, comp_result = self._assign_oxygens(skeleton.mol)
+        mol = self._substitute_nitrogens(mol, comp_result)
         mol = self._assign_hydrogens(mol, comp_result)
 
         # Step 3: Generate 3D coordinates
@@ -316,6 +329,8 @@ class BiocharGenerator:
         print(f"  Oxygens:     {self.composition.num_oxygens}")
         if self.composition.num_nitrogens:
             print(f"  Nitrogens:   {self.composition.num_nitrogens}")
+        if self.composition.num_sulfurs:
+            print(f"  Sulfurs:     {self.composition.num_sulfurs}")
         print(f"  Formula:     {self.composition.molecular_formula}")
         print(f"  MW:          {self.composition.molecular_weight:.1f} g/mol")
         print("\nRatios:")
@@ -323,6 +338,17 @@ class BiocharGenerator:
         print(f"  O/C ratio:   {self.composition.O_C_ratio:.3f} (target: {self.config.O_C_ratio:.3f})")
         if self.composition.num_nitrogens:
             print(f"  N/C ratio:   {self.composition.N_C_ratio:.3f}")
+        if self.composition.num_sulfurs:
+            print(f"  S/C ratio:   {self.composition.S_C_ratio:.3f}")
+        if (self.composition.num_pyridinic or self.composition.num_pyrrolic
+                or self.composition.num_graphitic):
+            print("\nRing Nitrogen:")
+            if self.composition.num_pyridinic:
+                print(f"  Pyridinic:   {self.composition.num_pyridinic}")
+            if self.composition.num_pyrrolic:
+                print(f"  Pyrrolic:    {self.composition.num_pyrrolic}")
+            if self.composition.num_graphitic:
+                print(f"  Graphitic:   {self.composition.num_graphitic}")
         print("\nFunctional Groups:")
         if self.composition.functional_groups:
             for group_name, count in self.composition.functional_groups.items():
@@ -385,6 +411,42 @@ class BiocharGenerator:
                 )
 
         return mol, comp
+
+    def _substitute_nitrogens(
+        self, mol: Chem.Mol, comp_result: CompositionResult
+    ) -> Chem.Mol:
+        """
+        Substitute ring carbons with nitrogen (pyridinic/pyrrolic/graphitic).
+
+        Runs after oxygen placement and before hydrogen saturation so that the
+        new valence requirements are satisfied by :class:`HydrogenAssigner`.
+        Updates *comp_result* ring-N census fields in-place.
+        """
+        n_py = self.config.num_pyridinic
+        n_pr = self.config.num_pyrrolic
+        n_gr = self.config.num_graphitic
+        if n_py <= 0 and n_pr <= 0 and n_gr <= 0:
+            return mol
+
+        substitutor = NitrogenSubstitutor(seed=self.config.seed)
+        mol = substitutor.substitute(
+            mol,
+            n_pyridinic=n_py,
+            n_pyrrolic=n_pr,
+            n_graphitic=n_gr,
+        )
+
+        comp_result.num_pyridinic = substitutor.placed_pyridinic
+        comp_result.num_pyrrolic = substitutor.placed_pyrrolic
+        comp_result.num_graphitic = substitutor.placed_graphitic
+        comp_result.placed_counts["pyridinic"] = substitutor.placed_pyridinic
+        comp_result.placed_counts["pyrrolic"] = substitutor.placed_pyrrolic
+        comp_result.placed_counts["graphitic"] = substitutor.placed_graphitic
+        comp_result.requested_counts["pyridinic"] = n_py
+        comp_result.requested_counts["pyrrolic"] = n_pr
+        comp_result.requested_counts["graphitic"] = n_gr
+
+        return mol
 
     def _assign_hydrogens(self, mol: Chem.Mol, comp_result: CompositionResult) -> Chem.Mol:
         """Assign hydrogen atoms, updating *comp_result* in-place."""
@@ -521,6 +583,9 @@ def generate_biochar(
     functional_groups: Optional[Dict[str, int]] = None,
     defect_fraction: float = 0.0,
     max_ether_span: int = 5,
+    num_pyridinic: int = 0,
+    num_pyrrolic: int = 0,
+    num_graphitic: int = 0,
     output_directory: str = ".",
     basename: str = "biochar",
     molecule_name: str = "BC",
@@ -577,6 +642,9 @@ def generate_biochar(
         functional_groups=functional_groups,
         defect_fraction=defect_fraction,
         max_ether_span=max_ether_span,
+        num_pyridinic=num_pyridinic,
+        num_pyrrolic=num_pyrrolic,
+        num_graphitic=num_graphitic,
         molecule_name=molecule_name,
         seed=seed,
     )
@@ -774,6 +842,9 @@ def generate_surface(
     defect_fraction: float = 0.0,
     pore_diameter: float = 10.0,
     num_sheets: int = 2,
+    pore_type: str = "slit",
+    max_attempts: int = 500,
+    min_separation: float = 3.0,
     sheet_overrides: Optional[List[Dict]] = None,
     output_directory: str = ".",
     basename: str = "surface",
@@ -799,6 +870,12 @@ def generate_surface(
         pore_diameter: Gap between sheet inner van-der-Waals surfaces,
             in Ångströms.
         num_sheets: Number of parallel sheets (default 2 → one slit pore).
+        pore_type: ``"slit"`` (parallel stacked sheets) or ``"amorphous"``
+            (random rigid-body packing with steric rejection).
+        max_attempts: Max random placement attempts per sheet for
+            ``pore_type="amorphous"`` before raising ``RuntimeError``.
+        min_separation: Minimum inter-sheet atom-atom distance (Å) for
+            ``pore_type="amorphous"``.
         sheet_overrides: List of per-sheet config dicts (length must equal
             *num_sheets*).  Accepted keys: ``target_num_carbons``,
             ``H_C_ratio``, ``O_C_ratio``, ``functional_groups``,
@@ -845,9 +922,11 @@ def generate_surface(
         functional_groups=functional_groups,
         aromaticity_percent=95.0,
         defect_fraction=defect_fraction,
-        pore_type="slit",
+        pore_type=pore_type,
         num_sheets=num_sheets,
         pore_diameter=pore_diameter,
+        max_attempts=max_attempts,
+        min_separation=min_separation,
         sheet_overrides=sheet_overrides,
         system_name=system_name,
         seed=seed,
