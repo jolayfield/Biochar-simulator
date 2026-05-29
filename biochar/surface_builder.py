@@ -1,7 +1,7 @@
 """
 Surface Builder for Porous Biochar Systems
 
-Generates slit-pore (Phase 1) and amorphous (Phase 2, deferred) surface
+Generates slit-pore (Phase 1) and amorphous (Phase 2, deferred — see #1) surface
 systems consisting of multiple parallel PAH sheets. Each sheet is an
 independent biochar molecule produced by the existing BiocharGenerator
 pipeline. The builder positions the sheets in 3D, applies periodic

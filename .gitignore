@@ -52,3 +52,4 @@ sim_*/
 
 # Claude Code local settings (personal overrides, not shared)
 .claude/settings.local.json
+.claude/worktrees/
