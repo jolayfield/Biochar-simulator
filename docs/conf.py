@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Biochar Simulator"
 copyright = "2026, jolayfield"
 author = "jolayfield"
-release = "0.1.1"
+release = "0.1.4"
 version = "0.1"
 
 # ---------------------------------------------------------------------------
