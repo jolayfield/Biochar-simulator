@@ -70,6 +70,14 @@ def _build_parser() -> argparse.ArgumentParser:
     n_group.add_argument("--graphitic", type=int, default=0, metavar="N",
                          help="Number of graphitic/quaternary N (interior 6-ring, no H)")
 
+    # Partial charge method
+    parser.add_argument(
+        "--charge-method", type=str, default="opls", choices=["opls", "ml"],
+        dest="charge_method",
+        help="Partial charge assignment: 'opls' (default, static table) or 'ml' "
+             "(environment-aware GPR; requires scikit-learn)",
+    )
+
     # Identity and output
     parser.add_argument(
         "--name", type=str, default="BC", metavar="NAME",
@@ -158,11 +166,13 @@ def main(argv=None) -> int:
         "num_pyridinic": args.pyridinic,
         "num_pyrrolic": args.pyrrolic,
         "num_graphitic": args.graphitic,
+        "charge_method": args.charge_method,
         **{k: v for k, v in base.items() if k not in {
             "target_num_carbons", "H_C_ratio", "O_C_ratio",
             "aromaticity_percent", "defect_fraction", "molecule_name",
             "seed", "functional_groups",
             "num_pyridinic", "num_pyrrolic", "num_graphitic",
+            "charge_method",
         }},
     }
 
@@ -192,6 +202,7 @@ def main(argv=None) -> int:
             num_pyridinic=config.num_pyridinic,
             num_pyrrolic=config.num_pyrrolic,
             num_graphitic=config.num_graphitic,
+            charge_method=config.charge_method,
             molecule_name=config.molecule_name,
             seed=config.seed,
             output_directory=args.output_dir,

@@ -140,6 +140,13 @@ class GeneratorConfig:
     num_pyrrolic: int = 0
     num_graphitic: int = 0
 
+    # Partial charge assignment method.
+    # "opls"  — static OPLS-AA lookup table (default, no extra dependencies).
+    # "ml"    — environment-aware Gaussian Process model; requires the ``ml``
+    #           optional extra (scikit-learn).  Falls back to a model trained on
+    #           OPLS reference charges when the bundled .pkl is absent.
+    charge_method: str = "opls"
+
     # Strict validation mode (default True).
     # When True, :meth:`BiocharGenerator.generate` raises :class:`ValidationError`
     # if:
@@ -157,6 +164,11 @@ class GeneratorConfig:
         # Validate molecule name length
         if len(self.molecule_name) > 5:
             raise ValueError(f"molecule_name must be ≤5 characters (GROMACS .gro format), got '{self.molecule_name}' ({len(self.molecule_name)} chars)")
+
+        if self.charge_method not in ("opls", "ml"):
+            raise ValueError(
+                f"charge_method must be 'opls' or 'ml', got '{self.charge_method}'"
+            )
 
     def to_dict(self) -> dict:
         """Return a JSON-serializable dictionary of this configuration."""
@@ -539,6 +551,12 @@ class BiocharGenerator:
         charger = ChargeAssigner()
         self.charges = charger.assign_charges(mol, self.atom_types)
 
+        if self.config.charge_method == "ml":
+            from .ml_charges import MLChargeRefinement
+            refiner = MLChargeRefinement()
+            self.charges = refiner.refine(mol, self.atom_types)
+            logger.info("ML charge refinement applied.")
+
         logger.info(
             "Atom types assigned: %d unique types, total charge: %.3f e",
             len(set(self.atom_types.values())),
@@ -586,6 +604,7 @@ def generate_biochar(
     num_pyridinic: int = 0,
     num_pyrrolic: int = 0,
     num_graphitic: int = 0,
+    charge_method: str = "opls",
     output_directory: str = ".",
     basename: str = "biochar",
     molecule_name: str = "BC",
@@ -645,6 +664,7 @@ def generate_biochar(
         num_pyridinic=num_pyridinic,
         num_pyrrolic=num_pyrrolic,
         num_graphitic=num_graphitic,
+        charge_method=charge_method,
         molecule_name=molecule_name,
         seed=seed,
     )
