@@ -446,6 +446,20 @@ VDW_RADII = {
 # Used as effective sheet thickness when computing slit-pore geometry.
 CARBON_VDW_DIAMETER = 3.4  # Angstroms
 
+# ---------------------------------------------------------------------------
+# Experimental-data model provenance & tunables
+# ---------------------------------------------------------------------------
+# Primary characterization dataset behind the temperature/feedstock composition
+# model (see :mod:`biochar.temperature_model`):
+UC_DAVIS_DB_URL = "https://biochar.ucdavis.edu/"   # UC Davis Biochar Database
+# Methodological parent: Wood, Mašek & Erastova, Cell Reports Physical Science
+# 5(7), 2024, DOI 10.1016/j.xcrp.2024.102036.
+#
+# Minimum aromaticity (%) the PAH skeleton builder can faithfully realise.  When
+# the data-derived aromaticity (from temperature/feedstock) falls below this it
+# is clamped to this floor and a warning is emitted.
+MIN_BUILDABLE_AROMATICITY = 70.0
+
 # Covalent radii (in Angstrom) for bond length validation
 COVALENT_RADII = {
     "H": 0.31,

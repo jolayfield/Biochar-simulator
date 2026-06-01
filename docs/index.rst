@@ -21,9 +21,10 @@ for GROMACS molecular dynamics simulations.
 
 - PAH skeletons from 6 to 200+ carbons with exact carbon counts
 - H/C and O/C ratio control with configurable tolerances
-- Functional groups: phenolic, carboxyl, ether, and more
+- Data-driven composition from pyrolysis temperature and feedstock (UC Davis Biochar Database)
+- Functional groups: phenolic, carboxyl, ether, thiol, thioether, amino, and ring-N doping
 - Pentagon ring defects for realistic topological disorder
-- Slit-pore surface systems (stacked parallel sheets)
+- Slit-pore and amorphous surface systems
 - GROMACS-ready ``.gro`` / ``.top`` / ``.itp`` with OPLS-AA force field
 
 .. toctree::
@@ -54,6 +55,7 @@ for GROMACS molecular dynamics simulations.
    :caption: API Reference
 
    api/biochar_generator
+   api/temperature_model
    api/surface_builder
    api/gromacs_export
    api/opls_typing

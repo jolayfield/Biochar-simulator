@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "biochar"
-version = "0.1.4"
+version = "0.1.5"
 description = "Generate biochar molecular structures for GROMACS MD simulations"
 readme = "README.md"
 license = { text = "MIT" }
@@ -62,7 +62,7 @@ where = ["."]
 include = ["biochar*"]
 
 [tool.setuptools.package-data]
-biochar = ["data/*.pkl"]
+biochar = ["data/*.pkl", "data/*.json", "data/*.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

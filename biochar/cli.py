@@ -2,6 +2,7 @@
 Command-line interface for the Biochar Simulator.
 
 Usage:
+    biochar-gen --temperature 600 --feedstock softwood --carbons 80 --name BC600 --seed 42
     biochar-gen --carbons 80 --hc-ratio 0.4 --oc-ratio 0.1 --name BC600 --seed 42
     biochar-gen --carbons 50 --phenolic 3 --carboxyl 1 --amino 2 --output-dir ./output
 """
@@ -26,12 +27,37 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Target number of carbon atoms",
     )
 
-    # Composition ratios
-    parser.add_argument("--hc-ratio", type=float, default=0.5, help="Target H/C ratio")
-    parser.add_argument("--oc-ratio", type=float, default=0.1, help="Target O/C ratio")
+    # Data-driven composition from pyrolysis conditions (mutually consistent with
+    # explicit ratio flags — explicit flags win over temperature-derived values)
     parser.add_argument(
-        "--aromaticity", type=float, default=90.0,
-        help="Target aromaticity percent (0–100)",
+        "--temperature", type=float, default=None, metavar="TEMP_C",
+        help=(
+            "Pyrolysis temperature in °C (100–1000). Derives H/C ratio, O/C ratio, "
+            "and aromaticity from the UC Davis Biochar Database model. Any explicit "
+            "--hc-ratio / --oc-ratio / --aromaticity flag overrides the derived value."
+        ),
+    )
+    parser.add_argument(
+        "--feedstock", type=str, default=None,
+        choices=["corn_stover", "grass", "hardwood", "manure", "softwood", "wood"],
+        help=(
+            "Feedstock type for temperature-model lookup (requires --temperature). "
+            "Low-data feedstocks fall back to the pooled curve with a warning."
+        ),
+    )
+
+    # Composition ratios — default None so --temperature can fill them
+    parser.add_argument(
+        "--hc-ratio", type=float, default=None,
+        help="Target H/C ratio (default: 0.5, or derived from --temperature)",
+    )
+    parser.add_argument(
+        "--oc-ratio", type=float, default=None,
+        help="Target O/C ratio (default: 0.1, or derived from --temperature)",
+    )
+    parser.add_argument(
+        "--aromaticity", type=float, default=None,
+        help="Target aromaticity percent (0–100; default: 90.0, or derived from --temperature)",
     )
 
     # Structural defects
@@ -153,12 +179,18 @@ def main(argv=None) -> int:
     }
     functional_groups = {k: v for k, v in fg_map.items() if v is not None} or None
 
-    # Build config dict, CLI values win over loaded config
-    cfg_dict = {
+    # Build config dict: start from loaded config, CLI args override.
+    # Composition fields (H_C_ratio etc.) are only set from CLI when explicitly
+    # provided (not None); otherwise GeneratorConfig derives them from
+    # --temperature / --feedstock or falls back to historical defaults.
+    _ALWAYS_OVERRIDE = {
+        "target_num_carbons", "defect_fraction", "molecule_name", "seed",
+        "functional_groups", "num_pyridinic", "num_pyrrolic", "num_graphitic",
+        "charge_method", "temperature", "feedstock",
+    }
+    cfg_dict = {k: v for k, v in base.items() if k not in _ALWAYS_OVERRIDE}
+    cfg_dict.update({
         "target_num_carbons": args.carbons,
-        "H_C_ratio": args.hc_ratio,
-        "O_C_ratio": args.oc_ratio,
-        "aromaticity_percent": args.aromaticity,
         "defect_fraction": args.defects,
         "molecule_name": args.name,
         "seed": args.seed,
@@ -167,14 +199,16 @@ def main(argv=None) -> int:
         "num_pyrrolic": args.pyrrolic,
         "num_graphitic": args.graphitic,
         "charge_method": args.charge_method,
-        **{k: v for k, v in base.items() if k not in {
-            "target_num_carbons", "H_C_ratio", "O_C_ratio",
-            "aromaticity_percent", "defect_fraction", "molecule_name",
-            "seed", "functional_groups",
-            "num_pyridinic", "num_pyrrolic", "num_graphitic",
-            "charge_method",
-        }},
-    }
+        "temperature": args.temperature,
+        "feedstock": args.feedstock,
+    })
+    # Composition: CLI wins only when explicitly supplied
+    if args.hc_ratio is not None:
+        cfg_dict["H_C_ratio"] = args.hc_ratio
+    if args.oc_ratio is not None:
+        cfg_dict["O_C_ratio"] = args.oc_ratio
+    if args.aromaticity is not None:
+        cfg_dict["aromaticity_percent"] = args.aromaticity
 
     try:
         config = GeneratorConfig(**cfg_dict)

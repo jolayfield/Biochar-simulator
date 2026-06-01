@@ -1,6 +1,42 @@
 Quick Start
 ===========
 
+From pyrolysis temperature and feedstock
+----------------------------------------
+
+Drive composition (H/C, O/C, aromaticity) directly from pyrolysis conditions
+using the UC Davis Biochar Database model:
+
+.. code-block:: python
+
+   from biochar import generate_biochar
+
+   mol, coords, gro, top, itp = generate_biochar(
+       target_num_carbons=80,
+       temperature=600,          # °C
+       feedstock="softwood",     # optional; omit for pooled-feedstock curve
+       output_directory="output",
+       basename="bc600_sw",
+       molecule_name="BC600",
+       seed=42,
+   )
+
+Explicit ``H_C_ratio`` / ``O_C_ratio`` / ``aromaticity_percent`` kwargs
+override the model-derived values when provided.
+
+Query reference properties (surface area, pH, CEC, …) for any temperature:
+
+.. code-block:: python
+
+   from biochar import properties
+
+   props = properties(600, feedstock="softwood")
+   print(props["H_C_ratio"], props["surface_area_m2_g"])
+
+From the command line::
+
+   biochar-gen --temperature 600 --feedstock softwood --carbons 80 --name BC600 --seed 42
+
 Single molecule
 ---------------
 

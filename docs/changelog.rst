@@ -1,6 +1,24 @@
 Changelog
 =========
 
+0.1.5 (2026-06-01)
+-------------------
+
+- **Temperature × feedstock composition model** — ``GeneratorConfig`` and
+  ``generate_biochar()`` now accept ``temperature`` (°C) and ``feedstock``
+  (e.g. ``"softwood"``, ``"grass"``) to derive H/C, O/C, and aromaticity
+  targets from the UC Davis Biochar Database.  Explicit ratio kwargs still
+  override the derived values.
+- **CLI** — ``biochar-gen --temperature 600 --feedstock softwood`` now works;
+  ``--hc-ratio`` / ``--oc-ratio`` / ``--aromaticity`` default to ``None``
+  (derived from the model when ``--temperature`` is given).
+- **New public API** — ``biochar.properties(temperature, feedstock=None)``
+  returns the full reference property table (pH, surface area, CEC, …);
+  ``biochar.VALID_FEEDSTOCKS`` lists accepted feedstock names;
+  ``biochar.TemperatureModel`` is the underlying model class.
+- **Documentation** — API reference page for ``temperature_model``;
+  temperature/feedstock example added to the Quick Start guide.
+
 0.1.4 (2026-05-31)
 -------------------
 

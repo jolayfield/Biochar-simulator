@@ -33,6 +33,7 @@ from .geometry_3d import CoordinateGenerator, GeometryValidator, ClashResolver
 from .opls_typing import AtomTyper, ChargeAssigner
 from .gromacs_export import GromacsExporter
 from .validation import ValidationEngine
+from .constants import MIN_BUILDABLE_AROMATICITY
 
 
 @dataclass
@@ -86,14 +87,18 @@ class GeneratorConfig:
     target_num_carbons: int = 50
     size_tolerance: float = 0.10
 
-    # Composition parameters
-    H_C_ratio: float = 0.5
+    # Composition parameters.
+    # H_C_ratio / O_C_ratio / aromaticity_percent default to None and are resolved
+    # in __post_init__:  explicit value  >  (temperature, feedstock)-derived  >
+    # the historical hard defaults (0.5 / 0.1 / 90.0).  This lets `temperature`
+    # drive composition for every entry point without breaking callers that omit it.
+    H_C_ratio: Optional[float] = None
     H_C_tolerance: float = 0.10
-    O_C_ratio: float = 0.1
+    O_C_ratio: Optional[float] = None
     O_C_tolerance: float = 0.10
 
     # Structural parameters
-    aromaticity_percent: float = 90.0
+    aromaticity_percent: Optional[float] = None
     aromaticity_tolerance: float = 5.0
 
     # Functional groups — dict mapping group name → exact count to place.
@@ -147,6 +152,17 @@ class GeneratorConfig:
     #           OPLS reference charges when the bundled .pkl is absent.
     charge_method: str = "opls"
 
+    # Data-driven composition by pyrolysis temperature (°C) and optional feedstock.
+    # When `temperature` is set, any of H_C_ratio / O_C_ratio / aromaticity_percent
+    # left as None are filled from the UC Davis Biochar Database model
+    # (:mod:`biochar.temperature_model`).  `feedstock` (one of
+    # ``temperature_model.VALID_FEEDSTOCKS``: softwood, hardwood, grass, manure,
+    # corn_stover, wood) selects a feedstock-specific H/C·O/C curve where the data
+    # supports it, otherwise the pooled curve is used.  A data-derived aromaticity
+    # below MIN_BUILDABLE_AROMATICITY is clamped to that floor with a warning.
+    temperature: Optional[float] = None
+    feedstock: Optional[str] = None
+
     # Strict validation mode (default True).
     # When True, :meth:`BiocharGenerator.generate` raises :class:`ValidationError`
     # if:
@@ -169,6 +185,40 @@ class GeneratorConfig:
             raise ValueError(
                 f"charge_method must be 'opls' or 'ml', got '{self.charge_method}'"
             )
+
+        # --- resolve composition: explicit > (temperature,feedstock)-derived > default ---
+        if self.feedstock is not None:
+            from .temperature_model import VALID_FEEDSTOCKS
+            if self.feedstock not in VALID_FEEDSTOCKS:
+                raise ValueError(
+                    f"feedstock must be one of {VALID_FEEDSTOCKS} or None, "
+                    f"got {self.feedstock!r}"
+                )
+        if self.temperature is not None:
+            from .temperature_model import get_default_model
+            comp = get_default_model().composition(self.temperature, self.feedstock)
+            if self.H_C_ratio is None:
+                self.H_C_ratio = comp["H_C_ratio"]
+            if self.O_C_ratio is None:
+                self.O_C_ratio = comp["O_C_ratio"]
+            if self.aromaticity_percent is None:
+                arom = comp["aromaticity_percent"]
+                if arom < MIN_BUILDABLE_AROMATICITY:
+                    logger.warning(
+                        "Predicted aromaticity %.0f%% (T=%s°C, feedstock=%s) is below "
+                        "the PAH-buildable floor (%.0f%%); clamping. The aromatic-sheet "
+                        "model poorly represents such a low-aromaticity char.",
+                        arom, self.temperature, self.feedstock, MIN_BUILDABLE_AROMATICITY,
+                    )
+                    arom = MIN_BUILDABLE_AROMATICITY
+                self.aromaticity_percent = arom
+        # Fill any still-unset composition fields with the historical defaults.
+        if self.H_C_ratio is None:
+            self.H_C_ratio = 0.5
+        if self.O_C_ratio is None:
+            self.O_C_ratio = 0.1
+        if self.aromaticity_percent is None:
+            self.aromaticity_percent = 90.0
 
     def to_dict(self) -> dict:
         """Return a JSON-serializable dictionary of this configuration."""
@@ -595,9 +645,9 @@ class BiocharGenerator:
 
 def generate_biochar(
     target_num_carbons: int = 50,
-    H_C_ratio: float = 0.5,
-    O_C_ratio: float = 0.1,
-    aromaticity_percent: float = 90.0,
+    H_C_ratio: Optional[float] = None,
+    O_C_ratio: Optional[float] = None,
+    aromaticity_percent: Optional[float] = None,
     functional_groups: Optional[Dict[str, int]] = None,
     defect_fraction: float = 0.0,
     max_ether_span: int = 5,
@@ -605,6 +655,8 @@ def generate_biochar(
     num_pyrrolic: int = 0,
     num_graphitic: int = 0,
     charge_method: str = "opls",
+    temperature: Optional[float] = None,
+    feedstock: Optional[str] = None,
     output_directory: str = ".",
     basename: str = "biochar",
     molecule_name: str = "BC",
@@ -665,6 +717,8 @@ def generate_biochar(
         num_pyrrolic=num_pyrrolic,
         num_graphitic=num_graphitic,
         charge_method=charge_method,
+        temperature=temperature,
+        feedstock=feedstock,
         molecule_name=molecule_name,
         seed=seed,
     )

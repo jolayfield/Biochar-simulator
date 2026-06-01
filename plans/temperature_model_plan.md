@@ -151,6 +151,19 @@ Net: building now is **not** wasted work; the Charchive DB drops in later.
   Sci.* 5(7), 2024, DOI 10.1016/j.xcrp.2024.102036. The `data/*.pptx` are its
   figures, built from `biochar_data.csv` (no new data).
 - ✅ **Package version** reconciled to **0.1.4** across all files.
+- ✅ **Feedstock taxonomy** — first-class `feedstock=` options:
+  `softwood` (Soft Wood), `hardwood` (Hard Wood), `grass` (Grass),
+  `manure` (Manure), `corn_stover` (Corn stover), **`wood` (its own category,
+  NOT merged into soft/hard — per user)**. Remaining labels (Other, Other/Mixed,
+  Nutshell, Hull, Sludge, Algae, Pomace) **feed the pooled baseline** and are
+  selectable but fall back to the **pooled curve with a low-confidence warning**.
+- ✅ **H/C and O/C computed from `Total C (%) Used in Plot`** (col 13), not
+  `C Organic (%)` (user-confirmed).
+- ✅ **Low predicted aromaticity → clamp + warn**: when `f(H/C)` returns below the
+  PAH engine's buildable floor, **clamp `aromaticity_percent` to that floor and
+  emit a warning** (the generator builds near-fully-aromatic sheets).
+- ✅ **Davis DB citation/URL:** **https://biochar.ucdavis.edu/** (UC Davis Biochar
+  Database) — record in `constants.py` provenance + README/docs.
 
 ## Open items (remaining)
 
@@ -159,6 +172,4 @@ Net: building now is **not** wasted work; the Charchive DB drops in later.
    carries direct NMR aromaticity, upgrade the `f(H/C)` proxy to real (possibly
    per-feedstock) aromaticity data.
 2. **Aromaticity fit form** — linear-clamped vs logistic on ~20 pts (pick by R²
-   during implementation; approach already approved above).
-3. **Davis formal citation/URL/version** — confirm exact reference for provenance
-   (redistribution already approved).
+   during implementation; approach already approved above). *(implementation detail)*
