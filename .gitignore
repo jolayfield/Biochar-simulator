@@ -50,6 +50,14 @@ sim_*/
 *.swp
 *.swo
 
+# Coverage artifacts
+.coverage
+coverage.json
+htmlcov/
+
+# Raw source data (CSVs already packaged in biochar/data/; .pptx is large binary)
+data/
+
 # Claude Code local settings (personal overrides, not shared)
 .claude/settings.local.json
 .claude/worktrees/
