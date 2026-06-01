@@ -2,6 +2,29 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
+## [0.1.4] — May 31, 2026
+
+### Added
+
+- **ML-based partial charge refinement** — opt-in `charge_method="ml"` using a bundled Gaussian-process model trained on OPLS reference charges (issue #4).
+
+### Changed
+
+- CI and Read the Docs now install scikit-learn for the `ml` extra.
+
+## [0.1.3] — May 29, 2026
+
+### Added
+
+- **Amorphous porous packing** — `pore_type="amorphous"` for disordered sheet packing (issue #1).
+- **S-doping** — thiol and thioether functional groups (issue #3).
+- **Ring-substituting nitrogen** — pyridinic / pyrrolic / graphitic (issue #2).
+- Expanded test coverage (~83%).
+
+> **Note:** the `[1.x]` entries below predate the current `0.1.x` version scheme
+> and are retained for history only. The authoritative package version is
+> **0.1.4** (`pyproject.toml`, `biochar/__init__.py`, git tag `v0.1.4`).
+
 ## [1.2.0] — April 16, 2026
 
 ### Added
@@ -185,6 +208,6 @@ The implementation reuses the existing `BiocharGenerator` pipeline for each shee
 
 ---
 
-**Current Version**: 1.2.0  
-**Last Updated**: April 16, 2026  
+**Current Version**: 0.1.4  
+**Last Updated**: May 31, 2026  
 **Status**: Production Ready

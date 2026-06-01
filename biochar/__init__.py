@@ -22,7 +22,7 @@ from .biochar_generator import (
 from .heteroatom_assignment import CompositionResult, CompositionInfo
 from .surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult
 
-__version__ = "0.1.2"
+__version__ = "0.1.4"
 __all__ = [
     "BiocharGenerator",
     "GeneratorConfig",

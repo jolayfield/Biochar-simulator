@@ -280,8 +280,8 @@ Provided for research purposes.
 
 ---
 
-**Release Date**: April 16, 2026
-**Version**: 1.2.0
+**Release Date**: May 31, 2026
+**Version**: 0.1.4
 **Status**: ✅ Production Ready
 
 All core functionality implemented and tested. Pentagon ring defects and porous surface generation now available.
