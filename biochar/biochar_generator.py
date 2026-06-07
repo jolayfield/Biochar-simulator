@@ -236,6 +236,30 @@ class GeneratorConfig:
         return cls(**d)
 
 
+@dataclass
+class BiocharResult:
+    """
+    Named result returned by :func:`generate_biochar`.
+
+    Fields are accessible by name (``result.mol``, ``result.gro_path``, …).
+    The object also supports positional unpacking for backward compatibility::
+
+        mol, coords, gro, top, itp = generate_biochar(...)  # still works
+
+    When ``write_files=False``, the three path fields are ``None``.
+    """
+
+    mol: Chem.Mol
+    coords: np.ndarray
+    composition: CompositionResult
+    gro_path: Optional[Path]
+    top_path: Optional[Path]
+    itp_path: Optional[Path]
+
+    def __iter__(self):
+        return iter((self.mol, self.coords, self.gro_path, self.top_path, self.itp_path))
+
+
 class BiocharGenerator:
     """
     Generate a single biochar molecule and export it to GROMACS files.
@@ -661,7 +685,8 @@ def generate_biochar(
     basename: str = "biochar",
     molecule_name: str = "BC",
     seed: Optional[int] = None,
-) -> Tuple[Chem.Mol, np.ndarray, Path, Path, Path]:
+    write_files: bool = True,
+) -> "BiocharResult":
     """
     Convenience function to generate and export biochar in one call.
 
@@ -701,9 +726,15 @@ def generate_biochar(
         molecule_name: Residue name (max 5 chars). Suggested: BC400, BC600,
             BCH05, BCO10.
         seed: Random seed for reproducibility.
+        write_files: If ``True`` (default), write ``.gro``, ``.top``, and
+            ``.itp`` files to *output_directory*.  Set to ``False`` to skip
+            all disk I/O; the path fields on the returned :class:`BiocharResult`
+            will be ``None``.
 
     Returns:
-        (molecule, coordinates, gro_path, top_path, itp_path)
+        :class:`BiocharResult` with named fields ``mol``, ``coords``,
+        ``composition``, ``gro_path``, ``top_path``, ``itp_path``.
+        Supports 5-tuple positional unpacking for backward compatibility.
     """
     config = GeneratorConfig(
         target_num_carbons=target_num_carbons,
@@ -727,12 +758,21 @@ def generate_biochar(
     mol, coords, composition = generator.generate()
     generator.print_summary()
 
-    gro_path, top_path, itp_path = generator.export_gromacs(
-        output_directory=output_directory,
-        basename=basename,
-    )
+    gro_path = top_path = itp_path = None
+    if write_files:
+        gro_path, top_path, itp_path = generator.export_gromacs(
+            output_directory=output_directory,
+            basename=basename,
+        )
 
-    return mol, coords, gro_path, top_path, itp_path
+    return BiocharResult(
+        mol=mol,
+        coords=coords,
+        composition=composition,
+        gro_path=gro_path,
+        top_path=top_path,
+        itp_path=itp_path,
+    )
 
 
 def generate_biochar_series(
