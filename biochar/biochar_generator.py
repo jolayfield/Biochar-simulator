@@ -150,6 +150,10 @@ class GeneratorConfig:
     # "ml"    — environment-aware Gaussian Process model; requires the ``ml``
     #           optional extra (scikit-learn).  Falls back to a model trained on
     #           OPLS reference charges when the bundled .pkl is absent.
+    # "qm"    — LigParGen-style QM charges: AM1 (via an external MOPAC binary) →
+    #           CM1A mapping → ×1.14 scaling.  Requires ``mopac`` on PATH
+    #           (``conda install -c conda-forge mopac``).  See
+    #           :mod:`biochar.qm_charges`.
     charge_method: str = "opls"
 
     # Data-driven composition by pyrolysis temperature (°C) and optional feedstock.
@@ -181,9 +185,9 @@ class GeneratorConfig:
         if len(self.molecule_name) > 5:
             raise ValueError(f"molecule_name must be ≤5 characters (GROMACS .gro format), got '{self.molecule_name}' ({len(self.molecule_name)} chars)")
 
-        if self.charge_method not in ("opls", "ml"):
+        if self.charge_method not in ("opls", "ml", "qm"):
             raise ValueError(
-                f"charge_method must be 'opls' or 'ml', got '{self.charge_method}'"
+                f"charge_method must be 'opls', 'ml', or 'qm', got '{self.charge_method}'"
             )
 
         # --- resolve composition: explicit > (temperature,feedstock)-derived > default ---
@@ -340,7 +344,7 @@ class BiocharGenerator:
 
         # Step 4: Assign OPLS types and charges
         logger.info("Assigning OPLS-AA atom types and charges...")
-        self._assign_opls_properties(mol)
+        self._assign_opls_properties(mol, coords)
 
         # Step 5: Validate
         logger.info("Validating structure...")
@@ -617,8 +621,14 @@ class BiocharGenerator:
 
         return mol, coords
 
-    def _assign_opls_properties(self, mol: Chem.Mol):
-        """Assign OPLS-AA atom types and charges."""
+    def _assign_opls_properties(self, mol: Chem.Mol, coords: np.ndarray):
+        """Assign OPLS-AA atom types and charges.
+
+        Atom types are always assigned from the OPLS-AA typer.  Partial charges
+        come from the configured ``charge_method``: the static OPLS table
+        (``"opls"``, default), the ML refiner (``"ml"``), or LigParGen-style QM
+        charges (``"qm"``), which need the 3D ``coords`` for the AM1 calculation.
+        """
         typer = AtomTyper()
         self.atom_types = typer.assign_atom_types(mol)
 
@@ -630,6 +640,11 @@ class BiocharGenerator:
             refiner = MLChargeRefinement()
             self.charges = refiner.refine(mol, self.atom_types)
             logger.info("ML charge refinement applied.")
+        elif self.config.charge_method == "qm":
+            from .qm_charges import QMChargeAssigner
+            assigner = QMChargeAssigner()
+            self.charges = assigner.assign(mol, coords, self.atom_types)
+            logger.info("QM (1.14*CM1A) charge assignment applied.")
 
         logger.info(
             "Atom types assigned: %d unique types, total charge: %.3f e",

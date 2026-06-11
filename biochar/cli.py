@@ -98,10 +98,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
     # Partial charge method
     parser.add_argument(
-        "--charge-method", type=str, default="opls", choices=["opls", "ml"],
+        "--charge-method", type=str, default="opls", choices=["opls", "ml", "qm"],
         dest="charge_method",
-        help="Partial charge assignment: 'opls' (default, static table) or 'ml' "
-             "(environment-aware GPR; requires scikit-learn)",
+        help="Partial charge assignment: 'opls' (default, static table), 'ml' "
+             "(environment-aware GPR; requires scikit-learn), or 'qm' "
+             "(LigParGen-style 1.14*CM1A via AM1; requires a MOPAC binary)",
     )
 
     # Identity and output
