@@ -38,6 +38,14 @@ viz = [
 ml = [
     "scikit-learn>=1.3",
 ]
+# The 'qm' charge backend (LigParGen-style 1.14*CM1A) shells out to an external
+# MOPAC binary, which is NOT installable from PyPI. Install MOPAC separately:
+#   conda install -c conda-forge mopac
+# or from https://github.com/openmopac/mopac. This extra carries no Python
+# dependencies of its own; it exists as a discoverable marker so that
+# `pip install biochar[qm]` succeeds and documents the requirement. The backend
+# discovers `mopac` on PATH at run time (override with $MOPAC_CMD).
+qm = []
 dev = [
     "pytest>=7.0",
     "pytest-cov",

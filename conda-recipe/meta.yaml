@@ -25,6 +25,12 @@ requirements:
     - scipy >=1.10.0
     - networkx >=3.1
     - rdkit >=2023.9.1
+  run_constrained:
+    # Optional QM charge backend (charge_method="qm", 1.14*CM1A via AM1).
+    # Not a hard dependency — install explicitly to enable:
+    #   conda install -c conda-forge mopac
+    # If present, it must be a recent OpenMOPAC.
+    - mopac >=23
 
 test:
   imports:

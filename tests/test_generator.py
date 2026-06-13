@@ -787,5 +787,61 @@ class TestBiocharSeries:
         assert "NBIO" in results
 
 
+class TestBiocharResult:
+    """Tests for the BiocharResult named-result object."""
+
+    def test_write_files_false_returns_none_paths(self, tmp_path):
+        from biochar import generate_biochar, BiocharResult
+        result = generate_biochar(
+            target_num_carbons=24, O_C_ratio=0.0, seed=42, write_files=False
+        )
+        assert isinstance(result, BiocharResult)
+        assert result.gro_path is None
+        assert result.top_path is None
+        assert result.itp_path is None
+
+    def test_write_files_false_mol_and_coords_valid(self, tmp_path):
+        from biochar import generate_biochar
+        result = generate_biochar(
+            target_num_carbons=24, O_C_ratio=0.0, seed=42, write_files=False
+        )
+        assert result.mol is not None
+        assert result.coords is not None
+        assert result.composition is not None
+
+    def test_positional_unpacking_backward_compat(self, tmp_path):
+        from biochar import generate_biochar
+        mol, coords, gro, top, itp = generate_biochar(
+            target_num_carbons=24, O_C_ratio=0.0, seed=42, write_files=False
+        )
+        assert mol is not None
+        assert coords is not None
+        assert gro is None
+        assert top is None
+        assert itp is None
+
+    def test_write_files_true_returns_paths(self, tmp_path):
+        from biochar import generate_biochar
+        result = generate_biochar(
+            target_num_carbons=24, O_C_ratio=0.0, seed=42, write_files=True,
+            output_directory=str(tmp_path),
+        )
+        assert result.gro_path is not None and result.gro_path.exists()
+        assert result.top_path is not None and result.top_path.exists()
+        assert result.itp_path is not None and result.itp_path.exists()
+
+    def test_default_write_files_is_true(self, tmp_path):
+        from biochar import generate_biochar
+        result = generate_biochar(
+            target_num_carbons=24, O_C_ratio=0.0, seed=42,
+            output_directory=str(tmp_path),
+        )
+        assert result.gro_path is not None
+
+    def test_biochar_result_exported(self):
+        import biochar
+        assert hasattr(biochar, "BiocharResult")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
