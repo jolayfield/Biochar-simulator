@@ -4,10 +4,13 @@ OPLS-AA Atom Typing and Charge Assignment
 Assign OPLS-AA atom types and partial charges to atoms.
 """
 
+import logging
 from typing import Dict, Tuple, List, Optional
 from dataclasses import dataclass
 
 from rdkit import Chem
+
+logger = logging.getLogger(__name__)
 
 from .constants import OPLS_ATOM_TYPES, OPLS_BOND_PARAMS, OPLS_ANGLE_PARAMS
 
@@ -283,6 +286,14 @@ class ChargeAssigner:
 
         if abs(total_charge) < 1e-6:
             return charges
+
+        if abs(total_charge) > 0.01:
+            logger.debug(
+                "Charge residual before neutrality correction: %.4f e "
+                "(distributing across %d heteroatoms)",
+                total_charge,
+                sum(1 for idx in charges if mol.GetAtomWithIdx(idx).GetAtomicNum() in [7, 8]),
+            )
 
         # Find polar atoms to adjust
         # Prefer to adjust oxygen and nitrogen

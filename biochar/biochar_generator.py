@@ -6,7 +6,7 @@ Main API for generating biochar building blocks for GROMACS simulations.
 
 import dataclasses
 import logging
-from typing import Optional, Tuple, List, Dict
+from typing import Callable, Optional, Tuple, List, Dict
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -190,6 +190,12 @@ class GeneratorConfig:
                 f"charge_method must be 'opls', 'ml', or 'qm', got '{self.charge_method}'"
             )
 
+        if self.max_ether_span < 3:
+            raise ValueError(
+                f"max_ether_span must be ≥ 3 (minimum for a 5-membered ring), "
+                f"got {self.max_ether_span}"
+            )
+
         # --- resolve composition: explicit > (temperature,feedstock)-derived > default ---
         if self.feedstock is not None:
             from .temperature_model import VALID_FEEDSTOCKS
@@ -200,7 +206,18 @@ class GeneratorConfig:
                 )
         if self.temperature is not None:
             from .temperature_model import get_default_model
-            comp = get_default_model().composition(self.temperature, self.feedstock)
+            model = get_default_model()
+            valid_range = model.get_valid_range(self.feedstock)
+            if valid_range is not None:
+                t_min, t_max = valid_range
+                if not (t_min <= self.temperature <= t_max):
+                    logger.warning(
+                        "temperature=%.0f°C is outside the data range [%.0f–%.0f°C] "
+                        "for feedstock=%r. Predictions are extrapolated and may be "
+                        "unreliable.",
+                        self.temperature, t_min, t_max, self.feedstock,
+                    )
+            comp = model.composition(self.temperature, self.feedstock)
             if self.H_C_ratio is None:
                 self.H_C_ratio = comp["H_C_ratio"]
             if self.O_C_ratio is None:
@@ -223,6 +240,14 @@ class GeneratorConfig:
             self.O_C_ratio = 0.1
         if self.aromaticity_percent is None:
             self.aromaticity_percent = 90.0
+
+        if self.max_ether_span > 4:
+            logger.warning(
+                "max_ether_span=%d may fold the aromatic sheet into a nanotube-like "
+                "structure. Values > 4 risk cross-sheet bridges. "
+                "Recommended: 3 (5-membered furan-like ring).",
+                self.max_ether_span,
+            )
 
     def to_dict(self) -> dict:
         """Return a JSON-serializable dictionary of this configuration."""
@@ -259,6 +284,8 @@ class BiocharResult:
     gro_path: Optional[Path]
     top_path: Optional[Path]
     itp_path: Optional[Path]
+    ring_composition: Optional[Dict[str, int]] = None
+    """Ring-type breakdown of the carbon skeleton, e.g. ``{"hexagons": 14, "pentagons": 2}``."""
 
     def __iter__(self):
         return iter((self.mol, self.coords, self.gro_path, self.top_path, self.itp_path))
@@ -305,6 +332,7 @@ class BiocharGenerator:
         self.atom_types = None
         self.charges = None
         self.validation_report = None
+        self.ring_composition: Optional[Dict[str, int]] = None
 
     def generate(self) -> Tuple[Chem.Mol, np.ndarray, CompositionResult]:
         """
@@ -326,6 +354,7 @@ class BiocharGenerator:
         # Step 1: Generate carbon skeleton
         logger.info("Generating carbon skeleton with %d carbons...", self.config.target_num_carbons)
         skeleton = self._generate_carbon_skeleton()
+        self.ring_composition = skeleton.ring_composition
 
         # Step 2: Assign heteroatoms (O, then ring N substitution, then H)
         logger.info("Assigning heteroatoms...")
@@ -449,9 +478,18 @@ class BiocharGenerator:
         if self.validation_report:
             print("\nValidation:")
             print(f"  Status: {'VALID' if self.validation_report[0] else 'INVALID'}")
-            if self.validation_report[1]:
-                print(f"  Errors: {len(self.validation_report[1])}")
-                for error in self.validation_report[1][:3]:
+            all_errors = self.validation_report[1]
+            valence_errors = [e for e in all_errors if "valence" in e.lower() or "Valence" in e]
+            other_errors = [e for e in all_errors if e not in valence_errors]
+            if valence_errors:
+                print(f"  Valence Issues: {len(valence_errors)}")
+                for error in valence_errors[:3]:
+                    print(f"    - {error}")
+            else:
+                print("  Valence Issues: 0")
+            if other_errors:
+                print(f"  Other Errors: {len(other_errors)}")
+                for error in other_errors[:3]:
                     print(f"    - {error}")
             if self.validation_report[2]:
                 print(f"  Warnings: {len(self.validation_report[2])}")
@@ -689,7 +727,7 @@ def generate_biochar(
     aromaticity_percent: Optional[float] = None,
     functional_groups: Optional[Dict[str, int]] = None,
     defect_fraction: float = 0.0,
-    max_ether_span: int = 5,
+    max_ether_span: Optional[int] = None,
     num_pyridinic: int = 0,
     num_pyrrolic: int = 0,
     num_graphitic: int = 0,
@@ -732,8 +770,9 @@ def generate_biochar(
             introduce realistic topological disorder.
         max_ether_span: Maximum number of C–C bonds between the two ring
             carbons bridged by each ether oxygen.  Controls the ring size of
-            the C–O–C bridge (ring size = max_ether_span + 2).  Default 3
-            (5-membered furan/benzofuran-like ring — always stays flat).
+            the C–O–C bridge (ring size = max_ether_span + 2).
+            ``None`` (default) uses :attr:`GeneratorConfig.max_ether_span`
+            default of 3 (5-membered furan/benzofuran-like ring — always flat).
             Use 4 for pyran/chromene-like (6-membered) or 5 for 7-membered;
             larger values risk cross-sheet bridges that fold the molecule.
         output_directory: Output directory for GROMACS files.
@@ -751,14 +790,13 @@ def generate_biochar(
         ``composition``, ``gro_path``, ``top_path``, ``itp_path``.
         Supports 5-tuple positional unpacking for backward compatibility.
     """
-    config = GeneratorConfig(
+    config_kwargs: Dict = dict(
         target_num_carbons=target_num_carbons,
         H_C_ratio=H_C_ratio,
         O_C_ratio=O_C_ratio,
         aromaticity_percent=aromaticity_percent,
         functional_groups=functional_groups,
         defect_fraction=defect_fraction,
-        max_ether_span=max_ether_span,
         num_pyridinic=num_pyridinic,
         num_pyrrolic=num_pyrrolic,
         num_graphitic=num_graphitic,
@@ -768,6 +806,9 @@ def generate_biochar(
         molecule_name=molecule_name,
         seed=seed,
     )
+    if max_ether_span is not None:
+        config_kwargs["max_ether_span"] = max_ether_span
+    config = GeneratorConfig(**config_kwargs)
 
     generator = BiocharGenerator(config)
     mol, coords, composition = generator.generate()
@@ -787,6 +828,7 @@ def generate_biochar(
         gro_path=gro_path,
         top_path=top_path,
         itp_path=itp_path,
+        ring_composition=generator.ring_composition,
     )
 
 
@@ -795,6 +837,8 @@ def generate_biochar_series(
     output_directory: str = ".",
     create_combined_top: bool = True,
     verbose: bool = True,
+    progress_callback: Optional[Callable[[int, int, str], None]] = None,
+    on_error: str = "raise",
 ) -> Dict[str, Tuple[Path, Path, Path]]:
     """
     Generate multiple biochar structures for mixed simulations.
@@ -815,6 +859,13 @@ def generate_biochar_series(
         output_directory: Output directory for all files
         create_combined_top: If True, generate a combined topology for all structures
         verbose: If True, print progress information
+        progress_callback: Optional callable invoked after each successful
+            generation as ``callback(completed, total, molecule_name)``.
+            Useful for GUI/web frontends and long overnight runs.
+        on_error: What to do when a structure fails generation.
+            ``"raise"`` (default) — re-raise the exception immediately.
+            ``"skip"`` — skip silently; the molecule is omitted from results.
+            ``"warn"`` — log a warning and skip.
 
     Returns:
         Dictionary mapping molecule_name -> (gro_path, top_path, itp_path)
@@ -841,16 +892,12 @@ def generate_biochar_series(
         print("=" * 70 + "\n")
 
     for i, config in enumerate(configurations, 1):
-        # Extract configuration
+        # Extract molecule name first (needed for progress/error messages).
+        # Missing name always raises immediately — on_error does not apply to
+        # misconfigured input.
         molecule_name = config.get("molecule_name")
         if not molecule_name:
             raise ValueError(f"Configuration {i} missing required 'molecule_name'")
-
-        if len(molecule_name) > 5:
-            raise ValueError(
-                f"molecule_name '{molecule_name}' exceeds 5 character limit "
-                f"(GROMACS .gro format requirement)"
-            )
 
         target_carbons = config.get("target_num_carbons", 50)
         h_c = config.get("H_C_ratio", 0.5)
@@ -864,7 +911,12 @@ def generate_biochar_series(
             print(f"  Parameters: {target_carbons}C, H/C={h_c:.2f}, O/C={o_c:.2f}")
 
         try:
-            mol, coords, gro_path, top_path, itp_path = generate_biochar(
+            if len(molecule_name) > 5:
+                raise ValueError(
+                    f"molecule_name '{molecule_name}' exceeds 5 character limit "
+                    f"(GROMACS .gro format requirement)"
+                )
+            result = generate_biochar(
                 target_num_carbons=target_carbons,
                 H_C_ratio=h_c,
                 O_C_ratio=o_c,
@@ -875,6 +927,7 @@ def generate_biochar_series(
                 molecule_name=molecule_name,
                 seed=seed,
             )
+            gro_path, top_path, itp_path = result.gro_path, result.top_path, result.itp_path
 
             results[molecule_name] = (gro_path, top_path, itp_path)
             itp_files[molecule_name] = itp_path
@@ -883,10 +936,19 @@ def generate_biochar_series(
             if verbose:
                 print(f"  ✓ Successfully generated {gro_path.name}\n")
 
+            if progress_callback is not None:
+                progress_callback(len(results), len(configurations), molecule_name)
+
         except Exception as e:
             if verbose:
                 print(f"  ✗ Failed: {e}\n")
-            raise
+            if on_error == "raise":
+                raise
+            elif on_error == "warn":
+                logger.warning(
+                    "Skipping '%s' after error: %s", molecule_name, e
+                )
+            # on_error == "skip": silently continue
 
     # Generate combined topology file if requested
     if create_combined_top and len(results) > 1:

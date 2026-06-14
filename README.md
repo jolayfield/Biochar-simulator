@@ -92,6 +92,23 @@ mol, coords, gro, top, itp = generate_biochar(
 
 `defect_fraction` ranges from 0.0 (pure hexagonal PAH) to 1.0 (all pentagons). Typical values: 0.1–0.2.
 
+#### Understanding `defect_fraction`
+
+`defect_fraction` is a *request probability*, not a guaranteed pentagon fraction. During skeleton growth each ring-addition event has a `defect_fraction` chance of *attempting* a pentagon; parity and adjacency constraints reject many of these attempts. Observed pentagon counts are lower than the requested fraction:
+
+| `defect_fraction` | ~50 C skeleton | ~100 C skeleton |
+|:-----------------:|:--------------:|:---------------:|
+| 0.05              | 0–1 pentagons  | 1–3 pentagons   |
+| 0.15              | 1–3 pentagons  | 2–6 pentagons   |
+| 0.30              | 2–5 pentagons  | 4–10 pentagons  |
+
+Use `result.ring_composition` to inspect the actual counts after generation:
+
+```python
+result = generate_biochar(target_num_carbons=60, defect_fraction=0.15, seed=42)
+print(result.ring_composition)  # e.g. {"hexagons": 12, "pentagons": 2}
+```
+
 ### Slit-pore surface
 
 ```python

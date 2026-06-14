@@ -394,6 +394,28 @@ class TemperatureModel:
                 out[prop] = self.predict(temperature, prop, feedstock)
         return out
 
+    def get_valid_range(
+        self, feedstock: Optional[str] = None
+    ) -> Optional[Tuple[float, float]]:
+        """
+        Return ``(T_min, T_max)`` (°C) of the data used to fit the model curves.
+
+        Uses the feedstock-specific override range when one exists for H/C or O/C;
+        otherwise returns the pooled range.  Returns ``None`` if the model artifact
+        contains no range information (older schema).
+        """
+        for prop in _OVERRIDE_PROPS:
+            if (feedstock and feedstock in self._m["feedstock_overrides"]
+                    and prop in self._m["feedstock_overrides"][feedstock]):
+                s = self._m["feedstock_overrides"][feedstock][prop]
+            else:
+                s = self._m["properties"].get(prop, {})
+            t_min = s.get("t_min")
+            t_max = s.get("t_max")
+            if t_min is not None and t_max is not None:
+                return float(t_min), float(t_max)
+        return None
+
     @property
     def feedstocks(self) -> Tuple[str, ...]:
         return VALID_FEEDSTOCKS
@@ -417,6 +439,22 @@ def get_default_model() -> TemperatureModel:
     if _DEFAULT_MODEL is None:
         _DEFAULT_MODEL = TemperatureModel()
     return _DEFAULT_MODEL
+
+
+def get_valid_range(feedstock: Optional[str] = None) -> Optional[Tuple[float, float]]:
+    """
+    Return ``(T_min, T_max)`` data range for the given *feedstock* (or pooled).
+
+    Example::
+
+        from biochar.temperature_model import get_valid_range
+        lo, hi = get_valid_range("softwood")  # e.g. (200.0, 900.0)
+    """
+    if feedstock is not None and feedstock not in VALID_FEEDSTOCKS:
+        raise ValueError(
+            f"feedstock must be one of {VALID_FEEDSTOCKS} or None, got {feedstock!r}"
+        )
+    return get_default_model().get_valid_range(feedstock)
 
 
 def properties(temperature: float, feedstock: Optional[str] = None) -> Dict[str, float]:

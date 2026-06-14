@@ -39,6 +39,7 @@ class CarbonSkeleton:
     num_carbons: int
     num_aromatic_carbons: int
     aromaticity_percent: float
+    ring_composition: Dict[str, int] = None  # {"hexagons": N, "pentagons": M}
 
 
 # ---------------------------------------------------------------------------
@@ -607,8 +608,10 @@ class PAHAssembler:
 
     def __init__(self, seed: int = None):
         self.seed = seed
-        if seed is not None:
-            random.seed(seed)
+        # Instance-level RNG — does not touch the global random state.
+        # _grow_graph creates its own random.Random(seed) internally, so this
+        # is only needed for any future per-instance randomness.
+        self._rng = random.Random(seed)
 
         # Preload PAH library
         self.pahs = {}
@@ -850,12 +853,18 @@ class PAHAssembler:
             smiles = Chem.MolToSmiles(mol)
         except Exception:
             smiles = f"C{num_carbons}_PAH"
+        rings = mol.GetRingInfo().AtomRings()
+        ring_comp = {
+            "hexagons": sum(1 for r in rings if len(r) == 6),
+            "pentagons": sum(1 for r in rings if len(r) == 5),
+        }
         return CarbonSkeleton(
             mol=mol,
             smiles=smiles,
             num_carbons=num_carbons,
             num_aromatic_carbons=num_aromatic,
             aromaticity_percent=aromaticity,
+            ring_composition=ring_comp,
         )
 
 
@@ -872,8 +881,7 @@ class RandomGraphGenerator:
 
     def __init__(self, seed: int = None):
         self.seed = seed
-        if seed is not None:
-            random.seed(seed)
+        self._rng = random.Random(seed)
 
     def generate(
         self, target_num_carbons: int, target_aromaticity: float = 100.0

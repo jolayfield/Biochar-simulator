@@ -10,12 +10,15 @@ boundary conditions, and exports GROMACS-ready files.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from rdkit import Chem
+
+logger = logging.getLogger(__name__)
 
 from .biochar_generator import BiocharGenerator, GeneratorConfig
 from .constants import CARBON_VDW_DIAMETER
@@ -174,6 +177,26 @@ class SurfaceConfig:
                     f"sheet_overrides length ({len(self.sheet_overrides)}) "
                     f"must equal num_sheets ({self.num_sheets})"
                 )
+        if self.box_padding_xy <= 0:
+            raise ValueError(
+                f"box_padding_xy must be > 0 nm (got {self.box_padding_xy})"
+            )
+        if self.box_padding_z <= 0:
+            raise ValueError(
+                f"box_padding_z must be > 0 nm (got {self.box_padding_z})"
+            )
+        if self.box_padding_xy > 10:
+            logger.warning(
+                "box_padding_xy=%.1f nm is unusually large (> 10 nm). "
+                "Possible unit error? Expected value in nm, not Å.",
+                self.box_padding_xy,
+            )
+        if self.box_padding_z > 10:
+            logger.warning(
+                "box_padding_z=%.1f nm is unusually large (> 10 nm). "
+                "Possible unit error? Expected value in nm, not Å.",
+                self.box_padding_z,
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -572,6 +595,7 @@ class SurfaceBuilder:
             radius = float(np.linalg.norm(base, axis=1).max())
 
             placed = False
+            best_sep = 0.0  # Track closest non-clashing separation achieved
             for _ in range(self.config.max_attempts):
                 R = _random_rotation_matrix(rng)
                 rotated = (R @ base.T).T
@@ -585,7 +609,10 @@ class SurfaceBuilder:
                 translation = lo + rng.random(3) * (hi - lo)
                 candidate = rotated + translation
 
-                if self._is_clash_free(candidate, placed_coords, min_sep):
+                sep = self._min_separation(candidate, placed_coords)
+                if sep > best_sep:
+                    best_sep = sep
+                if sep >= min_sep:
                     sheet.coords = candidate
                     placed_coords.append(candidate)
                     placed = True
@@ -595,10 +622,39 @@ class SurfaceBuilder:
                 raise RuntimeError(
                     f"Failed to place sheet {i + 1}/{self.config.num_sheets} "
                     f"after {self.config.max_attempts} attempts. "
-                    f"Increase the box size (reduce num_sheets, increase "
-                    f"box_padding_xy, or lower min_separation), or raise "
-                    f"max_attempts."
+                    f"Best achieved separation: {best_sep:.2f} Å "
+                    f"(needed {min_sep:.2f} Å). "
+                    f"Suggestions: increase box_padding_xy, reduce num_sheets, "
+                    f"lower min_separation, or raise max_attempts."
                 )
+
+    @staticmethod
+    def _min_separation(
+        candidate: np.ndarray,
+        placed: List[np.ndarray],
+    ) -> float:
+        """
+        Return the minimum atom-atom distance (Å) between *candidate* and all
+        already-placed sheets.  Returns ``inf`` when *placed* is empty (no
+        constraint yet).
+        """
+        if not placed:
+            return float("inf")
+        min_d = float("inf")
+        for other in placed:
+            # Cheap centroid/radius pre-screen.
+            c_centre = candidate.mean(axis=0)
+            o_centre = other.mean(axis=0)
+            c_rad = float(np.linalg.norm(candidate - c_centre, axis=1).max())
+            o_rad = float(np.linalg.norm(other - o_centre, axis=1).max())
+            centre_dist = float(np.linalg.norm(c_centre - o_centre))
+            if centre_dist > c_rad + o_rad + min_d:
+                continue
+            diff = candidate[:, None, :] - other[None, :, :]
+            d = float(np.sqrt((diff * diff).sum(axis=2)).min())
+            if d < min_d:
+                min_d = d
+        return min_d
 
     @staticmethod
     def _is_clash_free(
@@ -610,17 +666,4 @@ class SurfaceBuilder:
         Return ``True`` if *candidate* (N, 3) keeps every atom at least
         *min_sep* Å from all atoms of already-*placed* sheets.
         """
-        for other in placed:
-            # Cheap centroid/radius pre-screen before the full distance check.
-            c_centre = candidate.mean(axis=0)
-            o_centre = other.mean(axis=0)
-            c_rad = np.linalg.norm(candidate - c_centre, axis=1).max()
-            o_rad = np.linalg.norm(other - o_centre, axis=1).max()
-            if np.linalg.norm(c_centre - o_centre) > c_rad + o_rad + min_sep:
-                continue
-            # Full atom-atom minimum distance.
-            diff = candidate[:, None, :] - other[None, :, :]
-            dmin = np.sqrt((diff * diff).sum(axis=2)).min()
-            if dmin < min_sep:
-                return False
-        return True
+        return SurfaceBuilder._min_separation(candidate, placed) >= min_sep

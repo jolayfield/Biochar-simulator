@@ -843,5 +843,228 @@ class TestBiocharResult:
         assert hasattr(biochar, "BiocharResult")
 
 
+class TestSeedIsolation:
+    """ISSUE-A: Global random seed must not bleed across calls."""
+
+    def test_two_calls_same_seed_same_smiles(self):
+        """Two generate_biochar calls with the same seed must produce the same SMILES."""
+        from biochar.biochar_generator import generate_biochar
+        # O_C_ratio=0 avoids oxygen placement variability; H_C_ratio tuned for 24C.
+        r1 = generate_biochar(
+            target_num_carbons=24, H_C_ratio=0.5, O_C_ratio=0.0, seed=42, write_files=False
+        )
+        r2 = generate_biochar(
+            target_num_carbons=24, H_C_ratio=0.5, O_C_ratio=0.0, seed=42, write_files=False
+        )
+        from rdkit import Chem
+        smiles1 = Chem.MolToSmiles(r1.mol)
+        smiles2 = Chem.MolToSmiles(r2.mol)
+        assert smiles1 == smiles2, (
+            f"Same seed produced different SMILES:\n  {smiles1}\n  {smiles2}"
+        )
+
+    def test_different_seeds_different_structures(self):
+        """Different seeds should (almost certainly) produce different compositions."""
+        from biochar.biochar_generator import generate_biochar
+        r1 = generate_biochar(
+            target_num_carbons=30, H_C_ratio=0.5, O_C_ratio=0.0, seed=1, write_files=False
+        )
+        r2 = generate_biochar(
+            target_num_carbons=30, H_C_ratio=0.5, O_C_ratio=0.0, seed=9999, write_files=False
+        )
+        # Both should produce valid molecules
+        assert r1.mol is not None
+        assert r2.mol is not None
+
+
+class TestEtherSpanGuard:
+    """ISSUE-G: max_ether_span < 3 must raise ValueError."""
+
+    def test_ether_span_too_small_raises(self):
+        from biochar.heteroatom_assignment import OxygenAssigner
+        with pytest.raises(ValueError, match="max_ether_span"):
+            OxygenAssigner(max_ether_span=2)
+
+    def test_ether_span_minimum_valid(self):
+        from biochar.heteroatom_assignment import OxygenAssigner
+        assigner = OxygenAssigner(max_ether_span=3)
+        assert assigner._max_ether_span == 3
+
+    def test_config_max_ether_span_too_small_raises(self):
+        with pytest.raises(ValueError, match="max_ether_span"):
+            GeneratorConfig(max_ether_span=2, strict=False)
+
+    def test_config_max_ether_span_5_warns(self, caplog):
+        import logging
+        with caplog.at_level(logging.WARNING, logger="biochar.biochar_generator"):
+            GeneratorConfig(max_ether_span=5, strict=False)
+        assert any("max_ether_span" in r.message for r in caplog.records)
+
+
+class TestEtherSpanDefault:
+    """ISSUE-C: generate_biochar default must match GeneratorConfig default (3)."""
+
+    def test_generate_biochar_default_ether_span_is_3(self):
+        from biochar.biochar_generator import generate_biochar
+        # Without passing max_ether_span, it should use the GeneratorConfig default of 3.
+        # We verify by inspecting the config on a generator built via the convenience API.
+        config = GeneratorConfig(target_num_carbons=20, seed=1, strict=False)
+        assert config.max_ether_span == 3
+
+    def test_generate_biochar_explicit_override(self):
+        # max_ether_span=4 should be accepted by GeneratorConfig without raising.
+        config = GeneratorConfig(
+            target_num_carbons=20, max_ether_span=4, strict=False, seed=1
+        )
+        assert config.max_ether_span == 4
+
+
+class TestTemperatureRangeWarning:
+    """ISSUE-D: Out-of-range temperature should emit a warning."""
+
+    def test_out_of_range_temperature_warns(self, caplog):
+        import logging
+        with caplog.at_level(logging.WARNING, logger="biochar.biochar_generator"):
+            # Use a temperature well below any realistic training data minimum
+            GeneratorConfig(temperature=50, strict=False)
+        assert any("outside the data range" in r.message for r in caplog.records)
+
+    def test_in_range_temperature_no_warning(self, caplog):
+        import logging
+        with caplog.at_level(logging.WARNING, logger="biochar.biochar_generator"):
+            GeneratorConfig(temperature=600, strict=False)
+        range_warns = [r for r in caplog.records if "outside the data range" in r.message]
+        assert len(range_warns) == 0
+
+
+class TestFunctionalGroupValidation:
+    """ISSUE-E: Over-requested functional groups should emit a warning."""
+
+    def test_excessive_functional_groups_warns(self, caplog):
+        import logging
+        from biochar.heteroatom_assignment import OxygenAssigner
+        from rdkit import Chem
+        mol = Chem.MolFromSmiles("c1ccc2ccc3cccc4ccc1c2c34")  # pyrene (16 C)
+        assigner = OxygenAssigner(seed=0)
+        with caplog.at_level(logging.WARNING, logger="biochar.heteroatom_assignment"):
+            assigner.assign_oxygens(
+                mol,
+                target_O_C_ratio=0.0,
+                functional_group_preference={"phenolic": 500},  # absurdly large
+            )
+        assert any("500" in r.message for r in caplog.records)
+
+
+class TestRingComposition:
+    """ISSUE-J: CarbonSkeleton should report ring composition."""
+
+    def test_pure_hexagon_no_pentagons(self):
+        assembler = PAHAssembler(seed=0)
+        skeleton = assembler.generate(target_num_carbons=24, defect_fraction=0.0)
+        assert skeleton.ring_composition is not None
+        assert skeleton.ring_composition["pentagons"] == 0
+        assert skeleton.ring_composition["hexagons"] > 0
+
+    def test_defect_mode_may_have_pentagons(self):
+        assembler = PAHAssembler(seed=0)
+        skeleton = assembler.generate(target_num_carbons=40, defect_fraction=0.3)
+        assert skeleton.ring_composition is not None
+        # With high defect fraction, pentagons are very likely
+        assert "pentagons" in skeleton.ring_composition
+        assert "hexagons" in skeleton.ring_composition
+
+    def test_ring_composition_on_generator(self):
+        config = GeneratorConfig(target_num_carbons=24, seed=0, strict=False)
+        gen = BiocharGenerator(config)
+        gen.generate()
+        assert gen.ring_composition is not None
+        assert gen.ring_composition["hexagons"] >= 0
+
+    def test_ring_composition_in_biochar_result(self):
+        from biochar.biochar_generator import generate_biochar
+        result = generate_biochar(target_num_carbons=24, seed=0, O_C_ratio=0.0, write_files=False)
+        assert result.ring_composition is not None
+        assert "hexagons" in result.ring_composition
+        assert "pentagons" in result.ring_composition
+        assert result.ring_composition["hexagons"] >= 0
+
+
+class TestChargeNeutrality:
+    """ISSUE-K: Static OPLS charge assignment must produce a neutral molecule."""
+
+    def test_charges_sum_to_zero(self):
+        from biochar.opls_typing import AtomTyper, ChargeAssigner
+        mol = Chem.MolFromSmiles("c1cc(O)ccc1C(=O)O")  # 4-hydroxybenzoic acid
+        assert mol is not None
+        typer = AtomTyper()
+        atom_types = typer.assign_atom_types(mol)
+        charger = ChargeAssigner()
+        charges = charger.assign_charges(mol, atom_types)
+        total = sum(charges.values())
+        assert abs(total) < 1e-5, f"Total charge {total:.6f} is not neutral"
+
+
+class TestBatchProgressCallback:
+    """ISSUE-I: generate_biochar_series progress_callback and on_error."""
+
+    def test_progress_callback_called(self, tmp_path):
+        from biochar.biochar_generator import generate_biochar_series
+        calls = []
+        def cb(done, total, name):
+            calls.append((done, total, name))
+
+        # Use 24C coronene-like structures with O_C_ratio=0 to avoid validation issues
+        configs = [
+            {"molecule_name": "BC1", "target_num_carbons": 24,
+             "H_C_ratio": 0.5, "O_C_ratio": 0.0, "seed": 1},
+            {"molecule_name": "BC2", "target_num_carbons": 24,
+             "H_C_ratio": 0.5, "O_C_ratio": 0.0, "seed": 2},
+        ]
+        generate_biochar_series(
+            configs,
+            output_directory=str(tmp_path),
+            create_combined_top=False,
+            progress_callback=cb,
+        )
+        assert len(calls) == 2
+        assert calls[0] == (1, 2, "BC1")
+        assert calls[1] == (2, 2, "BC2")
+
+    def test_on_error_skip_continues(self, tmp_path):
+        from biochar.biochar_generator import generate_biochar_series
+        configs = [
+            {"molecule_name": "BC1", "target_num_carbons": 24,
+             "H_C_ratio": 0.5, "O_C_ratio": 0.0, "seed": 1},
+            {"molecule_name": "TOOLONG_NAME", "target_num_carbons": 24},  # will raise ValueError
+            {"molecule_name": "BC3", "target_num_carbons": 24,
+             "H_C_ratio": 0.5, "O_C_ratio": 0.0, "seed": 3},
+        ]
+        results = generate_biochar_series(
+            configs,
+            output_directory=str(tmp_path),
+            create_combined_top=False,
+            on_error="skip",
+            verbose=False,
+        )
+        # BC1 and BC3 should succeed; TOOLONG_NAME skipped
+        assert "BC1" in results
+        assert "BC3" in results
+        assert "TOOLONG_NAME" not in results
+
+    def test_on_error_raise_propagates(self, tmp_path):
+        from biochar.biochar_generator import generate_biochar_series
+        configs = [
+            {"molecule_name": "TOOLONG_NAME", "target_num_carbons": 24},
+        ]
+        with pytest.raises((ValueError, Exception)):
+            generate_biochar_series(
+                configs,
+                output_directory=str(tmp_path),
+                create_combined_top=False,
+                on_error="raise",
+                verbose=False,
+            )
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

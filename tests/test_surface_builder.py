@@ -60,6 +60,21 @@ class TestSurfaceConfigValidation:
         """Overrides list matching num_sheets should be valid."""
         SurfaceConfig(num_sheets=2, sheet_overrides=[{}, {}])
 
+    def test_box_padding_xy_negative_raises(self):
+        """Negative box_padding_xy must raise ValueError (ISSUE-H)."""
+        with pytest.raises(ValueError, match="box_padding_xy"):
+            SurfaceConfig(box_padding_xy=-0.5)
+
+    def test_box_padding_z_zero_raises(self):
+        """Zero box_padding_z must raise ValueError (ISSUE-H)."""
+        with pytest.raises(ValueError, match="box_padding_z"):
+            SurfaceConfig(box_padding_z=0.0)
+
+    def test_box_padding_xy_positive_valid(self):
+        """Positive box_padding_xy should be accepted."""
+        cfg = SurfaceConfig(box_padding_xy=2.0)
+        assert cfg.box_padding_xy == 2.0
+
 
 # ---------------------------------------------------------------------------
 # Sheet generation
@@ -444,7 +459,7 @@ class TestAmorphousPacking:
             target_num_carbons=16,
             num_sheets=8,
             pore_type="amorphous",
-            box_padding_xy=0.0,
+            box_padding_xy=0.01,  # tiny but valid; packing still impossible due to min_separation
             min_separation=50.0,  # absurdly large -> cannot pack
             max_attempts=50,
             seed=42,

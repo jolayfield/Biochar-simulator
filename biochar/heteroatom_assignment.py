@@ -191,6 +191,11 @@ class OxygenAssigner:
     """
 
     def __init__(self, seed: int = None, max_ether_span: int = 3):
+        if max_ether_span < 3:
+            raise ValueError(
+                f"max_ether_span must be ≥ 3 (minimum for a 5-membered ring), "
+                f"got {max_ether_span}"
+            )
         self.seed = seed
         # Maximum C-skeleton shortest-path distance (bonds) between the two
         # ring carbons that an ether oxygen may bridge.  Enforced minimum = 3
@@ -199,8 +204,8 @@ class OxygenAssigner:
         #   4 → 6-membered ring (pyran/chromene-like)
         #   5 → 7-membered ring
         self._max_ether_span = max_ether_span
-        if seed is not None:
-            random.seed(seed)
+        # Instance-level RNG — does not modify the global random state.
+        self._rng = random.Random(seed)
 
     # ------------------------------------------------------------------ #
     #  Public interface                                                    #
@@ -249,10 +254,24 @@ class OxygenAssigner:
 
         # ── Build edge-site pool ───────────────────────────────────────────
         site_pool = self._get_edge_sites(mol)
-        if self.seed is not None:
-            random.seed(self.seed)
-        random.shuffle(site_pool)
+        self._rng.shuffle(site_pool)
         used_sites: Set[int] = set()
+
+        # ── Warn if requested counts exceed a feasible estimate ───────────────
+        if isinstance(functional_group_preference, dict) and functional_group_preference:
+            n_sites = len(site_pool)
+            max_estimates = {"ether": n_sites // 2, "thioether": n_sites // 2}
+            for _g in ("phenolic", "hydroxyl", "carboxyl", "amino", "thiol"):
+                max_estimates[_g] = n_sites
+            for _g, _cnt in groups_spec.items():
+                _max = max_estimates.get(_g, n_sites)
+                if _cnt > _max * 1.5:
+                    logger.warning(
+                        "Requested %d '%s' groups but estimated max for this "
+                        "%d-carbon molecule is ~%d. "
+                        "Actual placement may be much lower.",
+                        _cnt, _g, num_carbons, _max,
+                    )
 
         emol = Chem.EditableMol(mol)
         new_mol = mol
@@ -531,8 +550,7 @@ class NitrogenSubstitutor:
 
     def __init__(self, seed: Optional[int] = None):
         self.seed = seed
-        if seed is not None:
-            random.seed(seed)
+        self._rng = random.Random(seed)
         # Number of each N type actually placed in the most recent call.
         self.placed_pyridinic = 0
         self.placed_pyrrolic = 0
@@ -565,9 +583,6 @@ class NitrogenSubstitutor:
 
         if n_pyridinic <= 0 and n_pyrrolic <= 0 and n_graphitic <= 0:
             return mol
-
-        if self.seed is not None:
-            random.seed(self.seed)
 
         used: Set[int] = set()
 
@@ -627,7 +642,7 @@ class NitrogenSubstitutor:
             and mol.GetRingInfo().NumAtomRings(a.GetIdx()) > 0
             and a.GetIdx() not in used
         ]
-        random.shuffle(cands)
+        self._rng.shuffle(cands)
         return cands
 
     def _swap_carbon_to_nitrogen(
@@ -757,8 +772,7 @@ class HydrogenAssigner:
 
     def __init__(self, seed: int = None):
         self.seed = seed
-        if seed is not None:
-            random.seed(seed)
+        self._rng = random.Random(seed)
 
     def assign_hydrogens(
         self,
