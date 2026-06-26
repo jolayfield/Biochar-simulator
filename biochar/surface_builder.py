@@ -1,8 +1,8 @@
 """
 Surface Builder for Porous Biochar Systems
 
-Generates slit-pore (Phase 1) and amorphous (Phase 2, deferred — see #1) surface
-systems consisting of multiple parallel PAH sheets. Each sheet is an
+Generates slit-pore and amorphous porous surface systems consisting of multiple
+parallel PAH sheets. Each sheet is an
 independent biochar molecule produced by the existing BiocharGenerator
 pipeline. The builder positions the sheets in 3D, applies periodic
 boundary conditions, and exports GROMACS-ready files.
@@ -11,6 +11,7 @@ boundary conditions, and exports GROMACS-ready files.
 from __future__ import annotations
 
 import logging
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -81,7 +82,11 @@ class SurfaceConfig:
             adjacent sheets, in Ångströms.  The centre-to-centre sheet
             separation is ``pore_diameter + 3.4 Å`` (slit pore only).
         max_attempts: Maximum random placement attempts per sheet for
-            ``pore_type="amorphous"`` before raising ``RuntimeError``.
+            ``pore_type="amorphous"`` before raising ``RuntimeError`` or
+            triggering *amorphous_fallback*.
+        amorphous_fallback: What to do when amorphous packing fails within
+            *max_attempts*.  ``None`` (default) re-raises ``RuntimeError``.
+            ``"slit"`` emits a warning and falls back to slit-pore geometry.
         min_separation: Minimum allowed inter-sheet atom-atom distance
             (Ångströms) used as the steric-rejection criterion for
             ``pore_type="amorphous"``.
@@ -119,6 +124,8 @@ class SurfaceConfig:
     # --- Amorphous packing --------------------------------------------------
     # Maximum random placement attempts per sheet before giving up.
     max_attempts: int = 500
+    # Graceful degradation: None = raise RuntimeError; "slit" = warn + fall back.
+    amorphous_fallback: Optional[str] = None
     # Minimum allowed inter-sheet atom-atom distance (Angstroms).
     min_separation: float = 3.0
 
@@ -155,6 +162,11 @@ class SurfaceConfig:
             raise ValueError(
                 f"pore_type must be 'slit' or 'amorphous' "
                 f"(got '{self.pore_type}')."
+            )
+        if self.amorphous_fallback not in (None, "slit"):
+            raise ValueError(
+                f"amorphous_fallback must be None or 'slit' "
+                f"(got '{self.amorphous_fallback}')."
             )
         if self.num_sheets < 2:
             raise ValueError(f"num_sheets must be >= 2 (got {self.num_sheets})")
@@ -329,7 +341,21 @@ class SurfaceBuilder:
             # sized to give enough free volume for all sheets, then each
             # sheet is randomly rotated and translated inside it.
             self._box_vectors = self._compute_amorphous_box_vectors()
-            self._pack_amorphous(self._box_vectors)
+            try:
+                self._pack_amorphous(self._box_vectors)
+            except RuntimeError as exc:
+                if self.config.amorphous_fallback == "slit":
+                    warnings.warn(
+                        f"Amorphous packing failed ({exc}). "
+                        f"Falling back to slit-pore geometry "
+                        f"(amorphous_fallback='slit').",
+                        stacklevel=2,
+                    )
+                    self._position_sheets()
+                    self._box_vectors = self._compute_box_vectors()
+                    self._centre_in_box(self._box_vectors)
+                else:
+                    raise
         else:
             self._position_sheets()
             self._box_vectors = self._compute_box_vectors()

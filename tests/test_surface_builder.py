@@ -488,3 +488,53 @@ class TestAmorphousPacking:
         total_atoms = int(lines[1].strip())
         expected = sum(s.mol.GetNumAtoms() for s in sheets)
         assert total_atoms == expected
+
+
+# ---------------------------------------------------------------------------
+# SurfaceConfig.amorphous_fallback
+# ---------------------------------------------------------------------------
+
+class TestAmorphousFallback:
+    """Tests for the amorphous_fallback graceful-degradation parameter."""
+
+    _IMPOSSIBLE = dict(
+        target_num_carbons=16,
+        num_sheets=2,
+        pore_type="amorphous",
+        min_separation=999.0,  # impossible: force packing failure on first attempt
+        max_attempts=1,
+        seed=42,
+        strict=False,
+    )
+
+    def test_invalid_fallback_raises_at_config_time(self):
+        """amorphous_fallback='nonsense' must raise ValueError at construction."""
+        with pytest.raises(ValueError, match="amorphous_fallback"):
+            SurfaceConfig(amorphous_fallback="nonsense")
+
+    def test_none_fallback_still_raises_runtime_error(self):
+        """Default fallback (None) must still propagate RuntimeError on failure."""
+        config = SurfaceConfig(**self._IMPOSSIBLE, amorphous_fallback=None)
+        with pytest.raises(RuntimeError, match="Failed to place sheet"):
+            SurfaceBuilder(config).build()
+
+    def test_slit_fallback_degrades_gracefully(self):
+        """amorphous_fallback='slit' must succeed and emit a UserWarning."""
+        config = SurfaceConfig(**self._IMPOSSIBLE, amorphous_fallback="slit")
+        with pytest.warns(UserWarning, match="Falling back to slit-pore geometry"):
+            sheets, box = SurfaceBuilder(config).build()
+        assert len(sheets) == config.num_sheets
+        assert box.shape == (3,)
+
+    def test_slit_fallback_produces_valid_coords(self):
+        """After slit fallback, sheet coords must be finite and separated along z."""
+        import warnings as _warnings
+        config = SurfaceConfig(**self._IMPOSSIBLE, amorphous_fallback="slit")
+        with _warnings.catch_warnings():
+            _warnings.simplefilter("ignore", UserWarning)
+            sheets, _ = SurfaceBuilder(config).build()
+        for sheet in sheets:
+            assert np.all(np.isfinite(sheet.coords))
+        z0 = sheets[0].coords[:, 2].mean()
+        z1 = sheets[1].coords[:, 2].mean()
+        assert abs(z1 - z0) > 1.0  # sheets separated in z (at least 1 Å)
