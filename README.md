@@ -178,6 +178,7 @@ gmx mdrun -deffnm topol
 | `aromaticity_percent` | float | 90.0 | Target % aromatic carbons |
 | `functional_groups` | dict\|None | `None` | Exact group counts, e.g. `{"phenolic": 2}` |
 | `defect_fraction` | float | 0.0 | Probability [0, 1) each ring is a pentagon |
+| `charge_method` | str | `"opls"` | Partial charge source: `"opls"`, `"ml"`, or `"qm"` |
 | `molecule_name` | str | `"BC"` | Residue name (≤5 chars for GROMACS) |
 | `periodic_box` | bool | False | Add periodic box vectors to `.gro` |
 | `seed` | int\|None | None | RNG seed for reproducibility |
@@ -213,6 +214,16 @@ gmx mdrun -deffnm topol
 | `"lactone"` | 2 | Falls back to phenolic with warning |
 
 Carbonyl, quinone, and lactone require ≥2 free valence on one carbon, which is unavailable on pure aromatic PAH edge sites — they warn and substitute phenolic automatically.
+
+### Partial charge methods (`charge_method`)
+
+| `charge_method` | Description | Requirement |
+|---|---|---|
+| `"opls"` (default) | Static OPLS-AA lookup table | None |
+| `"ml"` | GP model trained on OPLS reference charges | `pip install biochar[ml]` (scikit-learn) |
+| `"qm"` | 1.14×CM1A via MOPAC AM1 semiempirical | `conda install -c conda-forge mopac` |
+
+The `"qm"` backend reproduces the LigParGen 1.14*CM1A methodology using an external MOPAC binary. It runs a single-point AM1 calculation on the generated 3D geometry and maps the resulting Mulliken charges through the CM1A correction. See `docs/qm-charge-backend.md` for full details. Raises `biochar.QMChargeError` if MOPAC is not on PATH or exits with an error.
 
 ---
 

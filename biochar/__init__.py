@@ -22,13 +22,15 @@ from .biochar_generator import (
 from .heteroatom_assignment import CompositionResult, CompositionInfo
 from .surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult
 from .temperature_model import TemperatureModel, properties, VALID_FEEDSTOCKS
+from .qm_charges import QMChargeError
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __all__ = [
     "BiocharGenerator",
     "BiocharResult",
     "GeneratorConfig",
     "ValidationError",
+    "QMChargeError",
     "CompositionResult",
     "CompositionInfo",
     "generate_biochar",

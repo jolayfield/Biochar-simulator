@@ -2,6 +2,54 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
+## [0.3.0] — June 26, 2026
+
+### Added
+
+- **`amorphous_fallback` on `SurfaceConfig`** — optional `amorphous_fallback="slit"` degrades gracefully to slit-pore geometry when amorphous packing exhausts `max_attempts`, emitting a warning instead of raising `RuntimeError`. `None` (default) preserves the original error-raising behaviour.
+- **`QMChargeError` exported from `biochar`** — `from biochar import QMChargeError` now works without reaching into the submodule.
+- **Example notebook** — `examples/hardwood_400C_series.ipynb` demonstrating a 5-molecule 400 °C hardwood series.
+
+### Fixed (ISSUE-A through ISSUE-K)
+
+- **Seed isolation** (ISSUE-A) — all pipeline classes now use instance-level `self._rng = random.Random(seed)`; global `random.seed()` calls removed. Two `generate_biochar(seed=42)` calls in the same process now always produce identical SMILES.
+- **Amorphous packing diagnostics** (ISSUE-B) — `RuntimeError` on packing failure now includes `"Best achieved separation: X.XX Å (needed Y.YY Å)"`.
+- **`max_ether_span` default inconsistency** (ISSUE-C) — `generate_biochar()` convenience wrapper default changed from `5` → `None`, deferring to `GeneratorConfig` default of 3.
+- **Temperature model validity range** (ISSUE-D) — `TemperatureModel.get_valid_range(feedstock)` added; `GeneratorConfig` warns when `temperature` is outside the UC Davis training data range.
+- **`functional_groups` count validation** (ISSUE-E) — warning emitted when requested count exceeds 1.5× feasible edge-site estimate.
+- **Valence error visibility** (ISSUE-F) — dedicated `"Valence Issues: N"` line in `print_results()`, always shown even when count is zero.
+- **`max_ether_span < 3` not enforced** (ISSUE-G) — `ValueError` guard added in `OxygenAssigner.__init__` and `GeneratorConfig.__post_init__`.
+- **Box padding validation** (ISSUE-H) — `box_padding_xy/z ≤ 0` raises `ValueError`; values > 10 nm emit a unit-error warning.
+- **Batch progress callbacks** (ISSUE-I) — `generate_biochar_series()` gains `progress_callback` and `on_error` parameters.
+- **`ring_composition` on results** (ISSUE-J) — `ring_composition` dict (`{"hexagons": N, "pentagons": M}`) exposed on `CarbonSkeleton`, `BiocharGenerator`, and `BiocharResult`.
+- **Static OPLS charge neutrality** (ISSUE-K) — residual charge redistributed after static assignment; debug log when residual > 0.01 e before correction.
+
+### Changed
+
+- **Version bump** — `0.2.0` → `0.3.0` to reflect new public API surface.
+
+---
+
+## [0.2.0] — June 7, 2026
+
+### Added
+
+- **Named `BiocharResult` dataclass** — `generate_biochar()` now returns a `BiocharResult` with named fields (`mol`, `coords`, `gro_path`, `top_path`, `itp_path`, `ring_composition`). Positional unpacking still works via `__iter__` (issue #5).
+- **`write_files=False` parameter** — pass `write_files=False` to `generate_biochar()` to skip all GROMACS file I/O; `result.gro_path` / `.top_path` / `.itp_path` will be `None` (issue #5).
+- **QM 1.14*CM1A charge backend** — `charge_method="qm"` runs a single-point AM1 calculation via an external MOPAC binary, maps Mulliken charges through the CM1A correction, and scales by 1.14 (LigParGen methodology). Requires `conda install -c conda-forge mopac`. See `docs/qm-charge-backend.md`.
+
+---
+
+## [0.1.5] — June 1, 2026
+
+### Added
+
+- **Temperature × feedstock composition model** — `temperature` and `feedstock` parameters on `GeneratorConfig` / `generate_biochar()` derive H/C and O/C ratios from a regression model trained on the UC Davis Biochar Database (Davis *et al.*, 2024, DOI 10.1016/j.xcrp.2024.102036).
+- **CLI `--temperature` and `--feedstock` flags** — expose the composition model in `biochar-gen`.
+- **`TemperatureModel` public class** — `from biochar import TemperatureModel` for direct access to the underlying model.
+
+---
+
 ## [0.1.4] — May 31, 2026
 
 ### Added
