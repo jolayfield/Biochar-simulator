@@ -44,6 +44,13 @@ class CompositionResult:
     functional_groups: Dict[str, int] = field(default_factory=dict)
     placed_counts: Dict[str, int] = field(default_factory=dict)   # groups actually placed
     requested_counts: Dict[str, int] = field(default_factory=dict)  # groups requested
+    # Set by HydrogenAssigner when the requested H/C exceeds what the built
+    # skeleton can physically carry.  ``h_c_ceiling`` is the maximum H/C
+    # achievable for this molecule (all free edge valences saturated with H);
+    # ``h_c_target_unreachable`` flags that the target was above that ceiling and
+    # the structure was capped rather than reaching the request.
+    h_c_ceiling: Optional[float] = None
+    h_c_target_unreachable: bool = False
 
     @property
     def molecular_formula(self) -> str:
@@ -155,6 +162,45 @@ def _fix_heteroatom_bond_types(mol: Chem.Mol) -> Chem.Mol:
                     a2.SetIsAromatic(False)
                 changed = True
     return rwmol.GetMol() if changed else mol
+
+
+def attach_aliphatic_carbons(
+    mol: Chem.Mol, n_aliphatic: int, rng: random.Random
+) -> Chem.Mol:
+    """
+    Attach *n_aliphatic* pendant sp3 carbons (methyl groups) to distinct
+    aromatic edge carbons and return the new molecule.
+
+    A fully aromatic (sp2) flake caps hydrogen only on its perimeter, so its
+    H/C is bounded by the perimeter/area ratio.  Reaching the higher H/C of
+    low-temperature biochar requires genuine aliphatic carbon; each pendant
+    methyl converts one edge C-H into C-CH3 (net +2 H, +1 C).  The pendant
+    carbons are left bare -- their three hydrogens are added later by
+    :class:`HydrogenAssigner`, OPLS typing maps them to CT with HC hydrogens,
+    and the geometry stage places them like any other off-lattice atom.
+
+    Attaches at most as many methyls as there are free aromatic edge sites.
+    """
+    if n_aliphatic <= 0:
+        return mol
+    sites = [
+        a.GetIdx()
+        for a in mol.GetAtoms()
+        if a.GetAtomicNum() == 6 and a.GetIsAromatic() and a.GetDegree() < 3
+    ]
+    if not sites:
+        return mol
+    rng.shuffle(sites)
+    sites = sites[:n_aliphatic]
+
+    emol = Chem.RWMol(mol)
+    for c_ring in sites:
+        c_new = emol.AddAtom(Chem.Atom(6))
+        emol.AddBond(c_ring, c_new, Chem.BondType.SINGLE)
+    out = emol.GetMol()
+    _safe_sanitize(out)
+    out = _fix_heteroatom_bond_types(out)
+    return out
 
 
 # Groups that are not implementable on pure all-aromatic PAH edge carbons.
@@ -818,7 +864,28 @@ class HydrogenAssigner:
             )
             mol_with_H = mol_trimmed
         else:
+            # The saturated skeleton already has at most the target number of
+            # hydrogens: every free edge valence is capped and there is no site
+            # to add more without changing the carbon topology.  When the target
+            # is strictly above this ceiling the request is structurally
+            # unreachable -- record it and warn honestly instead of silently
+            # returning a hydrogen-deficient structure that only fails later in
+            # composition validation.
             mol_with_H = mol_saturated
+            if num_hydrogens < target_num_hydrogens and num_carbons > 0:
+                ceiling = num_hydrogens / num_carbons
+                if result is not None:
+                    result.h_c_ceiling = ceiling
+                    result.h_c_target_unreachable = True
+                logger.warning(
+                    "Requested H/C %.3f exceeds the structural ceiling %.3f for "
+                    "this %d-carbon skeleton (max %d H when all edge valences are "
+                    "saturated; %d requested). The structure was capped at the "
+                    "ceiling. Raising H/C requires a less-condensed skeleton or "
+                    "aliphatic/sp3 carbons, not more edge hydrogens.",
+                    target_H_C_ratio, ceiling, num_carbons,
+                    num_hydrogens, target_num_hydrogens,
+                )
 
         _safe_sanitize(mol_with_H)
         # After aromaticity re-perception, ether oxygens that bridge two ring

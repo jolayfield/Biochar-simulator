@@ -6,6 +6,7 @@ Main API for generating biochar building blocks for GROMACS simulations.
 
 import dataclasses
 import logging
+import random
 from typing import Callable, Optional, Tuple, List, Dict
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,7 +16,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-from .carbon_skeleton import PAHAssembler, SkeletonValidator
+from .carbon_skeleton import PAHAssembler, SkeletonValidator, _edge_carbon_fraction
 from .heteroatom_assignment import (
     OxygenAssigner,
     NitrogenSubstitutor,
@@ -23,6 +24,7 @@ from .heteroatom_assignment import (
     HeteroatomValidator,
     CompositionInfo,
     CompositionResult,
+    attach_aliphatic_carbons,
     _fix_heteroatom_bond_types,
 )
 
@@ -176,6 +178,16 @@ class GeneratorConfig:
     #     drift beyond tolerance, or steric clashes remaining after resolution).
     # Set to False to restore the previous lenient behaviour (print-and-continue).
     strict: bool = True
+
+    # Aliphatic (sp3) carbon decoration.  A purely aromatic flake caps hydrogen
+    # only on its perimeter, so its H/C is bounded (~0.5 even fully elongated).
+    # When True (default), if the requested H_C_ratio exceeds that aromatic
+    # ceiling the generator builds a smaller aromatic core and attaches pendant
+    # methyl groups so the total carbon count still matches target_num_carbons
+    # while the H/C reaches the target -- matching the aliphatic content of
+    # low-temperature biochar.  Set False (or request aromaticity_percent ≥ 99)
+    # to force a pure-aromatic structure (H/C then capped, with a warning).
+    allow_aliphatic: bool = True
 
     def __post_init__(self):
         # functional_groups defaults to None → O_C_ratio-driven phenolic placement
@@ -501,13 +513,62 @@ class BiocharGenerator:
     # Private methods
 
     def _generate_carbon_skeleton(self):
-        """Generate aromatic carbon skeleton."""
+        """Generate the carbon skeleton (aromatic core + optional aliphatic C)."""
         assembler = PAHAssembler(seed=self.config.seed)
+        N = self.config.target_num_carbons
+        r = self.config.H_C_ratio
+
+        # First pass: aromatic skeleton at full size (with H/C-aware elongation).
         skeleton = assembler.generate(
-            self.config.target_num_carbons,
+            N,
             self.config.aromaticity_percent,
             defect_fraction=self.config.defect_fraction,
+            target_h_c=r,
         )
+
+        # If the requested H/C still exceeds what this (already elongated)
+        # aromatic flake can carry, rebuild a smaller aromatic core and decorate
+        # it with pendant methyls so the total carbon count stays ~N while the
+        # H/C reaches the target.  The methyl count is computed from the core
+        # that is *actually built* so elongation and methyls never double-count.
+        if self._aliphatic_enabled(r) and r > _edge_carbon_fraction(skeleton.mol) + 0.02:
+            ceiling = _edge_carbon_fraction(skeleton.mol)
+            # Estimate the aromatic/aliphatic split (keeps total C ~ N).  Each
+            # methyl adds +1 C and a net +2 H, so H/C = ceiling + n(2-ceiling)/N.
+            n_est = round(N * (r - ceiling) / (2.0 - ceiling))
+            n_est = max(1, min(n_est, N - 6))
+            # Build a COMPACT core (target_h_c=None): the methyls, not
+            # elongation, supply the extra hydrogen here, so the aromatic
+            # ceiling stays low and the exact methyl count below cannot be
+            # driven negative by an already-elongated (overshooting) core.
+            core = assembler.generate(
+                N - n_est,
+                self.config.aromaticity_percent,
+                defect_fraction=self.config.defect_fraction,
+                target_h_c=None,
+            )
+            # Exact methyl count for the core as built.  A saturated aromatic
+            # core carries E edge hydrogens; attaching m methyls gives
+            # H = E + 2m and C = Ca + m, so H/C = target when
+            #   m = (target*Ca - E) / (2 - target).
+            Ca, E = self._aromatic_core_stats(core.mol)
+            m = round((r * Ca - E) / (2.0 - r))
+            m = max(0, min(m, E))
+            if m > 0:
+                rng = random.Random(self.config.seed)
+                decorated = attach_aliphatic_carbons(core.mol, m, rng)
+                cand = PAHAssembler._make_skeleton(decorated)
+                cand_hc = (E + 2 * m) / (Ca + m)
+            else:
+                # Core already meets/exceeds the target on its own.
+                cand = core
+                cand_hc = (E / Ca) if Ca else 0.0
+            # Keep the decorated candidate only if it lands closer to the target
+            # than the first-pass aromatic skeleton.  A benzene-grown "compact"
+            # core is not always minimally condensed, so it can overshoot; in
+            # that case the first-pass skeleton is the better structure.
+            if abs(cand_hc - r) < abs(ceiling - r):
+                skeleton = cand
 
         # Validate skeleton
         valid, errors = SkeletonValidator.validate(skeleton)
@@ -515,6 +576,27 @@ class BiocharGenerator:
             logger.warning("Skeleton validation issues: %s", errors)
 
         return skeleton
+
+    def _aliphatic_enabled(self, target_h_c: Optional[float]) -> bool:
+        """Whether aliphatic (sp3) decoration may be used to raise H/C."""
+        if (not self.config.allow_aliphatic or target_h_c is None
+                or self.config.target_num_carbons < 8):
+            return False
+        # Honour an explicit request for a (near) fully aromatic structure.
+        ap = self.config.aromaticity_percent
+        if ap is not None and ap >= 99.0:
+            return False
+        return True
+
+    @staticmethod
+    def _aromatic_core_stats(mol: Chem.Mol) -> Tuple[int, int]:
+        """Return (total carbons, aromatic edge carbons with a free valence)."""
+        Ca = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 6)
+        E = sum(
+            1 for a in mol.GetAtoms()
+            if a.GetAtomicNum() == 6 and a.GetIsAromatic() and a.GetDegree() < 3
+        )
+        return Ca, E
 
     def _assign_oxygens(self, mol: Chem.Mol) -> Tuple[Chem.Mol, CompositionResult]:
         """Assign oxygen atoms. Returns (mol, CompositionResult) with placed/requested counts."""
