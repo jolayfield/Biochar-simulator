@@ -180,3 +180,30 @@ class TestStrictPasses:
         )
         mol, coords, comp = BiocharGenerator(cfg).generate()
         assert abs(comp.H_C_ratio - 0.7) <= 0.06
+
+
+class TestExplicitFunctionalGroups:
+    """Explicit functional groups specify a precise composition: aliphatic
+    decoration must NOT fire and inflate H/C above the group-driven value."""
+
+    @pytest.mark.parametrize("seed", [1, 7, 42])
+    def test_amino_high_hc_not_overshot(self, seed):
+        # Naphthalene (10 C) + 1 amino = 7 edge C-H + 2 NH2-H = 9 H -> H/C 0.9.
+        # Aliphatic decoration must stay off so H/C is exactly the group-driven
+        # value, not pushed to 1.0 by extra methyls.
+        mol, comp = _build(
+            target_num_carbons=10, H_C_ratio=0.9, O_C_ratio=0.0,
+            functional_groups={"amino": 1}, seed=seed, strict=False,
+        )
+        assert comp.H_C_ratio == pytest.approx(0.9, abs=0.05)
+        assert comp.num_nitrogens >= 1
+        # No pendant sp3 carbon should have been added.
+        assert _aromatic_fraction(mol) == pytest.approx(1.0)
+
+    def test_explicit_groups_do_not_add_aliphatic(self):
+        mol, comp = _build(
+            target_num_carbons=60, H_C_ratio=0.8,
+            functional_groups={"phenolic": 2}, seed=5, strict=False,
+        )
+        # Explicit-group path stays fully aromatic (no auto aliphatic carbon).
+        assert _aromatic_fraction(mol) == pytest.approx(1.0)

@@ -516,7 +516,12 @@ class BiocharGenerator:
         """Generate the carbon skeleton (aromatic core + optional aliphatic C)."""
         assembler = PAHAssembler(seed=self.config.seed)
         N = self.config.target_num_carbons
-        r = self.config.H_C_ratio
+        # Explicit functional groups specify a precise composition and carry
+        # their own hydrogen (e.g. amino -NH2), so we do NOT auto-shape the
+        # skeleton for H/C in that case -- neither elongation nor aliphatic
+        # decoration would otherwise double-count that hydrogen and overshoot.
+        # H/C is then whatever the aromatic edges + requested groups produce.
+        r = None if self.config.functional_groups else self.config.H_C_ratio
 
         # First pass: aromatic skeleton at full size (with H/C-aware elongation).
         skeleton = assembler.generate(
