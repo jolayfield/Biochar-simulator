@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "biochar"
-version = "0.3.0"
+version = "0.4.0"
 description = "Generate biochar molecular structures for GROMACS MD simulations"
 readme = "README.md"
 license = { text = "MIT" }

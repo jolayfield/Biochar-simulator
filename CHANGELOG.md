@@ -2,6 +2,41 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
+## [0.4.0] — July 11, 2026
+
+### Added
+
+- **Declarative parameter-sweep driver** (`biochar.sweep`) — describe a factorial
+  grid (e.g. pyrolysis temperature × feedstock) in YAML/JSON; the driver expands
+  the cartesian product, generates every structure strict-first with seed-retry →
+  fallback, and writes a manifest (CSV + JSON). New `biochar-sweep` CLI and
+  `examples/sweeps/temperature_grid.yaml` / `oxygen_group_grid.yaml`.
+- **GROMACS MD run-setup pipeline** (`biochar.md_setup`) — turns each sweep
+  manifest row into a ready-to-submit run directory (dry-anneal → solvate → ion →
+  wet-equilibrate), writing files only (no `gmx` invoked). Includes
+  Minnesota-groundwater `IonProfile`/`ION_PROFILES` presets and a
+  `biochar-md-setup` CLI.
+- **Generic pre-solvation insertion seam** — `PreSolvationStage` +
+  `MoleculeInsertion` on `MDSetupConfig.pre_solvation_stage` let a downstream
+  workflow inject an `insert-molecules` stage (after dry-anneal, before
+  solvation) and switch the topology used from solvation onward, without
+  `md_setup` knowing what the molecules are. (The PFAS-sorption workflow now
+  lives in the separate `biochar-pfas` project and consumes this seam.)
+- **`allow_aliphatic` on `GeneratorConfig`** — allow pendant sp3 (aliphatic)
+  carbon so H/C targets above the pure-aromatic ceiling are reachable.
+
+### Fixed
+
+- **H/C ratio is now actually reached** — previously every structure landed well
+  below the requested H/C (~0.14 low at 100 C) because H/C was bounded by the
+  aromatic perimeter and the target never fed back into the skeleton. Now: honest
+  ceiling reporting (`CompositionResult.h_c_ceiling` / `.h_c_target_unreachable`),
+  H/C-aware skeleton growth (elongation), and aliphatic decoration reach targets
+  0.4–0.8 within tolerance for 30/50/100 C, and strict composition validation
+  passes where it previously could not.
+- **`test_ml_charges` skips instead of erroring** when the optional `scikit-learn`
+  extra is absent (`pytest.importorskip`).
+
 ## [0.3.0] — June 26, 2026
 
 ### Added
