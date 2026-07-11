@@ -164,6 +164,100 @@ gmx mdrun -deffnm topol
 
 ---
 
+## Parameter sweeps (declarative grids)
+
+`generate_biochar_series` takes a hand-written list of configs. For a full
+**factorial grid** — every combination of pyrolysis temperature × feedstock ×
+oxygen content — use the sweep driver instead. You describe the axes once in a
+YAML/JSON file and the pipeline expands the grid, generates every structure,
+and writes a manifest table for downstream analysis.
+
+### CLI
+
+```bash
+# Emit a starter config you can edit
+biochar-sweep template > my_sweep.yaml
+
+# Run a sweep
+biochar-sweep run examples/sweeps/temperature_grid.yaml
+```
+
+### Config format
+
+```yaml
+name: temperature_grid
+output_directory: sweep_out/temperature_grid
+seed: 1000              # base RNG seed; each grid point gets a distinct offset
+max_retries: 8          # strict-validation seed retries before fallback
+on_validation_fail: fallback   # fallback | skip | strict
+name_template: "T{temperature}_{feedstock}"
+
+axes:                   # cartesian product of every list below
+  temperature: [300, 400, 500, 600, 700]
+  feedstock:   [softwood, hardwood]
+
+fixed:                  # applied to every grid point
+  target_num_carbons: 100
+```
+
+Temperature and feedstock are mapped to `H_C_ratio` / `O_C_ratio` targets via
+`biochar.temperature_model`, so a single temperature axis drives the oxygen
+chemistry automatically. The example
+[`examples/sweeps/oxygen_group_grid.yaml`](examples/sweeps/oxygen_group_grid.yaml)
+sweeps explicit `functional_groups` counts instead.
+
+### Python API
+
+```python
+from biochar.sweep import load_sweep_config, run_sweep
+
+cfg = load_sweep_config("examples/sweeps/temperature_grid.yaml")
+summary = run_sweep(cfg, quiet=True)
+
+print(summary["n_built"], "structures")   # -> 10
+import pandas as pd
+df = pd.read_csv(summary["manifest_csv"])
+```
+
+### Output
+
+```
+<output_directory>/
+├── manifest.csv          # one row per grid point (see below)
+├── manifest.json         # same data + run metadata
+└── structures/
+    ├── 000_T300_softwood/   # .gro / .top / .itp for this point
+    ├── 001_T300_hardwood/
+    └── ...
+```
+
+The **manifest** carries one row per structure with the axis values
+(`axis_temperature`, `axis_feedstock`, …), the achieved composition
+(`molecular_formula`, `H_C_ratio`, `O_C_ratio`, `functional_groups`), the
+build `status`, `seed_used`, `n_attempts`, validation counts, and the paths to
+the three GROMACS files — ready to join against downstream analysis.
+
+### Validation and the `status` column
+
+Each grid point is generated **strict-first**: the driver retries with
+successive seeds (`max_retries`) seeking a structure that passes full
+composition + geometry validation. If none passes, `on_validation_fail`
+decides what happens:
+
+| `status` | Meaning |
+|---|---|
+| `strict_pass` | Passed strict validation on one of the retry seeds |
+| `fallback` | Strict never passed; built with `strict=False` (files still written) |
+| `skipped` | Strict never passed and `on_validation_fail: skip` |
+| `failed` | A non-validation error occurred (captured in the `error` column) |
+
+The seed-retry → fallback design exists so a sweep completes deterministically
+rather than stalling when a particular grid point cannot pass strict validation
+(e.g. minor flat-sheet steric clashes that resolve under GROMACS energy
+minimisation) — the `.gro/.top/.itp` files are still well-formed.
+
+---
+
 ## Configuration Parameters
 
 ### Single molecule (`GeneratorConfig` / `generate_biochar`)

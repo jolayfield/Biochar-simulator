@@ -1,0 +1,31 @@
+# Oxygen functional-group grid (controlled chemistry, not temperature-derived)
+# ---------------------------------------------------------------------------
+# Directly sets the number/type of oxygen groups on a fixed PAH scaffold to
+# isolate the effect of surface chemistry (phenolic -OH vs carboxyl -COOH) on
+# PFAS binding, independent of pyrolysis temperature.
+#
+# Each functional_groups dict is one axis value. molecule_name is auto-assigned
+# (BC000, BC001, ...) and the label is derived from the dict contents.
+#
+# Run with:
+#   biochar-sweep run examples/sweeps/oxygen_group_grid.yaml
+
+name: oxygen_group_grid
+output_directory: sweep_out/oxygen_group_grid
+
+fixed:
+  target_num_carbons: 100
+  aromaticity_percent: 90
+  charge_method: opls
+
+axes:
+  functional_groups:
+    - {phenolic: 4}
+    - {phenolic: 8}
+    - {carboxyl: 4}
+    - {carboxyl: 8}
+    - {phenolic: 4, carboxyl: 4}
+
+seed: 0
+max_retries: 8
+on_validation_fail: fallback

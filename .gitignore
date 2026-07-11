@@ -61,3 +61,6 @@ data/
 # Claude Code local settings (personal overrides, not shared)
 .claude/settings.local.json
 .claude/worktrees/
+
+# Sweep driver run output (manifests + generated structures); regenerable.
+sweep_out/

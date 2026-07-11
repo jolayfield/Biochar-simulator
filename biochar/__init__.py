@@ -23,6 +23,15 @@ from .heteroatom_assignment import CompositionResult, CompositionInfo
 from .surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult
 from .temperature_model import TemperatureModel, properties, VALID_FEEDSTOCKS
 from .qm_charges import QMChargeError
+from .sweep import (
+    run_sweep,
+    expand_grid,
+    build_point,
+    load_sweep_config,
+    GridPoint,
+    PointResult,
+    SweepError,
+)
 
 __version__ = "0.3.0"
 __all__ = [
@@ -42,4 +51,11 @@ __all__ = [
     "TemperatureModel",
     "properties",
     "VALID_FEEDSTOCKS",
+    "run_sweep",
+    "expand_grid",
+    "build_point",
+    "load_sweep_config",
+    "GridPoint",
+    "PointResult",
+    "SweepError",
 ]
