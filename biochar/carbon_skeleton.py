@@ -441,12 +441,59 @@ def _fuse_pentagon(
         return next_node + 3
 
 
+def _edge_carbon_fraction(mol: Chem.Mol) -> float:
+    """
+    Fraction of carbons on the perimeter (heavy-atom degree < 3).
+
+    On a fully H-saturated flake every such carbon carries exactly one
+    hydrogen, so this fraction *is* the maximum achievable H/C for the
+    structure (its "H/C ceiling").  Computed on the hydrogen-free skeleton.
+    """
+    carbons = [a for a in mol.GetAtoms() if a.GetAtomicNum() == 6]
+    if not carbons:
+        return 0.0
+    edge = sum(1 for a in carbons if a.GetDegree() < 3)
+    return edge / len(carbons)
+
+
+def _attach_seed_positions(
+    mol: Chem.Mol, positions: Optional[Dict[int, Tuple[float, float]]]
+) -> None:
+    """Attach hex-lattice ``init_x``/``init_y`` props to *mol* in place."""
+    if not positions:
+        return
+    for atom in mol.GetAtoms():
+        idx = atom.GetIdx()
+        if idx in positions:
+            x, y = positions[idx]
+            atom.SetDoubleProp("init_x", x)
+            atom.SetDoubleProp("init_y", y)
+
+
+def _compactness_for_hc(target_h_c: Optional[float], compact_ceiling: float) -> float:
+    """
+    Map a requested H/C ratio to a growth ``compactness`` in [0, 1], given the
+    *measured* H/C ceiling of the maximally condensed flake for this size.
+
+    Returns 1.0 (fully compact) when the target is at or below the compact
+    ceiling.  Above it, compactness drops toward 0 (elongated, higher-perimeter
+    growth) in proportion to how far above the ceiling the target sits.
+    """
+    if target_h_c is None or compact_ceiling <= 0:
+        return 1.0
+    if target_h_c <= compact_ceiling:
+        return 1.0
+    excess = (target_h_c - compact_ceiling) / compact_ceiling
+    return max(0.0, min(1.0, 1.0 - excess))
+
+
 def _grow_graph(
     G: nx.Graph,
     target_nodes: int,
     seed: Optional[int] = None,
     defect_fraction: float = 0.0,
     positions: Optional[Dict[int, Tuple[float, float]]] = None,
+    compactness: float = 1.0,
 ) -> nx.Graph:
     """
     Grow a carbon graph by iteratively fusing rings.
@@ -496,8 +543,20 @@ def _grow_graph(
         if not fusable:
             break
 
-        # Sort by compactness heuristic; break ties randomly
-        fusable.sort(key=lambda e: (-_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
+        # Edge selection controls the perimeter/area ratio of the flake, which
+        # in turn sets the maximum achievable H/C (edge carbons carry the H).
+        #   compactness == 1.0 -> always fuse at the highest-degree (interior)
+        #     edge: maximally condensed flake, lowest H/C ceiling (default,
+        #     byte-identical to the historical behaviour).
+        #   compactness  < 1.0 -> with probability (1 - compactness) fuse at a
+        #     low-degree (peripheral / tip) edge instead, elongating growth,
+        #     raising the perimeter and thus the reachable H/C.
+        if compactness >= 1.0:
+            fusable.sort(key=lambda e: (-_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
+        elif rng.random() < (1.0 - compactness):
+            fusable.sort(key=lambda e: (_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
+        else:
+            fusable.sort(key=lambda e: (-_edge_neighbor_degree(G, e[0], e[1]), rng.random()))
         u, v = fusable[0]
 
         nodes_remaining = target_nodes - G.number_of_nodes()
@@ -683,6 +742,7 @@ class PAHAssembler:
         target_aromaticity: float = 100.0,
         prefer_larger_pahs: bool = True,
         defect_fraction: float = 0.0,
+        target_h_c: Optional[float] = None,
     ) -> CarbonSkeleton:
         """
         Generate a carbon skeleton of approximately *target_num_carbons*.
@@ -695,6 +755,10 @@ class PAHAssembler:
                 during graph growth is a 5-membered (pentagon) ring.
                 0.0 = pure hexagonal PAH (default).
                 0.1 = roughly 10% pentagons.
+            target_h_c: Optional target H/C ratio.  When provided and above the
+                compact ceiling for this size, growth is steered toward a
+                less-condensed (higher-perimeter) flake so more edge carbons are
+                available to carry hydrogen.  ``None`` keeps fully compact growth.
         """
         mol = None
 
@@ -718,7 +782,7 @@ class PAHAssembler:
 
         # --- Route 2: library seed + graph growth (with optional pentagons) ---
         if mol is None:
-            mol = self._build_from_seed(target_num_carbons, defect_fraction)
+            mol = self._build_from_seed(target_num_carbons, defect_fraction, target_h_c)
 
         # --- Fallback: pyrene (no pentagons) ---
         if mol is None:
@@ -740,7 +804,8 @@ class PAHAssembler:
     # ------------------------------------------------------------------
 
     def _build_from_seed(
-        self, target: int, defect_fraction: float = 0.0
+        self, target: int, defect_fraction: float = 0.0,
+        target_h_c: Optional[float] = None,
     ) -> Optional[Chem.Mol]:
         """
         Build a carbon skeleton of *target* carbons using a library seed
@@ -757,45 +822,48 @@ class PAHAssembler:
             are made with different sub-seeds if kekulization fails.
         """
         _MAX_DEFECT_RETRIES = 5
+        _MAX_ELONGATE_RETRIES = 4
 
         if defect_fraction <= 0.0:
-            # --- Pure hexagon: strict parity constraint ---
-            seed_mol = None
-            seed_carbons = 0
-            for nC, name in reversed(self._SIZE_INDEX):
-                if nC <= target and (target - nC) % 4 == 0 and name in self.pahs:
-                    seed_mol = self.pahs[name]["mol"]
-                    seed_carbons = nC
+            # --- Pure hexagon route ---
+            # Always build the reliable, fully-compact skeleton first (largest
+            # fitting seed; deterministic and historically always kekulizable).
+            # This is byte-identical to the previous behaviour AND measures the
+            # true compact H/C ceiling for this size.
+            compact_mol, adj_target = self._build_pure_hex_compact(target)
+            if compact_mol is None:
+                return None
+            compact_ceiling = _edge_carbon_fraction(compact_mol)
+
+            # No target, or the target is already reachable by the compact flake
+            # (within a small margin): keep it -- no elongation, no extra builds.
+            if target_h_c is None or target_h_c <= compact_ceiling + 0.02:
+                return compact_mol
+
+            # Target exceeds the compact ceiling: grow a less-condensed
+            # (higher-perimeter) flake from a small seed.  Keep whichever
+            # candidate's edge-carbon fraction is *closest* to the target -- so
+            # an over-elongated flake that shoots past the target is rejected in
+            # favour of the compact flake (or a milder elongation) rather than
+            # returning an H/C that is now too high.
+            comp = _compactness_for_hc(target_h_c, compact_ceiling)
+            base_seed = self.seed if self.seed is not None else 0
+            best_mol = compact_mol
+            best_err = abs(compact_ceiling - target_h_c)
+            for attempt in range(_MAX_ELONGATE_RETRIES):
+                cand = self._build_pure_hex_elongated(
+                    adj_target, comp, base_seed + attempt
+                )
+                if cand is None:
+                    continue
+                frac = _edge_carbon_fraction(cand)
+                err = abs(frac - target_h_c)
+                if err < best_err:
+                    best_mol, best_err = cand, err
+                if frac >= target_h_c:
+                    # Reached/overshot the target; further tries only move away.
                     break
-
-            if seed_mol is None:
-                rem = (target - 6) % 4
-                if rem != 0:
-                    target = target + (4 - rem)
-                seed_mol = Chem.MolFromSmiles(PAH_LIBRARY["benzene"]["smiles"])
-                seed_carbons = 6
-
-            seed_positions = self._compute_seed_positions(seed_mol)
-
-            if seed_carbons >= target:
-                out = Chem.Mol(seed_mol)
-                if seed_positions:
-                    for atom in out.GetAtoms():
-                        idx = atom.GetIdx()
-                        if idx in seed_positions:
-                            x, y = seed_positions[idx]
-                            atom.SetDoubleProp("init_x", x)
-                            atom.SetDoubleProp("init_y", y)
-                return out
-
-            G = _mol_to_graph(seed_mol)
-            # Copy positions so _grow_graph / _fuse_* can mutate in place
-            grown_positions = dict(seed_positions) if seed_positions else None
-            G = _grow_graph(
-                G, target, seed=self.seed, defect_fraction=0.0,
-                positions=grown_positions,
-            )
-            return _graph_to_mol(G, positions=grown_positions)
+            return best_mol
 
         else:
             # --- Defect mode: relax parity, retry on kekulization failure ---
@@ -829,11 +897,15 @@ class PAHAssembler:
             for attempt in range(_MAX_DEFECT_RETRIES):
                 G = _mol_to_graph(seed_mol)
                 grown_positions = dict(seed_positions) if seed_positions else None
+                # Defect mode stays compact: pentagon insertion already perturbs
+                # topology and H count, and stacking elongation on top raises the
+                # kekulization-failure rate.  H/C-aware elongation is a
+                # pure-hexagon feature (see the defect_fraction == 0 branch).
                 G = _grow_graph(
                     G, target,
                     seed=base_seed + attempt,
                     defect_fraction=defect_fraction,
-                    positions=grown_positions,
+                    positions=grown_positions, compactness=1.0,
                 )
                 mol = _graph_to_mol(G, positions=grown_positions)
                 if mol is not None:
@@ -841,6 +913,78 @@ class PAHAssembler:
                 # kekulization failed — try again with a different sub-seed
 
             return None  # all retries exhausted
+
+    def _build_pure_hex_compact(
+        self, target: int
+    ) -> Tuple[Optional[Chem.Mol], int]:
+        """
+        Build a maximally condensed pure-hexagon skeleton from the *largest*
+        fitting library seed (fast, deterministic, always kekulizable).
+
+        Returns ``(mol, adjusted_target)``; *adjusted_target* may be bumped up to
+        satisfy the ``(target - 6) % 4 == 0`` parity constraint when falling back
+        to the benzene seed.
+        """
+        seed_mol = None
+        seed_carbons = 0
+        for nC, name in reversed(self._SIZE_INDEX):
+            if nC <= target and (target - nC) % 4 == 0 and name in self.pahs:
+                seed_mol = self.pahs[name]["mol"]
+                seed_carbons = nC
+                break
+
+        if seed_mol is None:
+            rem = (target - 6) % 4
+            if rem != 0:
+                target = target + (4 - rem)
+            seed_mol = Chem.MolFromSmiles(PAH_LIBRARY["benzene"]["smiles"])
+            seed_carbons = 6
+
+        seed_positions = self._compute_seed_positions(seed_mol)
+
+        if seed_carbons >= target:
+            out = Chem.Mol(seed_mol)
+            _attach_seed_positions(out, seed_positions)
+            return out, target
+
+        G = _mol_to_graph(seed_mol)
+        grown_positions = dict(seed_positions) if seed_positions else None
+        G = _grow_graph(
+            G, target, seed=self.seed, defect_fraction=0.0,
+            positions=grown_positions, compactness=1.0,
+        )
+        return _graph_to_mol(G, positions=grown_positions), target
+
+    def _build_pure_hex_elongated(
+        self, target: int, compactness: float, seed: int
+    ) -> Optional[Chem.Mol]:
+        """
+        Build a less-condensed pure-hexagon skeleton from the *smallest* fitting
+        seed, so growth (and its ``compactness`` control) shapes most of the
+        flake.  Returns the mol, or ``None`` on kekulization failure.
+        """
+        seed_mol = None
+        seed_carbons = 0
+        for nC, name in self._SIZE_INDEX:
+            if nC <= target and (target - nC) % 4 == 0 and name in self.pahs:
+                seed_mol = self.pahs[name]["mol"]
+                seed_carbons = nC
+                break
+        if seed_mol is None:
+            seed_mol = Chem.MolFromSmiles(PAH_LIBRARY["benzene"]["smiles"])
+            seed_carbons = 6
+
+        if seed_carbons >= target:
+            return None  # seed already fills the target; nothing to elongate
+
+        seed_positions = self._compute_seed_positions(seed_mol)
+        G = _mol_to_graph(seed_mol)
+        grown_positions = dict(seed_positions) if seed_positions else None
+        G = _grow_graph(
+            G, target, seed=seed, defect_fraction=0.0,
+            positions=grown_positions, compactness=compactness,
+        )
+        return _graph_to_mol(G, positions=grown_positions)
 
     @staticmethod
     def _make_skeleton(mol: Chem.Mol) -> CarbonSkeleton:

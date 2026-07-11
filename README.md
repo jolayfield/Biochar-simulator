@@ -178,6 +178,7 @@ gmx mdrun -deffnm topol
 | `aromaticity_percent` | float | 90.0 | Target % aromatic carbons |
 | `functional_groups` | dict\|None | `None` | Exact group counts, e.g. `{"phenolic": 2}` |
 | `defect_fraction` | float | 0.0 | Probability [0, 1) each ring is a pentagon |
+| `allow_aliphatic` | bool | True | Allow pendant sp3 (aliphatic) carbon to reach H/C above the pure-aromatic ceiling (see below). Set False to force a purely aromatic structure. |
 | `charge_method` | str | `"opls"` | Partial charge source: `"opls"`, `"ml"`, or `"qm"` |
 | `molecule_name` | str | `"BC"` | Residue name (≤5 chars for GROMACS) |
 | `periodic_box` | bool | False | Add periodic box vectors to `.gro` |
@@ -224,6 +225,35 @@ Carbonyl, quinone, and lactone require ≥2 free valence on one carbon, which is
 | `"qm"` | 1.14×CM1A via MOPAC AM1 semiempirical | `conda install -c conda-forge mopac` |
 
 The `"qm"` backend reproduces the LigParGen 1.14*CM1A methodology using an external MOPAC binary. It runs a single-point AM1 calculation on the generated 3D geometry and maps the resulting Mulliken charges through the CM1A correction. See `docs/qm-charge-backend.md` for full details. Raises `biochar.QMChargeError` if MOPAC is not on PATH or exits with an error.
+
+---
+
+## H/C ratio control
+
+A hydrogen only attaches at a carbon with a free valence. In a fully aromatic
+(sp2) flake those are exactly the **perimeter** carbons, so the achievable H/C
+is bounded by the perimeter/area ratio — roughly 0.44 at 50 C and 0.36 at 100 C
+for a maximally condensed sheet, falling as the sheet grows. Requesting a
+higher H/C than that ceiling used to silently produce a hydrogen-deficient
+structure. The generator now reaches the requested H/C in three stages:
+
+1. **Honest reporting.** If a target is above what the built structure can
+   carry, `result.composition.h_c_ceiling` and `.h_c_target_unreachable` are set
+   and a warning is logged, instead of the shortfall surfacing only later in
+   validation.
+2. **H/C-aware skeleton growth.** When a higher H/C is requested, the skeleton
+   is grown into a less-condensed (more elongated, higher-perimeter) shape,
+   raising the pure-aromatic ceiling toward ~0.5.
+3. **Aliphatic decoration.** Above the pure-aromatic ceiling, the generator
+   builds a smaller aromatic core and attaches pendant sp3 **methyl** groups so
+   the total carbon count still matches `target_num_carbons` while H/C reaches
+   the target (0.6–0.8). Aromaticity drops accordingly — matching the aliphatic
+   content of low-temperature biochar — and OPLS typing maps the added carbons
+   to `opls_135` (CT) with `opls_140` (HC) hydrogens.
+
+To force a purely aromatic structure (H/C then capped at the aromatic ceiling,
+with a warning), set `allow_aliphatic=False` or request
+`aromaticity_percent ≥ 99`.
 
 ---
 
@@ -379,7 +409,7 @@ The PAH quality suite reports:
 
 | Issue | Notes |
 |---|---|
-| H/C ratio loose for very small structures (6–14 C) | Edge-to-interior carbon ratio limits control; use ≥30 C for tight H/C |
+| H/C has a lower floor for small structures | A maximally condensed flake still caps H on every edge carbon, so very small sheets cannot go *below* ~0.44 (50 C) / ~0.36 (100 C). Requests below that floor return the most-condensed structure; use a larger sheet for lower H/C. |
 | Steric clash count increases with size | Large flat aromatics have H···H near-contacts; use GROMACS energy minimisation after generation for production runs |
 | Geometry validation thresholds | The built-in validator uses strict VdW radii; some reported "clashes" are artefacts of the flat starting structure and resolve under MD |
 | Amorphous porous surfaces not yet implemented | Only slit pores (parallel sheets) are supported; `pore_type="amorphous"` is reserved for a future release |
