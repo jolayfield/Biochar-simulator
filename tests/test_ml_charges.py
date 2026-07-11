@@ -3,6 +3,12 @@ Tests for ML-based partial charge refinement (issue #4).
 """
 
 import pytest
+
+# The ML charge backend is an optional extra (``biochar[ml]``). When
+# scikit-learn is not installed these tests would otherwise error at runtime;
+# skip the whole module instead so the suite stays green without the extra.
+pytest.importorskip("sklearn", reason="scikit-learn (biochar[ml] extra) not installed")
+
 import numpy as np
 from rdkit import Chem
 
