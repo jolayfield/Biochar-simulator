@@ -1,0 +1,26 @@
+# Pyrolysis-temperature x feedstock grid
+# ---------------------------------------
+# A factorial sweep over pyrolysis temperature and feedstock. Temperature and
+# feedstock set the oxygen content (O/C); the built-in temperature model derives
+# H/C, O/C, and aromaticity for each grid point.
+#
+# Run with:
+#   biochar-sweep run examples/sweeps/temperature_grid.yaml
+#
+# Produces 5 x 2 = 10 structures under sweep_out/temperature_grid/structures/,
+# plus manifest.csv and manifest.json.
+
+name: temperature_grid
+output_directory: sweep_out/temperature_grid
+
+fixed:
+  target_num_carbons: 100
+  charge_method: opls
+
+axes:
+  temperature: [300, 400, 500, 600, 700]
+  feedstock: [softwood, hardwood]
+
+seed: 0
+max_retries: 8
+on_validation_fail: fallback

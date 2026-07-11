@@ -59,6 +59,7 @@ dev = [
 
 [project.scripts]
 biochar-gen = "biochar.cli:main"
+biochar-sweep = "biochar.sweep_cli:main"
 
 [project.urls]
 Homepage = "https://github.com/jolayfield/Biochar-simulator"
