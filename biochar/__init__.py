@@ -32,6 +32,17 @@ from .sweep import (
     PointResult,
     SweepError,
 )
+from .md_setup import (
+    setup_md_from_manifest,
+    setup_one_structure,
+    MDSetupConfig,
+    MDSetupError,
+    IonProfile,
+    ION_PROFILES,
+    get_ion_profile,
+    PreSolvationStage,
+    MoleculeInsertion,
+)
 
 __version__ = "0.3.0"
 __all__ = [
@@ -58,4 +69,13 @@ __all__ = [
     "GridPoint",
     "PointResult",
     "SweepError",
+    "setup_md_from_manifest",
+    "setup_one_structure",
+    "MDSetupConfig",
+    "MDSetupError",
+    "IonProfile",
+    "ION_PROFILES",
+    "get_ion_profile",
+    "PreSolvationStage",
+    "MoleculeInsertion",
 ]

@@ -477,6 +477,101 @@ For surfaces, a single `.gro` contains all sheets as separate residues, and the 
 
 ---
 
+## GROMACS run setup
+
+`biochar-sweep` builds structures; `biochar-md-setup` turns each row of a
+sweep manifest into a ready-to-submit GROMACS run directory, following the
+dry-anneal / solvate / wet-equilibrate protocol (Wood, Mašek & Erastova
+annealing schedule). It writes files only — no `gmx` binary is invoked — so it
+runs anywhere and the resulting directories are submitted on the user's own
+workstation or HPC cluster.
+
+### CLI
+
+```bash
+biochar-md-setup sweep_out/temperature_grid/manifest.csv \
+    --output-root sweep_out/temperature_grid/md_runs \
+    --ion-profile mn_calcareous_default
+```
+
+### Python API
+
+```python
+from biochar.md_setup import setup_md_from_manifest
+
+results = setup_md_from_manifest(
+    "sweep_out/temperature_grid/manifest.csv",
+    output_root="sweep_out/temperature_grid/md_runs",
+    ion_profile="mn_calcareous_default",
+)
+for r in results:
+    print(r["label"], r["status"], r["run_dir"])
+```
+
+Only manifest rows with `status` in `{strict_pass, fallback}` are processed;
+`skipped`/`failed` rows are reported back (with a `skipped_reason`) rather
+than silently dropped.
+
+### Per-structure pipeline
+
+Each run directory gets its own `.mdp` files and a single executable
+`run_pipeline.sh` that chains the stages with `gmx grompp`/`mdrun`:
+
+1. **Dry EM** — steepest descent, `emtol = 500`
+2. **Anneal NVT** — 300 K pre-equilibration with velocity generation
+3. **Anneal NPT** — simulated annealing, Berendsen 100 bar, 300→1000→300 K over 5.5 ns
+4. **Final dry NPT** — Berendsen 1 bar, 300 K, 2 ns
+5. **Box + solvate** — `editconf -d <pad> -bt cubic` (box size computed from
+   the actual final dry structure, not hand-tuned per run) + `solvate`
+6. **Ion addition** — one `genion` call per non-zero cation in the chosen
+   ion profile (correct valence per species: Ca²⁺/Mg²⁺ → `-pq 2`,
+   Na⁺/K⁺ → `-pq 1`), each with `-conc` and `-neutral`
+7. **Wet EM** — `emtol = 1000`
+8. **Wet NVT** then **wet NPT** — semiisotropic pressure coupling, C-rescale
+
+### Ion profiles (Minnesota water chemistry)
+
+`IonProfile` is a small dataclass (`ca_mM`, `mg_mM`, `na_mM`, `k_mM`,
+`counter_ion`) selected by name via `--ion-profile` / `ion_profile=`:
+
+| Profile | Description |
+|---|---|
+| `pure_water` | No background electrolyte — solvation-only control |
+| `mn_calcareous_default` | Illustrative Ca-HCO₃-type Minnesota glacial-till groundwater (Ca²⁺/Mg²⁺-dominated, low Na⁺/K⁺) |
+| `na_dominated` | Sodium-dominated scenario, e.g. softened or road-salt-impacted water |
+
+> **These are illustrative starting points, not measured values.** Minnesota
+> groundwater ion concentrations vary widely by aquifer and county. For a
+> specific site, override the profile with monitoring-well data — see the
+> MN DNR (*Bulletin 26, Natural Quality of Minnesota's Ground Water*) and MPCA
+> ambient groundwater monitoring reports — by constructing a custom
+> `IonProfile(...)` and passing it directly instead of a preset name.
+
+### Pre-solvation molecule insertion (extension seam)
+
+`MDSetupConfig.pre_solvation_stage` is a domain-neutral hook for inserting extra
+molecules into the equilibrated slab's box **after dry-anneal, before
+solvation** — the pipeline anneals the bare surface, inserts the molecules
+(`gmx insert-molecules`), then runs box+solvate+ions and the wet stages against
+a topology that already accounts for them:
+
+```python
+from biochar.md_setup import MDSetupConfig, PreSolvationStage, MoleculeInsertion
+
+stage = PreSolvationStage(
+    name="Insert sorbate molecules",
+    insertions=[MoleculeInsertion("MOL.gro", n_copies=4, n_try=500)],
+    solvation_top="merged.top",     # topology used from solvation onward
+    extra_files=["merged.top", "MOL.gro"],  # copied into the run dir
+)
+setup_md_from_manifest(manifest, output_root, config=MDSetupConfig(pre_solvation_stage=stage))
+```
+
+`md_setup` stays agnostic about *what* the molecules are — a downstream workflow
+builds the coordinates and merged topology and hands them in through this seam.
+
+---
+
 ## Testing
 
 ```bash
