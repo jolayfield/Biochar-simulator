@@ -18,6 +18,11 @@ The Biochar Simulator builds polycyclic aromatic hydrocarbon (PAH) structures wi
 - **Porous Surfaces**: Slit-pore systems of stacked PAH sheets with user-controlled pore diameter
 - **Output**: GROMACS `.gro`, `.top`, `.itp` files with OPLS-AA force field
 
+> **Related project:** [**biochar-pfas**](https://github.com/jolayfield/biochar-pfas)
+> drives this package to set up PFAS-sorption simulations (PFOA/PFOS/PFBS),
+> inserting the ligands through the generic
+> [pre-solvation seam](#pre-solvation-molecule-insertion-extension-seam).
+
 ---
 
 ## Installation
@@ -569,6 +574,10 @@ setup_md_from_manifest(manifest, output_root, config=MDSetupConfig(pre_solvation
 
 `md_setup` stays agnostic about *what* the molecules are — a downstream workflow
 builds the coordinates and merged topology and hands them in through this seam.
+[**biochar-pfas**](https://github.com/jolayfield/biochar-pfas) is one such
+workflow: it parametrizes PFAS anions (PFOA/PFOS/PFBS), merges their topology
+with a biochar structure, and drives this package through the seam to set up
+PFAS-sorption simulations.
 
 ---
 
