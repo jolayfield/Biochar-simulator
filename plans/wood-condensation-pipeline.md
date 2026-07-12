@@ -138,5 +138,10 @@ starting configs). Both molecule sources are supported: **generate fresh**
 - [x] **Phase 4 — surface creation** → `setup_surface` / `render_surface_script`:
       z-expand the condensed bulk by ~10 nm vacuum (editconf), EM, then 10 ns
       semi-isotropic NPT (xy at 1 bar, z frozen to preserve the gap).
-- [ ] Phase 5 — validation helpers (density / SASA / TEM)
-- [ ] Phase 6 — config / CLI / docs / tests polish
+- [x] **Phase 5 — validation helpers** → `render_validation_script` /
+      `write_validation_setup`: an `analyze.sh` with true density (freevolume,
+      He 0.13 nm; rho_solid = rho_sys/(1-Vf)), normalized SASA (N2 0.18 nm, last
+      2 ns), convergence (energy/rms), and the TEM command.
+- [x] **Phase 6 — CLI / exports / docs** → `biochar-condense` (`generate` /
+      `from-files`), `add_surface_and_validation` convenience, `__init__` exports,
+      pyproject entry point, README section. 36 condensation tests total.

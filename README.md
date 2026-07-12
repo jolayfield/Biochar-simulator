@@ -581,6 +581,58 @@ PFAS-sorption simulations.
 
 ---
 
+## Wood-style condensation (bulk & surface models)
+
+`biochar.condensation` is a **parallel construction mode** that reproduces the
+Wood, Mašek & Erastova (2024, *Cell Rep. Phys. Sci.* 5, 102037) protocol:
+instead of a single flat sheet, it packs **many copies of one biochar molecule**
+into a box and condenses them into an amorphous **bulk** via HTT-scaled simulated
+annealing, then expands that bulk into an exposed **surface**. It is **setup-only**
+— it writes the box, the exact Wood `.mdp` files, and run scripts; you run the
+~45 ns × 3 annealing on your own GROMACS build.
+
+### CLI
+
+```bash
+# Generate one molecule fresh, then condense 50 copies (HTT sets the anneal temperature)
+biochar-condense generate --output-dir cond_600 --copies 50 --htt 600 \
+    --carbons 100 --hc 0.23 --oc 0.07 --name BC600
+
+# ...or condense copies of an existing molecule
+biochar-condense from-files --output-dir cond --gro mol.gro --itp mol.itp --copies 50 --htt 600
+```
+
+Each writes a directory with `run_condensation.sh` (pack → EM → NVT → NPT anneal
+→ NPT final, ×3 repeats), `run_surface.sh` (z-expand ~10 nm + semi-isotropic NPT),
+and `analyze.sh` (true density, SASA, convergence, TEM).
+
+### Python API
+
+```python
+from biochar.condensation import generate_and_condense, add_surface_and_validation
+
+run = generate_and_condense("cond_600", n_copies=50, htt_c=600)  # pack + anneal setup
+add_surface_and_validation(run)                                   # + surface + analysis
+# then, on your GROMACS build:  ./run_condensation.sh -> ./run_surface.sh -> ./analyze.sh
+```
+
+### HTT-scaled annealing (Wood Tables 6 & 7)
+
+| HTT | anneal peak T | timestep |
+|---|---|---|
+| 400 °C | 1000 K | 1 fs |
+| 600 °C | 2000 K | 0.5 fs |
+| 800 °C | 3000 K | 0.5 fs |
+
+Per model: EM → NVT 10 ns @ peak T → NPT anneal 25 ns (hold peak → cool to 300 K
+→ hold, Berendsen 100 bar) → NPT final 10 ns (300 K, 1 bar). The dry bulk is then
+z-expanded and relaxed under semi-isotropic pressure coupling to form the surface.
+Density/roughness are validated with `gmx freevolume` (He probe) and `gmx sasa`
+(N₂ probe). This does not replace the single-molecule generator — it's an
+additional mode.
+
+---
+
 ## Testing
 
 ```bash

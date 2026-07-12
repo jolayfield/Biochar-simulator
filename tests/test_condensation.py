@@ -13,6 +13,7 @@ import pytest
 from biochar.condensation import (
     AnnealSpec,
     CondensationError,
+    add_surface_and_validation,
     anneal_spec_for_htt,
     estimate_box_nm,
     generate_and_condense,
@@ -21,9 +22,11 @@ from biochar.condensation import (
     render_condensation_top,
     render_mdp_set,
     render_surface_script,
+    render_validation_script,
     setup_condensation,
     setup_surface,
     write_condensation_setup,
+    write_validation_setup,
 )
 
 
@@ -253,3 +256,93 @@ class TestSurface:
             render_surface_script("bulk.gro", "system.top", gap_nm=0)
         with pytest.raises(CondensationError):
             setup_surface(tmp_path / "surf", tmp_path / "nope.gro", bulk / "system.top")
+
+
+# --------------------------------------------------------------------------- #
+# Phase 5 — validation helpers
+# --------------------------------------------------------------------------- #
+class TestValidation:
+    def test_wood_probe_radii_and_window(self):
+        sc = render_validation_script(surface_ns=10.0, sasa_last_ns=2.0)
+        assert "freevolume" in sc and "-radius 0.13" in sc         # He probe
+        assert "sasa" in sc and "-probe 0.18" in sc                # N2 probe
+        assert "-b 8000" in sc                                     # last 2 ns of 10 ns
+        assert "rho_system / (1 - Vf_0.13)" in sc                  # true-density formula
+        assert "nSASA" in sc and "2 * A_xy" in sc                  # normalization
+        assert "200 keV" in sc and "0.02 rad" in sc                # TEM params
+
+    def test_bad_window_rejected(self):
+        with pytest.raises(CondensationError):
+            render_validation_script(surface_ns=10.0, sasa_last_ns=0)
+        with pytest.raises(CondensationError):
+            render_validation_script(surface_ns=10.0, sasa_last_ns=20.0)
+
+    def test_write_validation_setup(self, tmp_path):
+        out = write_validation_setup(tmp_path / "v")
+        assert (out / "analyze.sh").exists()
+        assert (out / "analyze.sh").stat().st_mode & stat.S_IXUSR
+
+
+class TestAddSurfaceAndValidation:
+    def _condense(self, tmp_path):
+        (tmp_path / "m.gro").write_text(_valid_gro())
+        (tmp_path / "m.itp").write_text(_ITP)
+        return setup_condensation(tmp_path / "run", tmp_path / "m.gro",
+                                  tmp_path / "m.itp", n_copies=10, htt_c=400)
+
+    def test_adds_surface_and_validation_to_run_dir(self, tmp_path):
+        run = self._condense(tmp_path)
+        add_surface_and_validation(run, which_repeat=2, gap_nm=9.0)
+        assert (run / "surf_npt.mdp").exists()
+        assert (run / "run_surface.sh").exists()
+        assert (run / "analyze.sh").exists()
+        # surface script wired to the chosen repeat's condensed bulk, no copy
+        sc = (run / "run_surface.sh").read_text()
+        assert "rep_2/final.gro" in sc and "GAP=9" in sc
+        assert (run / "analyze.sh").read_text().count("rep_2/final") >= 1
+
+    def test_requires_existing_condensation(self, tmp_path):
+        with pytest.raises(CondensationError):
+            add_surface_and_validation(tmp_path / "empty")
+
+
+# --------------------------------------------------------------------------- #
+# Phase 6 — CLI
+# --------------------------------------------------------------------------- #
+class TestCli:
+    def _expected(self, run):
+        return all((run / f).exists() for f in (
+            "system.top", "em.mdp", "nvt.mdp", "npt_anneal.mdp", "npt_final.mdp",
+            "run_condensation.sh", "surf_npt.mdp", "run_surface.sh", "analyze.sh",
+        ))
+
+    def test_from_files(self, tmp_path):
+        from biochar.condensation_cli import main
+        (tmp_path / "m.gro").write_text(_valid_gro())
+        (tmp_path / "m.itp").write_text(_ITP)
+        run = tmp_path / "run"
+        rc = main(["from-files", "--output-dir", str(run), "--gro", str(tmp_path / "m.gro"),
+                   "--itp", str(tmp_path / "m.itp"), "--copies", "12", "--htt", "600"])
+        assert rc == 0 and self._expected(run)
+        assert "ref_t           = 2000" in (run / "nvt.mdp").read_text()  # 600 C
+
+    def test_no_surface_no_validation(self, tmp_path):
+        from biochar.condensation_cli import main
+        (tmp_path / "m.gro").write_text(_valid_gro())
+        (tmp_path / "m.itp").write_text(_ITP)
+        run = tmp_path / "run"
+        main(["from-files", "--output-dir", str(run), "--gro", str(tmp_path / "m.gro"),
+              "--itp", str(tmp_path / "m.itp"), "--copies", "8", "--htt", "400",
+              "--no-surface", "--no-validation"])
+        assert (run / "run_condensation.sh").exists()
+        assert not (run / "run_surface.sh").exists()
+        assert not (run / "analyze.sh").exists()
+
+    def test_generate(self, tmp_path):
+        pytest.importorskip("biochar.biochar_generator")
+        from biochar.condensation_cli import main
+        run = tmp_path / "run"
+        rc = main(["generate", "--output-dir", str(run), "--copies", "10", "--htt", "800",
+                   "--carbons", "30", "--hc", "0.5", "--oc", "0.1", "--name", "BC30", "--seed", "1"])
+        assert rc == 0 and self._expected(run)
+        assert (run / "molecule.gro").exists()
