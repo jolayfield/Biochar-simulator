@@ -64,3 +64,6 @@ data/
 
 # Sweep driver run output (manifests + generated structures); regenerable.
 sweep_out/
+
+# Built Sphinx docs (build artifact; also contained internal refs)
+docs/_build/

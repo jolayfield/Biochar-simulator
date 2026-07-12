@@ -90,7 +90,7 @@ Add `tests/test_pfas_ligands.py` covering `render_ligpargen_molecules_txt`,
 
 `MDSetupConfig.ligands` / `.ligand_system_dir` and the ligand-insertion
 staging in `_render_pipeline_script`, `_render_solvate_ions_slurm`, and
-`_render_mu3c_chain_script` currently have no test coverage — only the
+`_render_hpc_chain_script` currently have no test coverage — only the
 pre-existing non-PFAS paths are exercised.
 
 **Touchpoints:** `biochar/md_setup.py`, `tests/test_md_setup.py`.
@@ -106,8 +106,8 @@ Fabricate a minimal fake `ligand_system_dir` (`atomtypes.itp` +
 `setup_one_structure(..., config=MDSetupConfig(ligands=...))` against the
 already-generated `sweep_out/pfas_temperature_grid/structures/000_T300_softwood/`
 structure to confirm `merged.top`, `run_pipeline.sh`, and (with
-`cluster="mu3c"`) `solvate_ions.slurm`/`submit_chain.sh` all come out
-well-formed — without touching `gmx`/`ligpargen`/mu3c.
+`cluster="hpc"`) `solvate_ions.slurm`/`submit_chain.sh` all come out
+well-formed — without touching `gmx`/`ligpargen`/hpc.
 
 **Touchpoints:** new test/script under `tests/` or `examples/`.
 
@@ -193,10 +193,10 @@ silently dropped) when Issue A is executed.
 - **N-doped amorphous structures** — combining `pore_type="amorphous"` with
   pyridinic/graphitic N substitution is untested; may surface ring-parity
   edge cases in `carbon_skeleton.py`.
-- **mu3c `scratch_root` misconfiguration** (from `PFAS_HANDOFF.md` §5) —
-  `/scratch/layfield` should likely be `/home0/layfield` or
-  `/extra0/layfield` in the Compute panel. Ops/config only; matters once
-  someone is ready to actually execute the PFAS pipeline on mu3c, not before.
+- **hpc `scratch_root` misconfiguration** (from `PFAS_HANDOFF.md` §5) —
+  `/scratch/<user>` should likely be `/home0/<user>` or
+  `/extra0/<user>` in the Compute panel. Ops/config only; matters once
+  someone is ready to actually execute the PFAS pipeline on hpc, not before.
 - **`tests/test_ml_charges.py` sklearn gap** — 18 failures from a missing
   `scikit-learn` dependency in the `biochar-md` conda env; environment issue,
   not a code defect, so not proposed as a numbered issue above.

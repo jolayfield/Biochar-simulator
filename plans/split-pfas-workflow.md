@@ -97,7 +97,7 @@ class PreSolvationStage:
 - `MDSetupConfig` drops `ligands` / `ligand_system_dir`; gains
   `pre_solvation_stage: Optional[PreSolvationStage] = None`.
 - `_render_pipeline_script` / `_render_solvate_ions_slurm` /
-  `_render_mu3c_chain_script` take the neutral `pre_solvation_stage`, render the
+  `_render_slurm_chain_script` take the neutral `pre_solvation_stage`, render the
   `gmx insert-molecules` chain from `insertions` (using biochar's own path
   exprs), copy `extra_files`, and switch the topology to `solvation_top` from
   solvation onward — exactly the current logic, minus the words "ligand"/"PFAS".
