@@ -460,6 +460,14 @@ UC_DAVIS_DB_URL = "https://biochar.ucdavis.edu/"   # UC Davis Biochar Database
 # is clamped to this floor and a warning is emitted.
 MIN_BUILDABLE_AROMATICITY = 70.0
 
+# Ring-curvature ratios of non-graphitizing carbons (Wood et al. 2024): the
+# published island building blocks average roughly 10 hexagons : 2 pentagons :
+# 1 heptagon.  As per-ring-addition probabilities over the 13-ring total this is
+# 2/13 pentagons and 1/13 heptagons (hexagons are the ~10/13 remainder).  Pass
+# these as ``defect_fraction`` / ``heptagon_fraction`` to reproduce that mix.
+WOOD_PENTAGON_FRACTION = 2.0 / 13.0   # ≈ 0.154
+WOOD_HEPTAGON_FRACTION = 1.0 / 13.0   # ≈ 0.077
+
 # Covalent radii (in Angstrom) for bond length validation
 COVALENT_RADII = {
     "H": 0.31,

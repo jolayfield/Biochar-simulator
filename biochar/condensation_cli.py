@@ -59,11 +59,21 @@ def _finish(args) -> int:
 
 def _cmd_generate(args) -> int:
     from .biochar_generator import GeneratorConfig
+    from .constants import WOOD_PENTAGON_FRACTION, WOOD_HEPTAGON_FRACTION
+
+    if args.wood_curvature:
+        defect_fraction = WOOD_PENTAGON_FRACTION
+        heptagon_fraction = WOOD_HEPTAGON_FRACTION
+    else:
+        defect_fraction = args.defect_fraction
+        heptagon_fraction = args.heptagon_fraction
 
     cfg = GeneratorConfig(
         target_num_carbons=args.carbons,
         H_C_ratio=args.hc,
         O_C_ratio=args.oc,
+        defect_fraction=defect_fraction,
+        heptagon_fraction=heptagon_fraction,
         molecule_name=args.name,
         seed=args.seed,
         strict=False,
@@ -93,6 +103,13 @@ def main(argv=None) -> int:
     gen.add_argument("--oc", type=float, default=0.1, help="target O/C ratio")
     gen.add_argument("--name", default="BC", help="residue/moleculetype name (<=5 chars)")
     gen.add_argument("--seed", type=int, default=None, help="RNG seed for the molecule")
+    gen.add_argument("--defect-fraction", type=float, default=0.0,
+                     help="per-ring pentagon probability (positive curvature); default 0")
+    gen.add_argument("--heptagon-fraction", type=float, default=0.0,
+                     help="per-ring heptagon probability (negative curvature); default 0")
+    gen.add_argument("--wood-curvature", action="store_true",
+                     help="use Wood et al. 2024 curvature ratios "
+                          "(pentagon 2/13, heptagon 1/13); overrides the two fractions")
     _add_common(gen)
     gen.set_defaults(func=_cmd_generate)
 

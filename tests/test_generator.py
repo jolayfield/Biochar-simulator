@@ -388,6 +388,102 @@ class TestDefectRings:
         assert comp_defect.num_carbons > 0
 
 
+class TestHeptagonRings:
+    """Tests for heptagon (7-membered ring) curvature insertion."""
+
+    def test_fuse_heptagon_adds_five_nodes(self):
+        """A heptagon fused onto one edge adds exactly five new vertices."""
+        from biochar.carbon_skeleton import _fuse_heptagon
+        import networkx as nx
+
+        G = nx.cycle_graph(6)  # benzene: nodes 0..5, edge (0,1) present
+        next_node = _fuse_heptagon(G, 0, 1, next_node=6)
+        assert next_node == 11
+        assert G.number_of_nodes() == 11
+        # The fused ring (shared edge + 5 new) is a 7-cycle.
+        assert any(len(c) == 7 for c in nx.minimum_cycle_basis(G))
+
+    def test_choose_ring_size_probabilities(self):
+        """_choose_ring_size returns 5/6/7 per the requested fractions."""
+        from biochar.carbon_skeleton import _choose_ring_size
+        import random
+
+        rng = random.Random(0)
+        counts = {5: 0, 6: 0, 7: 0}
+        for _ in range(4000):
+            counts[_choose_ring_size(rng, 0.2, 0.1, nodes_remaining=20)] += 1
+        assert counts[7] > 0 and counts[5] > 0 and counts[6] > 0
+        # Heptagons requested at 0.1 should be rarer than the ~0.7 hexagons.
+        assert counts[7] < counts[6]
+
+    def test_grow_graph_heptagon_only_even_node_count(self):
+        """Heptagon-only growth still yields an even node count (Kekulé-valid)."""
+        from biochar.carbon_skeleton import _grow_graph
+        import networkx as nx
+
+        for seed in range(5):
+            G = nx.cycle_graph(6)
+            G = _grow_graph(G, 34, seed=seed, heptagon_fraction=0.3)
+            assert G.number_of_nodes() % 2 == 0, (
+                f"seed={seed}: odd node count {G.number_of_nodes()}"
+            )
+
+    def test_pah_assembler_produces_heptagons(self):
+        """Across seeds, heptagon_fraction yields at least one 7-membered ring."""
+        seen_heptagon = False
+        for seed in range(12):
+            assembler = PAHAssembler(seed=seed)
+            skeleton = assembler.generate(
+                target_num_carbons=60,
+                defect_fraction=0.15,
+                heptagon_fraction=0.10,
+            )
+            assert skeleton.mol is not None
+            assert skeleton.num_carbons % 2 == 0
+            if skeleton.ring_composition.get("heptagons", 0) > 0:
+                seen_heptagon = True
+        assert seen_heptagon, "no heptagon produced across 12 seeds"
+
+    def test_ring_composition_reports_heptagons(self):
+        """ring_composition always carries a 'heptagons' key."""
+        assembler = PAHAssembler(seed=1)
+        skeleton = assembler.generate(target_num_carbons=24, defect_fraction=0.0)
+        assert "heptagons" in skeleton.ring_composition
+        assert skeleton.ring_composition["heptagons"] == 0
+
+    def test_generator_config_heptagon_fraction_default(self):
+        """GeneratorConfig.heptagon_fraction should default to 0.0."""
+        assert GeneratorConfig().heptagon_fraction == 0.0
+
+    def test_generator_config_heptagon_fraction_custom(self):
+        """GeneratorConfig.heptagon_fraction should accept non-zero values."""
+        assert GeneratorConfig(heptagon_fraction=0.077).heptagon_fraction == 0.077
+
+    def test_biochar_generator_with_heptagons(self):
+        """BiocharGenerator runs end-to-end with heptagon_fraction > 0."""
+        config = GeneratorConfig(
+            target_num_carbons=40,
+            defect_fraction=0.15,
+            heptagon_fraction=0.077,
+            seed=4,
+            strict=False,
+        )
+        mol, coords, composition = BiocharGenerator(config).generate()
+        assert mol is not None
+        assert composition.num_carbons > 0
+
+    def test_wood_curvature_constants(self):
+        """Wood's published curvature ratios are exported as fractions."""
+        from biochar.constants import (
+            WOOD_PENTAGON_FRACTION,
+            WOOD_HEPTAGON_FRACTION,
+        )
+        assert abs(WOOD_PENTAGON_FRACTION - 2.0 / 13.0) < 1e-9
+        assert abs(WOOD_HEPTAGON_FRACTION - 1.0 / 13.0) < 1e-9
+        # Pentagons roughly twice as common as heptagons (10:2:1 ratio).
+        assert WOOD_PENTAGON_FRACTION > WOOD_HEPTAGON_FRACTION
+
+
 class TestCompositionResult:
     """Test the new CompositionResult properties."""
 

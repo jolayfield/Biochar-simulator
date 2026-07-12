@@ -126,6 +126,13 @@ class GeneratorConfig:
     # 0.0 = pure hexagonal PAH (default).  0.1 ≈ 10% pentagons.
     defect_fraction: float = 0.0
 
+    # Ring defects: probability [0, 1) that each ring addition is a 7-membered
+    # heptagon, introducing the negative (saddle) curvature of non-graphitizing
+    # carbons (Wood et al. 2024).  0.0 = no heptagons (default).  Wood's ratios
+    # are ~1 pentagon : 5 hexagons and ~1 heptagon : 10 hexagons, i.e.
+    # defect_fraction ≈ 0.154 with heptagon_fraction ≈ 0.077.
+    heptagon_fraction: float = 0.0
+
     # Maximum graph distance (in bonds along the carbon skeleton) between the
     # two ring carbons that an ether oxygen may bridge.  The ring formed by the
     # C-O-C bridge has (max_ether_span + 2) members.  Minimum enforced = 3
@@ -528,6 +535,7 @@ class BiocharGenerator:
             N,
             self.config.aromaticity_percent,
             defect_fraction=self.config.defect_fraction,
+            heptagon_fraction=self.config.heptagon_fraction,
             target_h_c=r,
         )
 
@@ -550,6 +558,7 @@ class BiocharGenerator:
                 N - n_est,
                 self.config.aromaticity_percent,
                 defect_fraction=self.config.defect_fraction,
+                heptagon_fraction=self.config.heptagon_fraction,
                 target_h_c=None,
             )
             # Exact methyl count for the core as built.  A saturated aromatic
@@ -814,6 +823,7 @@ def generate_biochar(
     aromaticity_percent: Optional[float] = None,
     functional_groups: Optional[Dict[str, int]] = None,
     defect_fraction: float = 0.0,
+    heptagon_fraction: float = 0.0,
     max_ether_span: Optional[int] = None,
     num_pyridinic: int = 0,
     num_pyrrolic: int = 0,
@@ -855,6 +865,10 @@ def generate_biochar(
             skeleton growth is a 5-membered (pentagon) ring rather than a
             hexagon.  0.0 (default) = pure hexagonal PAH.  Values ~0.1–0.2
             introduce realistic topological disorder.
+        heptagon_fraction: Probability [0, 1) that each ring added is a
+            7-membered (heptagon) ring, adding the saddle curvature of
+            non-graphitizing carbons.  0.0 (default) = no heptagons.  Wood
+            et al. 2024 ratios ≈ defect_fraction 0.154 + heptagon_fraction 0.077.
         max_ether_span: Maximum number of C–C bonds between the two ring
             carbons bridged by each ether oxygen.  Controls the ring size of
             the C–O–C bridge (ring size = max_ether_span + 2).
@@ -884,6 +898,7 @@ def generate_biochar(
         aromaticity_percent=aromaticity_percent,
         functional_groups=functional_groups,
         defect_fraction=defect_fraction,
+        heptagon_fraction=heptagon_fraction,
         num_pyridinic=num_pyridinic,
         num_pyrrolic=num_pyrrolic,
         num_graphitic=num_graphitic,
