@@ -116,12 +116,25 @@ Validation:
 4. **Non-periodic vs periodic packing**: Wood's bulk is periodic in x,y,z; the
    packed box must be set up for full PBC condensation.
 
+## Refinement (single-molecule block)
+
+Per follow-up decision, the building block is a **single biochar-simulator
+molecule** (not a Wood-style mix of many different blocks): generate ONE molecule
+at the target composition, pack **N copies** of it into the box, and anneal. This
+collapses Phase 2 (library selection) into "get one molecule" and makes Phase 3 a
+single `gmx insert-molecules` packing (seeded per repeat for the 3 different
+starting configs). Both molecule sources are supported: **generate fresh**
+(`generate_and_condense`) or **use an existing `.gro`/`.itp`** (`setup_condensation`).
+
 ## Progress
 
 - [x] Methodology extracted from the paper; decisions locked (above).
-- [ ] Phase 1 — annealing `.mdp` + HTT scaling
-- [ ] Phase 2 — block-library selection
-- [ ] Phase 3 — box packing
-- [ ] Phase 4 — surface creation
-- [ ] Phase 5 — validation helpers
-- [ ] Phase 6 — config / CLI / docs / tests
+- [x] **Phase 1 — annealing `.mdp` + HTT scaling** → PR #15 (merged). Exact Wood
+      Tables 6/7 numbers, 16 tests.
+- [x] **Phase 2+3 — single-molecule packing** → `setup_condensation` /
+      `generate_and_condense`: dry `.top` (molecule × N), loose box estimate,
+      per-repeat seeded `insert-molecules` packing wired into the run script.
+      (Phase 2 "library selection" simplified to the single-molecule block.)
+- [ ] Phase 4 — surface creation (z-expand + semi-iso NPT)
+- [ ] Phase 5 — validation helpers (density / SASA / TEM)
+- [ ] Phase 6 — config / CLI / docs / tests polish

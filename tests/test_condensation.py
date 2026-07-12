@@ -14,10 +14,35 @@ from biochar.condensation import (
     AnnealSpec,
     CondensationError,
     anneal_spec_for_htt,
+    estimate_box_nm,
+    generate_and_condense,
+    moleculetype_name,
     render_condensation_script,
+    render_condensation_top,
     render_mdp_set,
+    setup_condensation,
     write_condensation_setup,
 )
+
+
+def _valid_gro() -> str:
+    """A 3-atom molecule spanning 0.30 nm in x (largest extent)."""
+    coords = [(0.0, 0.0, 0.0), (0.15, 0.0, 0.0), (0.30, 0.15, 0.10)]
+    lines = ["test molecule", f"{len(coords):>5}"]
+    for i, (x, y, z) in enumerate(coords, 1):
+        lines.append(f"{1:>5}{'MOL':<5}{('C' + str(i)):>5}{i:>5}{x:8.3f}{y:8.3f}{z:8.3f}")
+    lines.append("   1.000   1.000   1.000")
+    return "\n".join(lines) + "\n"
+
+
+_ITP = """[ moleculetype ]
+; name  nrexcl
+BCX     3
+
+[ atoms ]
+;  nr  type resnr res atom cgnr charge mass
+    1  opls_145  1  BCX  C1  1  -0.115  12.011
+"""
 
 
 def _val(mdp: str, key: str) -> str:
@@ -110,3 +135,76 @@ class TestWriteSetup:
     def test_requires_htt_or_spec(self, tmp_path):
         with pytest.raises(CondensationError):
             write_condensation_setup(tmp_path / "run", "a.gro", "b.top")
+
+
+# --------------------------------------------------------------------------- #
+# Packing helpers (single molecule -> bulk of N copies)
+# --------------------------------------------------------------------------- #
+class TestPackingHelpers:
+    def test_moleculetype_name(self):
+        assert moleculetype_name(_ITP) == "BCX"
+
+    def test_moleculetype_name_missing(self):
+        with pytest.raises(CondensationError):
+            moleculetype_name("[ atoms ]\n1 opls_145\n")
+
+    def test_estimate_box_scales(self):
+        # extent 0.30 -> cell max(0.30,0.5)*1.6 = 0.8; 8 copies -> ceil(2) grid -> 1.6 nm
+        assert estimate_box_nm(_valid_gro(), 8) == 1.6
+        # more copies -> larger box
+        assert estimate_box_nm(_valid_gro(), 64) > estimate_box_nm(_valid_gro(), 8)
+
+    def test_top_has_moltype_and_count(self):
+        top = render_condensation_top("mol.itp", "BCX", 20)
+        assert '#include "mol.itp"' in top
+        assert '#include "oplsaa.ff/forcefield.itp"' in top
+        assert "BCX" in top and " 20" in top
+        assert "water" not in top.lower() and "sol" not in top.lower()  # dry
+
+
+class TestSetupCondensation:
+    @pytest.fixture()
+    def molecule(self, tmp_path):
+        (tmp_path / "mol.gro").write_text(_valid_gro())
+        (tmp_path / "mol.itp").write_text(_ITP)
+        return tmp_path / "mol.gro", tmp_path / "mol.itp"
+
+    def test_setup_writes_and_packs(self, molecule, tmp_path):
+        gro, itp = molecule
+        out = setup_condensation(tmp_path / "run", gro, itp, n_copies=16, htt_c=600)
+        for f in ("mol.gro", "mol.itp", "system.top", "em.mdp", "nvt.mdp",
+                  "npt_anneal.mdp", "npt_final.mdp", "run_condensation.sh"):
+            assert (out / f).exists()
+        # dry .top with the right count
+        assert "BCX" in (out / "system.top").read_text()
+        assert " 16" in (out / "system.top").read_text()
+        # per-repeat packing, seeded, before EM
+        sc = (out / "run_condensation.sh").read_text()
+        assert "insert-molecules" in sc and "-nmol 16" in sc and '-seed "$rep"' in sc
+        assert sc.index("insert-molecules") < sc.index("em.mdp")
+        # HTT-scaled anneal temperature (600 C -> 2000 K)
+        assert "ref_t           = 2000" in (out / "nvt.mdp").read_text()
+
+    def test_explicit_box_used(self, molecule, tmp_path):
+        gro, itp = molecule
+        out = setup_condensation(tmp_path / "run", gro, itp, n_copies=8, htt_c=400, box_nm=12.0)
+        assert "-box 12 12 12" in (out / "run_condensation.sh").read_text()
+
+    def test_missing_molecule_raises(self, tmp_path):
+        with pytest.raises(CondensationError):
+            setup_condensation(tmp_path / "run", tmp_path / "nope.gro",
+                               tmp_path / "nope.itp", n_copies=4, htt_c=400)
+
+
+class TestGenerateAndCondense:
+    def test_end_to_end(self, tmp_path):
+        gen = pytest.importorskip("biochar.biochar_generator")
+        cfg = gen.GeneratorConfig(target_num_carbons=30, H_C_ratio=0.5, O_C_ratio=0.1,
+                                  molecule_name="BC30", strict=False, seed=1)
+        out = generate_and_condense(tmp_path / "run", n_copies=12,
+                                    generator_config=cfg, htt_c=800)
+        assert (out / "system.top").exists()
+        assert (out / "molecule.gro").exists() and (out / "molecule.itp").exists()
+        sc = (out / "run_condensation.sh").read_text()
+        assert "-nmol 12" in sc
+        assert "ref_t           = 3000" in (out / "nvt.mdp").read_text()  # 800 C -> 3000 K
