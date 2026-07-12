@@ -135,6 +135,8 @@ starting configs). Both molecule sources are supported: **generate fresh**
       `generate_and_condense`: dry `.top` (molecule × N), loose box estimate,
       per-repeat seeded `insert-molecules` packing wired into the run script.
       (Phase 2 "library selection" simplified to the single-molecule block.)
-- [ ] Phase 4 — surface creation (z-expand + semi-iso NPT)
+- [x] **Phase 4 — surface creation** → `setup_surface` / `render_surface_script`:
+      z-expand the condensed bulk by ~10 nm vacuum (editconf), EM, then 10 ns
+      semi-isotropic NPT (xy at 1 bar, z frozen to preserve the gap).
 - [ ] Phase 5 — validation helpers (density / SASA / TEM)
 - [ ] Phase 6 — config / CLI / docs / tests polish
