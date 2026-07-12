@@ -20,7 +20,9 @@ from biochar.condensation import (
     render_condensation_script,
     render_condensation_top,
     render_mdp_set,
+    render_surface_script,
     setup_condensation,
+    setup_surface,
     write_condensation_setup,
 )
 
@@ -208,3 +210,46 @@ class TestGenerateAndCondense:
         sc = (out / "run_condensation.sh").read_text()
         assert "-nmol 12" in sc
         assert "ref_t           = 3000" in (out / "nvt.mdp").read_text()  # 800 C -> 3000 K
+
+
+# --------------------------------------------------------------------------- #
+# Phase 4 — surface creation (z-expand + semi-isotropic NPT)
+# --------------------------------------------------------------------------- #
+class TestSurface:
+    @pytest.fixture()
+    def bulk(self, tmp_path):
+        (tmp_path / "bulk.gro").write_text(
+            "bulk\n    1\n    1MOL     C1    1   0.000   0.000   0.000\n   3.000   3.000   2.500\n"
+        )
+        (tmp_path / "system.top").write_text(
+            '#include "oplsaa.ff/forcefield.itp"\n#include "mol.itp"\n\n[ molecules ]\nBCX 50\n'
+        )
+        (tmp_path / "mol.itp").write_text("[ moleculetype ]\nBCX 3\n")
+        return tmp_path
+
+    def test_writes_files_and_copies_inputs(self, bulk, tmp_path):
+        out = setup_surface(tmp_path / "surf", bulk / "bulk.gro", bulk / "system.top",
+                            itp=bulk / "mol.itp")
+        for f in ("bulk.gro", "system.top", "mol.itp", "em.mdp", "surf_npt.mdp", "run_surface.sh"):
+            assert (out / f).exists()
+        assert (out / "run_surface.sh").stat().st_mode & stat.S_IXUSR
+
+    def test_semiisotropic_z_frozen(self, bulk, tmp_path):
+        out = setup_surface(tmp_path / "surf", bulk / "bulk.gro", bulk / "system.top")
+        m = (out / "surf_npt.mdp").read_text()
+        assert "pcoupltype      = semiisotropic" in m
+        assert "compressibility = 4.5e-5 0" in m   # xy free, z frozen (keep gap)
+        assert "ref_p           = 1.0 1.0" in m
+        assert "nsteps          = 5000000" in m and "dt              = 0.002" in m
+
+    def test_script_expands_z_then_em_then_npt(self, bulk, tmp_path):
+        out = setup_surface(tmp_path / "surf", bulk / "bulk.gro", bulk / "system.top", gap_nm=8.0)
+        sc = (out / "run_surface.sh").read_text()
+        assert "editconf" in sc and "NEWZ" in sc and "GAP=8" in sc
+        assert sc.index("editconf") < sc.index("em.mdp") < sc.index("surf_npt.mdp")
+
+    def test_bad_gap_and_missing_input(self, bulk, tmp_path):
+        with pytest.raises(CondensationError):
+            render_surface_script("bulk.gro", "system.top", gap_nm=0)
+        with pytest.raises(CondensationError):
+            setup_surface(tmp_path / "surf", tmp_path / "nope.gro", bulk / "system.top")
