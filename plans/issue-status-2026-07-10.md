@@ -84,7 +84,7 @@ uncommitted.
 - **D** — No local end-to-end smoke test for the PFAS pipeline (`test`, ~1 hr)
   — fabricate a fake `ligand_system_dir` and confirm `merged.top`,
   `run_pipeline.sh`, `solvate_ions.slurm`/`submit_chain.sh` come out
-  well-formed without touching `gmx`/`ligpargen`/mu3c.
+  well-formed without touching `gmx`/`ligpargen`/hpc.
 - **E** — Expose `ligands`/`ligand_system_dir` on the CLI (`enhancement`,
   2–3 hr) — `md_setup_cli.py`/`sweep_cli.py` are Python-API-only right now.
 - **F** — Add a top-level `examples/pfas_binding/` walkthrough (`docs`,
@@ -146,10 +146,10 @@ suite (`tests/test_hc_control.py`), but:
   pyridinic/graphitic N substitution is untested; may surface ring-parity
   edge cases in `carbon_skeleton.py` (now also touched by the H/C fix above —
   worth re-checking for interaction once Issue J lands).
-- **mu3c `scratch_root` misconfiguration** (from `PFAS_HANDOFF.md` §5) —
-  `/scratch/layfield` should likely be `/home0/layfield` or
-  `/extra0/layfield` in the Compute panel. Ops/config only; matters once
-  someone is ready to actually execute the PFAS pipeline on mu3c, not before.
+- **hpc `scratch_root` misconfiguration** (from `PFAS_HANDOFF.md` §5) —
+  `/scratch/<user>` should likely be `/home0/<user>` or
+  `/extra0/<user>` in the Compute panel. Ops/config only; matters once
+  someone is ready to actually execute the PFAS pipeline on hpc, not before.
 - **`tests/test_ml_charges.py` sklearn gap** — 18 failures from a missing
   `scikit-learn` dependency in the `biochar-md` conda env; environment issue,
   not a code defect, so not proposed as a numbered issue above.

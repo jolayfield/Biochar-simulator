@@ -187,10 +187,14 @@ class TestPreSolvationStage:
             setup_one_structure(gro, top, tmp_path / "run",
                                 config=MDSetupConfig(pre_solvation_stage=stage))
 
-    def test_mu3c_chain_threads_stage(self, built_structure, tmp_path):
+    def test_slurm_chain_threads_stage(self, built_structure, tmp_path):
         gro, top = built_structure
         stage = self._stage(tmp_path)
-        cfg = MDSetupConfig(pre_solvation_stage=stage, cluster="mu3c")
+        cfg = MDSetupConfig(
+            pre_solvation_stage=stage, cluster="slurm",
+            slurm_submit_script="wrapper.slurm", slurm_sif_file="gromacs.sif",
+            slurm_partition="batch",
+        )
         out = setup_one_structure(gro, top, tmp_path / "run", label="mini", config=cfg)
         assert (out / "solvate_ions.slurm").exists()
         assert (out / "submit_chain.sh").exists()
@@ -198,6 +202,13 @@ class TestPreSolvationStage:
         assert "insert-molecules" in slurm and "MOL.gro" in slurm
         chain = (out / "submit_chain.sh").read_text()
         assert "merged.top" in chain  # solvate_ions job handed the stage topology
+
+    def test_slurm_requires_site_fields(self, built_structure, tmp_path):
+        gro, top = built_structure
+        # cluster="slurm" without the site-specific fields must raise.
+        cfg = MDSetupConfig(cluster="slurm")
+        with pytest.raises(MDSetupError, match="slurm_submit_script"):
+            setup_one_structure(gro, top, tmp_path / "run", config=cfg)
 
 
 # --------------------------------------------------------------------------- #
