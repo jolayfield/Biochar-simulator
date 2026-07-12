@@ -145,3 +145,8 @@ starting configs). Both molecule sources are supported: **generate fresh**
 - [x] **Phase 6 — CLI / exports / docs** → `biochar-condense` (`generate` /
       `from-files`), `add_surface_and_validation` convenience, `__init__` exports,
       pyproject entry point, README section. 36 condensation tests total.
+- [x] **Curvature (sub-decision 2)** → heptagon fusion (`_fuse_heptagon`) +
+      `_choose_ring_size`; `heptagon_fraction` threaded through `PAHAssembler` →
+      `GeneratorConfig` → `generate_biochar`; Wood's ratios exported as
+      `WOOD_PENTAGON_FRACTION` (2/13) / `WOOD_HEPTAGON_FRACTION` (1/13) and wired
+      into `biochar-condense generate --wood-curvature`. 9 heptagon tests added.

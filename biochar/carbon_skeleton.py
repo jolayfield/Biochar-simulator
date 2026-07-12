@@ -441,6 +441,83 @@ def _fuse_pentagon(
         return next_node + 3
 
 
+def _fuse_heptagon(
+    G: nx.Graph,
+    u: int,
+    v: int,
+    next_node: int,
+    positions: Optional[Dict[int, Tuple[float, float]]] = None,
+) -> int:
+    """
+    Fuse a 7-membered ring onto edge (u, v) — adds five new vertices.
+
+    Heptagons introduce the negative (saddle) curvature that, together with
+    pentagons (positive curvature), disrupts graphitic stacking in
+    non-graphitizing carbons (Wood et al. 2024). Same position-merge logic as
+    ``_fuse_hexagon`` / ``_fuse_pentagon``.
+
+    Returns the next free node id.
+    """
+    if positions is not None and u in positions and v in positions:
+        outward = _outward_direction(G, positions, u, v)
+        new_pos_list = _compute_fused_ring_positions(
+            positions[u], positions[v], outward, n_sides=7, num_new=5
+        )
+
+        new_nodes: List[int] = []
+        for pos in new_pos_list:
+            existing = _find_node_at_position(positions, pos)
+            if existing is not None:
+                new_nodes.append(existing)
+            else:
+                G.add_node(next_node)
+                positions[next_node] = pos
+                new_nodes.append(next_node)
+                next_node += 1
+
+        ring_seq = [v] + new_nodes + [u]
+        for a, b in zip(ring_seq, ring_seq[1:]):
+            G.add_edge(a, b)
+
+        return next_node
+
+    else:
+        new_nodes = list(range(next_node, next_node + 5))
+        for n in new_nodes:
+            G.add_node(n)
+        ring_seq = [v] + new_nodes + [u]
+        for a, b in zip(ring_seq, ring_seq[1:]):
+            G.add_edge(a, b)
+        return next_node + 5
+
+
+def _choose_ring_size(
+    rng: random.Random,
+    pentagon_fraction: float,
+    heptagon_fraction: float,
+    nodes_remaining: int,
+) -> int:
+    """Pick a ring size (5, 6, or 7) for the next fusion.
+
+    Pentagons/heptagons are drawn with their requested probabilities; hexagons
+    are the remainder. A ring is only eligible if it does not overshoot the
+    remaining node budget by more than one (pentagon +3, hexagon +4,
+    heptagon +5), so growth lands near the target size.
+    """
+    penta_ok = nodes_remaining >= 3
+    hexa_ok = nodes_remaining >= 3          # hexagon is the fallback; allow near the end
+    hepta_ok = nodes_remaining >= 5
+
+    r = rng.random()
+    if penta_ok and r < pentagon_fraction:
+        return 5
+    if hepta_ok and r < pentagon_fraction + heptagon_fraction:
+        return 7
+    if hexa_ok:
+        return 6
+    return 5  # tiny budget: a pentagon overshoots least
+
+
 def _edge_carbon_fraction(mol: Chem.Mol) -> float:
     """
     Fraction of carbons on the perimeter (heavy-atom degree < 3).
@@ -494,6 +571,7 @@ def _grow_graph(
     defect_fraction: float = 0.0,
     positions: Optional[Dict[int, Tuple[float, float]]] = None,
     compactness: float = 1.0,
+    heptagon_fraction: float = 0.0,
 ) -> nx.Graph:
     """
     Grow a carbon graph by iteratively fusing rings.
@@ -561,19 +639,18 @@ def _grow_graph(
 
         nodes_remaining = target_nodes - G.number_of_nodes()
 
-        # Decide ring size for this step.
-        # Pentagon adds ≤ 3 new nodes; hexagon adds ≤ 4.
-        # In defect mode: if exactly 3 slots remain use a pentagon so we
-        # land on the target rather than overshooting by 1.
-        if defect_fraction > 0 and nodes_remaining == 3:
-            use_pentagon = True
-        elif defect_fraction > 0 and nodes_remaining >= 4:
-            use_pentagon = rng.random() < defect_fraction
+        # Decide ring size for this step. Pentagon (+3) / heptagon (+5) are drawn
+        # with their requested fractions; hexagon (+4) is the remainder. When no
+        # defects are requested this is always a hexagon.
+        if defect_fraction > 0 or heptagon_fraction > 0:
+            ring = _choose_ring_size(rng, defect_fraction, heptagon_fraction, nodes_remaining)
         else:
-            use_pentagon = False
+            ring = 6
 
-        if use_pentagon:
+        if ring == 5:
             next_node = _fuse_pentagon(G, u, v, next_node, positions=positions)
+        elif ring == 7:
+            next_node = _fuse_heptagon(G, u, v, next_node, positions=positions)
         else:
             next_node = _fuse_hexagon(G, u, v, next_node, positions=positions)
 
@@ -603,6 +680,9 @@ def _grow_graph(
         if defect_fraction > 0:
             # Pentagon adds odd → odd + odd = even  ✓
             next_node = _fuse_pentagon(G, u, v, next_node, positions=positions)
+        elif heptagon_fraction > 0:
+            # Heptagon also adds odd → restores parity when only heptagons are on
+            next_node = _fuse_heptagon(G, u, v, next_node, positions=positions)
         else:
             # Hexagon adds even → pure-hexagon safety net
             next_node = _fuse_hexagon(G, u, v, next_node, positions=positions)
@@ -743,6 +823,7 @@ class PAHAssembler:
         prefer_larger_pahs: bool = True,
         defect_fraction: float = 0.0,
         target_h_c: Optional[float] = None,
+        heptagon_fraction: float = 0.0,
     ) -> CarbonSkeleton:
         """
         Generate a carbon skeleton of approximately *target_num_carbons*.
@@ -755,6 +836,9 @@ class PAHAssembler:
                 during graph growth is a 5-membered (pentagon) ring.
                 0.0 = pure hexagonal PAH (default).
                 0.1 = roughly 10% pentagons.
+            heptagon_fraction: Probability [0, 1) that any ring addition is a
+                7-membered (heptagon) ring. Together with pentagons this adds the
+                curvature of non-graphitizing carbons (Wood et al. 2024).
             target_h_c: Optional target H/C ratio.  When provided and above the
                 compact ceiling for this size, growth is steered toward a
                 less-condensed (higher-perimeter) flake so more edge carbons are
@@ -762,7 +846,7 @@ class PAHAssembler:
         """
         mol = None
 
-        if defect_fraction <= 0.0:
+        if defect_fraction <= 0.0 and heptagon_fraction <= 0.0:
             # --- Route 1: exact library match (only for pure hexagon mode) ---
             for name, info in self.pahs.items():
                 if info["num_carbons"] == target_num_carbons:
@@ -782,7 +866,9 @@ class PAHAssembler:
 
         # --- Route 2: library seed + graph growth (with optional pentagons) ---
         if mol is None:
-            mol = self._build_from_seed(target_num_carbons, defect_fraction, target_h_c)
+            mol = self._build_from_seed(
+                target_num_carbons, defect_fraction, target_h_c, heptagon_fraction
+            )
 
         # --- Fallback: pyrene (no pentagons) ---
         if mol is None:
@@ -806,6 +892,7 @@ class PAHAssembler:
     def _build_from_seed(
         self, target: int, defect_fraction: float = 0.0,
         target_h_c: Optional[float] = None,
+        heptagon_fraction: float = 0.0,
     ) -> Optional[Chem.Mol]:
         """
         Build a carbon skeleton of *target* carbons using a library seed
@@ -824,7 +911,7 @@ class PAHAssembler:
         _MAX_DEFECT_RETRIES = 5
         _MAX_ELONGATE_RETRIES = 4
 
-        if defect_fraction <= 0.0:
+        if defect_fraction <= 0.0 and heptagon_fraction <= 0.0:
             # --- Pure hexagon route ---
             # Always build the reliable, fully-compact skeleton first (largest
             # fitting seed; deterministic and historically always kekulizable).
@@ -906,6 +993,7 @@ class PAHAssembler:
                     seed=base_seed + attempt,
                     defect_fraction=defect_fraction,
                     positions=grown_positions, compactness=1.0,
+                    heptagon_fraction=heptagon_fraction,
                 )
                 mol = _graph_to_mol(G, positions=grown_positions)
                 if mol is not None:
@@ -1001,6 +1089,7 @@ class PAHAssembler:
         ring_comp = {
             "hexagons": sum(1 for r in rings if len(r) == 6),
             "pentagons": sum(1 for r in rings if len(r) == 5),
+            "heptagons": sum(1 for r in rings if len(r) == 7),
         }
         return CarbonSkeleton(
             mol=mol,
