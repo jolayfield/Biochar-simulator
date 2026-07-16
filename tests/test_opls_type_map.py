@@ -12,6 +12,8 @@ The forcefield-backed tests run only when an oplsaa.ff can be located (set
 ``GMXDATA`` set). The regression tests below need no forcefield.
 """
 
+from __future__ import annotations
+
 import os
 import re
 import shutil
