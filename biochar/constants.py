@@ -5,6 +5,9 @@ Atom types, charges, and masses for OPLS-AA force field.
 Reference: Jorgensen, W. L., et al. JACS 118.45 (1996): 11225-11236.
 """
 
+from dataclasses import dataclass
+from typing import Optional
+
 
 # OPLS-AA Atom Types for Biochar Systems
 # Format: atom_type: (description, mass_amu, default_charge)
@@ -273,6 +276,123 @@ FUNCTIONAL_GROUPS = {
         "H_per_group": 0,
     },
 }
+
+# ---------------------------------------------------------------------------
+# pH-dependent protonation states
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ProtonationState:
+    """
+    One acid/base equilibrium available to a biochar functional group.
+
+    *pKa* always belongs to the **protonated** member of the pair, following the
+    usual convention.  ``kind`` says which side of the equilibrium the charge
+    appears on, and is what stops the two blocks being conflated:
+
+        "acidic"  — the neutral form is protonated; it *loses* H+ to become an
+                    anion.  Fraction ionized rises with pH.
+        "basic"   — the neutral form is deprotonated; it *gains* H+ to become a
+                    cation.  Fraction ionized falls with pH.
+
+    ``neutral_type`` / ``ionized_type`` name the OPLS type of the one heteroatom
+    whose formal charge changes.  ``h_type`` is the exchangeable hydrogen's OPLS
+    type — the H that is removed (acidic) or added (basic).
+    """
+
+    pKa: float
+    kind: str            # "acidic" | "basic"
+    neutral_type: str    # OPLS type of the key heteroatom, neutral form
+    ionized_type: str    # OPLS type of the key heteroatom, ionized form
+    h_type: str          # OPLS type of the exchangeable hydrogen
+    description: str
+
+
+# Titratable groups, keyed by the group names OxygenAssigner already places
+# (plus "pyridinic", which NitrogenSubstitutor substitutes into the ring).
+#
+# pKa provenance — model-compound values, chosen to sit inside the ranges
+# reported for real biochar surfaces by potentiometric and Boehm titration
+# (carboxylic 3–6, phenolic 8–11, see refs below):
+#
+#   carboxyl   4.20  benzoic acid.  Biochar surface carboxyls titrate 3–6;
+#                    benzoic acid is the aryl-carboxyl model compound.
+#   phenolic   9.50  phenol (9.95) shifted down slightly toward the 9–10 band
+#                    reported for biochar phenolic OH, which sits on
+#                    electron-poor polyaromatic edges rather than plain benzene.
+#   thiol      6.60  thiophenol.  Aryl thiols are far more acidic than alkyl.
+#   amino      4.60  anilinium (conjugate acid of aniline).
+#   pyridinic  5.20  pyridinium (conjugate acid of pyridine).
+#
+# Refs: Boehm/potentiometric titration ranges —
+#   doi:10.1016/j.scitotenv.2020.142792 (proton uptake vs. pyrolysis temperature)
+#   doi:10.1016/j.jcis.2016.01.076      (pKa of graphene-like materials)
+#   doi:10.1016/j.carbon.2013.09.048    (limits of the Boehm titration)
+#
+# NOTE — lactonic groups (pKa 7–9) also titrate in the environmentally
+# interesting window but are deliberately absent: "lactone" currently falls back
+# to "phenolic" in OxygenAssigner, so there is no lactone to titrate.
+#
+# NOTE — graphitic N is absent by design.  It is permanently +1 by construction
+# (three aromatic ring bonds, pyridinium-like) and does not titrate.
+PROTONATION_STATES: dict[str, ProtonationState] = {
+    "carboxyl": ProtonationState(
+        pKa=4.20,
+        kind="acidic",
+        neutral_type="OH2",   # -C(=O)OH  hydroxyl oxygen
+        ionized_type="O2M",   # -C(=O)O-  carboxylate oxygen
+        h_type="HO2",
+        description="Ar-COOH <-> Ar-COO- + H+  (benzoic acid, pKa 4.20)",
+    ),
+    "phenolic": ProtonationState(
+        pKa=9.50,
+        kind="acidic",
+        neutral_type="OH",
+        ionized_type="OM",
+        h_type="HO",
+        description="Ar-OH <-> Ar-O- + H+  (phenol, pKa 9.95 -> 9.50 on PAH edge)",
+    ),
+    "thiol": ProtonationState(
+        pKa=6.60,
+        kind="acidic",
+        neutral_type="SH_",
+        ionized_type="SM",
+        h_type="HSH",
+        description="Ar-SH <-> Ar-S- + H+  (thiophenol, pKa 6.60)",
+    ),
+    "amino": ProtonationState(
+        pKa=4.60,
+        kind="basic",
+        neutral_type="NA",
+        ionized_type="NAP",
+        h_type="HNAP",
+        description="Ar-NH2 + H+ <-> Ar-NH3+  (anilinium, pKa 4.60)",
+    ),
+    "pyridinic": ProtonationState(
+        pKa=5.20,
+        kind="basic",
+        neutral_type="NPY",
+        ionized_type="NPYP",
+        h_type="HPYP",
+        description="pyridinic N + H+ <-> pyridinium NH+  (pyridinium, pKa 5.20)",
+    ),
+}
+
+# Group kinds, for callers that need to branch on the sign of the transition
+# without reaching into the table.
+ACIDIC_GROUPS = frozenset(
+    g for g, s in PROTONATION_STATES.items() if s.kind == "acidic"
+)
+BASIC_GROUPS = frozenset(
+    g for g, s in PROTONATION_STATES.items() if s.kind == "basic"
+)
+
+# Physically meaningful pH bounds.  Outside this range the Henderson-Hasselbalch
+# fraction saturates anyway, and the request is much more likely a unit error.
+PH_MIN = 0.0
+PH_MAX = 14.0
+
 
 # Common PAH structures (SMILES notation)
 # All entries validated: correct carbon count, 100% aromatic, all atoms in 6-membered rings.
