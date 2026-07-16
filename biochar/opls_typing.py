@@ -355,27 +355,40 @@ class ChargeAssigner:
         self, mol: Chem.Mol, charges: Dict[int, float]
     ) -> Dict[int, float]:
         """
-        Adjust charges to ensure overall neutrality.
+        Adjust charges so the molecule sums to its **total formal charge**.
 
-        Scales all charges proportionally to sum to zero.
+        The target is the sum of the atoms' formal charges, not zero. A neutral
+        molecule has a formal charge of 0, so this reduces exactly to the old
+        sum-to-zero behaviour and leaves the non-pH path untouched.
+
+        Targeting zero unconditionally -- as this did previously -- made an
+        ionized structure impossible to express: any charge placed on a
+        carboxylate was redistributed away until the molecule was neutral
+        again, with no warning. It also quietly erased the formal +1 that
+        graphitic nitrogen has carried since it was introduced.
+
+        Neutralising a genuinely charged system is the job of `genion -neutral`
+        at solvation time (see md_setup), not of the molecule definition.
 
         Args:
             mol: RDKit molecule
             charges: Dictionary of {atom_idx: charge}
 
         Returns:
-            Equilibrated charges
+            Equilibrated charges summing to the molecule's formal charge
         """
-        total_charge = sum(charges.values())
+        target = sum(atom.GetFormalCharge() for atom in mol.GetAtoms())
+        residual = sum(charges.values()) - target
 
-        if abs(total_charge) < 1e-6:
+        if abs(residual) < 1e-6:
             return charges
 
-        if abs(total_charge) > 0.01:
+        if abs(residual) > 0.01:
             logger.debug(
-                "Charge residual before neutrality correction: %.4f e "
-                "(distributing across %d heteroatoms)",
-                total_charge,
+                "Charge residual before correction: %.4f e (target %+d e, "
+                "distributing across %d heteroatoms)",
+                residual,
+                target,
                 sum(1 for idx in charges if mol.GetAtomWithIdx(idx).GetAtomicNum() in [7, 8]),
             )
 
@@ -391,7 +404,7 @@ class ChargeAssigner:
             adjustable_atoms = list(charges.keys())
 
         # Scale adjustment
-        scale = total_charge / len(adjustable_atoms)
+        scale = residual / len(adjustable_atoms)
         adjusted_charges = charges.copy()
 
         for idx in adjustable_atoms:
@@ -471,10 +484,20 @@ class OPLSPropertyTable:
                     f"Atom {prop.atom_idx} has extreme charge: {prop.charge:.2f}"
                 )
 
-        # Check total charge is reasonable
+        # The partial charges must sum to the molecule's formal charge.
+        #
+        # This replaces an `abs(total_charge) > 1.0` check that could never fire
+        # -- charges were forced to zero before it ran, and it did nothing but
+        # `pass` regardless. Comparing against the formal charge is a real
+        # check: it catches an atom typed to the wrong ionization state, which
+        # otherwise produces a topology that grompp accepts and simulates wrong.
+        formal_charge = sum(a.GetFormalCharge() for a in self.mol.GetAtoms())
         total_charge = self.get_total_charge()
-        if abs(total_charge) > 1.0:
-            # Warning, not error
-            pass
+        if abs(total_charge - formal_charge) > 0.01:
+            errors.append(
+                f"Net charge {total_charge:+.4f} e does not match total formal "
+                f"charge {formal_charge:+d} e (difference "
+                f"{total_charge - formal_charge:+.4f} e)"
+            )
 
         return len(errors) == 0, errors
