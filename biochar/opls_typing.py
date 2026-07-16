@@ -54,6 +54,42 @@ class AtomTyper:
 
         return atom_types
 
+    @staticmethod
+    def _is_carboxyl_carbon(atom: Chem.Atom) -> bool:
+        """
+        True when *atom* is the carbon of a carboxyl or carboxylate group.
+
+        A carboxyl carbon carries two oxygens (C(=O)-OH or C(=O)-O-); a ketone
+        or quinone carbon carries one, and an ether carbon's oxygen is not
+        doubly bonded. Two oxygens on one carbon is therefore sufficient here --
+        the generator builds no esters (the 'lactone' group falls back to
+        phenolic and is never actually placed).
+
+        This is what separates a carboxyl -OH from a phenolic -OH; without it
+        both look like "an oxygen with one hydrogen".
+        """
+        if atom.GetAtomicNum() != 6:
+            return False
+        return sum(1 for n in atom.GetNeighbors() if n.GetAtomicNum() == 8) >= 2
+
+    @classmethod
+    def _is_carboxylate_carbon(cls, atom: Chem.Atom) -> bool:
+        """
+        True when *atom* is the carbon of a *deprotonated* carboxylate.
+
+        Detected by any of its oxygens carrying a negative formal charge. The
+        two oxygens of a carboxylate are equivalent by resonance, so both take
+        the carboxylate type -- RDKit's C(=O)[O-] Kekule form assigns the charge
+        to only one of them, and typing the other from its double bond alone
+        would leave one oxygen on the neutral carboxylic-acid type.
+        """
+        if not cls._is_carboxyl_carbon(atom):
+            return False
+        return any(
+            n.GetAtomicNum() == 8 and n.GetFormalCharge() < 0
+            for n in atom.GetNeighbors()
+        )
+
     def _determine_atom_type(self, mol: Chem.Mol, atom: Chem.Atom) -> str:
         """
         Determine OPLS atom type for a single atom.
@@ -62,9 +98,14 @@ class AtomTyper:
         - Aromatic C -> CA, aromatic H -> HA
         - Aliphatic sp3 C -> CT, H on sp3 C -> HC
         - Carbonyl O -> OC, hydroxyl O -> OH, ether O -> OS
+        - Formal charge selects the ionized types: an anionic O is carboxylate
+          (O2M) or phenolate (OM) by its neighbour; a cationic N is graphitic
+          (NGR), pyridinium (NPYP), or anilinium (NAP) by ring membership and
+          hydrogen count.
         """
         atomic_num = atom.GetAtomicNum()
         is_aromatic = atom.GetIsAromatic()
+        formal_charge = atom.GetFormalCharge()
 
         # Carbon
         if atomic_num == 6:
@@ -104,6 +145,10 @@ class AtomTyper:
                     return "HSH"
                 elif neighbor_type == "NPR":
                     return "HNPR"
+                elif neighbor_type == "NPYP":
+                    return "HPYP"
+                elif neighbor_type == "NAP":
+                    return "HNAP"
                 else:
                     return "HC"
             return "HC"
@@ -114,25 +159,47 @@ class AtomTyper:
             num_bonds = len(atom.GetBonds())
             neighbors = list(atom.GetNeighbors())
 
+            # Deprotonated oxygen: carboxylate or phenolate, by its neighbour.
+            if formal_charge < 0:
+                heavy = [n for n in neighbors if n.GetAtomicNum() != 1]
+                if heavy and self._is_carboxyl_carbon(heavy[0]):
+                    return "O2M"  # Carboxylate  Ar-COO-
+                return "OM"       # Phenolate    Ar-O-
+
             if num_bonds == 1:
-                # Terminal oxygen (likely carbonyl)
+                # Terminal oxygen: a carbonyl of some kind.
                 neighbor = neighbors[0]
                 if neighbor.GetAtomicNum() == 6:
                     # Check if double bond
                     bond = mol.GetBondBetweenAtoms(atom.GetIdx(), neighbor.GetIdx())
                     if bond and bond.GetBondType() == Chem.BondType.DOUBLE:
-                        return "OC"  # Carbonyl
+                        # Both oxygens of a carboxylate are equivalent by
+                        # resonance, so the C=O of a deprotonated group takes
+                        # the carboxylate type too -- not the neutral acid's.
+                        if self._is_carboxylate_carbon(neighbor):
+                            return "O2M"  # Carboxylate  Ar-COO-
+                        # A carboxylic acid C=O is not a ketone C=O -- it has
+                        # its own OPLS type and its own charge.
+                        if self._is_carboxyl_carbon(neighbor):
+                            return "O"   # Carboxylic acid C=O
+                        return "OC"      # Ketone / aldehyde C=O
                     else:
                         return "O"  # Carboxylic acid O
             elif num_bonds == 2:
                 # Connected to two atoms
                 if any(n.GetAtomicNum() == 1 for n in neighbors):
-                    return "OH"  # Hydroxyl
+                    # Hydroxyl -- but a carboxyl -OH and a phenolic -OH are
+                    # different types. Both have exactly one H and one heavy
+                    # neighbour, so only the neighbour tells them apart.
+                    heavy = [n for n in neighbors if n.GetAtomicNum() != 1]
+                    if heavy and self._is_carboxyl_carbon(heavy[0]):
+                        return "OH2"  # Carboxylic acid -OH
+                    return "OH"       # Phenolic / alcohol -OH
                 else:
                     return "OS"  # Ether
-            else:
-                # Special case for carboxylic acid OH
-                return "OH2"
+
+            # Oxygen with 3+ bonds is not a species this pipeline builds.
+            return "OH"
 
         # Nitrogen
         elif atomic_num == 7:
@@ -148,7 +215,22 @@ class AtomTyper:
             # (plus, for pyrrolic, one H).  Aniline N (pendant Ar-NH2) is not in
             # a ring, so it is excluded here.
             ring_info = mol.GetRingInfo()
-            if ring_info.NumAtomRings(atom.GetIdx()) > 0:
+            in_ring = ring_info.NumAtomRings(atom.GetIdx()) > 0
+
+            # Cationic nitrogen. Graphitic N is quaternary and carries a formal
+            # +1 by construction, so it must be matched before pyridinium --
+            # both are cationic ring nitrogens, and only the hydrogen count and
+            # heavy-neighbour count separate them.
+            if formal_charge > 0:
+                if in_ring:
+                    if h_count == 0 and len(heavy_neighbors) >= 3:
+                        return "NGR"   # Graphitic: quaternary, no H
+                    if h_count >= 1:
+                        return "NPYP"  # Pyridinium: protonated ring N
+                elif h_count >= 2:
+                    return "NAP"       # Anilinium Ar-NH3+
+
+            if in_ring:
                 ring_sizes = [
                     len(r) for r in ring_info.AtomRings() if atom.GetIdx() in r
                 ]
@@ -168,6 +250,8 @@ class AtomTyper:
 
         # Sulfur
         elif atomic_num == 16:
+            if formal_charge < 0:
+                return "SM"   # Thiophenolate sulfur (Ar-S-)
             if any(n.GetAtomicNum() == 1 for n in atom.GetNeighbors()):
                 return "SH_"  # Thiol sulfur (Ar-SH)
             else:
