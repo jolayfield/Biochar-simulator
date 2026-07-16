@@ -38,9 +38,9 @@ OPLS_ATOM_TYPES = {
     "HNA": ("H on aromatic amine nitrogen", 1.008, 0.30),
 
     # Sulfur
-    "SH_": ("Aromatic thiol sulfur (Ar-SH)", 32.06, -0.39),    # opls_202
+    "SH_": ("Aromatic thiol sulfur (Ar-SH)", 32.06, -0.39),    # opls_734
     "HSH": ("H on thiol sulfur", 1.008, 0.21),                 # opls_204
-    "SS": ("Thioether sulfur bridging two aryl C (Ar-S-Ar)", 32.06, -0.16),  # opls_209
+    "SS": ("Thioether sulfur bridging two aryl C (Ar-S-Ar)", 32.06, -0.16),  # opls_222
     # Ring-substituting nitrogen (biochar N-doping)
     "NPY": ("Pyridinic N (substituted into 6-ring, no H)", 14.007, -0.36),
     "NPR": ("Pyrrolic N (substituted into 5-ring, with H)", 14.007, -0.52),
@@ -73,9 +73,9 @@ OPLS_LJ_PARAMS = {
     "NT": (0.3250, 0.7113),      # Quaternary nitrogen
     "NA": (0.3250, 0.7113),      # Aromatic amine N (aniline)
     "HNA": (0.1000, 0.0000),     # H on aromatic amine (no LJ)
-    "SH_": (0.3550, 1.0460),     # Aromatic thiol sulfur (opls_202)
+    "SH_": (0.3550, 1.0460),     # Aromatic thiol sulfur (opls_734)
     "HSH": (0.0000, 0.0000),     # H on thiol sulfur (no LJ, opls_204)
-    "SS": (0.3550, 1.0460),      # Thioether sulfur (opls_209)
+    "SS": (0.3550, 1.0460),      # Thioether sulfur (opls_222)
     "NPY": (0.3250, 0.7113),     # Pyridinic ring N (OPLS pyridine N)
     "NPR": (0.3250, 0.7113),     # Pyrrolic ring N (OPLS pyrrole N)
     "NGR": (0.3250, 0.7113),     # Graphitic/quaternary ring N
@@ -86,6 +86,13 @@ OPLS_LJ_PARAMS = {
 # Internal names (CA, HA, etc.) are used throughout the biochar generation pipeline.
 # At GROMACS export time, these are translated so the topology is compatible with
 # the standard oplsaa.ff forcefield shipped with GROMACS.
+#
+# When the exported .itp #includes a real oplsaa.ff, only the opls_XXX name reaches
+# GROMACS -- mass, charge, LJ and bonded parameters are all resolved from the
+# forcefield by that name. A name naming the wrong element therefore silently
+# simulates the wrong chemistry. Trailing comments quote the type's description in
+# oplsaa.ff/atomtypes.atp verbatim; keep them in sync when editing.
+# tests/test_opls_type_map.py checks every entry against an installed oplsaa.ff.
 GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
     "CA":  "opls_145",   # aromatic carbon, benzene-type
     "HA":  "opls_146",   # aromatic hydrogen
@@ -100,16 +107,30 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
     "OH2": "opls_268",   # carboxylic acid -OH oxygen
     "HO2": "opls_270",   # carboxylic acid -OH hydrogen
     "OW":  "opls_116",   # SPC/E water oxygen
-    "NA":  "opls_900",   # primary aromatic amine N (aniline Ar-NH2)
-    "HNA": "opls_901",   # H on primary aromatic amine
-    "SH_": "opls_202",   # aromatic thiol sulfur (Ar-SH)
-    "HSH": "opls_204",   # H on thiol sulfur
-    "SS":  "opls_209",   # thioether sulfur bridging two aryl C (Ar-S-Ar)
-    "NPY": "opls_521",   # pyridinic ring N (OPLS-AA pyridine aromatic N)
-    "NPR": "opls_531",   # pyrrolic ring N (OPLS-AA pyrrole N-H nitrogen)
-    "HNPR": "opls_532",  # H on pyrrolic N (OPLS-AA pyrrole N-H hydrogen)
-    "NGR": "opls_520",   # graphitic/quaternary aromatic N (OPLS pyridinium-type ring N)
+    "NA":  "opls_900",   # "N primary   amines" -- aniline Ar-NH2 nitrogen
+    "HNA": "opls_909",   # "H(N)   primary   amines" -- H on that nitrogen
+    "SH_": "opls_734",   # "all-atom S: thiophenol (HS is #204)" -- Ar-SH sulfur
+    "HSH": "opls_204",   # "all-atom H(S): thiols" -- the HS named by opls_734
+    "SS":  "opls_222",   # "S in thioanisoles" -- nearest aryl-S; see note below
+    "NPY": "opls_520",   # "N   in pyridine 6-31G*" -- pyridinic ring N
+    "NPR": "opls_542",   # "N   in pyrrole" -- pyrrolic ring N
+    "HNPR": "opls_545",  # "H1  in pyrrole" -- the pyrrole N-H hydrogen
+    "NGR": "opls_520",   # graphitic/quaternary ring N; approximated, see note below
 }
+
+# Two entries above are deliberate approximations, not exact matches:
+#
+#   SS  -> opls_222 is the thioanisole sulfur (Ar-S-CH3). OPLS-AA has no diaryl
+#          thioether (Ar-S-Ar) type; opls_222 is the only aryl-attached sulfide S
+#          and carries the matching CA-S bond (0.176 nm, "thioanisole" in
+#          ffbonded.itp). Note OPLS_BOND_PARAMS[("CA", "SS")] still uses 1.740 A,
+#          the thiophenol length -- harmless while a real oplsaa.ff is included
+#          (GROMACS resolves bonds by type name), but wrong on the fallback path.
+#
+#   NGR -> opls_520 is the pyridine N, reused for graphitic/quaternary N because
+#          OPLS-AA has no substitutional 3-coordinate aromatic N type. Element and
+#          ring aromaticity are right; the charge/bonded environment is only
+#          approximate. NPY maps here too -- for pyridinic N it is exact.
 
 # OPLS-AA Bond Parameters (k_bond, r0)
 # Format: (atom_type1, atom_type2) -> (k_kcal/mol/Angstrom^2, r0_Angstrom)
