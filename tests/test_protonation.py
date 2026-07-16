@@ -97,29 +97,15 @@ class TestProtonationStatesTable:
                 f"{group} neutral type {state.neutral_type} missing from OPLS_ATOM_TYPES"
             )
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="ionized OPLS types are defined in U4; U1 only declares the contract",
-    )
     def test_ionized_types_exist_in_opls_table(self):
-        """
-        The ionized side is defined in U4. Until that lands this fails, which is
-        the point: U1 declares the contract, U4 satisfies it.
-
-        strict=True — when U4 lands, this passing becomes an error, forcing the
-        marker off rather than leaving a stale xfail behind.
-        """
+        """Every ionized type the table names must be a real OPLS type."""
         for group, state in PROTONATION_STATES.items():
             assert state.ionized_type in OPLS_ATOM_TYPES, (
                 f"{group} ionized type {state.ionized_type} missing from OPLS_ATOM_TYPES"
             )
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="cationic H types (HNAP/HPYP) are defined in U4",
-    )
     def test_exchangeable_hydrogen_types_exist_in_opls_table(self):
-        """Acidic H types exist today; basic (added) H types arrive in U4."""
+        """The H removed (acidic) or added (basic) must be a real OPLS type."""
         for group, state in PROTONATION_STATES.items():
             assert state.h_type in OPLS_ATOM_TYPES, (
                 f"{group} h_type {state.h_type} missing from OPLS_ATOM_TYPES"
