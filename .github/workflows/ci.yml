@@ -10,6 +10,10 @@ jobs:
   test:
     name: Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    # tests/test_opls_type_map.py resolves the forcefield from GMXDATA. Without
+    # it those tests skip and the suite reports green having checked nothing.
+    env:
+      GMXDATA: /usr/share/gromacs
     strategy:
       fail-fast: false
       matrix:
@@ -29,8 +33,29 @@ jobs:
           pip install pytest pytest-cov
           pip install -e . --no-deps
 
+      # The forcefield-backed tests only parse oplsaa.ff (atomtypes.atp,
+      # ffnonbonded.itp, ffbonded.itp) -- they never invoke gmx. gromacs-data
+      # ships exactly those files without the binaries.
+      - name: Install GROMACS forcefield data
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gromacs-data
+
+      # Without this the suite still passes -- it just skips every
+      # forcefield-backed test and reports green having verified nothing. That
+      # silent skip is the exact failure mode these tests exist to catch, so
+      # assert the forcefield is really discoverable rather than trusting apt.
+      - name: Verify the forcefield is discoverable
+        run: |
+          if [ ! -f "$GMXDATA/top/oplsaa.ff/atomtypes.atp" ]; then
+            echo "::error::oplsaa.ff not found under $GMXDATA — the forcefield tests would silently skip"
+            find / -name atomtypes.atp -not -path '*/node_modules/*' 2>/dev/null | head
+            exit 1
+          fi
+          echo "forcefield OK: $(ls "$GMXDATA/top/oplsaa.ff" | wc -l) files"
+
       - name: Run tests
-        run: pytest tests/ -v --tb=short --cov=biochar --cov-report=term-missing
+        run: pytest tests/ -v --tb=short -rs --cov=biochar --cov-report=term-missing
 
       - name: Upload coverage
         if: matrix.python-version == '3.11'
