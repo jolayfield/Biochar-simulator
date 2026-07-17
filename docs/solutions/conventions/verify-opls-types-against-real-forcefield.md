@@ -47,7 +47,7 @@ believed sufficient until the next defect proved it wasn't**:
 |-------|-------|-------------|
 | 1 | The mapped type **exists** | Every wrong mapping named a real type |
 | 2 | The mapped type has the right **element/mass** | `CA-S-CA` — right element, right mass, still broken |
-| 3 | Every emitted **bond/angle combination resolves** in `ffbonded.itp` | (holds so far) |
+| 3 | Every emitted **bond/angle combination resolves** | now enforced — see Examples |
 
 **Depth 1** (fixed in c26bacd): `SS` (thioether sulfur) mapped to `opls_209`, which is a
 *carbon* — bonded type `CT`, mass 12.011. Pyridinic and pyrrolic N mapped to carbon types
@@ -55,16 +55,21 @@ too. `grompp` accepts any name that exists, so nothing errored; the simulation r
 wrong chemistry.
 
 **Depth 2**: the fix added element/mass consistency checks
-(`TestTypesAreTheRightElement` in `tests/test_opls_type_map.py`). This is the current
-ceiling.
+(`TestTypesAreTheRightElement` in `tests/test_opls_type_map.py`). Believed sufficient at
+the time — a prior session recorded that *"element consistency is the check that catches
+this class."* Depth 3 falsified that.
 
-**Depth 3** (open): `SS -> opls_222` is genuinely sulfur (mass 32.06, bonded type `S`), so
+**Depth 3**: `SS -> opls_222` is genuinely sulfur (mass 32.06, bonded type `S`), so
 depth 2 passes cleanly — yet a thioether bridges two aromatic carbons and emits a
 `CA-S-CA` angle, and `ffbonded.itp` has **no such angletype**. Only `CA S CT` (thioanisole)
-and `CA S CM` exist, both `104.200` deg / `518.816` kJ/mol/rad². `grompp` rejects the
+and `CA S CM` exist, both `104.200` deg / `518.816` kJ/mol/rad². `grompp` rejected the
 topology with "No default Angle types". Reproduced end-to-end with
-`functional_groups={"thioether": 2}`. Of everything the generator emits, this is the only
-hole — all bonds and every other angle resolve.
+`functional_groups={"thioether": 2}`.
+
+Depth 3 is now checked for every functional group and every N-doping mode, and the
+`CA-S-CA` angle is supplied by `SUPPLEMENTARY_ANGLE_PARAMS`. Turning the check on found
+**two further gaps the same day**, which is the strongest evidence that the depth is the
+right one — see "What the check found immediately" below.
 
 ## Guidance
 
@@ -83,11 +88,20 @@ internal type -> GROMACS_OPLS_TYPE_MAP -> opls_XXX
               -> ffbonded.itp [bondtypes] / [angletypes]
 ```
 
-Corollary: **never hand-copy force-field values into the codebase.** Three tables that did
+Corollary, and the rule is narrower than "never hand-copy a value": **a local table may
+hold only what the force field does not define.** Three tables that ignored this
 (`OPLS_LJ_PARAMS`, `OPLS_BOND_PARAMS`, `OPLS_ANGLE_PARAMS`) drifted into an AMBER/OPLS
-chimera with no single provenance and were deleted. When the force field genuinely lacks a
-parameter, supply it from a local `.itp` with a provenance comment — do not reinstate a
-table.
+chimera with no single provenance and were deleted. The distinction is what makes
+`SUPPLEMENTARY_ANGLE_PARAMS` safe where they were not:
+
+- A value that **also exists** in the force field is duplication. Two sources of truth
+  diverge — that is the entire failure history above.
+- A value that exists **nowhere else** cannot drift. There is nothing to diverge from.
+
+So a supplement is legitimate, and its boundary is mechanically enforceable rather than a
+matter of discipline: `TestSupplementDoesNotShadowForcefield` fails if any entry duplicates
+a stock angletype. Every entry also carries a provenance comment naming why the force field
+lacks it and where the number came from.
 
 ## Why This Matters
 
@@ -116,91 +130,74 @@ names are unverified data pretending to be code.
 
 ## Examples
 
-### The depth-3 test
+### The depth-3 check
 
-Slots into `tests/test_opls_type_map.py`, reusing its existing `_find_oplsaa()` /
-`requires_oplsaa` skip machinery. Verified against the stock force field — it reports
-`CA-S-CA` and nothing else (no false positives):
+It lives in `tests/test_opls_type_map.py::TestBondedResolution`, parametrised over every
+functional group and every N-doping mode. It is deliberately **not** reproduced here: a
+copy of it in this file would be a second source of truth that drifts out of sync with the
+real one — the exact failure this document is about.
+
+What matters conceptually is the lookup chain, because the indirection in the middle is the
+part that is easy to get wrong:
 
 ```python
-from itertools import combinations
+# internal type -> opls name -> BONDED type -> ffbonded combination
+def to_bonded(internal):
+    return bonded_type_of[GROMACS_OPLS_TYPE_MAP[internal]]   # col 2 of ffnonbonded.itp
 
-
-def _parse_bonded_types(ff):
-    """opls_XXX -> bonded type (column 2 of ffnonbonded.itp)."""
-    out = {}
-    for line in (ff / "ffnonbonded.itp").read_text().splitlines():
-        parts = line.split(";", 1)[0].split()
-        if len(parts) >= 2 and parts[0].startswith("opls_"):
-            out[parts[0]] = parts[1]
-    return out
-
-
-def _parse_section(ff, header, n):
-    """[ bondtypes ] is `i j func b0 kb`; [ angletypes ] is `i j k func th0 cth`."""
-    out, inside = set(), False
-    for raw in (ff / "ffbonded.itp").read_text().splitlines():
-        line = raw.split(";", 1)[0].strip()
-        if line.startswith("["):
-            inside = line.startswith(header)
-            continue
-        if not inside or not line:
-            continue
-        p = line.split()
-        if len(p) >= n:
-            # bonds are order-free; angles fix the middle atom
-            out.add(tuple(sorted(p[:2])) if n == 2
-                    else (min(p[0], p[2]), p[1], max(p[0], p[2])))
-    return out
-
-
-@requires_oplsaa
-class TestBondedResolution:
-    """Depth 3: element and mass can both be right while the combination the
-    molecule actually emits is still missing from ffbonded.itp."""
-
-    def test_every_emitted_bond_and_angle_resolves(self):
-        bonded = _parse_bonded_types(OPLSAA)
-        bondtypes = _parse_section(OPLSAA, "[ bondtypes", 2)
-        angletypes = _parse_section(OPLSAA, "[ angletypes", 3)
-
-        def to_bonded(internal):
-            return bonded[GROMACS_OPLS_TYPE_MAP[internal]]
-
-        gen = BiocharGenerator(GeneratorConfig(
-            target_num_carbons=20,
-            functional_groups={"thioether": 2},
-            strict=False,          # composition tolerances are not what we assert here
-        ))
-        mol, _, _ = gen.generate()
-        types = gen.atom_types          # instance attr, set by generate()
-
-        missing = []
-        for b in mol.GetBonds():
-            i, j = b.GetBeginAtomIdx(), b.GetEndAtomIdx()
-            if tuple(sorted([to_bonded(types[i]), to_bonded(types[j])])) not in bondtypes:
-                missing.append(("bond", types[i], types[j]))
-
-        for atom in mol.GetAtoms():
-            nbrs = [n.GetIdx() for n in atom.GetNeighbors()]
-            j = to_bonded(types[atom.GetIdx()])
-            for x, y in combinations(nbrs, 2):
-                i, k = to_bonded(types[x]), to_bonded(types[y])
-                if (min(i, k), j, max(i, k)) not in angletypes:
-                    missing.append(("angle", f"{i}-{j}-{k}"))
-
-        assert not missing, f"combinations absent from ffbonded.itp: {missing}"
+triple = (min(i, k), j, max(i, k))          # angles fix the middle atom
+ok = triple in angletypes or internal_triple in SUPPLEMENTARY_ANGLE_PARAMS
 ```
 
-**Two caveats that must ship with this test, not be discovered after:**
+The second clause is the whole design: a combination is acceptable if the force field
+resolves it **or** we supply it deliberately. Anything else is a gap.
 
-1. **It fails on day one.** `CA-S-CA` is a real, currently-shipping gap, so this cannot
-   land as a bare assertion — it lands *with* the fix (a local `.itp` supplying the angle;
-   closest stock value is the `CA-S-CT` thioanisole angle, `104.200` / `518.816`). The
-   day-one failure is the test working, not the test being wrong.
-2. **It has no teeth in CI.** CI never installs GROMACS, so every `requires_oplsaa` test
-   skips on every run. Until CI gets a force field — vendor a fixture, or set
-   `BIOCHAR_OPLSAA_FF` — this only protects people who run it locally with one installed.
+The check has teeth — deleting the `CA-S-CA` entry from `SUPPLEMENTARY_ANGLE_PARAMS` makes
+it fail again:
+
+```
+AssertionError: 'thioether' emits terms no forcefield entry and no
+SUPPLEMENTARY_ANGLE_PARAMS covers: ['angle CA-SS-CA (CA-S-CA)']
+```
+
+### What the check found immediately
+
+Turning it on surfaced two gaps nobody was tracking. Both are `xfail(strict=True)`, so
+fixing either fails the suite until its marker is removed. They are worth studying because
+they are **different kinds of problem that look identical from the test output**:
+
+- **`carboxyl` emits `O_2-C-OH` — a typing bug, not a missing parameter.** `AtomTyper`
+  never assigns the carboxylic-acid types at all: its `OH2` branch sits behind `else` after
+  `num_bonds == 1` and `== 2`, so it needs an oxygen with 3+ bonds, which cannot occur.
+  `O`/`OH2`/`HO2` are dead code and a `-COOH` types as ketone O + phenol OH. OPLS *does*
+  define the real angle — `O_3 C OH`, 121.000/669.440, "RCOOH". **Supplementing here would
+  be the wrong fix**: it would cement the wrong chemistry and hide the typing bug behind a
+  plausible number. The fix is correct typing.
+- **`num_pyridinic` emits `NC-CA-OH` — a genuine force-field gap.** A hydroxyl on a ring
+  carbon adjacent to a pyridinic N, reachable at the *default* O/C ratio. OPLS simply omits
+  it (3-hydroxypyridine is plausible chemistry). This one does belong in the supplement,
+  with a defensible value.
+
+The lesson in the pair: when the check fires, the first question is not "what value do I
+add?" but **"is the force field missing this, or are we asking it the wrong question?"**
+Only the first justifies a supplement.
+
+### What this check still does not cover
+
+Know the edges, or it will be trusted further than it earns:
+
+- **It does not run in CI.** CI installs no GROMACS, so every `requires_oplsaa` test — this
+  one included — skips on every CI run. It protects local runs and nothing else until CI
+  gets a force field: vendor a fixture, or set `BIOCHAR_OPLSAA_FF`. A green CI badge is
+  currently *no evidence at all* about depth 3.
+- **It checks tables, not `grompp`.** It proves a combination has an entry; it does not run
+  GROMACS. An end-to-end `grompp` smoke test over one molecule per group would be strictly
+  stronger.
+- **It does not check dihedrals**, which the exporter also emits with `funct` only. The same
+  class of gap could exist there and would not be caught.
+- **Resolvable is not correct.** Depth 3 says a parameter *exists*, not that it describes
+  the chemistry. `SS -> opls_222` and `NGR -> opls_520` remain deliberate approximations,
+  and the supplemented `CA-S-CA` is a nearest-analog value, not QM-validated.
 
 ### Two traps that look like the answer
 
@@ -225,13 +222,15 @@ them:
   (wrong-element mappings); added `tests/test_opls_type_map.py`.
 - PR [#21](https://github.com/jolayfield/Biochar-simulator/pull/21) — deleted the three
   hand-copied tables and the unreachable `[ atomtypes ]` fallback.
+- PR [#23](https://github.com/jolayfield/Biochar-simulator/pull/23) — supplied the
+  `CA-S-CA` angle and landed the depth-3 check described here.
 - Issue #3 — S-doping (thiol/thioether); origin of the types behind the `CA-S-CA` gap.
-- `biochar/constants.py` — `GROMACS_OPLS_TYPE_MAP` and the `SS -> opls_222` note, which
-  records the `CA-S-CA` gap and its closest stock value.
+- `biochar/constants.py` — `GROMACS_OPLS_TYPE_MAP`, the `SS -> opls_222` note, and
+  `SUPPLEMENTARY_ANGLE_PARAMS` with the rule that bounds it.
+- `tests/test_opls_type_map.py` — the three depths as executable checks, plus the two
+  `xfail(strict)` gaps above.
 - `docs/api/constants.rst` — states that LJ/bonded parameters live in `oplsaa.ff`, not in
   this module.
-- `docs/user_guide/gromacs_workflow.rst` — force-field notes; does not yet mention the
-  thioether caveat.
 
 **Open reconciliation risk:** branch `feat/ph-protonation` (`b21a8bf`) independently redid
 these mappings and **regresses `SS` back to `opls_209`** — the carbon that depth 1 fixed.
