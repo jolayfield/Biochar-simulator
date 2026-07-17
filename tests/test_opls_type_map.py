@@ -14,14 +14,21 @@ The forcefield-backed tests run only when an oplsaa.ff can be located (set
 
 from __future__ import annotations
 
+import inspect
 import os
 import re
 import shutil
+from itertools import combinations
 from pathlib import Path
 
 import pytest
 
-from biochar.constants import GROMACS_OPLS_TYPE_MAP, OPLS_ATOM_TYPES
+from biochar.constants import (
+    FUNCTIONAL_GROUPS,
+    GROMACS_OPLS_TYPE_MAP,
+    OPLS_ATOM_TYPES,
+    SUPPLEMENTARY_ANGLE_PARAMS,
+)
 
 
 def _find_oplsaa() -> Path | None:
@@ -81,6 +88,44 @@ def _parse_atomtype_descriptions(ff: Path) -> dict[str, str]:
         if match:
             descriptions[match.group(1)] = match.group(2).strip()
     return descriptions
+
+
+def _parse_bonded_types(ff: Path) -> dict[str, str]:
+    """Map opls_XXX -> bonded type (column 2 of ffnonbonded.itp).
+
+    ffbonded.itp is keyed by this coarser name, not by the opls_XXX name --
+    several opls types share one bonded type.
+    """
+    bonded: dict[str, str] = {}
+    for line in (ff / "ffnonbonded.itp").read_text().splitlines():
+        parts = line.split(";", 1)[0].split()
+        if len(parts) >= 2 and parts[0].startswith("opls_"):
+            bonded[parts[0]] = parts[1]
+    return bonded
+
+
+def _parse_ffbonded_section(ff: Path, header: str, arity: int) -> set:
+    """Read [ bondtypes ] (`i j func b0 kb`) or [ angletypes ] (`i j k func th0 cth`).
+
+    Bonds are order-free; angles fix the middle atom and are canonicalised on the
+    outer two.
+    """
+    found, inside = set(), False
+    for raw in (ff / "ffbonded.itp").read_text().splitlines():
+        line = raw.split(";", 1)[0].strip()
+        if line.startswith("["):
+            inside = line.startswith(header)
+            continue
+        if not inside or not line:
+            continue
+        parts = line.split()
+        if len(parts) >= arity:
+            if arity == 2:
+                found.add(tuple(sorted(parts[:2])))
+            else:
+                i, j, k = parts[0], parts[1], parts[2]
+                found.add((min(i, k), j, max(i, k)))
+    return found
 
 
 @requires_oplsaa
@@ -156,3 +201,167 @@ class TestNitrogenRegression:
 
     def test_pyrrolic_hydrogen_is_pyrrole_nh_hydrogen(self):
         assert GROMACS_OPLS_TYPE_MAP["HNPR"] == "opls_545"
+
+
+# ---------------------------------------------------------------------------
+# Depth 3 -- bonded resolution
+# ---------------------------------------------------------------------------
+#
+# The checks above are depth 1 (the type exists) and depth 2 (it is the right
+# element). Both passed while thioether topologies were still unusable: SS ->
+# opls_222 is genuinely sulfur with the right mass, but a thioether emits a
+# CA-S-CA angle and stock OPLS defines no such angletype, so grompp refused the
+# topology with "No default Angle types".
+#
+# [ bonds ] and [ angles ] are emitted with funct only, so the forcefield is the
+# sole source of bonded parameters -- except where SUPPLEMENTARY_ANGLE_PARAMS
+# writes them inline. Every combination the generator can emit must resolve
+# through one of those two routes.
+
+
+def _config_kwargs(**extra):
+    """Build a GeneratorConfig kwargs dict, tolerating signature drift."""
+    from biochar.biochar_generator import GeneratorConfig
+
+    params = inspect.signature(GeneratorConfig).parameters
+    kwargs = {"target_num_carbons": 20, "strict": False, "seed": 1}
+    kwargs.update(extra)
+    unknown = set(kwargs) - set(params)
+    assert not unknown, f"GeneratorConfig has no such parameter(s): {unknown}"
+    return kwargs
+
+
+def _unresolvable(mol, atom_types, bonded, bondtypes, angletypes):
+    """Bonds/angles the molecule emits that nothing can parameterise."""
+
+    def to_bonded(internal):
+        return bonded[GROMACS_OPLS_TYPE_MAP[internal]]
+
+    missing = []
+    for bond in mol.GetBonds():
+        i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+        pair = tuple(sorted([to_bonded(atom_types[i]), to_bonded(atom_types[j])]))
+        if pair not in bondtypes:
+            missing.append(f"bond {atom_types[i]}-{atom_types[j]} ({'-'.join(pair)})")
+
+    for atom in mol.GetAtoms():
+        j = atom.GetIdx()
+        neighbours = [n.GetIdx() for n in atom.GetNeighbors()]
+        for i, k in combinations(neighbours, 2):
+            outer = sorted([atom_types[i], atom_types[k]])
+            internal = (outer[0], atom_types[j], outer[1])
+            bi, bk = to_bonded(atom_types[i]), to_bonded(atom_types[k])
+            triple = (min(bi, bk), to_bonded(atom_types[j]), max(bi, bk))
+            if triple in angletypes or internal in SUPPLEMENTARY_ANGLE_PARAMS:
+                continue
+            missing.append(f"angle {'-'.join(internal)} ({'-'.join(triple)})")
+    return sorted(set(missing))
+
+
+# Gaps this check found that are real but out of scope to fix here. Both are
+# xfail(strict) so that fixing one fails the suite until its marker is removed --
+# a silent pass would let the gap reopen unnoticed.
+_CARBOXYL_XFAIL = (
+    "AtomTyper never assigns the carboxylic-acid types. Its OH2 branch sits "
+    "behind `else` after num_bonds == 1 and == 2, so it needs an oxygen with 3+ "
+    "bonds, which cannot occur -- O/OH2/HO2 are dead code and a -COOH types as "
+    "ketone O + phenol OH, emitting O_2-C-OH. OPLS defines the real carboxyl "
+    "angle as O_3-C-OH (121.000/669.440, 'RCOOH'). The fix is correct typing, "
+    "not a supplement: supplementing would cement the wrong chemistry. Already "
+    "fixed on feat/ph-protonation; reconcile rather than re-fix."
+)
+_PYRIDINIC_XFAIL = (
+    "A hydroxyl on a ring carbon adjacent to a pyridinic N emits NC-CA-OH, which "
+    "stock OPLS does not define (3-hydroxypyridine is plausible chemistry OPLS "
+    "just omits). Reachable with default settings, since the default O/C ratio "
+    "adds phenolic OH. Unlike carboxyl this is a genuine forcefield gap, so it "
+    "belongs in SUPPLEMENTARY_ANGLE_PARAMS -- but only with a defensible value "
+    "and provenance, which needs its own change."
+)
+
+
+def _group_params():
+    """Functional-group cases, xfail-marked where a known gap makes them fail."""
+    known = {"carboxyl": _CARBOXYL_XFAIL}
+    params = []
+    for group in sorted(FUNCTIONAL_GROUPS):
+        reason = known.get(group)
+        marks = [pytest.mark.xfail(strict=True, reason=reason)] if reason else []
+        params.append(pytest.param(group, marks=marks))
+    return params
+
+
+@requires_oplsaa
+class TestBondedResolution:
+    """Depth 3: every bond and angle the generator emits must be parameterisable."""
+
+    @pytest.mark.parametrize("group", _group_params())
+    def test_functional_group_emits_only_resolvable_terms(self, group):
+        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+
+        gen = BiocharGenerator(
+            GeneratorConfig(**_config_kwargs(functional_groups={group: 2}))
+        )
+        mol, _, _ = gen.generate()
+        missing = _unresolvable(
+            mol,
+            gen.atom_types,
+            _parse_bonded_types(OPLSAA),
+            _parse_ffbonded_section(OPLSAA, "[ bondtypes", 2),
+            _parse_ffbonded_section(OPLSAA, "[ angletypes", 3),
+        )
+        assert not missing, (
+            f"'{group}' emits terms no forcefield entry and no "
+            f"SUPPLEMENTARY_ANGLE_PARAMS covers: {missing}"
+        )
+
+    @pytest.mark.parametrize(
+        "knob",
+        [
+            pytest.param(
+                "num_pyridinic",
+                marks=pytest.mark.xfail(strict=True, reason=_PYRIDINIC_XFAIL),
+            ),
+            "num_pyrrolic",
+            "num_graphitic",
+        ],
+    )
+    def test_ring_nitrogen_emits_only_resolvable_terms(self, knob):
+        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+
+        gen = BiocharGenerator(GeneratorConfig(**_config_kwargs(**{knob: 2})))
+        mol, _, _ = gen.generate()
+        missing = _unresolvable(
+            mol,
+            gen.atom_types,
+            _parse_bonded_types(OPLSAA),
+            _parse_ffbonded_section(OPLSAA, "[ bondtypes", 2),
+            _parse_ffbonded_section(OPLSAA, "[ angletypes", 3),
+        )
+        assert not missing, f"'{knob}' emits unresolvable terms: {missing}"
+
+
+@requires_oplsaa
+class TestSupplementDoesNotShadowForcefield:
+    """The supplement may only hold what oplsaa.ff lacks.
+
+    A value that also exists in the forcefield is duplication, and duplication is
+    what drifted the deleted OPLS_LJ_PARAMS/OPLS_BOND_PARAMS tables out of sync in
+    the first place. A value that exists nowhere else cannot drift.
+    """
+
+    def test_no_supplementary_angle_duplicates_a_stock_angletype(self):
+        bonded = _parse_bonded_types(OPLSAA)
+        angletypes = _parse_ffbonded_section(OPLSAA, "[ angletypes", 3)
+
+        shadowed = []
+        for (i, j, k) in SUPPLEMENTARY_ANGLE_PARAMS:
+            bi, bk = (bonded[GROMACS_OPLS_TYPE_MAP[i]], bonded[GROMACS_OPLS_TYPE_MAP[k]])
+            triple = (min(bi, bk), bonded[GROMACS_OPLS_TYPE_MAP[j]], max(bi, bk))
+            if triple in angletypes:
+                shadowed.append(f"{i}-{j}-{k} ({'-'.join(triple)})")
+
+        assert not shadowed, (
+            "SUPPLEMENTARY_ANGLE_PARAMS shadows angletypes oplsaa.ff already "
+            f"defines -- remove them and let the forcefield supply them: {shadowed}"
+        )
