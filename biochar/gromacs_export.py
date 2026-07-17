@@ -15,6 +15,24 @@ from .opls_typing import OPLSPropertyTable
 from .constants import GROMACS_OPLS_TYPE_MAP, OPLS_ATOM_TYPES, OPLS_LJ_PARAMS
 
 
+def _write_qtot_footer(f, mol: Chem.Mol, qtot: float) -> None:
+    """
+    Record the molecule's net charge after an ``[ atoms ]`` block.
+
+    A non-zero qtot is legitimate -- a deprotonated carboxyl really does carry
+    -1 -- so this states the charge rather than warning about it, and names the
+    step responsible for balancing it. Without the note, a reader hitting
+    ``qtot -3.0000`` has no way to tell a real anion from a topology bug.
+    """
+    formal = sum(a.GetFormalCharge() for a in mol.GetAtoms())
+    f.write(f"; total charge: {qtot:+.4f} e (formal {formal:+d} e)\n")
+    if formal != 0:
+        f.write(
+            "; NOTE: this molecule is intentionally charged. Neutralise the "
+            "system with `gmx genion -neutral` at solvation.\n"
+        )
+
+
 class GROFileWriter:
     """Write GROMACS structure (.gro) files."""
 
@@ -214,6 +232,7 @@ class TOPFileWriter:
 
             prop_table = OPLSPropertyTable(mol, atom_types, charges)
 
+            qtot = 0.0
             for prop in prop_table.get_properties():
                 atom_num = prop.atom_idx + 1
                 opls_type = GROMACS_OPLS_TYPE_MAP.get(prop.opls_type, prop.opls_type)
@@ -223,11 +242,15 @@ class TOPFileWriter:
                 cgnr = 1
                 charge = prop.charge
                 mass = prop.mass
+                qtot += charge
 
                 f.write(
                     f"{atom_num:5d} {opls_type:5s} {residue_num:5d} {residue_name:5s} "
-                    f"{atom_name:5s} {cgnr:5d} {charge:10.6f} {mass:10.4f}\n"
+                    f"{atom_name:5s} {cgnr:5d} {charge:10.6f} {mass:10.4f}"
+                    f"   ; qtot {qtot:+.4f}\n"
                 )
+
+            _write_qtot_footer(f, mol, qtot)
 
             # Bonds section
             f.write("\n[ bonds ]\n")
@@ -347,6 +370,7 @@ class ITPFileWriter:
 
             prop_table = OPLSPropertyTable(mol, atom_types, charges)
 
+            qtot = 0.0
             for prop in prop_table.get_properties():
                 atom_num = prop.atom_idx + 1
                 opls_type = GROMACS_OPLS_TYPE_MAP.get(prop.opls_type, prop.opls_type)
@@ -356,11 +380,15 @@ class ITPFileWriter:
                 cgnr = 1
                 charge = prop.charge
                 mass = prop.mass
+                qtot += charge
 
                 f.write(
                     f"{atom_num:5d} {opls_type:5s} {residue_num:5d} {residue_name:5s} "
-                    f"{atom_name:5s} {cgnr:5d} {charge:10.6f} {mass:10.4f}\n"
+                    f"{atom_name:5s} {cgnr:5d} {charge:10.6f} {mass:10.4f}"
+                    f"   ; qtot {qtot:+.4f}\n"
                 )
+
+            _write_qtot_footer(f, mol, qtot)
 
             # Bonds section
             f.write("\n[ bonds ]\n")

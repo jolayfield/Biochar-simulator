@@ -60,6 +60,17 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Target aromaticity percent (0–100; default: 90.0, or derived from --temperature)",
     )
 
+    parser.add_argument(
+        "--pH", type=float, default=None, metavar="PH",
+        help=(
+            "Environmental pH [0–14]. Omit (default) to leave every group "
+            "neutral. When set, each titratable site (carboxyl, phenolic, "
+            "thiol, aniline N, pyridinic N) is independently ionized with its "
+            "Henderson-Hasselbalch probability, and the topology carries a real "
+            "net charge for `gmx genion -neutral` to balance"
+        ),
+    )
+
     # Structural defects
     parser.add_argument(
         "--defects", type=float, default=0.0, metavar="FRAC",
@@ -210,6 +221,10 @@ def main(argv=None) -> int:
         cfg_dict["O_C_ratio"] = args.oc_ratio
     if args.aromaticity is not None:
         cfg_dict["aromaticity_percent"] = args.aromaticity
+    # pH: None is both "not supplied" and the neutral default, so a loaded
+    # config's pH survives unless --pH is given explicitly.
+    if args.pH is not None:
+        cfg_dict["pH"] = args.pH
 
     try:
         config = GeneratorConfig(**cfg_dict)
@@ -233,6 +248,7 @@ def main(argv=None) -> int:
             O_C_ratio=config.O_C_ratio,
             aromaticity_percent=config.aromaticity_percent,
             functional_groups=config.functional_groups,
+            pH=config.pH,
             defect_fraction=config.defect_fraction,
             num_pyridinic=config.num_pyridinic,
             num_pyrrolic=config.num_pyrrolic,
