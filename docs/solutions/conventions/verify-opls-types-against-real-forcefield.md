@@ -162,9 +162,10 @@ SUPPLEMENTARY_ANGLE_PARAMS covers: ['angle CA-SS-CA (CA-S-CA)']
 
 ### What the check found immediately
 
-Turning it on surfaced two gaps nobody was tracking. Both are `xfail(strict=True)`, so
-fixing either fails the suite until its marker is removed. They are worth studying because
-they are **different kinds of problem that look identical from the test output**:
+Turning it on surfaced two gaps nobody was tracking. Both were held by `xfail(strict=True)`
+until their fixes landed — so the fix could never silently leave a stale exemption behind —
+and both are now closed. They are worth studying because they are **different kinds of
+problem that look identical from the test output**:
 
 - **`carboxyl` emits `O_2-C-OH` — a typing bug, not a missing parameter.** `AtomTyper`
   never assigns the carboxylic-acid types at all: its `OH2` branch sits behind `else` after
@@ -173,31 +174,36 @@ they are **different kinds of problem that look identical from the test output**
   define the real angle — `O_3 C OH`, 121.000/669.440, "RCOOH". **Supplementing here would
   be the wrong fix**: it would cement the wrong chemistry and hide the typing bug behind a
   plausible number. The fix is correct typing.
-- **`num_pyridinic` emits `NC-CA-OH` — a genuine force-field gap.** A hydroxyl on a ring
-  carbon adjacent to a pyridinic N, reachable at the *default* O/C ratio. OPLS simply omits
-  it (3-hydroxypyridine is plausible chemistry). This one does belong in the supplement,
-  with a defensible value.
+- **`num_pyridinic` emitted `NC-CA-OH` — a genuine force-field gap, now supplied.** A
+  hydroxyl on a ring carbon adjacent to a pyridinic N, reachable at the *default* O/C ratio.
+  OPLS simply omits it (3-hydroxypyridine is plausible chemistry). This one *did* belong in
+  the supplement, and the value is the phenol angle `CA-CA-OH` (120.000 / 585.760)
+  transcribed verbatim — same hydroxyl-on-aromatic geometry, differing only in the far ring
+  atom. It is the worked example of the supplement's intended use.
 
 The lesson in the pair: when the check fires, the first question is not "what value do I
 add?" but **"is the force field missing this, or are we asking it the wrong question?"**
-Only the first justifies a supplement.
+`carboxyl` was the wrong question (a typing bug); `num_pyridinic` was a real gap. Only the
+second justifies a supplement.
 
 ### What this check still does not cover
 
 Know the edges, or it will be trusted further than it earns:
 
-- **It does not run in CI.** CI installs no GROMACS, so every `requires_oplsaa` test — this
-  one included — skips on every CI run. It protects local runs and nothing else until CI
-  gets a force field: vendor a fixture, or set `BIOCHAR_OPLSAA_FF`. A green CI badge is
-  currently *no evidence at all* about depth 3.
+- **CI runs it now, but only because the force field is installed.** CI installs
+  `gromacs-data` (the force-field files, not the binaries) and points `GMXDATA` at it, and a
+  verify step fails loudly if `oplsaa.ff` is ever not discoverable — so a green badge does
+  mean depth 3 actually ran. This was not always true: for a long time CI installed no
+  GROMACS and every `requires_oplsaa` test silently skipped, the exact failure these tests
+  exist to catch. If the `gromacs-data` install is ever dropped, the guarantee goes with it.
 - **It checks tables, not `grompp`.** It proves a combination has an entry; it does not run
   GROMACS. An end-to-end `grompp` smoke test over one molecule per group would be strictly
   stronger.
 - **It does not check dihedrals**, which the exporter also emits with `funct` only. The same
   class of gap could exist there and would not be caught.
 - **Resolvable is not correct.** Depth 3 says a parameter *exists*, not that it describes
-  the chemistry. `SS -> opls_222` and `NGR -> opls_520` remain deliberate approximations,
-  and the supplemented `CA-S-CA` is a nearest-analog value, not QM-validated.
+  the chemistry. `SS -> opls_222` and `NGR -> opls_379` remain deliberate approximations, and
+  the supplemented `CA-S-CA` and `NPY-CA-OH` are nearest-analog values, not QM-validated.
 
 ### Two traps that look like the answer
 
@@ -224,19 +230,17 @@ them:
   hand-copied tables and the unreachable `[ atomtypes ]` fallback.
 - PR [#23](https://github.com/jolayfield/Biochar-simulator/pull/23) — supplied the
   `CA-S-CA` angle and landed the depth-3 check described here.
+- PR [#25](https://github.com/jolayfield/Biochar-simulator/pull/25) — reconciled the
+  `feat/ph-protonation` lineage: fixed the carboxyl typing (retiring that gap) and settled
+  `NGR -> opls_379`.
+- PR [#26](https://github.com/jolayfield/Biochar-simulator/pull/26) — gave CI `gromacs-data`,
+  so the depth-3 check runs on every PR instead of skipping.
 - Issue #3 — S-doping (thiol/thioether); origin of the types behind the `CA-S-CA` gap.
 - `biochar/constants.py` — `GROMACS_OPLS_TYPE_MAP`, the `SS -> opls_222` note, and
   `SUPPLEMENTARY_ANGLE_PARAMS` with the rule that bounds it.
-- `tests/test_opls_type_map.py` — the three depths as executable checks, plus the two
-  `xfail(strict)` gaps above.
+- `tests/test_opls_type_map.py` — the three depths against an installed `oplsaa.ff`. Its
+  companion `tests/test_constants_ff.py` checks the map against a committed ground-truth
+  table so element consistency runs even when no force field is present (e.g. locally
+  without `GMXDATA`); the two are complementary, not duplicates.
 - `docs/api/constants.rst` — states that LJ/bonded parameters live in `oplsaa.ff`, not in
   this module.
-
-**Open reconciliation risk:** branch `feat/ph-protonation` (`b21a8bf`) independently redid
-these mappings and **regresses `SS` back to `opls_209`** — the carbon that depth 1 fixed.
-If it merges unreconciled, the wrong-element bug returns. The depth-3 test would catch it.
-
-**Note on a divergent test file:** notes from the `feat/ph-protonation` line refer to
-`tests/test_constants_ff.py` for the element/mass check; the merged lineage names it
-`tests/test_opls_type_map.py`. Same purpose, different branches. Verify which exists before
-relying on either. *(auto memory [claude])*

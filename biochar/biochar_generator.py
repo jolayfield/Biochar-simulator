@@ -391,6 +391,50 @@ class BiocharGenerator:
         self.validation_report = None
         self.ring_composition: Optional[Dict[str, int]] = None
 
+    # Functional groups whose adjacency to a ring-substituted N is covered by the
+    # depth-3 bonded-resolution check (tests/test_opls_type_map.py). That check
+    # exercises each N-doping mode at the default composition, which places
+    # hydroxyl / phenolic O -- so those crossings are verified (NC-CA-OH is
+    # supplied in SUPPLEMENTARY_ANGLE_PARAMS). Any other functional group crossed
+    # with N-doping is NOT systematically checked; see the warning below.
+    _DOPING_VERIFIED_GROUPS = frozenset({"hydroxyl", "phenolic"})
+
+    def _warn_unverified_crossed_doping(self) -> None:
+        """Warn when the config crosses ring-N doping with an unverified group.
+
+        Ring-substituted N (pyridinic / pyrrolic / graphitic) combined with an
+        explicitly requested functional group other than hydroxyl / phenolic can
+        emit a bond or angle that neither stock oplsaa.ff nor
+        SUPPLEMENTARY_ANGLE_PARAMS covers -- e.g. an ether O next to a pyridinic
+        N. Nothing verifies these crossed combinations today (the depth-3 check
+        varies one axis at a time), so grompp may reject the topology at
+        simulation time with "No default Angle types" / "No default Bond types".
+
+        This is a heads-up, not an error: the structure is still generated. If
+        grompp does reject it, supply the missing parameter in
+        SUPPLEMENTARY_ANGLE_PARAMS with a provenanced value, per
+        docs/solutions/conventions/verify-opls-types-against-real-forcefield.md.
+        Silence it with logging (this logger is 'biochar.biochar_generator').
+        """
+        cfg = self.config
+        doped = (cfg.num_pyridinic or 0) + (cfg.num_pyrrolic or 0) + (cfg.num_graphitic or 0)
+        if doped <= 0 or not cfg.functional_groups:
+            return
+        crossed = sorted(
+            g for g in cfg.functional_groups
+            if g not in self._DOPING_VERIFIED_GROUPS
+        )
+        if not crossed:
+            return
+        logger.warning(
+            "Crossed N-doping + functional group requested (%s alongside ring N). "
+            "These combinations are not verified against the forcefield -- the "
+            "topology may emit a bond/angle stock oplsaa.ff lacks, which grompp "
+            "rejects at simulation time. If that happens, add the missing term to "
+            "SUPPLEMENTARY_ANGLE_PARAMS (see the OPLS verification convention doc).",
+            ", ".join(crossed),
+        )
+
     def generate(self) -> Tuple[Chem.Mol, np.ndarray, CompositionResult]:
         """
         Run the full generation pipeline and return the molecular structure.
@@ -408,6 +452,8 @@ class BiocharGenerator:
         Raises:
             RuntimeError: If carbon skeleton growth fails after retries.
         """
+        self._warn_unverified_crossed_doping()
+
         # Step 1: Generate carbon skeleton
         logger.info("Generating carbon skeleton with %d carbons...", self.config.target_num_carbons)
         skeleton = self._generate_carbon_skeleton()

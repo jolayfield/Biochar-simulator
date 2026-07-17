@@ -183,6 +183,12 @@ SUPPLEMENTARY_ANGLE_PARAMS: dict[tuple[str, str, str], tuple[float, float]] = {
     # value keeps the bridge consistent with the opls_222 sulfur SS already maps to.
     # Approximate, like the SS mapping it accompanies -- not QM-validated.
     ("CA", "SS", "CA"): (104.200, 518.816),
+    # Hydroxyl on a ring carbon adjacent to a pyridinic N (3-hydroxypyridine).
+    # Resolves to bonded NC-CA-OH, which stock OPLS omits. The value is the phenol
+    # angle CA-CA-OH (120.000 / 585.760 in ffbonded.itp) transcribed verbatim: it
+    # holds the hydroxyl-on-aromatic-carbon geometry exactly and differs only in the
+    # far ring atom (neutral CA vs pyridinic NC). Nearest analog, not QM-validated.
+    ("NPY", "CA", "OH"): (120.000, 585.760),
 }
 
 # Functional groups definitions

@@ -258,27 +258,23 @@ def _unresolvable(mol, atom_types, bonded, bondtypes, angletypes):
     return sorted(set(missing))
 
 
-# Gaps this check found that are real but out of scope to fix here. Each is
-# xfail(strict) so that fixing one fails the suite until its marker is removed --
-# a silent pass would let the gap reopen unnoticed. carboxyl was the other one,
-# and the pH work's typing fix retired it exactly that way.
-_PYRIDINIC_XFAIL = (
-    "A hydroxyl on a ring carbon adjacent to a pyridinic N emits NC-CA-OH, which "
-    "stock OPLS does not define (3-hydroxypyridine is plausible chemistry OPLS "
-    "just omits). Reachable with default settings, since the default O/C ratio "
-    "adds phenolic OH. A genuine forcefield gap, so it belongs in "
-    "SUPPLEMENTARY_ANGLE_PARAMS -- but only with a defensible value and "
-    "provenance, which needs its own change."
-)
+# This check has found three gaps so far, all now closed. Each was held by an
+# xfail(strict) marker until its fix landed -- at which point the marker XPASSed
+# and failed the suite until removed, so a fix could never silently leave a stale
+# exemption behind:
+#   - carboxyl (O_2-C-OH): a typing bug, retired by the pH work's typing fix.
+#   - num_pyridinic (NC-CA-OH): a genuine forcefield gap, retired by the
+#     NPY-CA-OH entry in SUPPLEMENTARY_ANGLE_PARAMS (phenol-analog value).
+# When the next gap appears, add its marker here the same way.
 
 
 def _group_params():
     """Functional-group cases, xfail-marked where a known gap makes them fail.
 
-    carboxyl used to be marked here: AtomTyper never assigned the carboxylic-acid
-    types, so a -COOH emitted O_2-C-OH instead of the real O_3-C-OH. The pH work
-    fixed the typing, the marker started passing, and xfail(strict) failed the
-    suite until it was removed.
+    Currently none are marked. carboxyl used to be: AtomTyper never assigned the
+    carboxylic-acid types, so a -COOH emitted O_2-C-OH instead of the real
+    O_3-C-OH. The pH work fixed the typing, the marker started passing, and
+    xfail(strict) failed the suite until it was removed.
     """
     known: dict[str, str] = {}
     params = []
@@ -316,10 +312,7 @@ class TestBondedResolution:
     @pytest.mark.parametrize(
         "knob",
         [
-            pytest.param(
-                "num_pyridinic",
-                marks=pytest.mark.xfail(strict=True, reason=_PYRIDINIC_XFAIL),
-            ),
+            "num_pyridinic",
             "num_pyrrolic",
             "num_graphitic",
         ],
