@@ -9,14 +9,18 @@ used throughout the package.
 ``OPLS_ATOM_TYPES``
     ``dict[str, tuple]`` — atom type → ``(description, mass_amu, default_charge)``
 
-``OPLS_LJ_PARAMS``
-    ``dict[str, tuple]`` — atom type → ``(sigma_nm, epsilon_kJ/mol)``
+``GROMACS_OPLS_TYPE_MAP``
+    ``dict[str, str]`` — internal atom type → GROMACS ``opls_XXX`` name.
 
-``OPLS_BOND_PARAMS``
-    ``dict[tuple, tuple]`` — ``(type1, type2)`` → ``(k_kcal/mol/Å², r0_Å)``
+.. note::
 
-``OPLS_ANGLE_PARAMS``
-    ``dict[tuple, tuple]`` — ``(type1, type2, type3)`` → ``(k_kcal/mol/rad², θ₀_deg)``
+   Lennard-Jones, bond, and angle parameters are **not** stored in this module.
+   An exported topology ``#include``\ s a real ``oplsaa.ff``, and GROMACS resolves
+   every one of those parameters from it by the ``opls_XXX`` name above. Earlier
+   releases carried hand-copied ``OPLS_LJ_PARAMS``, ``OPLS_BOND_PARAMS`` and
+   ``OPLS_ANGLE_PARAMS`` tables; they were unused by the exporter and had drifted
+   from the force field, so they were removed. Supply any parameter the force
+   field lacks via a local ``.itp`` rather than reinstating a table here.
 
 .. rubric:: Functional groups
 

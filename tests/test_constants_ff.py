@@ -1,6 +1,5 @@
 """
-Force-field table integrity — GROMACS_OPLS_TYPE_MAP, OPLS_ATOM_TYPES,
-OPLS_LJ_PARAMS, and the bonded tables.
+Force-field table integrity — GROMACS_OPLS_TYPE_MAP and OPLS_ATOM_TYPES.
 
 Why this file exists
 --------------------
@@ -15,6 +14,23 @@ Asserting only that a mapped name *exists* does not catch that. Asserting the
 mapped name refers to the *right element* does. Five real mappings were wrong in
 exactly this way (a hydrogen carrying mass 14.007, sulfur typed as carbon) and
 survived because nothing checked.
+
+Relationship to tests/test_opls_type_map.py
+-------------------------------------------
+The two files are complementary, not duplicates, and the split is deliberate:
+
+* This file checks the map against a **committed** ground-truth table, so it runs
+  everywhere -- including CI, which installs no GROMACS. That is the only reason
+  to keep a hand-transcribed copy of forcefield data anywhere in this repo, and
+  test_mapped_types_match_installed_forcefield below is what keeps the copy
+  honest whenever a real forcefield is present.
+* test_opls_type_map.py checks against an **installed** oplsaa.ff and goes
+  deeper -- it resolves every emitted bond and angle through the bonded type into
+  ffbonded.itp. It skips entirely without a forcefield.
+
+Element consistency (here) is necessary but not sufficient: a type can be the
+right element and still have no bonded parameters for the combination it appears
+in. See docs/solutions/conventions/verify-opls-types-against-real-forcefield.md.
 """
 
 import re
@@ -22,13 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from biochar.constants import (
-    GROMACS_OPLS_TYPE_MAP,
-    OPLS_ANGLE_PARAMS,
-    OPLS_ATOM_TYPES,
-    OPLS_BOND_PARAMS,
-    OPLS_LJ_PARAMS,
-)
+from biochar.constants import GROMACS_OPLS_TYPE_MAP, OPLS_ATOM_TYPES
 
 
 # Ground truth for every opls_XXX name this package maps to, transcribed from
@@ -48,9 +58,9 @@ STOCK_OPLS = {
     "opls_146": (1, 1.0080, "benzene H"),
     "opls_154": (8, 15.9994, "alcohol OH"),
     "opls_155": (1, 1.0080, "alcohol HO"),
-    "opls_202": (16, 32.0600, "all-atom S: sulfides, S=C"),
     "opls_204": (1, 1.0080, "all-atom H(S): thiols"),
-    "opls_209": (6, 12.0110, "all-atom C: CH3, sulfides"),
+    "opls_222": (16, 32.0600, "S in thioanisoles"),
+    "opls_734": (16, 32.0600, "all-atom S: thiophenol (HS is #204)"),
     "opls_267": (6, 12.0110, "C: C in COOH"),
     "opls_268": (8, 15.9994, "O: OH in COOH"),
     "opls_269": (8, 15.9994, "O: =O in COOH"),
@@ -93,14 +103,13 @@ IONIZED_TYPES = ("CM", "O2M", "OM", "SM", "NPYP", "HPYP", "NAP", "HNAP")
 
 # Mappings known to be wrong and deliberately not fixed here.
 #
-# SS (thioether S) points at opls_209, which is the *carbon* of a sulfide CH3
-# group. The sulfur mappings are owned by a separate piece of work auditing
-# SH_/SS against thiophenol's opls_734, so fixing SS here would collide with it.
-# Marked xfail(strict) so that when that work lands, this passing forces the
-# entry out of this dict rather than leaving a stale exemption behind.
-KNOWN_BAD_MAPPINGS = {
-    "SS": "thioether S maps to a carbon type; owned by the S-mapping audit",
-}
+# Empty, and the mechanism is why. SS used to sit here pointing at opls_209 -- the
+# *carbon* of a sulfide CH3 -- exempted because the S-mapping audit owned the fix.
+# That audit landed (SH_ -> opls_734, SS -> opls_222), the exemption started
+# passing, and xfail(strict) turned that pass into a failure until the entry was
+# removed. Which is the point: an exemption that outlives its bug fails loudly
+# rather than rotting here.
+KNOWN_BAD_MAPPINGS: dict[str, str] = {}
 
 
 def _mapping_params():
@@ -166,20 +175,7 @@ class TestIonizedTypesComplete:
     @pytest.mark.parametrize("t", IONIZED_TYPES)
     def test_ionized_type_is_fully_defined(self, t):
         assert t in OPLS_ATOM_TYPES, f"{t} missing from OPLS_ATOM_TYPES"
-        assert t in OPLS_LJ_PARAMS, f"{t} missing from OPLS_LJ_PARAMS"
         assert t in GROMACS_OPLS_TYPE_MAP, f"{t} missing from GROMACS_OPLS_TYPE_MAP"
-
-    def test_every_atom_type_has_lj_params(self):
-        missing = set(OPLS_ATOM_TYPES) - set(OPLS_LJ_PARAMS)
-        assert not missing, f"atom types with no LJ parameters: {sorted(missing)}"
-
-    def test_bonded_tables_only_reference_known_types(self):
-        for key in OPLS_BOND_PARAMS:
-            for t in key:
-                assert t in OPLS_ATOM_TYPES, f"bond {key} references unknown type {t}"
-        for key in OPLS_ANGLE_PARAMS:
-            for t in key:
-                assert t in OPLS_ATOM_TYPES, f"angle {key} references unknown type {t}"
 
     def test_mapped_names_are_well_formed(self):
         for internal, opls in GROMACS_OPLS_TYPE_MAP.items():

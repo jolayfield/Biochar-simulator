@@ -263,12 +263,6 @@ class TestConstantsSanity:
         for t in ("CA", "HA", "CT", "HC", "OH", "OS"):
             assert t in GROMACS_OPLS_TYPE_MAP, f"Missing GROMACS mapping for {t}"
 
-    def test_opls_lj_params_sigma_non_negative(self):
-        from biochar.constants import OPLS_LJ_PARAMS
-        for atom_type, (sigma, epsilon) in OPLS_LJ_PARAMS.items():
-            assert sigma >= 0, f"{atom_type}: negative sigma {sigma}"
-            assert epsilon >= 0, f"{atom_type}: negative epsilon {epsilon}"
-
     def test_opls_atom_types_entries_have_three_fields(self):
         from biochar.constants import OPLS_ATOM_TYPES
         for key, val in OPLS_ATOM_TYPES.items():

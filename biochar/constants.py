@@ -6,7 +6,6 @@ Reference: Jorgensen, W. L., et al. JACS 118.45 (1996): 11225-11236.
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 # OPLS-AA Atom Types for Biochar Systems
@@ -41,9 +40,9 @@ OPLS_ATOM_TYPES = {
     "HNA": ("H on aromatic amine nitrogen", 1.008, 0.30),
 
     # Sulfur
-    "SH_": ("Aromatic thiol sulfur (Ar-SH)", 32.06, -0.39),    # opls_202
+    "SH_": ("Aromatic thiol sulfur (Ar-SH)", 32.06, -0.39),    # opls_734
     "HSH": ("H on thiol sulfur", 1.008, 0.21),                 # opls_204
-    "SS": ("Thioether sulfur bridging two aryl C (Ar-S-Ar)", 32.06, -0.16),  # opls_209
+    "SS": ("Thioether sulfur bridging two aryl C (Ar-S-Ar)", 32.06, -0.16),  # opls_222
     # Ring-substituting nitrogen (biochar N-doping)
     "NPY": ("Pyridinic N (substituted into 6-ring, no H)", 14.007, -0.36),
     "NPR": ("Pyrrolic N (substituted into 5-ring, with H)", 14.007, -0.52),
@@ -65,63 +64,30 @@ OPLS_ATOM_TYPES = {
     "HNAP": ("H on anilinium N", 1.008, 0.330),                 # derived: opls_290 (H of RNH3+)
 }
 
-# OPLS-AA Lennard-Jones Parameters
-# Format: atom_type -> (sigma_nm, epsilon_kJ/mol)
-# sigma: van der Waals radius (in nanometers)
-# epsilon: well depth (in kJ/mol)
-# Reference: GROMACS OPLS-AA forcefield
-
-OPLS_LJ_PARAMS = {
-    "CA": (0.3550, 0.2928),      # Aromatic carbon
-    "HA": (0.2600, 0.0630),      # Aromatic hydrogen
-    "CT": (0.3500, 0.2761),      # Aliphatic carbon (sp3)
-    "HC": (0.2500, 0.0630),      # H on aliphatic C
-    "OC": (0.2960, 0.5023),      # Carbonyl oxygen
-    "OH": (0.3066, 0.7113),      # Hydroxyl oxygen
-    "OS": (0.2960, 0.5023),      # Ether oxygen
-    "OW": (0.3066, 0.6276),      # Water oxygen
-    "HO": (0.0000, 0.0000),      # H in hydroxyl (no LJ)
-    "C": (0.3750, 0.4392),       # Carboxylic acid carbonyl C
-    "O": (0.2960, 0.5023),       # Carboxylic acid carbonyl O
-    "OH2": (0.3066, 0.7113),     # Hydroxyl on carboxylic acid
-    "HO2": (0.0000, 0.0000),     # H on carboxylic hydroxyl (no LJ)
-    "N": (0.3250, 0.7113),       # Tertiary nitrogen
-    "NT": (0.3250, 0.7113),      # Quaternary nitrogen
-    "NA": (0.3250, 0.7113),      # Aromatic amine N (aniline)
-    "HNA": (0.1000, 0.0000),     # H on aromatic amine (no LJ)
-    "SH_": (0.3550, 1.0460),     # Aromatic thiol sulfur (opls_202)
-    "HSH": (0.0000, 0.0000),     # H on thiol sulfur (no LJ, opls_204)
-    "SS": (0.3550, 1.0460),      # Thioether sulfur (opls_209)
-    "NPY": (0.3250, 0.7113),     # Pyridinic ring N (OPLS pyridine N)
-    "NPR": (0.3250, 0.7113),     # Pyrrolic ring N (OPLS pyrrole N)
-    "NGR": (0.3250, 0.7113),     # Graphitic/quaternary ring N
-    "HNPR": (0.0000, 0.0000),    # H on pyrrolic N (no LJ)
-    # Ionized forms — sigma/epsilon copied from the stock OPLS type each one
-    # maps to (see GROMACS_OPLS_TYPE_MAP).  These are only consulted on the
-    # standalone-[atomtypes] export path; against stock oplsaa.ff GROMACS
-    # resolves the mapped type's own parameters instead.
-    "CM":  (0.3750, 0.4393),     # opls_271 carboxylate C
-    "O2M": (0.2960, 0.8786),     # opls_272 carboxylate O
-    "OM":  (0.3150, 1.0460),     # opls_420 alkoxide O   (derived)
-    "SM":  (0.4250, 2.0920),     # opls_417 thiolate S   (derived)
-    "NPYP": (0.3250, 0.7113),    # opls_379 CytH+ N3     (derived)
-    "HPYP": (0.0000, 0.0000),    # opls_513 H on HIP N   (derived, no LJ)
-    "NAP": (0.3250, 0.7113),     # opls_287 RNH3+ N      (derived)
-    "HNAP": (0.0000, 0.0000),    # opls_290 H of RNH3+   (derived, no LJ)
-}
+# Lennard-Jones, bond, and angle parameters intentionally live in oplsaa.ff, not
+# here. GROMACS resolves them from the #included forcefield by the opls_XXX name in
+# GROMACS_OPLS_TYPE_MAP below, so a hand-copied table here would be dead weight that
+# can only drift. A previous table did drift: its values were a mix of AMBER and OPLS
+# with no single provenance.
+#
+# The one exception is SUPPLEMENTARY_ANGLE_PARAMS below, and the rule that keeps it
+# from becoming that table again is strict: it may hold ONLY combinations stock
+# oplsaa.ff does not define. A value that also exists in the forcefield is
+# duplication and will drift; a value that exists nowhere else cannot.
+# tests/test_opls_type_map.py enforces both halves -- every emitted combination
+# resolves, and nothing here shadows a stock entry.
 
 # Mapping from internal generic type names to GROMACS OPLS-AA opls_XXX names.
 # Internal names (CA, HA, etc.) are used throughout the biochar generation pipeline.
 # At GROMACS export time, these are translated so the topology is compatible with
 # the standard oplsaa.ff forcefield shipped with GROMACS.
 #
-# IMPORTANT — the mapped name decides the physics.  Against stock oplsaa.ff the
-# exporter does not emit its own [atomtypes] block, so GROMACS resolves mass, LJ
-# parameters, and bonded terms from the *mapped* type, not from OPLS_ATOM_TYPES
-# or OPLS_LJ_PARAMS above.  grompp accepts any name that exists, so a mapping to
-# the wrong element fails silently rather than loudly.  tests/test_constants_ff.py
-# asserts element consistency for exactly this reason; see the note there before
-# adding or changing an entry.
+# When the exported .itp #includes a real oplsaa.ff, only the opls_XXX name reaches
+# GROMACS -- mass, charge, LJ and bonded parameters are all resolved from the
+# forcefield by that name. A name naming the wrong element therefore silently
+# simulates the wrong chemistry. Trailing comments quote the type's description in
+# oplsaa.ff/atomtypes.atp verbatim; keep them in sync when editing.
+# tests/test_opls_type_map.py checks every entry against an installed oplsaa.ff.
 GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
     "CA":  "opls_145",   # aromatic carbon, benzene-type
     "HA":  "opls_146",   # aromatic hydrogen
@@ -136,145 +102,81 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
     "OH2": "opls_268",   # carboxylic acid -OH oxygen
     "HO2": "opls_270",   # carboxylic acid -OH hydrogen
     "OW":  "opls_116",   # SPC/E water oxygen
-    "NA":  "opls_900",   # primary amine N ("N primary amines")
-    "HNA": "opls_909",   # H on primary amine N ("H(N) primary amines")
-    "SH_": "opls_202",   # aromatic thiol sulfur (Ar-SH)
-    "HSH": "opls_204",   # H on thiol sulfur ("all-atom H(S): thiols")
-    "SS":  "opls_209",   # thioether sulfur bridging two aryl C (Ar-S-Ar)
-    "NPY": "opls_520",   # pyridinic ring N ("N in pyridine")
-    "NPR": "opls_542",   # pyrrolic ring N ("N in pyrrole")
-    "HNPR": "opls_545",  # H on pyrrolic N ("H1 in pyrrole" — the N-H)
-    "NGR": "opls_379",   # graphitic/quaternary N: derived from "CytH+ N3", a
-                         # protonated (cationic) aromatic ring N.  Graphitic N
-                         # carries a formal +1, so a cationic aromatic N is a
-                         # closer analog than the neutral pyridine N it used to
-                         # share with NPY.  Stock OPLS has no quaternary
-                         # aromatic N; see Open Questions in the pH plan.
+    "NA":  "opls_900",   # "N primary   amines" -- aniline Ar-NH2 nitrogen
+    "HNA": "opls_909",   # "H(N)   primary   amines" -- H on that nitrogen
+    "SH_": "opls_734",   # "all-atom S: thiophenol (HS is #204)" -- Ar-SH sulfur
+    "HSH": "opls_204",   # "all-atom H(S): thiols" -- the HS named by opls_734
+    "SS":  "opls_222",   # "S in thioanisoles" -- nearest aryl-S; see note below
+    "NPY": "opls_520",   # "N   in pyridine 6-31G*" -- pyridinic ring N
+    "NPR": "opls_542",   # "N   in pyrrole" -- pyrrolic ring N
+    "HNPR": "opls_545",  # "H1  in pyrrole" -- the pyrrole N-H hydrogen
+    "NGR": "opls_379",   # "CytH+ N3 Protonated cytosine." -- a cationic aromatic
+                         # ring N. Graphitic N carries a formal +1, so a cationic
+                         # aromatic N is a closer analog than the neutral pyridine
+                         # N this used to share with NPY. Stock OPLS has no
+                         # quaternary aromatic N. See note below.
 
     # ---- Ionized forms (pH-dependent protonation) -------------------------
     # Only carboxylate has genuine stock OPLS types.  The rest are DERIVED from
     # the nearest available analog -- chemically reasonable, but not validated
     # against QM.  Each line records the analog and why it was chosen.
-    "CM":  "opls_271",   # carboxylate C  — exact ("C in COO- carboxylate")
-    "O2M": "opls_272",   # carboxylate O  — exact ("O in COO- carboxylate")
-    "OM":  "opls_420",   # phenolate O    — DERIVED from "O in CH3O-" (alkoxide).
+    "CM":  "opls_271",   # carboxylate C  -- exact ("C in COO- carboxylate")
+    "O2M": "opls_272",   # carboxylate O  -- exact ("O in COO- carboxylate")
+    "OM":  "opls_420",   # phenolate O    -- DERIVED from "O in CH3O-" (alkoxide).
                          # Stock OPLS has no aryl oxide; alkoxide is the only
                          # deprotonated O available.  Being aliphatic, it likely
                          # overstates the charge on an aryl oxide, whose charge
                          # delocalises into the ring.
-    "SM":  "opls_417",   # thiophenolate S — DERIVED from "S in CH3S-" (thiolate).
+    "SM":  "opls_417",   # thiophenolate S -- DERIVED from "S in CH3S-" (thiolate).
                          # Same caveat as OM: stock OPLS has no aryl thiolate.
-    "NPYP": "opls_379",  # pyridinium N   — DERIVED from "CytH+ N3", a protonated
+    "NPYP": "opls_379",  # pyridinium N   -- DERIVED from "CytH+ N3", a protonated
                          # aromatic ring N.  Nearest available cationic aromatic
                          # N; shares the analog with NGR, which is also a
                          # cationic aromatic N.
-    "HPYP": "opls_513",  # H on pyridinium N — DERIVED from "H on N in HIP", the
+    "HPYP": "opls_513",  # H on pyridinium N -- DERIVED from "H on N in HIP", the
                          # H on doubly-protonated histidine's cationic ring N.
                          # Structurally the closest stock aromatic N-H+.
-    "NAP": "opls_287",   # anilinium N    — DERIVED from "N (RNH3+)".
+    "NAP": "opls_287",   # anilinium N    -- DERIVED from "N (RNH3+)".
                          # Parameterised for alkylammonium, so it does not carry
                          # aniline's ring conjugation.
-    "HNAP": "opls_290",  # H on anilinium N — DERIVED from "H (RNH3+)".
+    "HNAP": "opls_290",  # H on anilinium N -- DERIVED from "H (RNH3+)".
 }
 
-# OPLS-AA Bond Parameters (k_bond, r0)
-# Format: (atom_type1, atom_type2) -> (k_kcal/mol/Angstrom^2, r0_Angstrom)
-# Values from GROMACS OPLS-AA forcefield
+# Two entries above are deliberate approximations, not exact matches:
+#
+#   SS  -> opls_222 is the thioanisole sulfur (Ar-S-CH3). OPLS-AA has no diaryl
+#          thioether (Ar-S-Ar) type; opls_222 is the only aryl-attached sulfide S
+#          and carries the matching CA-S bond (0.176 nm, "thioanisole" in
+#          ffbonded.itp).
+#
+#          The CA-S bond resolves, but the CA-S-CA angle has no stock angletype
+#          -- see SUPPLEMENTARY_ANGLE_PARAMS below, which supplies it.
+#
+#   NGR -> opls_379 ("CytH+ N3") is a protonated, cationic aromatic ring N.
+#          OPLS-AA has no substitutional 3-coordinate aromatic N, so this is an
+#          analog either way; a cationic aromatic N is the closer one, because
+#          graphitic N carries a formal +1. It previously shared the neutral
+#          pyridine N (opls_520) with NPY, which understated exactly that charge
+#          -- the reason it moved is the pH work, which makes formal charge real
+#          rather than something ChargeAssigner flattened to zero. Element and
+#          ring aromaticity are right; the bonded environment is still
+#          approximate, and this is not QM-validated.
 
-OPLS_BOND_PARAMS = {
-    ("CA", "CA"): (770.0, 1.387),      # Aromatic C-C
-    ("CA", "HA"): (367.0, 1.084),      # Aromatic C-H
-    ("CT", "CT"): (268.0, 1.529),      # Aliphatic C-C
-    ("CT", "HC"): (367.0, 1.084),      # Aliphatic C-H
-    ("CA", "CT"): (268.0, 1.529),      # Aromatic-aliphatic C-C
-    ("CT", "OH"): (320.0, 1.410),      # Aliphatic C-OH
-    ("CA", "OH"): (450.0, 1.367),      # Aromatic C-OH (phenolic)
-    ("CT", "OS"): (320.0, 1.410),      # Aliphatic C-O (ether)
-    ("CA", "OS"): (450.0, 1.367),      # Aromatic C-O (ether)
-    ("C", "O"): (750.0, 1.230),        # Carboxylic carbonyl
-    ("C", "OH2"): (320.0, 1.364),      # C-OH in carboxylic acid
-    ("CT", "OC"): (320.0, 1.410),      # Aliphatic C-carbonyl O
-    ("OH", "HO"): (367.0, 0.960),      # O-H hydroxyl
-    ("OH2", "HO2"): (367.0, 0.960),    # O-H carboxylic
-    ("OS", "HO"): (367.0, 0.960),      # This shouldn't exist, but for safety
-    ("CA", "NA"): (500.0, 1.422),      # Aromatic C-N bond (aniline)
-    ("NA", "HNA"): (434.0, 1.010),     # N-H bond in aniline
-    ("CA", "SH_"): (340.0, 1.740),     # Aromatic C-S bond (thiophenol)
-    ("SH_", "HSH"): (274.0, 1.336),    # S-H bond in thiol
-    ("CA", "SS"): (340.0, 1.740),      # Aromatic C-S bond (aryl thioether)
-    ("CA", "NPY"): (483.0, 1.339),     # Aromatic C-N (pyridinic 6-ring)
-    ("CA", "NPR"): (427.0, 1.381),     # Aromatic C-N (pyrrolic 5-ring)
-    ("CA", "NGR"): (483.0, 1.339),     # Aromatic C-N (graphitic/quaternary)
-    ("NPR", "HNPR"): (434.0, 1.010),   # N-H bond in pyrrole
-    # Ionized forms.  Carboxylate C-O sits between the neutral C=O (1.230) and
-    # C-OH (1.364) lengths because the two oxygens are equivalent by resonance.
-    ("CA", "CM"): (317.0, 1.522),      # Aryl C-C(OO-)
-    ("CM", "O2M"): (656.0, 1.250),     # Carboxylate C-O (both, resonance-averaged)
-    ("CA", "OM"): (450.0, 1.367),      # Aryl C-O- (phenolate); as neutral phenol
-    ("CA", "SM"): (340.0, 1.740),      # Aryl C-S- (thiophenolate); as neutral thiol
-    ("CA", "NPYP"): (483.0, 1.339),    # Aromatic C-N+ (pyridinium); as pyridinic
-    ("NPYP", "HPYP"): (434.0, 1.010),  # N-H in pyridinium
-    ("CA", "NAP"): (382.0, 1.448),     # Aryl C-N+ (anilinium); longer than neutral
-                                       # aniline's 1.422 — the N lone pair is
-                                       # protonated, so it no longer conjugates
-                                       # into the ring.
-    ("NAP", "HNAP"): (434.0, 1.010),   # N-H in anilinium
-}
-
-# OPLS-AA Angle Parameters (k_angle, theta0)
-# Format: (atom_type1, atom_type2, atom_type3) -> (k_kcal/mol/rad^2, theta0_deg)
-
-OPLS_ANGLE_PARAMS = {
-    ("CA", "CA", "CA"): (126.0, 120.0),
-    ("CA", "CA", "HA"): (70.0, 120.0),
-    ("CA", "CA", "CT"): (70.0, 120.0),
-    ("CA", "CA", "OH"): (70.0, 119.7),
-    ("CA", "CA", "OS"): (70.0, 119.7),
-    ("HA", "CA", "HA"): (35.0, 120.0),
-    ("CT", "CT", "CT"): (63.0, 109.47),
-    ("CT", "CT", "HC"): (48.0, 109.47),
-    ("CT", "CT", "OH"): (55.0, 109.47),
-    ("CT", "CT", "OS"): (55.0, 109.47),
-    ("HC", "CT", "HC"): (35.0, 109.47),
-    ("HC", "CT", "OH"): (35.0, 109.47),
-    ("CT", "OH", "HO"): (55.0, 104.52),
-    ("CA", "OH", "HO"): (70.0, 108.0),
-    ("CT", "OS", "CT"): (60.0, 110.7),
-    ("CA", "OS", "CA"): (70.0, 113.2),
-    ("CT", "OS", "CA"): (70.0, 113.2),
-    ("CA", "CA", "NA"): (70.0, 120.0),   # Ar-C-C-N in aniline
-    ("CA", "NA", "HNA"): (55.0, 113.9),  # Ar-N-H angle
-    ("HNA", "NA", "HNA"): (35.0, 116.0), # H-N-H in aniline
-    ("CA", "CA", "SH_"): (70.0, 120.0),  # Ar-C-C-S in thiophenol
-    ("CA", "SH_", "HSH"): (44.0, 96.0),  # Ar-S-H angle in thiol
-    ("CA", "CA", "SS"): (70.0, 120.0),   # Ar-C-C-S in aryl thioether
-    ("CA", "SS", "CA"): (62.0, 104.2),   # Ar-S-Ar angle in thioether
-    # Ring-substituting nitrogen angles
-    ("CA", "NPY", "CA"): (70.0, 117.0),  # C-N-C in pyridinic 6-ring
-    ("CA", "CA", "NPY"): (70.0, 123.0),  # C-C-N (ring) adjacent to pyridinic N
-    ("CA", "NPR", "CA"): (70.0, 109.8),  # C-N-C in pyrrolic 5-ring
-    ("CA", "CA", "NPR"): (70.0, 107.7),  # C-C-N (ring) adjacent to pyrrolic N
-    ("CA", "NPR", "HNPR"): (35.0, 125.1),# C-N-H in pyrrole
-    ("CA", "NGR", "CA"): (70.0, 120.0),  # C-N-C in graphitic/quaternary N
-    ("CA", "CA", "NGR"): (70.0, 120.0),  # C-C-N (ring) adjacent to graphitic N
-    # Ionized forms
-    ("CA", "CA", "CM"): (70.0, 120.0),    # Ar-C-C-COO-
-    ("CA", "CM", "O2M"): (70.0, 117.0),   # Ar-C-O in carboxylate
-    ("O2M", "CM", "O2M"): (80.0, 126.0),  # O-C-O in carboxylate; wider than the
-                                          # neutral COOH's O-C-O from the
-                                          # symmetric resonance form
-    ("CA", "CA", "OM"): (70.0, 120.0),    # Ar-C-C-O- in phenolate
-    ("CA", "CA", "SM"): (70.0, 120.0),    # Ar-C-C-S- in thiophenolate
-    ("CA", "NPYP", "CA"): (70.0, 120.0),  # C-N+-C in pyridinium; wider than
-                                          # pyridine's 117.0 — the lone pair is
-                                          # protonated and no longer compresses
-                                          # the ring angle
-    ("CA", "CA", "NPYP"): (70.0, 120.0),  # C-C-N+ (ring) adjacent to pyridinium
-    ("CA", "NPYP", "HPYP"): (35.0, 120.0),# C-N+-H in pyridinium
-    ("CA", "CA", "NAP"): (70.0, 120.0),   # Ar-C-C-N+ in anilinium
-    ("CA", "NAP", "HNAP"): (35.0, 109.5), # Ar-N+-H in anilinium; tetrahedral,
-                                          # unlike neutral aniline's 113.9
-    ("HNAP", "NAP", "HNAP"): (35.0, 109.5),  # H-N+-H in anilinium
+# Angles that stock oplsaa.ff cannot resolve, written inline into [ angles ] so the
+# parameters travel with the molecule (the .itp), not with whichever .top includes it.
+#
+# Keyed by internal atom type, outer two sorted. Values are GROMACS units:
+# (theta0_deg, k_kJ/mol/rad^2) -- the same columns as ffbonded.itp [ angletypes ].
+#
+# Every entry needs a provenance comment naming why the forcefield lacks it and where
+# the number came from. Nothing may be added here that oplsaa.ff already defines.
+SUPPLEMENTARY_ANGLE_PARAMS: dict[tuple[str, str, str], tuple[float, float]] = {
+    # Ar-S-Ar, the diaryl thioether bridge. OPLS-AA has no aryl-S-aryl angle: the
+    # closest stock entries are CA-S-CT (thioanisole) and CA-S-CM, both 104.200 /
+    # 518.816 and themselves "adjusted from CT-S-CT" per ffbonded.itp. Reusing that
+    # value keeps the bridge consistent with the opls_222 sulfur SS already maps to.
+    # Approximate, like the SS mapping it accompanies -- not QM-validated.
+    ("CA", "SS", "CA"): (104.200, 518.816),
 }
 
 # Functional groups definitions

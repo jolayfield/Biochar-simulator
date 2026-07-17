@@ -3,6 +3,8 @@ Tests for gromacs_export.py — GROFileWriter, TOPFileWriter, ITPFileWriter,
 GromacsExporter, MultiSheetGROWriter, SurfaceTopologyWriter.
 """
 
+import os
+
 import pytest
 import numpy as np
 from pathlib import Path
@@ -176,6 +178,51 @@ class TestTOPFileWriter:
         text = Path(top).read_text()
         assert "[ molecules ]" in text
         assert "BENZ" in text
+
+    def test_top_defers_to_forcefield_for_atomtypes(self, tmp_path):
+        """The .top must #include a forcefield and never redefine its types.
+
+        An [ atomtypes ] block here would override the #included oplsaa.ff by
+        name, silently replacing stock LJ parameters with whatever we wrote.
+        The types are the forcefield's to define; we only reference them.
+        """
+        mol, _, atom_types, charges = _benzene_typed()
+        top = str(tmp_path / "out.top")
+        TOPFileWriter.write(top, mol, atom_types, charges, molecule_name="BENZ")
+
+        text = Path(top).read_text()
+        assert '#include "oplsaa.ff/forcefield.itp"' in text
+        assert "[ atomtypes ]" not in text
+        assert "[atomtypes]" not in text
+
+    def test_top_defers_to_forcefield_even_when_ff_is_resolvable(self, tmp_path):
+        """Emitting atomtypes must not depend on whether the include resolves.
+
+        A stock oplsaa.ff/forcefield.itp holds no [ atomtypes ] of its own -- it
+        only #includes ffnonbonded.itp -- so any check that greps the named file
+        for that section concludes the types are missing precisely when a real
+        forcefield is present, and duplicates them.
+        """
+        ff_dir = tmp_path / "oplsaa.ff"
+        ff_dir.mkdir()
+        (ff_dir / "forcefield.itp").write_text(
+            '#define _FF_OPLSAA\n\n[ defaults ]\n1 3 yes 0.5 0.5\n\n'
+            '#include "ffnonbonded.itp"\n#include "ffbonded.itp"\n'
+        )
+        (ff_dir / "ffnonbonded.itp").write_text(
+            "[ atomtypes ]\nopls_145 CA 6 12.011 -0.115 A 3.55e-01 2.92880e-01\n"
+        )
+
+        mol, _, atom_types, charges = _benzene_typed()
+        top = str(tmp_path / "out.top")
+        cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            TOPFileWriter.write(top, mol, atom_types, charges, molecule_name="BENZ")
+        finally:
+            os.chdir(cwd)
+
+        assert "[ atomtypes ]" not in Path(top).read_text()
 
     def test_atoms_section_count(self, tmp_path):
         """Number of atom lines in [ atoms ] must equal mol.GetNumAtoms()."""
