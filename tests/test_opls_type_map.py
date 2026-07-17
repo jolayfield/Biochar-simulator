@@ -258,31 +258,29 @@ def _unresolvable(mol, atom_types, bonded, bondtypes, angletypes):
     return sorted(set(missing))
 
 
-# Gaps this check found that are real but out of scope to fix here. Both are
+# Gaps this check found that are real but out of scope to fix here. Each is
 # xfail(strict) so that fixing one fails the suite until its marker is removed --
-# a silent pass would let the gap reopen unnoticed.
-_CARBOXYL_XFAIL = (
-    "AtomTyper never assigns the carboxylic-acid types. Its OH2 branch sits "
-    "behind `else` after num_bonds == 1 and == 2, so it needs an oxygen with 3+ "
-    "bonds, which cannot occur -- O/OH2/HO2 are dead code and a -COOH types as "
-    "ketone O + phenol OH, emitting O_2-C-OH. OPLS defines the real carboxyl "
-    "angle as O_3-C-OH (121.000/669.440, 'RCOOH'). The fix is correct typing, "
-    "not a supplement: supplementing would cement the wrong chemistry. Already "
-    "fixed on feat/ph-protonation; reconcile rather than re-fix."
-)
+# a silent pass would let the gap reopen unnoticed. carboxyl was the other one,
+# and the pH work's typing fix retired it exactly that way.
 _PYRIDINIC_XFAIL = (
     "A hydroxyl on a ring carbon adjacent to a pyridinic N emits NC-CA-OH, which "
     "stock OPLS does not define (3-hydroxypyridine is plausible chemistry OPLS "
     "just omits). Reachable with default settings, since the default O/C ratio "
-    "adds phenolic OH. Unlike carboxyl this is a genuine forcefield gap, so it "
-    "belongs in SUPPLEMENTARY_ANGLE_PARAMS -- but only with a defensible value "
-    "and provenance, which needs its own change."
+    "adds phenolic OH. A genuine forcefield gap, so it belongs in "
+    "SUPPLEMENTARY_ANGLE_PARAMS -- but only with a defensible value and "
+    "provenance, which needs its own change."
 )
 
 
 def _group_params():
-    """Functional-group cases, xfail-marked where a known gap makes them fail."""
-    known = {"carboxyl": _CARBOXYL_XFAIL}
+    """Functional-group cases, xfail-marked where a known gap makes them fail.
+
+    carboxyl used to be marked here: AtomTyper never assigned the carboxylic-acid
+    types, so a -COOH emitted O_2-C-OH instead of the real O_3-C-OH. The pH work
+    fixed the typing, the marker started passing, and xfail(strict) failed the
+    suite until it was removed.
+    """
+    known: dict[str, str] = {}
     params = []
     for group in sorted(FUNCTIONAL_GROUPS):
         reason = known.get(group)

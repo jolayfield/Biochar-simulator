@@ -44,6 +44,16 @@ class CompositionResult:
     functional_groups: Dict[str, int] = field(default_factory=dict)
     placed_counts: Dict[str, int] = field(default_factory=dict)   # groups actually placed
     requested_counts: Dict[str, int] = field(default_factory=dict)  # groups requested
+    # pH-dependent protonation census, set by ``ProtonationAssigner``.
+    # ``net_charge`` is the molecule's total formal charge -- 0 when no pH was
+    # requested, and what ``genion -neutral`` must balance at solvation time.
+    # ``titratable_counts`` is every site that *could* ionize;
+    # ``ionized_counts`` is the subset that actually did.  Both are reported so
+    # the per-site sampling stays visible: near a pKa a single structure is one
+    # draw, not the ensemble mean.
+    net_charge: int = 0
+    ionized_counts: Dict[str, int] = field(default_factory=dict)
+    titratable_counts: Dict[str, int] = field(default_factory=dict)
     # Set by HydrogenAssigner when the requested H/C exceeds what the built
     # skeleton can physically carry.  ``h_c_ceiling`` is the maximum H/C
     # achievable for this molecule (all free edge valences saturated with H);

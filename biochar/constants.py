@@ -5,6 +5,8 @@ Atom types, charges, and masses for OPLS-AA force field.
 Reference: Jorgensen, W. L., et al. JACS 118.45 (1996): 11225-11236.
 """
 
+from dataclasses import dataclass
+
 
 # OPLS-AA Atom Types for Biochar Systems
 # Format: atom_type: (description, mass_amu, default_charge)
@@ -47,6 +49,19 @@ OPLS_ATOM_TYPES = {
     "NGR": ("Graphitic/quaternary N (interior 6-ring, no H)", 14.007, 0.02),
     "HNPR": ("H on pyrrolic nitrogen", 1.008, 0.38),
 
+    # ---- Ionized forms (pH-dependent protonation) -------------------------
+    # Charges are the stock OPLS values of the type each one maps to (see
+    # GROMACS_OPLS_TYPE_MAP for the mapping and its provenance).  Only
+    # carboxylate has a genuine stock OPLS type; the rest are derived from the
+    # nearest analog and are flagged as such on every line.
+    "CM":  ("Carboxylate carbon (Ar-COO-)", 12.01, 0.700),      # opls_271, exact
+    "O2M": ("Carboxylate oxygen (Ar-COO-)", 15.999, -0.800),    # opls_272, exact
+    "OM":  ("Phenolate oxygen (Ar-O-)", 15.999, -0.980),        # derived: opls_420 alkoxide
+    "SM":  ("Thiophenolate sulfur (Ar-S-)", 32.06, -0.900),     # derived: opls_417 thiolate
+    "NPYP": ("Pyridinium N (protonated pyridinic, +1)", 14.007, -0.740),  # derived: opls_379
+    "HPYP": ("H on pyridinium N", 1.008, 0.460),                # derived: opls_513 (H on HIP N)
+    "NAP": ("Anilinium N (Ar-NH3+)", 14.007, -0.300),           # derived: opls_287 (RNH3+)
+    "HNAP": ("H on anilinium N", 1.008, 0.330),                 # derived: opls_290 (H of RNH3+)
 }
 
 # Lennard-Jones, bond, and angle parameters intentionally live in oplsaa.ff, not
@@ -95,7 +110,36 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
     "NPY": "opls_520",   # "N   in pyridine 6-31G*" -- pyridinic ring N
     "NPR": "opls_542",   # "N   in pyrrole" -- pyrrolic ring N
     "HNPR": "opls_545",  # "H1  in pyrrole" -- the pyrrole N-H hydrogen
-    "NGR": "opls_520",   # graphitic/quaternary ring N; approximated, see note below
+    "NGR": "opls_379",   # "CytH+ N3 Protonated cytosine." -- a cationic aromatic
+                         # ring N. Graphitic N carries a formal +1, so a cationic
+                         # aromatic N is a closer analog than the neutral pyridine
+                         # N this used to share with NPY. Stock OPLS has no
+                         # quaternary aromatic N. See note below.
+
+    # ---- Ionized forms (pH-dependent protonation) -------------------------
+    # Only carboxylate has genuine stock OPLS types.  The rest are DERIVED from
+    # the nearest available analog -- chemically reasonable, but not validated
+    # against QM.  Each line records the analog and why it was chosen.
+    "CM":  "opls_271",   # carboxylate C  -- exact ("C in COO- carboxylate")
+    "O2M": "opls_272",   # carboxylate O  -- exact ("O in COO- carboxylate")
+    "OM":  "opls_420",   # phenolate O    -- DERIVED from "O in CH3O-" (alkoxide).
+                         # Stock OPLS has no aryl oxide; alkoxide is the only
+                         # deprotonated O available.  Being aliphatic, it likely
+                         # overstates the charge on an aryl oxide, whose charge
+                         # delocalises into the ring.
+    "SM":  "opls_417",   # thiophenolate S -- DERIVED from "S in CH3S-" (thiolate).
+                         # Same caveat as OM: stock OPLS has no aryl thiolate.
+    "NPYP": "opls_379",  # pyridinium N   -- DERIVED from "CytH+ N3", a protonated
+                         # aromatic ring N.  Nearest available cationic aromatic
+                         # N; shares the analog with NGR, which is also a
+                         # cationic aromatic N.
+    "HPYP": "opls_513",  # H on pyridinium N -- DERIVED from "H on N in HIP", the
+                         # H on doubly-protonated histidine's cationic ring N.
+                         # Structurally the closest stock aromatic N-H+.
+    "NAP": "opls_287",   # anilinium N    -- DERIVED from "N (RNH3+)".
+                         # Parameterised for alkylammonium, so it does not carry
+                         # aniline's ring conjugation.
+    "HNAP": "opls_290",  # H on anilinium N -- DERIVED from "H (RNH3+)".
 }
 
 # Two entries above are deliberate approximations, not exact matches:
@@ -108,10 +152,15 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
 #          The CA-S bond resolves, but the CA-S-CA angle has no stock angletype
 #          -- see SUPPLEMENTARY_ANGLE_PARAMS below, which supplies it.
 #
-#   NGR -> opls_520 is the pyridine N, reused for graphitic/quaternary N because
-#          OPLS-AA has no substitutional 3-coordinate aromatic N type. Element and
-#          ring aromaticity are right; the charge/bonded environment is only
-#          approximate. NPY maps here too -- for pyridinic N it is exact.
+#   NGR -> opls_379 ("CytH+ N3") is a protonated, cationic aromatic ring N.
+#          OPLS-AA has no substitutional 3-coordinate aromatic N, so this is an
+#          analog either way; a cationic aromatic N is the closer one, because
+#          graphitic N carries a formal +1. It previously shared the neutral
+#          pyridine N (opls_520) with NPY, which understated exactly that charge
+#          -- the reason it moved is the pH work, which makes formal charge real
+#          rather than something ChargeAssigner flattened to zero. Element and
+#          ring aromaticity are right; the bonded environment is still
+#          approximate, and this is not QM-validated.
 
 # Angles that stock oplsaa.ff cannot resolve, written inline into [ angles ] so the
 # parameters travel with the molecule (the .itp), not with whichever .top includes it.
@@ -223,6 +272,123 @@ FUNCTIONAL_GROUPS = {
         "H_per_group": 0,
     },
 }
+
+# ---------------------------------------------------------------------------
+# pH-dependent protonation states
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ProtonationState:
+    """
+    One acid/base equilibrium available to a biochar functional group.
+
+    *pKa* always belongs to the **protonated** member of the pair, following the
+    usual convention.  ``kind`` says which side of the equilibrium the charge
+    appears on, and is what stops the two blocks being conflated:
+
+        "acidic"  — the neutral form is protonated; it *loses* H+ to become an
+                    anion.  Fraction ionized rises with pH.
+        "basic"   — the neutral form is deprotonated; it *gains* H+ to become a
+                    cation.  Fraction ionized falls with pH.
+
+    ``neutral_type`` / ``ionized_type`` name the OPLS type of the one heteroatom
+    whose formal charge changes.  ``h_type`` is the exchangeable hydrogen's OPLS
+    type — the H that is removed (acidic) or added (basic).
+    """
+
+    pKa: float
+    kind: str            # "acidic" | "basic"
+    neutral_type: str    # OPLS type of the key heteroatom, neutral form
+    ionized_type: str    # OPLS type of the key heteroatom, ionized form
+    h_type: str          # OPLS type of the exchangeable hydrogen
+    description: str
+
+
+# Titratable groups, keyed by the group names OxygenAssigner already places
+# (plus "pyridinic", which NitrogenSubstitutor substitutes into the ring).
+#
+# pKa provenance — model-compound values, chosen to sit inside the ranges
+# reported for real biochar surfaces by potentiometric and Boehm titration
+# (carboxylic 3–6, phenolic 8–11, see refs below):
+#
+#   carboxyl   4.20  benzoic acid.  Biochar surface carboxyls titrate 3–6;
+#                    benzoic acid is the aryl-carboxyl model compound.
+#   phenolic   9.50  phenol (9.95) shifted down slightly toward the 9–10 band
+#                    reported for biochar phenolic OH, which sits on
+#                    electron-poor polyaromatic edges rather than plain benzene.
+#   thiol      6.60  thiophenol.  Aryl thiols are far more acidic than alkyl.
+#   amino      4.60  anilinium (conjugate acid of aniline).
+#   pyridinic  5.20  pyridinium (conjugate acid of pyridine).
+#
+# Refs: Boehm/potentiometric titration ranges —
+#   doi:10.1016/j.scitotenv.2020.142792 (proton uptake vs. pyrolysis temperature)
+#   doi:10.1016/j.jcis.2016.01.076      (pKa of graphene-like materials)
+#   doi:10.1016/j.carbon.2013.09.048    (limits of the Boehm titration)
+#
+# NOTE — lactonic groups (pKa 7–9) also titrate in the environmentally
+# interesting window but are deliberately absent: "lactone" currently falls back
+# to "phenolic" in OxygenAssigner, so there is no lactone to titrate.
+#
+# NOTE — graphitic N is absent by design.  It is permanently +1 by construction
+# (three aromatic ring bonds, pyridinium-like) and does not titrate.
+PROTONATION_STATES: dict[str, ProtonationState] = {
+    "carboxyl": ProtonationState(
+        pKa=4.20,
+        kind="acidic",
+        neutral_type="OH2",   # -C(=O)OH  hydroxyl oxygen
+        ionized_type="O2M",   # -C(=O)O-  carboxylate oxygen
+        h_type="HO2",
+        description="Ar-COOH <-> Ar-COO- + H+  (benzoic acid, pKa 4.20)",
+    ),
+    "phenolic": ProtonationState(
+        pKa=9.50,
+        kind="acidic",
+        neutral_type="OH",
+        ionized_type="OM",
+        h_type="HO",
+        description="Ar-OH <-> Ar-O- + H+  (phenol, pKa 9.95 -> 9.50 on PAH edge)",
+    ),
+    "thiol": ProtonationState(
+        pKa=6.60,
+        kind="acidic",
+        neutral_type="SH_",
+        ionized_type="SM",
+        h_type="HSH",
+        description="Ar-SH <-> Ar-S- + H+  (thiophenol, pKa 6.60)",
+    ),
+    "amino": ProtonationState(
+        pKa=4.60,
+        kind="basic",
+        neutral_type="NA",
+        ionized_type="NAP",
+        h_type="HNAP",
+        description="Ar-NH2 + H+ <-> Ar-NH3+  (anilinium, pKa 4.60)",
+    ),
+    "pyridinic": ProtonationState(
+        pKa=5.20,
+        kind="basic",
+        neutral_type="NPY",
+        ionized_type="NPYP",
+        h_type="HPYP",
+        description="pyridinic N + H+ <-> pyridinium NH+  (pyridinium, pKa 5.20)",
+    ),
+}
+
+# Group kinds, for callers that need to branch on the sign of the transition
+# without reaching into the table.
+ACIDIC_GROUPS = frozenset(
+    g for g, s in PROTONATION_STATES.items() if s.kind == "acidic"
+)
+BASIC_GROUPS = frozenset(
+    g for g, s in PROTONATION_STATES.items() if s.kind == "basic"
+)
+
+# Physically meaningful pH bounds.  Outside this range the Henderson-Hasselbalch
+# fraction saturates anyway, and the request is much more likely a unit error.
+PH_MIN = 0.0
+PH_MAX = 14.0
+
 
 # Common PAH structures (SMILES notation)
 # All entries validated: correct carbon count, 100% aromatic, all atoms in 6-membered rings.

@@ -132,6 +132,8 @@ def _make_label(axis_values: Dict[str, Any]) -> str:
             parts.append(f"T{tag}")
         elif k == "target_num_carbons":
             parts.append(f"C{tag}")
+        elif k == "pH":
+            parts.append(f"pH{tag}")
         else:
             parts.append(tag)
     return "_".join(parts)[:48]
@@ -234,6 +236,12 @@ class PointResult:
     O_C_ratio: Optional[float] = None
     functional_groups: Optional[Dict[str, int]] = None
     ring_composition: Optional[Dict[str, int]] = None
+    # Net formal charge of the structure (0 unless a pH was requested).  Carried
+    # into the manifest so md_setup consumers can see the charge budget without
+    # re-deriving it -- `gmx genion -neutral` still does the actual
+    # neutralising; this is the reporting half.
+    net_charge: Optional[int] = None
+    ionized_counts: Optional[Dict[str, int]] = None
     validation_errors: List[str] = field(default_factory=list)
     validation_warnings: List[str] = field(default_factory=list)
     gro_path: Optional[str] = None
@@ -258,6 +266,8 @@ class PointResult:
             "O_C_ratio": self.O_C_ratio,
             "functional_groups": json.dumps(self.functional_groups) if self.functional_groups else "",
             "ring_composition": json.dumps(self.ring_composition) if self.ring_composition else "",
+            "net_charge": self.net_charge,
+            "ionized_counts": json.dumps(self.ionized_counts) if self.ionized_counts else "",
             "n_validation_errors": len(self.validation_errors),
             "n_validation_warnings": len(self.validation_warnings),
             "gro_path": self.gro_path or "",
@@ -438,6 +448,8 @@ def _ok_result(point, gen, comp, paths, status, seed, attempts, elapsed) -> Poin
         O_C_ratio=getattr(comp, "O_C_ratio", None),
         functional_groups=dict(getattr(comp, "functional_groups", {}) or {}),
         ring_composition=dict(getattr(gen, "ring_composition", {}) or {}),
+        net_charge=getattr(comp, "net_charge", None),
+        ionized_counts=dict(getattr(comp, "ionized_counts", {}) or {}),
         validation_errors=list(errors),
         validation_warnings=list(warnings),
         gro_path=str(paths[0]) if paths[0] else None,

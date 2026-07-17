@@ -48,6 +48,27 @@ EXTENDED_VALENCES = {
     16: (4, 6),            # S can have 4 or 6 bonds (sulfone, sulfate)
 }
 
+# Valences for anionic heteroatoms (formal charge < 0).
+# Format: (min_valence, max_valence)
+#
+# An anion trades one bond for a lone pair, so it carries exactly one fewer
+# bond than its neutral form -- and, having done so, has no free valence left.
+# Both halves of that matter:
+#
+#   min: a phenolate O (1 bond, -1) must report needed_valence == 0, or
+#        HydrogenAssigner._saturate_valences re-protonates it and silently
+#        undoes the deprotonation.
+#   max: it must equally report available_valence == 0, or bond-adding callers
+#        believe there is room to attach to a complete anion.
+#
+# This table is consulted only when formal_charge < 0; the neutral and cationic
+# paths are untouched.
+ANIONIC_VALENCES = {
+    7: (2, 2),             # N-: amide-like, 2 bonds
+    8: (1, 1),             # O-: phenolate / carboxylate, 1 bond
+    16: (1, 1),            # S-: thiophenolate, 1 bond
+}
+
 
 def get_valence_range(atomic_num: int, formal_charge: int = 0) -> Tuple[int, int]:
     """
@@ -67,15 +88,13 @@ def get_valence_range(atomic_num: int, formal_charge: int = 0) -> Tuple[int, int
     min_val, max_val, _ = STANDARD_VALENCES[atomic_num]
 
     # Adjust for formal charge
-    if formal_charge != 0 and atomic_num in EXTENDED_VALENCES:
-        # Can use extended valence states
-        ext_min, ext_max = EXTENDED_VALENCES[atomic_num]
-        if formal_charge > 0:
-            # Positive charge: use extended max
-            return (ext_min, ext_max)
-        elif formal_charge < 0:
-            # Negative charge: minimum might decrease
-            return (max(0, min_val - 1), max_val)
+    if formal_charge < 0 and atomic_num in ANIONIC_VALENCES:
+        # Negative charge: one bond traded for a lone pair, no free valence left.
+        return ANIONIC_VALENCES[atomic_num]
+
+    if formal_charge > 0 and atomic_num in EXTENDED_VALENCES:
+        # Positive charge: use extended max
+        return EXTENDED_VALENCES[atomic_num]
 
     return (min_val, max_val)
 

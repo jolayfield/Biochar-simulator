@@ -145,6 +145,17 @@ class SurfaceConfig:
     # --- Reproducibility ----------------------------------------------------
     seed: Optional[int] = None
 
+    # --- Environmental pH ---------------------------------------------------
+    # None (default) leaves every sheet neutral.  When set, each sheet's
+    # titratable sites are independently ionized (see GeneratorConfig.pH) and
+    # the stack carries a real net charge for `gmx genion -neutral` to balance.
+    #
+    # Setting pH disables the identical-sheet optimisation: protonation is a
+    # per-site random draw, so two sheets built at the same pH are independent
+    # samples rather than copies.  Each sheet is generated from its own seed and
+    # gets its own .itp accordingly.
+    pH: Optional[float] = None
+
     # --- Ring defects -------------------------------------------------------
     # Probability [0, 1) that each ring addition is a 5-membered pentagon.
     # 0.0 = pure hexagonal (default).
@@ -286,10 +297,14 @@ class SurfaceBuilder:
        :attr:`SurfaceConfig.box_padding_z` (nm) in *z*, then centres the
        system inside the box.
 
-    When :attr:`SurfaceConfig.sheet_overrides` is ``None`` all sheets are
-    chemically identical: only the first sheet is generated; the rest are
-    deep-copied.  A single ``.itp`` is produced and the ``.top`` lists it
-    with ``count = num_sheets``.
+    When :attr:`SurfaceConfig.sheet_overrides` is ``None`` **and**
+    :attr:`SurfaceConfig.pH` is ``None`` all sheets are chemically identical:
+    only the first sheet is generated; the rest are deep-copied.  A single
+    ``.itp`` is produced and the ``.top`` lists it with ``count = num_sheets``.
+
+    Setting ``pH`` breaks that identity — protonation is a per-site random draw,
+    so sheets built at the same pH are independent samples, not copies.  Each
+    sheet is then generated from its own seed and written to its own ``.itp``.
 
     Use :func:`~biochar_generator.generate_surface` for a one-call convenience
     wrapper.
@@ -382,7 +397,7 @@ class SurfaceBuilder:
         output_dir = Path(output_directory)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        sheets_identical = self.config.sheet_overrides is None
+        sheets_identical = self._sheets_identical
 
         # --- Write .itp files -----------------------------------------------
         itp_paths: List[Path] = []
@@ -441,10 +456,26 @@ class SurfaceBuilder:
     # Sheet generation
     # ------------------------------------------------------------------
 
+    @property
+    def _sheets_identical(self) -> bool:
+        """
+        True when every sheet is chemically the same molecule.
+
+        Two things break identity: explicit per-sheet overrides, and pH.
+        Protonation is an independent per-site draw, so sheets built at the same
+        pH are samples rather than copies -- deep-copying one across the stack
+        would report N times the same ionization pattern instead of an ensemble,
+        understating variance and biasing net charge.
+
+        Sheet generation, molecule naming, and .itp export all depend on this,
+        so it is answered once here rather than re-derived at each site.
+        """
+        return self.config.sheet_overrides is None and self.config.pH is None
+
     def _generate_single_sheet(self, sheet_index: int) -> SheetResult:
         """Generate a single biochar sheet (or deep-copy if identical)."""
         # Identical-sheet optimisation: copy first sheet for indices > 0
-        if self.config.sheet_overrides is None and sheet_index > 0:
+        if self._sheets_identical and sheet_index > 0:
             base = self.sheets[0]
             return SheetResult(
                 mol=Chem.Mol(base.mol),
@@ -455,6 +486,13 @@ class SurfaceBuilder:
                 molecule_name=base.molecule_name,
             )
 
+        # Each sheet must be an independent protonation draw, so a pH stack
+        # offsets the seed per sheet. Reusing one seed would make every sheet
+        # titrate identically -- the copy problem again, just via the RNG.
+        seed = self.config.seed
+        if seed is not None and self.config.pH is not None:
+            seed += sheet_index
+
         # Build GeneratorConfig for this sheet
         gen_kwargs = dict(
             target_num_carbons=self.config.target_num_carbons,
@@ -462,8 +500,9 @@ class SurfaceBuilder:
             O_C_ratio=self.config.O_C_ratio,
             aromaticity_percent=self.config.aromaticity_percent,
             functional_groups=self.config.functional_groups,
+            pH=self.config.pH,
             defect_fraction=self.config.defect_fraction,
-            seed=self.config.seed,
+            seed=seed,
             strict=self.config.strict,
         )
 
@@ -473,7 +512,7 @@ class SurfaceBuilder:
             gen_kwargs.update(overrides)
 
         # Molecule name: same for identical sheets, indexed for distinct
-        if self.config.sheet_overrides is None:
+        if self._sheets_identical:
             mol_name = self.config.sheet_base_name
         else:
             mol_name = f"{self.config.sheet_base_name}{sheet_index + 1}"

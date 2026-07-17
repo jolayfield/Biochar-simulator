@@ -43,6 +43,26 @@ class TestGetValenceRange:
         lo, hi = get_valence_range(7, formal_charge=1)
         assert hi == 4
 
+    # -- Characterization: charged-atom ranges relied on by the protonation
+    # -- pipeline.  Pinned before get_valence_range was extended for anionic O
+    # -- so that the extension is provably additive.
+
+    def test_nitrogen_cation_is_exactly_four(self):
+        """Pyridinium / anilinium N: 4 sigma bonds, no room for more."""
+        assert get_valence_range(7, formal_charge=1) == (4, 4)
+
+    def test_sulfur_cation_extends_beyond_two(self):
+        """Hypervalent S (sulfone/sulfate) keeps its extended range."""
+        lo, hi = get_valence_range(16, formal_charge=1)
+        assert hi > 2
+
+    def test_neutral_ranges_are_unaffected_by_charge_zero(self):
+        """Every neutral range must be identical whether or not charge is passed."""
+        for atomic_num in (1, 6, 7, 8, 9, 16, 17):
+            assert get_valence_range(atomic_num) == get_valence_range(
+                atomic_num, formal_charge=0
+            ), f"neutral range for Z={atomic_num} shifted"
+
     def test_unknown_element_defaults_to_one_four(self):
         lo, hi = get_valence_range(99)  # Einsteinium — not in table
         assert lo >= 1
@@ -57,6 +77,95 @@ class TestGetValenceRange:
         lo, hi = get_valence_range(17)
         assert lo == 1
         assert hi == 1
+
+
+class TestAnionicValenceRanges:
+    """
+    Anionic heteroatoms carry one fewer bond than their neutral form.
+
+    Without this, a deprotonated oxygen reports ``needed_valence == 1`` and
+    :meth:`HydrogenAssigner._saturate_valences` silently re-protonates it,
+    undoing the deprotonation with no error.
+    """
+
+    def test_oxygen_anion_is_exactly_one(self):
+        """Phenolate / carboxylate O-: one bond, and no room for another."""
+        assert get_valence_range(8, formal_charge=-1) == (1, 1)
+
+    def test_sulfur_anion_is_exactly_one(self):
+        """Thiophenolate S-: one bond, and no room for another."""
+        assert get_valence_range(16, formal_charge=-1) == (1, 1)
+
+    def test_nitrogen_anion_is_exactly_two(self):
+        """Amide-like N-: two bonds."""
+        assert get_valence_range(7, formal_charge=-1) == (2, 2)
+
+    def test_oxygen_anion_needs_no_hydrogen(self):
+        """The regression this whole unit exists to prevent."""
+        min_val, _ = get_valence_range(8, formal_charge=-1)
+        bonds_on_phenolate_o = 1
+        assert max(0, min_val - bonds_on_phenolate_o) == 0
+
+    def test_neutral_oxygen_still_needs_a_second_bond(self):
+        """Guard: the neutral path must keep its existing behaviour."""
+        min_val, _ = get_valence_range(8, formal_charge=0)
+        assert max(0, min_val - 1) == 1
+
+
+class TestAnionSurvivesHydrogenAssignment:
+    """
+    Integration coverage through the real HydrogenAssigner.
+
+    The range tests above prove get_valence_range returns the right numbers.
+    These prove the assigner actually honours them -- which is the behaviour the
+    protonation feature depends on, and which no unit-level assertion can show.
+    """
+
+    @staticmethod
+    def _phenolate() -> Chem.Mol:
+        """Benzene bearing a single deprotonated O- (phenolate)."""
+        mol = Chem.MolFromSmiles("[O-]c1ccccc1")
+        assert mol is not None
+        return Chem.AddHs(mol)
+
+    def _anionic_oxygens(self, mol):
+        return [
+            a for a in mol.GetAtoms()
+            if a.GetAtomicNum() == 8 and a.GetFormalCharge() == -1
+        ]
+
+    def test_phenolate_oxygen_keeps_its_charge_and_gains_no_hydrogen(self):
+        from biochar.heteroatom_assignment import HydrogenAssigner
+
+        mol = self._phenolate()
+        before = self._anionic_oxygens(mol)
+        assert len(before) == 1, "fixture should carry exactly one O-"
+        assert before[0].GetTotalNumHs() == 0
+
+        out, _ = HydrogenAssigner(seed=0).assign_hydrogens(mol, target_H_C_ratio=1.0)
+
+        after = self._anionic_oxygens(out)
+        assert len(after) == 1, "the O- lost its formal charge during H assignment"
+        o = after[0]
+        h_neighbours = [n for n in o.GetNeighbors() if n.GetAtomicNum() == 1]
+        assert h_neighbours == [], (
+            "HydrogenAssigner re-protonated the phenolate oxygen -- "
+            "get_valence_range is not reporting needed_valence == 0 for O-"
+        )
+
+    def test_neutral_phenol_oxygen_still_keeps_its_hydrogen(self):
+        """Regression guard: the neutral path must be unchanged."""
+        from biochar.heteroatom_assignment import HydrogenAssigner
+
+        mol = Chem.AddHs(Chem.MolFromSmiles("Oc1ccccc1"))
+        out, _ = HydrogenAssigner(seed=0).assign_hydrogens(mol, target_H_C_ratio=1.0)
+
+        oxygens = [a for a in out.GetAtoms() if a.GetAtomicNum() == 8]
+        assert len(oxygens) == 1
+        h_neighbours = [
+            n for n in oxygens[0].GetNeighbors() if n.GetAtomicNum() == 1
+        ]
+        assert len(h_neighbours) == 1, "neutral phenol lost its hydroxyl H"
 
 
 class TestGetMaxMinValence:

@@ -122,6 +122,22 @@ class GeneratorConfig:
     # Random seed for reproducibility
     seed: Optional[int] = None
 
+    # Environmental pH.  None (default) = no protonation stage at all, i.e.
+    # every group stays in the neutral form it is built in, reproducing the
+    # pre-pH behaviour exactly.
+    #
+    # When set, each titratable site (carboxyl, phenolic, thiol, aniline N,
+    # pyridinic N) is independently ionized with its Henderson-Hasselbalch
+    # probability, drawn from `seed`.  The molecule then carries a real net
+    # charge; neutralising the system is left to `genion -neutral` at solvation
+    # time (see md_setup), not to the molecule definition.
+    #
+    # A single structure is one sample from the ensemble.  Near a pKa each site
+    # is close to a coin flip, so a pH within ~1 unit of a pKa needs replicate
+    # seeds to be representative -- `composition.ionized_counts` reports what
+    # was actually placed.
+    pH: Optional[float] = None
+
     # Ring defects: probability [0, 1) that each ring addition is a pentagon.
     # 0.0 = pure hexagonal PAH (default).  0.1 ≈ 10% pentagons.
     defect_fraction: float = 0.0
@@ -214,6 +230,28 @@ class GeneratorConfig:
                 f"max_ether_span must be ≥ 3 (minimum for a 5-membered ring), "
                 f"got {self.max_ether_span}"
             )
+
+        if self.pH is not None:
+            from .constants import PH_MAX, PH_MIN
+
+            if not PH_MIN <= self.pH <= PH_MAX:
+                raise ValueError(
+                    f"pH must be within [{PH_MIN}, {PH_MAX}], got {self.pH}"
+                )
+
+            # The ML refiner forces its predictions to sum to zero and was
+            # trained on neutral molecules, so it would both erase the net
+            # charge and extrapolate outside its training set.  Failing here is
+            # better than silently handing back a neutral structure the caller
+            # explicitly asked to be ionized.  'opls' and 'qm' both honour the
+            # formal charge ('qm' passes it to MOPAC as CHARGE=).
+            if self.charge_method == "ml":
+                raise ValueError(
+                    "charge_method='ml' cannot be combined with pH: the ML "
+                    "refiner constrains total charge to zero and is trained on "
+                    "neutral molecules, so it would erase the very charge pH "
+                    "creates. Use charge_method='opls' (default) or 'qm'."
+                )
 
         # --- resolve composition: explicit > (temperature,feedstock)-derived > default ---
         if self.feedstock is not None:
@@ -379,6 +417,10 @@ class BiocharGenerator:
         logger.info("Assigning heteroatoms...")
         mol, comp_result = self._assign_oxygens(skeleton.mol)
         mol = self._substitute_nitrogens(mol, comp_result)
+        # Protonation sits here by necessity: after every heteroatom exists (so
+        # there are sites to titrate) and before HydrogenAssigner, which owns
+        # acidic-H placement and would otherwise fight the decision.
+        mol = self._assign_protonation(mol, comp_result)
         mol = self._assign_hydrogens(mol, comp_result)
 
         # Step 3: Generate 3D coordinates
@@ -471,6 +513,15 @@ class BiocharGenerator:
             print(f"  Sulfurs:     {self.composition.num_sulfurs}")
         print(f"  Formula:     {self.composition.molecular_formula}")
         print(f"  MW:          {self.composition.molecular_weight:.1f} g/mol")
+        if self.config.pH is not None:
+            print("\nProtonation:")
+            print(f"  pH:          {self.config.pH:.2f}")
+            print(f"  Net charge:  {self.composition.net_charge:+d} e")
+            for group, n in sorted(self.composition.titratable_counts.items()):
+                ionized = self.composition.ionized_counts.get(group, 0)
+                print(f"  {group + ':':13s}{ionized}/{n} ionized")
+            if self.composition.net_charge != 0:
+                print("  (gmx genion -neutral balances this at solvation)")
         print("\nRatios:")
         print(f"  H/C ratio:   {self.composition.H_C_ratio:.3f} (target: {self.config.H_C_ratio:.3f})")
         print(f"  O/C ratio:   {self.composition.O_C_ratio:.3f} (target: {self.config.O_C_ratio:.3f})")
@@ -672,6 +723,35 @@ class BiocharGenerator:
 
         return mol
 
+    def _assign_protonation(
+        self, mol: Chem.Mol, comp_result: CompositionResult
+    ) -> Chem.Mol:
+        """
+        Set protonation states from ``config.pH``, updating *comp_result*.
+
+        A no-op when ``pH`` is None, which is what keeps the default path
+        byte-for-byte identical to the pre-pH generator.
+        """
+        if self.config.pH is None:
+            return mol
+
+        from .protonation import ProtonationAssigner
+
+        assigner = ProtonationAssigner(seed=self.config.seed)
+        mol, _ = assigner.assign(mol, pH=self.config.pH, result=comp_result)
+
+        if comp_result.net_charge != 0:
+            logger.info(
+                "pH %.2f → net charge %+d e (%s). The topology carries this "
+                "charge; `gmx genion -neutral` adds counterions at solvation.",
+                self.config.pH,
+                comp_result.net_charge,
+                ", ".join(
+                    f"{n}×{g}" for g, n in sorted(comp_result.ionized_counts.items())
+                ) or "no ionized groups",
+            )
+        return mol
+
     def _assign_hydrogens(self, mol: Chem.Mol, comp_result: CompositionResult) -> Chem.Mol:
         """Assign hydrogen atoms, updating *comp_result* in-place."""
         assigner = HydrogenAssigner(seed=self.config.seed)
@@ -822,6 +902,7 @@ def generate_biochar(
     O_C_ratio: Optional[float] = None,
     aromaticity_percent: Optional[float] = None,
     functional_groups: Optional[Dict[str, int]] = None,
+    pH: Optional[float] = None,
     defect_fraction: float = 0.0,
     heptagon_fraction: float = 0.0,
     max_ether_span: Optional[int] = None,
@@ -848,6 +929,11 @@ def generate_biochar(
         aromaticity_percent: Target aromaticity percentage.
         functional_groups: Dict mapping functional group name → exact count,
             e.g. ``{"phenolic": 3, "carboxyl": 1}``.
+        pH: Environmental pH.  ``None`` (default) leaves every group neutral.
+            When set, each titratable site is independently ionized with its
+            Henderson-Hasselbalch probability and the structure carries a real
+            net charge (``result.composition.net_charge``), which
+            ``gmx genion -neutral`` balances at solvation time.
 
             Supported groups:
 
@@ -897,6 +983,7 @@ def generate_biochar(
         O_C_ratio=O_C_ratio,
         aromaticity_percent=aromaticity_percent,
         functional_groups=functional_groups,
+        pH=pH,
         defect_fraction=defect_fraction,
         heptagon_fraction=heptagon_fraction,
         num_pyridinic=num_pyridinic,
@@ -1132,6 +1219,7 @@ def generate_surface(
     H_C_ratio: float = 0.3,
     O_C_ratio: float = 0.05,
     functional_groups: Optional[Dict[str, int]] = None,
+    pH: Optional[float] = None,
     defect_fraction: float = 0.0,
     pore_diameter: float = 10.0,
     num_sheets: int = 2,
@@ -1213,6 +1301,7 @@ def generate_surface(
         H_C_ratio=H_C_ratio,
         O_C_ratio=O_C_ratio,
         functional_groups=functional_groups,
+        pH=pH,
         aromaticity_percent=95.0,
         defect_fraction=defect_fraction,
         pore_type=pore_type,
