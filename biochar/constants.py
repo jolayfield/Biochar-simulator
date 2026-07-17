@@ -53,7 +53,14 @@ OPLS_ATOM_TYPES = {
 # here. GROMACS resolves them from the #included forcefield by the opls_XXX name in
 # GROMACS_OPLS_TYPE_MAP below, so a hand-copied table here would be dead weight that
 # can only drift. A previous table did drift: its values were a mix of AMBER and OPLS
-# with no single provenance. Add parameters to a local .itp instead of reviving it.
+# with no single provenance.
+#
+# The one exception is SUPPLEMENTARY_ANGLE_PARAMS below, and the rule that keeps it
+# from becoming that table again is strict: it may hold ONLY combinations stock
+# oplsaa.ff does not define. A value that also exists in the forcefield is
+# duplication and will drift; a value that exists nowhere else cannot.
+# tests/test_opls_type_map.py enforces both halves -- every emitted combination
+# resolves, and nothing here shadows a stock entry.
 
 # Mapping from internal generic type names to GROMACS OPLS-AA opls_XXX names.
 # Internal names (CA, HA, etc.) are used throughout the biochar generation pipeline.
@@ -98,17 +105,30 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
 #          and carries the matching CA-S bond (0.176 nm, "thioanisole" in
 #          ffbonded.itp).
 #
-#          KNOWN GAP: the bond resolves but the angle does not. A thioether
-#          emits a CA-S-CA angle, and ffbonded.itp has no such angletype --
-#          only CA-S-CT and CA-S-CM (both 104.200 deg, 518.816 kJ/mol/rad^2).
-#          grompp therefore rejects a thioether topology with "No default
-#          Angle types". Supply the angle from a local .itp; the closest
-#          stock value is the CA-S-CT thioanisole angle above.
+#          The CA-S bond resolves, but the CA-S-CA angle has no stock angletype
+#          -- see SUPPLEMENTARY_ANGLE_PARAMS below, which supplies it.
 #
 #   NGR -> opls_520 is the pyridine N, reused for graphitic/quaternary N because
 #          OPLS-AA has no substitutional 3-coordinate aromatic N type. Element and
 #          ring aromaticity are right; the charge/bonded environment is only
 #          approximate. NPY maps here too -- for pyridinic N it is exact.
+
+# Angles that stock oplsaa.ff cannot resolve, written inline into [ angles ] so the
+# parameters travel with the molecule (the .itp), not with whichever .top includes it.
+#
+# Keyed by internal atom type, outer two sorted. Values are GROMACS units:
+# (theta0_deg, k_kJ/mol/rad^2) -- the same columns as ffbonded.itp [ angletypes ].
+#
+# Every entry needs a provenance comment naming why the forcefield lacks it and where
+# the number came from. Nothing may be added here that oplsaa.ff already defines.
+SUPPLEMENTARY_ANGLE_PARAMS: dict[tuple[str, str, str], tuple[float, float]] = {
+    # Ar-S-Ar, the diaryl thioether bridge. OPLS-AA has no aryl-S-aryl angle: the
+    # closest stock entries are CA-S-CT (thioanisole) and CA-S-CM, both 104.200 /
+    # 518.816 and themselves "adjusted from CT-S-CT" per ffbonded.itp. Reusing that
+    # value keeps the bridge consistent with the opls_222 sulfur SS already maps to.
+    # Approximate, like the SS mapping it accompanies -- not QM-validated.
+    ("CA", "SS", "CA"): (104.200, 518.816),
+}
 
 # Functional groups definitions
 # Each functional group specifies how to add atoms to the carbon skeleton

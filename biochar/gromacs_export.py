@@ -12,7 +12,24 @@ import numpy as np
 from rdkit import Chem
 
 from .opls_typing import OPLSPropertyTable
-from .constants import GROMACS_OPLS_TYPE_MAP
+from .constants import GROMACS_OPLS_TYPE_MAP, SUPPLEMENTARY_ANGLE_PARAMS
+
+
+def _angle_suffix(atom_types: Dict[int, str], i: int, j: int, k: int) -> str:
+    """Explicit parameters for an angle stock oplsaa.ff cannot resolve, else "".
+
+    Angles normally carry funct only and are resolved from the #included
+    forcefield by type name. A handful of combinations have no entry there at all
+    (see SUPPLEMENTARY_ANGLE_PARAMS); for those, grompp would fail with "No
+    default Angle types" unless the parameters are written inline.
+    """
+    outer = sorted([atom_types.get(i, ""), atom_types.get(k, "")])
+    key = (outer[0], atom_types.get(j, ""), outer[1])
+    params = SUPPLEMENTARY_ANGLE_PARAMS.get(key)
+    if params is None:
+        return ""
+    theta0, force_constant = params
+    return f" {theta0:.3f} {force_constant:.3f}"
 
 
 class GROFileWriter:
@@ -208,7 +225,10 @@ class TOPFileWriter:
                         for n2 in neighbors[i + 1 :]:
                             angle_tuple = tuple(sorted([n1, atom.GetIdx(), n2]))
                             if angle_tuple not in angles_written:
-                                f.write(f"{n1 + 1:5d} {atom.GetIdx() + 1:5d} {n2 + 1:5d} 1\n")
+                                suffix = _angle_suffix(atom_types, n1, atom.GetIdx(), n2)
+                                f.write(
+                                    f"{n1 + 1:5d} {atom.GetIdx() + 1:5d} {n2 + 1:5d} 1{suffix}\n"
+                                )
                                 angles_written.add(angle_tuple)
 
             # Dihedrals section (if requested)
@@ -336,7 +356,10 @@ class ITPFileWriter:
                         for n2 in neighbors[i + 1 :]:
                             angle_tuple = tuple(sorted([n1, atom.GetIdx(), n2]))
                             if angle_tuple not in angles_written:
-                                f.write(f"{n1 + 1:5d} {atom.GetIdx() + 1:5d} {n2 + 1:5d} 1\n")
+                                suffix = _angle_suffix(atom_types, n1, atom.GetIdx(), n2)
+                                f.write(
+                                    f"{n1 + 1:5d} {atom.GetIdx() + 1:5d} {n2 + 1:5d} 1{suffix}\n"
+                                )
                                 angles_written.add(angle_tuple)
 
             if include_dihedrals:
