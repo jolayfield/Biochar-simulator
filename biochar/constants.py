@@ -153,6 +153,10 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
 #          -- see SUPPLEMENTARY_ANGLE_PARAMS below, which supplies it.
 #
 #   NGR -> opls_379 ("CytH+ N3") is a protonated, cationic aromatic ring N.
+#          CHOSEN DELIBERATELY, 2026-07-17, and reviewed -- not inherited from
+#          whichever branch merged last. Do not "restore" opls_520 on the
+#          assumption that this drifted.
+#
 #          OPLS-AA has no substitutional 3-coordinate aromatic N, so this is an
 #          analog either way; a cationic aromatic N is the closer one, because
 #          graphitic N carries a formal +1. It previously shared the neutral
@@ -160,7 +164,9 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
 #          -- the reason it moved is the pH work, which makes formal charge real
 #          rather than something ChargeAssigner flattened to zero. Element and
 #          ring aromaticity are right; the bonded environment is still
-#          approximate, and this is not QM-validated.
+#          approximate, and this is not QM-validated. A QM check, or a better
+#          analog, would be a legitimate reason to revisit. "It looks like an
+#          accident" is not -- it was a decision.
 
 # Angles that stock oplsaa.ff cannot resolve, written inline into [ angles ] so the
 # parameters travel with the molecule (the .itp), not with whichever .top includes it.
