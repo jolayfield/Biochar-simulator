@@ -5,14 +5,14 @@ Assign OPLS-AA atom types and partial charges to atoms.
 """
 
 import logging
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, Tuple, List
 from dataclasses import dataclass
 
 from rdkit import Chem
 
 logger = logging.getLogger(__name__)
 
-from .constants import OPLS_ATOM_TYPES, OPLS_BOND_PARAMS, OPLS_ANGLE_PARAMS
+from .constants import OPLS_ATOM_TYPES
 
 
 @dataclass
@@ -32,8 +32,6 @@ class AtomTyper:
 
     def __init__(self):
         self.opls_types = OPLS_ATOM_TYPES
-        self.bond_params = OPLS_BOND_PARAMS
-        self.angle_params = OPLS_ANGLE_PARAMS
 
     def assign_atom_types(self, mol: Chem.Mol) -> Dict[int, str]:
         """
@@ -175,29 +173,6 @@ class AtomTyper:
 
         # Default
         return f"X{atomic_num}"
-
-    def get_bond_parameters(
-        self, atom_type_1: str, atom_type_2: str
-    ) -> Optional[Tuple[float, float]]:
-        """
-        Get bond parameters for atom type pair.
-
-        Returns:
-            (force_constant_kcal_mol_A2, equilibrium_length_A)
-        """
-        key = tuple(sorted([atom_type_1, atom_type_2]))
-        return self.bond_params.get(key)
-
-    def get_angle_parameters(
-        self, atom_type_1: str, atom_type_2: str, atom_type_3: str
-    ) -> Optional[Tuple[float, float]]:
-        """
-        Get angle parameters for atom type triple.
-
-        Returns:
-            (force_constant_kcal_mol_rad2, equilibrium_angle_deg)
-        """
-        return self.angle_params.get((atom_type_1, atom_type_2, atom_type_3))
 
 
 class ChargeAssigner:

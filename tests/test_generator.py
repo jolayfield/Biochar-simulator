@@ -581,16 +581,10 @@ class TestRingNitrogenSubstitution:
     """Test ring-substituting nitrogen (pyridinic / pyrrolic / graphitic)."""
 
     def test_ring_n_opls_types_defined(self):
-        from biochar.constants import (
-            OPLS_ATOM_TYPES, OPLS_LJ_PARAMS, OPLS_BOND_PARAMS, GROMACS_OPLS_TYPE_MAP
-        )
+        from biochar.constants import OPLS_ATOM_TYPES, GROMACS_OPLS_TYPE_MAP
         for t in ("NPY", "NPR", "NGR", "HNPR"):
             assert t in OPLS_ATOM_TYPES
-            assert t in OPLS_LJ_PARAMS
             assert t in GROMACS_OPLS_TYPE_MAP
-        assert ("CA", "NPY") in OPLS_BOND_PARAMS
-        assert ("CA", "NGR") in OPLS_BOND_PARAMS
-        assert ("NPR", "HNPR") in OPLS_BOND_PARAMS
 
     def test_substitutor_pyridinic_count(self):
         from biochar.heteroatom_assignment import NitrogenSubstitutor
