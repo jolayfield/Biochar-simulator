@@ -49,38 +49,11 @@ OPLS_ATOM_TYPES = {
 
 }
 
-# OPLS-AA Lennard-Jones Parameters
-# Format: atom_type -> (sigma_nm, epsilon_kJ/mol)
-# sigma: van der Waals radius (in nanometers)
-# epsilon: well depth (in kJ/mol)
-# Reference: GROMACS OPLS-AA forcefield
-
-OPLS_LJ_PARAMS = {
-    "CA": (0.3550, 0.2928),      # Aromatic carbon
-    "HA": (0.2600, 0.0630),      # Aromatic hydrogen
-    "CT": (0.3500, 0.2761),      # Aliphatic carbon (sp3)
-    "HC": (0.2500, 0.0630),      # H on aliphatic C
-    "OC": (0.2960, 0.5023),      # Carbonyl oxygen
-    "OH": (0.3066, 0.7113),      # Hydroxyl oxygen
-    "OS": (0.2960, 0.5023),      # Ether oxygen
-    "OW": (0.3066, 0.6276),      # Water oxygen
-    "HO": (0.0000, 0.0000),      # H in hydroxyl (no LJ)
-    "C": (0.3750, 0.4392),       # Carboxylic acid carbonyl C
-    "O": (0.2960, 0.5023),       # Carboxylic acid carbonyl O
-    "OH2": (0.3066, 0.7113),     # Hydroxyl on carboxylic acid
-    "HO2": (0.0000, 0.0000),     # H on carboxylic hydroxyl (no LJ)
-    "N": (0.3250, 0.7113),       # Tertiary nitrogen
-    "NT": (0.3250, 0.7113),      # Quaternary nitrogen
-    "NA": (0.3250, 0.7113),      # Aromatic amine N (aniline)
-    "HNA": (0.1000, 0.0000),     # H on aromatic amine (no LJ)
-    "SH_": (0.3550, 1.0460),     # Aromatic thiol sulfur (opls_734)
-    "HSH": (0.0000, 0.0000),     # H on thiol sulfur (no LJ, opls_204)
-    "SS": (0.3550, 1.0460),      # Thioether sulfur (opls_222)
-    "NPY": (0.3250, 0.7113),     # Pyridinic ring N (OPLS pyridine N)
-    "NPR": (0.3250, 0.7113),     # Pyrrolic ring N (OPLS pyrrole N)
-    "NGR": (0.3250, 0.7113),     # Graphitic/quaternary ring N
-    "HNPR": (0.0000, 0.0000),    # H on pyrrolic N (no LJ)
-}
+# Lennard-Jones, bond, and angle parameters intentionally live in oplsaa.ff, not
+# here. GROMACS resolves them from the #included forcefield by the opls_XXX name in
+# GROMACS_OPLS_TYPE_MAP below, so a hand-copied table here would be dead weight that
+# can only drift. A previous table did drift: its values were a mix of AMBER and OPLS
+# with no single provenance. Add parameters to a local .itp instead of reviving it.
 
 # Mapping from internal generic type names to GROMACS OPLS-AA opls_XXX names.
 # Internal names (CA, HA, etc.) are used throughout the biochar generation pipeline.
@@ -123,83 +96,19 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
 #   SS  -> opls_222 is the thioanisole sulfur (Ar-S-CH3). OPLS-AA has no diaryl
 #          thioether (Ar-S-Ar) type; opls_222 is the only aryl-attached sulfide S
 #          and carries the matching CA-S bond (0.176 nm, "thioanisole" in
-#          ffbonded.itp). Note OPLS_BOND_PARAMS[("CA", "SS")] still uses 1.740 A,
-#          the thiophenol length -- harmless while a real oplsaa.ff is included
-#          (GROMACS resolves bonds by type name), but wrong on the fallback path.
+#          ffbonded.itp).
+#
+#          KNOWN GAP: the bond resolves but the angle does not. A thioether
+#          emits a CA-S-CA angle, and ffbonded.itp has no such angletype --
+#          only CA-S-CT and CA-S-CM (both 104.200 deg, 518.816 kJ/mol/rad^2).
+#          grompp therefore rejects a thioether topology with "No default
+#          Angle types". Supply the angle from a local .itp; the closest
+#          stock value is the CA-S-CT thioanisole angle above.
 #
 #   NGR -> opls_520 is the pyridine N, reused for graphitic/quaternary N because
 #          OPLS-AA has no substitutional 3-coordinate aromatic N type. Element and
 #          ring aromaticity are right; the charge/bonded environment is only
 #          approximate. NPY maps here too -- for pyridinic N it is exact.
-
-# OPLS-AA Bond Parameters (k_bond, r0)
-# Format: (atom_type1, atom_type2) -> (k_kcal/mol/Angstrom^2, r0_Angstrom)
-# Values from GROMACS OPLS-AA forcefield
-
-OPLS_BOND_PARAMS = {
-    ("CA", "CA"): (770.0, 1.387),      # Aromatic C-C
-    ("CA", "HA"): (367.0, 1.084),      # Aromatic C-H
-    ("CT", "CT"): (268.0, 1.529),      # Aliphatic C-C
-    ("CT", "HC"): (367.0, 1.084),      # Aliphatic C-H
-    ("CA", "CT"): (268.0, 1.529),      # Aromatic-aliphatic C-C
-    ("CT", "OH"): (320.0, 1.410),      # Aliphatic C-OH
-    ("CA", "OH"): (450.0, 1.367),      # Aromatic C-OH (phenolic)
-    ("CT", "OS"): (320.0, 1.410),      # Aliphatic C-O (ether)
-    ("CA", "OS"): (450.0, 1.367),      # Aromatic C-O (ether)
-    ("C", "O"): (750.0, 1.230),        # Carboxylic carbonyl
-    ("C", "OH2"): (320.0, 1.364),      # C-OH in carboxylic acid
-    ("CT", "OC"): (320.0, 1.410),      # Aliphatic C-carbonyl O
-    ("OH", "HO"): (367.0, 0.960),      # O-H hydroxyl
-    ("OH2", "HO2"): (367.0, 0.960),    # O-H carboxylic
-    ("OS", "HO"): (367.0, 0.960),      # This shouldn't exist, but for safety
-    ("CA", "NA"): (500.0, 1.422),      # Aromatic C-N bond (aniline)
-    ("NA", "HNA"): (434.0, 1.010),     # N-H bond in aniline
-    ("CA", "SH_"): (340.0, 1.740),     # Aromatic C-S bond (thiophenol)
-    ("SH_", "HSH"): (274.0, 1.336),    # S-H bond in thiol
-    ("CA", "SS"): (340.0, 1.740),      # Aromatic C-S bond (aryl thioether)
-    ("CA", "NPY"): (483.0, 1.339),     # Aromatic C-N (pyridinic 6-ring)
-    ("CA", "NPR"): (427.0, 1.381),     # Aromatic C-N (pyrrolic 5-ring)
-    ("CA", "NGR"): (483.0, 1.339),     # Aromatic C-N (graphitic/quaternary)
-    ("NPR", "HNPR"): (434.0, 1.010),   # N-H bond in pyrrole
-}
-
-# OPLS-AA Angle Parameters (k_angle, theta0)
-# Format: (atom_type1, atom_type2, atom_type3) -> (k_kcal/mol/rad^2, theta0_deg)
-
-OPLS_ANGLE_PARAMS = {
-    ("CA", "CA", "CA"): (126.0, 120.0),
-    ("CA", "CA", "HA"): (70.0, 120.0),
-    ("CA", "CA", "CT"): (70.0, 120.0),
-    ("CA", "CA", "OH"): (70.0, 119.7),
-    ("CA", "CA", "OS"): (70.0, 119.7),
-    ("HA", "CA", "HA"): (35.0, 120.0),
-    ("CT", "CT", "CT"): (63.0, 109.47),
-    ("CT", "CT", "HC"): (48.0, 109.47),
-    ("CT", "CT", "OH"): (55.0, 109.47),
-    ("CT", "CT", "OS"): (55.0, 109.47),
-    ("HC", "CT", "HC"): (35.0, 109.47),
-    ("HC", "CT", "OH"): (35.0, 109.47),
-    ("CT", "OH", "HO"): (55.0, 104.52),
-    ("CA", "OH", "HO"): (70.0, 108.0),
-    ("CT", "OS", "CT"): (60.0, 110.7),
-    ("CA", "OS", "CA"): (70.0, 113.2),
-    ("CT", "OS", "CA"): (70.0, 113.2),
-    ("CA", "CA", "NA"): (70.0, 120.0),   # Ar-C-C-N in aniline
-    ("CA", "NA", "HNA"): (55.0, 113.9),  # Ar-N-H angle
-    ("HNA", "NA", "HNA"): (35.0, 116.0), # H-N-H in aniline
-    ("CA", "CA", "SH_"): (70.0, 120.0),  # Ar-C-C-S in thiophenol
-    ("CA", "SH_", "HSH"): (44.0, 96.0),  # Ar-S-H angle in thiol
-    ("CA", "CA", "SS"): (70.0, 120.0),   # Ar-C-C-S in aryl thioether
-    ("CA", "SS", "CA"): (62.0, 104.2),   # Ar-S-Ar angle in thioether
-    # Ring-substituting nitrogen angles
-    ("CA", "NPY", "CA"): (70.0, 117.0),  # C-N-C in pyridinic 6-ring
-    ("CA", "CA", "NPY"): (70.0, 123.0),  # C-C-N (ring) adjacent to pyridinic N
-    ("CA", "NPR", "CA"): (70.0, 109.8),  # C-N-C in pyrrolic 5-ring
-    ("CA", "CA", "NPR"): (70.0, 107.7),  # C-C-N (ring) adjacent to pyrrolic N
-    ("CA", "NPR", "HNPR"): (35.0, 125.1),# C-N-H in pyrrole
-    ("CA", "NGR", "CA"): (70.0, 120.0),  # C-N-C in graphitic/quaternary N
-    ("CA", "CA", "NGR"): (70.0, 120.0),  # C-C-N (ring) adjacent to graphitic N
-}
 
 # Functional groups definitions
 # Each functional group specifies how to add atoms to the carbon skeleton
