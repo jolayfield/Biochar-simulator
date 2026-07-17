@@ -98,6 +98,13 @@ GROMACS_OPLS_TYPE_MAP: dict[str, str] = {
 #          and carries the matching CA-S bond (0.176 nm, "thioanisole" in
 #          ffbonded.itp).
 #
+#          KNOWN GAP: the bond resolves but the angle does not. A thioether
+#          emits a CA-S-CA angle, and ffbonded.itp has no such angletype --
+#          only CA-S-CT and CA-S-CM (both 104.200 deg, 518.816 kJ/mol/rad^2).
+#          grompp therefore rejects a thioether topology with "No default
+#          Angle types". Supply the angle from a local .itp; the closest
+#          stock value is the CA-S-CT thioanisole angle above.
+#
 #   NGR -> opls_520 is the pyridine N, reused for graphitic/quaternary N because
 #          OPLS-AA has no substitutional 3-coordinate aromatic N type. Element and
 #          ring aromaticity are right; the charge/bonded environment is only

@@ -30,9 +30,6 @@ class AtomProperty:
 class AtomTyper:
     """Assign OPLS-AA atom types based on chemical environment."""
 
-    def __init__(self):
-        self.opls_types = OPLS_ATOM_TYPES
-
     def assign_atom_types(self, mol: Chem.Mol) -> Dict[int, str]:
         """
         Assign OPLS-AA atom types to all atoms.
