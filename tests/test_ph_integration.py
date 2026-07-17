@@ -306,3 +306,171 @@ class TestItpExport:
         qtots = [float(m) for m in re.findall(r"; qtot ([-+][\d.]+)", itp)]
         assert qtots, "no running qtot found"
         assert qtots[-1] == pytest.approx(float(comp.net_charge), abs=1e-3)
+
+
+class TestSurfacePh:
+    """
+    generate_surface must titrate. A hand-listed gen_kwargs previously dropped
+    pH here exactly as cli.py dropped it, silently returning neutral sheets.
+    """
+
+    @staticmethod
+    def _surface(**kw):
+        from biochar.surface_builder import SurfaceBuilder, SurfaceConfig
+
+        base = dict(
+            target_num_carbons=24,
+            H_C_ratio=0.45,
+            O_C_ratio=0.15,
+            functional_groups={"carboxyl": 2},
+            num_sheets=2,
+            pore_diameter=10.0,
+            sheet_base_name="BC",
+            seed=3,
+            strict=False,
+        )
+        base.update(kw)
+        b = SurfaceBuilder(SurfaceConfig(**base))
+        sheets, _ = b.build()
+        return b, sheets
+
+    @staticmethod
+    def _charge(sheet):
+        return sum(a.GetFormalCharge() for a in sheet.mol.GetAtoms())
+
+    def test_ph_reaches_every_sheet(self):
+        _, sheets = self._surface(pH=7.0)
+        assert all(self._charge(s) < 0 for s in sheets), (
+            f"sheets not ionized: {[self._charge(s) for s in sheets]}"
+        )
+
+    def test_without_ph_sheets_stay_neutral(self):
+        _, sheets = self._surface()
+        assert all(self._charge(s) == 0 for s in sheets)
+
+    def test_ph_disables_the_identical_sheet_optimisation(self):
+        b, _ = self._surface(pH=7.0)
+        assert b._sheets_identical is False
+
+    def test_without_ph_sheets_are_still_treated_as_identical(self):
+        b, _ = self._surface()
+        assert b._sheets_identical is True
+
+    def test_sheets_get_distinct_names_when_ph_breaks_identity(self):
+        _, sheets = self._surface(pH=7.0)
+        names = [s.molecule_name for s in sheets]
+        assert len(set(names)) == len(names), f"duplicate residue names: {names}"
+
+    def test_sheet_names_stay_within_the_gromacs_limit(self):
+        _, sheets = self._surface(pH=7.0)
+        for s in sheets:
+            assert len(s.molecule_name) <= 5, s.molecule_name
+
+    def test_sheets_titrate_independently_rather_than_being_copied(self):
+        """
+        Near a pKa each sheet is its own draw. Over a stack, identical
+        ionization on every sheet would mean the copy path is still live.
+        """
+        _, sheets = self._surface(pH=4.2, num_sheets=6, seed=1)
+        charges = [self._charge(s) for s in sheets]
+        assert len(set(charges)) > 1, (
+            f"every sheet titrated identically -- sheets are copies, not "
+            f"independent samples: {charges}"
+        )
+
+    def test_surface_ph_is_reproducible_under_seed(self):
+        a = [self._charge(s) for s in self._surface(pH=4.2, seed=9)[1]]
+        b = [self._charge(s) for s in self._surface(pH=4.2, seed=9)[1]]
+        assert a == b
+
+    def test_generate_surface_accepts_ph(self, tmp_path):
+        from biochar import generate_surface
+
+        sheets, gro, top, itps = generate_surface(
+            target_num_carbons=24,
+            H_C_ratio=0.45,
+            O_C_ratio=0.15,
+            functional_groups={"carboxyl": 2},
+            pH=7.0,
+            num_sheets=2,
+            output_directory=str(tmp_path),
+            seed=3,
+            strict=False,
+        )
+        assert all(self._charge(s) < 0 for s in sheets)
+
+    def test_surface_top_reports_total_system_charge(self, tmp_path):
+        b, sheets = self._surface(pH=7.0)
+        b.export_gromacs(output_directory=str(tmp_path), basename="surf")
+        top = (tmp_path / "surf.top").read_text()
+
+        expected = sum(self._charge(s) for s in sheets)
+        assert expected < 0, "fixture should be charged"
+        assert f"Total system charge: {expected:+d} e" in top
+        assert "genion" in top
+
+    def test_neutral_surface_top_reports_zero_without_a_genion_note(self, tmp_path):
+        b, _ = self._surface()
+        b.export_gromacs(output_directory=str(tmp_path), basename="surf")
+        top = (tmp_path / "surf.top").read_text()
+        assert "Total system charge: +0 e" in top
+        assert "genion" not in top
+
+    def test_each_sheet_gets_its_own_itp_when_ph_is_set(self, tmp_path):
+        b, sheets = self._surface(pH=7.0)
+        _, _, itps = b.export_gromacs(output_directory=str(tmp_path), basename="surf")
+        assert len(itps) == len(sheets)
+
+
+class TestProtonationBondTypes:
+    def test_ether_bonds_are_not_left_aromatic_after_protonation(self):
+        """
+        CLAUDE.md: '_fix_heteroatom_bond_types must be called after any RDKit
+        SanitizeMol pass that touches a molecule containing ether oxygens.'
+        """
+        from biochar.protonation import ProtonationAssigner
+
+        mol = Chem.AddHs(Chem.MolFromSmiles("Oc1ccc2c(c1)Oc1ccccc1-2"))
+        out, _ = ProtonationAssigner(seed=1).assign(mol, pH=13.0)
+
+        for a in out.GetAtoms():
+            if a.GetAtomicNum() != 8 or a.GetDegree() != 2:
+                continue
+            if not all(n.GetAtomicNum() == 6 for n in a.GetNeighbors()):
+                continue
+            for b in a.GetBonds():
+                assert str(b.GetBondType()) == "SINGLE", (
+                    "ether C-O left AROMATIC after protonation"
+                )
+
+
+class TestCensusMatchesReality:
+    def test_ionized_counts_never_exceed_the_net_charge_they_imply(self):
+        from biochar.protonation import ProtonationAssigner
+
+        mol = Chem.AddHs(Chem.MolFromSmiles("OC(=O)c1cc(C(=O)O)cc(C(=O)O)c1"))
+        out, comp = ProtonationAssigner(seed=1).assign(mol, pH=12.0)
+        acidic_ionized = sum(
+            n for g, n in comp.ionized_counts.items()
+            if g in ("carboxyl", "phenolic", "thiol")
+        )
+        assert acidic_ionized == -comp.net_charge
+
+    def test_duplicate_neutral_types_are_rejected_not_silently_dropped(self):
+        from unittest.mock import patch
+
+        from biochar.constants import PROTONATION_STATES, ProtonationState
+        from biochar.protonation import ProtonationAssigner
+
+        clashing = dict(PROTONATION_STATES)
+        clashing["hydroxyl"] = ProtonationState(
+            pKa=9.5, kind="acidic",
+            neutral_type="OH",      # already claimed by 'phenolic'
+            ionized_type="OM2", h_type="HO",
+            description="duplicate neutral type",
+        )
+        with patch.dict(
+            "biochar.protonation.PROTONATION_STATES", clashing, clear=True
+        ):
+            with pytest.raises(ValueError, match="neutral_type"):
+                ProtonationAssigner(seed=1)

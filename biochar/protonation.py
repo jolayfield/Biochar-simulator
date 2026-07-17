@@ -13,12 +13,17 @@ rather than a single structure (see :class:`ProtonationAssigner`).
 
 import logging
 import random
+from collections import Counter
 from typing import Dict, List, Optional, Tuple
 
 from rdkit import Chem
 
 from .constants import PH_MAX, PH_MIN, PROTONATION_STATES
-from .heteroatom_assignment import CompositionResult, _safe_sanitize
+from .heteroatom_assignment import (
+    CompositionResult,
+    _fix_heteroatom_bond_types,
+    _safe_sanitize,
+)
 from .opls_typing import AtomTyper
 
 logger = logging.getLogger(__name__)
@@ -87,10 +92,22 @@ class ProtonationAssigner:
         self._rng = random.Random(seed)
         self._typer = AtomTyper()
         # Reverse index: OPLS type of the neutral form -> group name.
-        self._by_neutral_type: Dict[str, str] = {
-            state.neutral_type: group
-            for group, state in PROTONATION_STATES.items()
-        }
+        #
+        # This inversion is only sound while neutral types are unique. A
+        # duplicate would let one group quietly overwrite another and leave it
+        # permanently untitratable, so it is rejected here rather than silently
+        # collapsed by the dict.
+        self._by_neutral_type: Dict[str, str] = {}
+        for group, state in PROTONATION_STATES.items():
+            clash = self._by_neutral_type.get(state.neutral_type)
+            if clash is not None:
+                raise ValueError(
+                    f"PROTONATION_STATES entries {clash!r} and {group!r} share "
+                    f"neutral_type {state.neutral_type!r}. Site detection maps "
+                    f"OPLS type -> group, so one would silently shadow the "
+                    f"other and never titrate."
+                )
+            self._by_neutral_type[state.neutral_type] = group
 
     # ------------------------------------------------------------------ #
     #  Public interface                                                    #
@@ -124,9 +141,9 @@ class ProtonationAssigner:
 
         sites = self._find_sites(mol)
         decisions = self._decide(sites, pH)
-        out = self._apply(mol, decisions)
+        out, applied = self._apply(mol, decisions)
 
-        return out, self._record(out, sites, decisions, result)
+        return out, self._record(out, sites, applied, result)
 
     # ------------------------------------------------------------------ #
     #  Private helpers                                                    #
@@ -163,7 +180,7 @@ class ProtonationAssigner:
 
     def _apply(
         self, mol: Chem.Mol, decisions: List[Tuple[int, str]]
-    ) -> Chem.Mol:
+    ) -> Tuple[Chem.Mol, List[Tuple[int, str]]]:
         """
         Apply the ionization decisions.
 
@@ -171,12 +188,18 @@ class ProtonationAssigner:
         existing indices; removed atoms shift every later index, so removals are
         deferred and then applied in descending order. Doing the removals inline
         would invalidate the indices of every site not yet visited.
+
+        Returns (mol, applied) where *applied* is the subset of *decisions* that
+        actually took effect. The census is built from that rather than from the
+        decisions, so it can never claim an ionization the molecule does not
+        carry.
         """
         if not decisions:
-            return mol
+            return mol, []
 
         rw = Chem.RWMol(mol)
         h_to_remove: List[int] = []
+        applied: List[Tuple[int, str]] = []
 
         for idx, group in decisions:
             state = PROTONATION_STATES[group]
@@ -209,35 +232,42 @@ class ProtonationAssigner:
                 atom.SetFormalCharge(1)
                 atom.SetNumExplicitHs(0)
                 atom.SetNoImplicit(True)
+            applied.append((idx, group))
 
         for h_idx in sorted(h_to_remove, reverse=True):
             rw.RemoveAtom(h_idx)
 
         out = rw.GetMol()
         _safe_sanitize(out)
-        return out
+        # Required after any sanitisation of a molecule that may hold ether
+        # oxygens: aromaticity perception marks a bridging ether C-O AROMATIC
+        # when the ring it closes satisfies Huckel. Mirrors the same pairing in
+        # OxygenAssigner.assign_oxygens and HydrogenAssigner.assign_hydrogens.
+        out = _fix_heteroatom_bond_types(out)
+        return out, applied
 
     def _record(
         self,
         mol: Chem.Mol,
         sites: List[Tuple[int, str]],
-        decisions: List[Tuple[int, str]],
+        applied: List[Tuple[int, str]],
         result: Optional[CompositionResult],
     ) -> CompositionResult:
-        """Write the census and net charge onto the composition record."""
-        titratable: Dict[str, int] = {}
-        for _, group in sites:
-            titratable[group] = titratable.get(group, 0) + 1
+        """
+        Write the census and net charge onto the composition record.
 
-        ionized: Dict[str, int] = {}
-        for _, group in decisions:
-            ionized[group] = ionized.get(group, 0) + 1
+        *applied* is what _apply actually did, not what _decide wanted -- a
+        decision that could not be carried out contributes no charge, so
+        counting it would put ionized_counts and net_charge into disagreement.
+        """
+        titratable = Counter(group for _, group in sites)
+        ionized = Counter(group for _, group in applied)
 
         net_charge = sum(a.GetFormalCharge() for a in mol.GetAtoms())
 
         if result is None:
             result = CompositionResult()
         result.net_charge = net_charge
-        result.ionized_counts = ionized
-        result.titratable_counts = titratable
+        result.ionized_counts = dict(ionized)
+        result.titratable_counts = dict(titratable)
         return result
