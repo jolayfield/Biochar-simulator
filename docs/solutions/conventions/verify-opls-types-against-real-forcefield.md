@@ -205,6 +205,29 @@ Know the edges, or it will be trusted further than it earns:
   the chemistry. `SS -> opls_222` and `NGR -> opls_379` remain deliberate approximations, and
   the supplemented `CA-S-CA` and `NPY-CA-OH` are nearest-analog values, not QM-validated.
 
+### Known limitation: the analog values are not QM-validated (and, for now, that is fine)
+
+The supplemented angles (`CA-S-CA`, `NPY-CA-OH`) and the approximate type mappings
+(`SS -> opls_222`, `NGR -> opls_379`) are nearest-analog choices with traceable provenance
+but no quantum-chemistry backing. Deriving them properly means, per parameter: build the real
+model compound (3-hydroxypyridine, diphenyl sulfide), optimize + run a frequency calculation
+at an OPLS-consistent level of theory (HF/6-31G\* to match the original fit), extract the
+force constant via the Seminario method, and reconcile the GROMACS ½-factor. That is a
+parameterization sub-project, not a one-off number, and it multiplies with every new gap.
+
+**Decision (2026-07-17): deferred, deliberately.** No current use of this package depends
+tightly enough on the geometry or dynamics *at these specific sites* to justify the work. For
+bulk structural, surface-area, or adsorption-capacity results, a slightly-off aryl-S-aryl or
+pyridinol bending constant is deep in the noise, and "chemically reasonable nearest-analog" is
+the right amount of rigor.
+
+**Revisit when** a specific result actually hinges on one of these sites — e.g. binding or
+dynamics studied *at* a pyridinic-N-hydroxyl pocket or a thioether bridge, or any move toward
+publication-grade parameters for these environments. The natural first target is `NPY-CA-OH`:
+3-hydroxypyridine is a tiny, clean model, and the calculation would tell you directly whether
+the phenol borrow holds. Charges are a separate axis and would need their own treatment (the
+ionized types were derived by analogy too); QM-validating a *bend* does not touch the charge.
+
 ### Two traps that look like the answer
 
 Both are tempting, confident, and wrong. Recorded because the next reader will reach for
