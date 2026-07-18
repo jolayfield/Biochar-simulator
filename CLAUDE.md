@@ -35,9 +35,41 @@ cd docs && make html
 
 The test discovery root is `tests/` (configured in `pyproject.toml`). The two loose test files at the project root (`test_valence_comprehensive.py`, `test_valence_update.py`) are older scratch tests, not part of the suite.
 
+`tests/` holds 16 files; the three named above are examples, not the whole suite. A `PreToolUse` hook in
+`.claude/settings.json` runs the full suite before any `git commit` and blocks the commit if it fails.
+
 ## Architecture
 
-The package lives entirely in `biochar/`. The public API is in `biochar_generator.py`; all other modules are internal.
+The package lives entirely in `biochar/`.
+
+**`pyproject.toml` is the source of truth for what is public.** `[project.scripts]` declares the four console
+entry points; `biochar/__init__.py`'s `__all__` declares the public Python API. Do not infer the public surface
+from this file — check those two.
+
+| Console script | Module | Purpose |
+|---|---|---|
+| `biochar-gen` | `cli.py` | Generate a single structure or series |
+| `biochar-sweep` | `sweep_cli.py` | Run a declarative factorial parameter sweep |
+| `biochar-md-setup` | `md_setup_cli.py` | Generate GROMACS run directories from a sweep manifest |
+| `biochar-condense` | `condensation_cli.py` | Set up a Wood et al. 2024 condensation-annealing run |
+
+### Module map
+
+`biochar_generator.py` orchestrates the single-molecule pipeline (five steps, below). Beyond that pipeline:
+
+- **`sweep.py`** — declarative parameter-sweep driver; `run_sweep`, `expand_grid`, `build_point`, and the
+  sweep manifest that `md_setup` consumes.
+- **`md_setup.py`** — writes GROMACS run inputs (`.mdp` templates plus a driver script) per structure;
+  `setup_md_from_manifest`, ion profiles, pre-solvation stages.
+- **`condensation.py`** — Wood et al. 2024 condensation-annealing setup (parallel construction mode).
+- **`temperature_model.py`** — data-driven temperature × feedstock property model; `TemperatureModel`,
+  `properties`, `VALID_FEEDSTOCKS`.
+- **`qm_charges.py`** — LigParGen-style QM partial charges (1.14*CM1A) via an external MOPAC binary.
+  Requires a MOPAC install; raises `QMChargeError` when unavailable.
+- **`ml_charges.py`** — ML-based partial charge refinement.
+- **`valence.py`** — valence validation system (see `VALENCE_SYSTEM.md`).
+- **`cli.py`**, **`sweep_cli.py`**, **`md_setup_cli.py`**, **`condensation_cli.py`** — argument parsing only;
+  the logic lives in the module each one wraps.
 
 ### Generation pipeline (single molecule)
 

@@ -28,8 +28,8 @@
           {
             "type": "command",
             "if": "Bash(git commit*)",
-            "command": "conda run -n biochar python -m pytest tests/ -q",
-            "timeout": 120,
+            "command": "out=$(conda run -n biochar python -m pytest tests/ -q 2>&1) || { printf '%s\\n' \"$out\" | tail -20 >&2; echo 'Commit blocked: pre-commit test suite failed. Exit 2 is the blocking code; fix the suite or amend the hook.' >&2; exit 2; }",
+            "timeout": 600,
             "statusMessage": "Running test suite before commit..."
           }
         ]
