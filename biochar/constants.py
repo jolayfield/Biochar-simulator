@@ -574,6 +574,28 @@ VDW_RADII = {
 # Used as effective sheet thickness when computing slit-pore geometry.
 CARBON_VDW_DIAMETER = 3.4  # Angstroms
 
+# --- Hydrogen-bond-aware clash detection ----------------------------------
+# A polar hydrogen sitting close to an O/N acceptor is a hydrogen bond, not a
+# steric clash.  The generic 0.75 × vdW-sum floor is 2.04 Å for an O/H pair,
+# which lands squarely inside the physical H...A range (~1.6-2.2 Å), so every
+# intramolecular H-bond between adjacent -OH groups is otherwise reported as a
+# clash.  On high-oxygen chars (O/C >= ~0.2, e.g. 400 °C softwood) such pairs
+# are unavoidable and strict validation fails on every seed.
+#
+# Donor-acceptor pairs that satisfy the angle criterion below are held to this
+# reduced floor instead.  It still catches genuine overlap: an H...O contact
+# shorter than this is too close even for a low-barrier hydrogen bond.
+HBOND_MIN_H_ACCEPTOR_DISTANCE = 1.5  # Angstroms
+
+# Minimum D-H...A angle (degrees) for a contact to count as a hydrogen bond.
+# Real H-bonds are near-linear (typically > 120°); 90° is a deliberately
+# permissive gate that only requires the H to point *toward* the acceptor
+# rather than the acceptor being jammed into the side of the D-H bond.
+HBOND_MIN_DHA_ANGLE_DEG = 90.0
+
+# Elements that act as hydrogen-bond donors (when carrying an H) and acceptors.
+HBOND_DONOR_ACCEPTOR_ELEMENTS = (7, 8)  # N, O (atomic numbers)
+
 # ---------------------------------------------------------------------------
 # Experimental-data model provenance & tunables
 # ---------------------------------------------------------------------------
