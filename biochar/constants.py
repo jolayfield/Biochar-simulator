@@ -596,6 +596,31 @@ HBOND_MIN_DHA_ANGLE_DEG = 90.0
 # Elements that act as hydrogen-bond donors (when carrying an H) and acceptors.
 HBOND_DONOR_ACCEPTOR_ELEMENTS = (7, 8)  # N, O (atomic numbers)
 
+# --- Bond-length validation ------------------------------------------------
+# COVALENT_RADII are *single-bond* radii, so their sum only predicts a single
+# bond.  Scale by bond order to get the expected length: an aromatic C-C is
+# 1.40 Å, not the 1.52 Å the radii sum implies, and a C=O is 1.23 Å, not 1.42 Å.
+# Reporting the unscaled sum made every such message wrong about what it
+# expected, even when the bond really was out of range.
+#
+# Factors are the ratio of the observed length to the single-bond radii sum:
+# aromatic C-C 1.40/1.52 = 0.92; C=O 1.23/1.42 = 0.87; C#C 1.20/1.52 = 0.79.
+BOND_ORDER_LENGTH_FACTORS = {
+    "SINGLE": 1.00,
+    "AROMATIC": 0.92,
+    "DOUBLE": 0.87,
+    "TRIPLE": 0.79,
+}
+
+# Fractional tolerance on the expected bond length.  These are tighter than the
+# old 0.8/1.5 band on purpose: correcting `expected` downward for aromatic and
+# multiple bonds would otherwise *lower* the absolute floor and let a genuinely
+# compressed bond through.  At these factors an aromatic C-C is accepted over
+# 1.19-1.96 Å, versus 1.22-2.28 Å before -- comparable at the low end, and no
+# longer absurdly permissive at the high end.
+BOND_LENGTH_MIN_FACTOR = 0.85
+BOND_LENGTH_MAX_FACTOR = 1.40
+
 # ---------------------------------------------------------------------------
 # Experimental-data model provenance & tunables
 # ---------------------------------------------------------------------------

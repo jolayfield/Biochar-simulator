@@ -17,6 +17,9 @@ from .constants import (
     HBOND_MIN_H_ACCEPTOR_DISTANCE,
     HBOND_MIN_DHA_ANGLE_DEG,
     HBOND_DONOR_ACCEPTOR_ELEMENTS,
+    BOND_ORDER_LENGTH_FACTORS,
+    BOND_LENGTH_MIN_FACTOR,
+    BOND_LENGTH_MAX_FACTOR,
 )
 
 
@@ -1121,14 +1124,17 @@ class GeometryValidator:
             # Calculate distance
             distance = np.linalg.norm(coords[i] - coords[j])
 
-            # Expected distance: sum of covalent radii
+            # Expected distance: sum of covalent radii, scaled by bond order.
+            # The radii are single-bond values, so an unscaled sum over-predicts
+            # every aromatic and multiple bond (aromatic C-C would be reported
+            # as "expected 1.52" when it is really 1.40).
             r_cov_i = COVALENT_RADII.get(symbol_i, 0.76)
             r_cov_j = COVALENT_RADII.get(symbol_j, 0.76)
-            expected_distance = r_cov_i + r_cov_j
+            factor = BOND_ORDER_LENGTH_FACTORS.get(str(bond.GetBondType()), 1.00)
+            expected_distance = (r_cov_i + r_cov_j) * factor
 
-            # Allow 20% deviation
-            min_dist = expected_distance * 0.8
-            max_dist = expected_distance * 1.5
+            min_dist = expected_distance * BOND_LENGTH_MIN_FACTOR
+            max_dist = expected_distance * BOND_LENGTH_MAX_FACTOR
 
             if distance < min_dist or distance > max_dist:
                 errors.append(
