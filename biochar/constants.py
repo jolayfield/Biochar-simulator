@@ -223,6 +223,21 @@ FUNCTIONAL_GROUPS = {
         "O_per_group": 1,
         "H_per_group": 1,
     },
+    "aliphatic_hydroxyl": {
+        # Primary alcohol on an sp3 carbon: a pendant -CH3 becomes -CH2-OH.
+        # This is the dominant O-bearing aliphatic group in low-temperature,
+        # cellulose-derived biochar, and unlike phenolic it draws on the sp3
+        # (aliphatic) carbons the H/C-shaping stage adds -- which is what lets
+        # high-O/C low-aromaticity chars reach their oxygen target at all.
+        # Types are identical to phenolic (OH/HO on the O-H); only the carbon
+        # it attaches to differs (CT vs CA), so no new OPLS type is needed.
+        "description": "Aliphatic hydroxyl (-CH2-OH on sp3 carbon)",
+        "atoms": [("O", "OH"), ("H", "HO")],
+        "connectivity": [(0, "CT", 1), (0, 1, 1)],
+        "composition": {"O": 1, "H": 1},
+        "O_per_group": 1,
+        "H_per_group": 1,
+    },
     "ether": {
         "description": "Ether group (-O-)",
         "atoms": [("O", "OS")],

@@ -267,12 +267,17 @@ class OxygenAssigner:
     #  Public interface                                                    #
     # ------------------------------------------------------------------ #
 
+    # Groups that attach to sp3 (aliphatic) carbons; everything else draws on
+    # the aromatic edge pool.
+    _ALIPHATIC_GROUPS = frozenset({"aliphatic_hydroxyl"})
+
     def assign_oxygens(
         self,
         mol: Chem.Mol,
         target_O_C_ratio: float,
         O_C_tolerance: float = 0.10,
         functional_group_preference: Optional[Dict[str, int]] = None,
+        allow_aliphatic_oxygen: bool = True,
     ) -> Tuple[Chem.Mol, CompositionResult]:
         """
         Assign oxygen-containing functional groups to the molecule.
@@ -285,6 +290,12 @@ class OxygenAssigner:
             functional_group_preference: Dict mapping group name → exact count,
                 e.g. {"phenolic": 3, "carboxyl": 1}.
                 If None, places phenolic groups to reach target_O_C_ratio.
+            allow_aliphatic_oxygen: In O_C_ratio mode, when the aromatic edge
+                sites cannot hold the target oxygen, place the remainder as
+                aliphatic hydroxyls (-CH2-OH) on the sp3 carbons.  Set False to
+                reproduce the aromatic-only behaviour exactly.  Has no effect in
+                dict mode, where the requested groups are always honoured, and
+                no effect when the skeleton carries no aliphatic carbons.
 
         Returns:
             (modified_mol, composition_result) where composition_result carries
@@ -292,6 +303,14 @@ class OxygenAssigner:
             (groups requested after normalisation).
         """
         num_carbons = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 6)
+
+        # ── Build the two carbon pools ─────────────────────────────────────
+        # Aromatic edge carbons take phenolic/carboxyl/ether/etc; sp3 carbons
+        # take aliphatic hydroxyls.  Both are shuffled so placement is spread.
+        aromatic_pool = self._get_edge_sites(mol)
+        aliphatic_pool = self._get_aliphatic_sites(mol)
+        self._rng.shuffle(aromatic_pool)
+        self._rng.shuffle(aliphatic_pool)
 
         # ── Mode 1: exact-count dict ───────────────────────────────────────
         if isinstance(functional_group_preference, dict) and functional_group_preference:
@@ -301,26 +320,35 @@ class OxygenAssigner:
             target_num_oxygens = int(round(num_carbons * target_O_C_ratio))
             if target_num_oxygens <= 0:
                 return mol, self._calculate_composition(mol, {}, {}, {})
-            groups_spec = {"phenolic": target_num_oxygens}
+            # Fill aromatic edges with phenolic first; spill the shortfall onto
+            # sp3 carbons as aliphatic hydroxyls.  Without the spill, a
+            # low-aromaticity char whose edges are mostly consumed by aliphatic
+            # decoration + H-saturation cannot reach its oxygen target at all.
+            n_phenolic = min(target_num_oxygens, len(aromatic_pool))
+            groups_spec = {}
+            if n_phenolic > 0:
+                groups_spec["phenolic"] = n_phenolic
+            if allow_aliphatic_oxygen:
+                n_aliphatic = min(target_num_oxygens - n_phenolic, len(aliphatic_pool))
+                if n_aliphatic > 0:
+                    groups_spec["aliphatic_hydroxyl"] = n_aliphatic
 
         if not groups_spec:
             return mol, self._calculate_composition(mol, {}, {}, {})
 
         requested_counts: Dict[str, int] = dict(groups_spec)
-
-        # ── Build edge-site pool ───────────────────────────────────────────
-        site_pool = self._get_edge_sites(mol)
-        self._rng.shuffle(site_pool)
         used_sites: Set[int] = set()
 
         # ── Warn if requested counts exceed a feasible estimate ───────────────
         if isinstance(functional_group_preference, dict) and functional_group_preference:
-            n_sites = len(site_pool)
-            max_estimates = {"ether": n_sites // 2, "thioether": n_sites // 2}
+            n_arom = len(aromatic_pool)
+            n_aliph = len(aliphatic_pool)
+            max_estimates = {"ether": n_arom // 2, "thioether": n_arom // 2,
+                             "aliphatic_hydroxyl": n_aliph}
             for _g in ("phenolic", "hydroxyl", "carboxyl", "amino", "thiol"):
-                max_estimates[_g] = n_sites
+                max_estimates[_g] = n_arom
             for _g, _cnt in groups_spec.items():
-                _max = max_estimates.get(_g, n_sites)
+                _max = max_estimates.get(_g, n_arom)
                 if _cnt > _max * 1.5:
                     logger.warning(
                         "Requested %d '%s' groups but estimated max for this "
@@ -335,15 +363,16 @@ class OxygenAssigner:
 
         # ── Place each group type the requested number of times ────────────
         for group, count in groups_spec.items():
+            pool = aliphatic_pool if group in self._ALIPHATIC_GROUPS else aromatic_pool
             placed = 0
             while placed < count:
-                free = [s for s in site_pool if s not in used_sites]
+                free = [s for s in pool if s not in used_sites]
                 ok, new_mol, emol, n_O, sites_used = self._place_group(
                     group, emol, new_mol, free
                 )
                 if not ok:
                     logger.warning(
-                        "Could not place all '%s' groups (%d/%d placed — not enough edge sites)",
+                        "Could not place all '%s' groups (%d/%d placed — not enough sites)",
                         group, placed, count,
                     )
                     break
@@ -407,6 +436,22 @@ class OxygenAssigner:
             and ValenceValidator.get_valence_info(mol, a.GetIdx()).available_valence >= 1
         ]
 
+    def _get_aliphatic_sites(self, mol: Chem.Mol) -> List[int]:
+        """Return indices of sp3 (non-aromatic) carbons with ≥1 free valence.
+
+        These are the pendant methyls/methylenes the H/C-shaping stage adds.
+        Each can host one hydroxyl (a -CH3 becomes -CH2-OH); a second -OH on the
+        same carbon would be a geminal diol, so the caller consumes each site
+        once, exactly as it does for aromatic edge sites.
+        """
+        return [
+            a.GetIdx()
+            for a in mol.GetAtoms()
+            if a.GetAtomicNum() == 6
+            and not a.GetIsAromatic()
+            and ValenceValidator.get_valence_info(mol, a.GetIdx()).available_valence >= 1
+        ]
+
     def _place_group(
         self,
         group: str,
@@ -422,8 +467,10 @@ class OxygenAssigner:
         """
         BT = Chem.BondType
 
-        if group in ("phenolic", "hydroxyl"):
-            # Ar-OH: single-bond O then H
+        if group in ("phenolic", "hydroxyl", "aliphatic_hydroxyl"):
+            # C-OH: single-bond O then H.  Identical construction whether the
+            # carbon is an aromatic edge (phenolic) or an sp3 pendant carbon
+            # (aliphatic_hydroxyl); the caller chooses the pool of carbons.
             if not free_sites:
                 return False, new_mol, emol, 0, set()
             c = free_sites[0]
