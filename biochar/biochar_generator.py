@@ -845,11 +845,20 @@ class BiocharGenerator:
         # Displacing ring carbons via the resolver would shatter the ring
         # geometry.  GROMACS energy minimisation (gmx grompp + em) will relax
         # H/O positions further before any production MD run.
-        if steric_clashes and not generator.used_hex_lattice:
+        # The force-field pass is NOT gated on clashes.  A clean clash report
+        # does not mean the embedding is strain-free: ETKDG can leave a
+        # compressed aromatic bond (e.g. 1.16 Å where 1.40 Å is expected) that
+        # only the FF refinement relaxes.  While every high-oxygen structure
+        # carried at least one (false) H-bond "clash", this pass always ran and
+        # the coupling was invisible; once H-bonds stopped being reported as
+        # clashes it would have silently skipped refinement altogether.
+        # Clash *resolution* still runs only when there is a clash to resolve.
+        if not generator.used_hex_lattice:
             # First pass: iterative clash resolution
-            coords = ClashResolver.resolve_clashes(
-                mol, coords, max_iterations=15, displacement_step=0.15, use_vdw_radii=True
-            )
+            if steric_clashes:
+                coords = ClashResolver.resolve_clashes(
+                    mol, coords, max_iterations=15, displacement_step=0.15, use_vdw_radii=True
+                )
 
             # Second pass: force-field refinement.
             coords, _ = generator.validate_and_relax(mol, coords, max_iterations=200)
@@ -866,9 +875,10 @@ class BiocharGenerator:
 
             # Final validation
             valid, errors = GeometryValidator.validate_geometry(mol, coords)
-            steric_clashes_after = [e for e in errors if "Steric clash" in e]
-            clashes_resolved = len(steric_clashes) - len(steric_clashes_after)
-            print(f"  Clash resolution: {clashes_resolved}/{len(steric_clashes)} clashes resolved")
+            if steric_clashes:
+                steric_clashes_after = [e for e in errors if "Steric clash" in e]
+                clashes_resolved = len(steric_clashes) - len(steric_clashes_after)
+                print(f"  Clash resolution: {clashes_resolved}/{len(steric_clashes)} clashes resolved")
 
         if not valid:
             print("Warning: Geometry validation issues:")

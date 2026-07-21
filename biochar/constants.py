@@ -574,6 +574,53 @@ VDW_RADII = {
 # Used as effective sheet thickness when computing slit-pore geometry.
 CARBON_VDW_DIAMETER = 3.4  # Angstroms
 
+# --- Hydrogen-bond-aware clash detection ----------------------------------
+# A polar hydrogen sitting close to an O/N acceptor is a hydrogen bond, not a
+# steric clash.  The generic 0.75 × vdW-sum floor is 2.04 Å for an O/H pair,
+# which lands squarely inside the physical H...A range (~1.6-2.2 Å), so every
+# intramolecular H-bond between adjacent -OH groups is otherwise reported as a
+# clash.  On high-oxygen chars (O/C >= ~0.2, e.g. 400 °C softwood) such pairs
+# are unavoidable and strict validation fails on every seed.
+#
+# Donor-acceptor pairs that satisfy the angle criterion below are held to this
+# reduced floor instead.  It still catches genuine overlap: an H...O contact
+# shorter than this is too close even for a low-barrier hydrogen bond.
+HBOND_MIN_H_ACCEPTOR_DISTANCE = 1.5  # Angstroms
+
+# Minimum D-H...A angle (degrees) for a contact to count as a hydrogen bond.
+# Real H-bonds are near-linear (typically > 120°); 90° is a deliberately
+# permissive gate that only requires the H to point *toward* the acceptor
+# rather than the acceptor being jammed into the side of the D-H bond.
+HBOND_MIN_DHA_ANGLE_DEG = 90.0
+
+# Elements that act as hydrogen-bond donors (when carrying an H) and acceptors.
+HBOND_DONOR_ACCEPTOR_ELEMENTS = (7, 8)  # N, O (atomic numbers)
+
+# --- Bond-length validation ------------------------------------------------
+# COVALENT_RADII are *single-bond* radii, so their sum only predicts a single
+# bond.  Scale by bond order to get the expected length: an aromatic C-C is
+# 1.40 Å, not the 1.52 Å the radii sum implies, and a C=O is 1.23 Å, not 1.42 Å.
+# Reporting the unscaled sum made every such message wrong about what it
+# expected, even when the bond really was out of range.
+#
+# Factors are the ratio of the observed length to the single-bond radii sum:
+# aromatic C-C 1.40/1.52 = 0.92; C=O 1.23/1.42 = 0.87; C#C 1.20/1.52 = 0.79.
+BOND_ORDER_LENGTH_FACTORS = {
+    "SINGLE": 1.00,
+    "AROMATIC": 0.92,
+    "DOUBLE": 0.87,
+    "TRIPLE": 0.79,
+}
+
+# Fractional tolerance on the expected bond length.  These are tighter than the
+# old 0.8/1.5 band on purpose: correcting `expected` downward for aromatic and
+# multiple bonds would otherwise *lower* the absolute floor and let a genuinely
+# compressed bond through.  At these factors an aromatic C-C is accepted over
+# 1.19-1.96 Å, versus 1.22-2.28 Å before -- comparable at the low end, and no
+# longer absurdly permissive at the high end.
+BOND_LENGTH_MIN_FACTOR = 0.85
+BOND_LENGTH_MAX_FACTOR = 1.40
+
 # ---------------------------------------------------------------------------
 # Experimental-data model provenance & tunables
 # ---------------------------------------------------------------------------

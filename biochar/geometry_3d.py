@@ -11,7 +11,16 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from scipy.spatial.distance import pdist, squareform
 
-from .constants import VDW_RADII, COVALENT_RADII
+from .constants import (
+    VDW_RADII,
+    COVALENT_RADII,
+    HBOND_MIN_H_ACCEPTOR_DISTANCE,
+    HBOND_MIN_DHA_ANGLE_DEG,
+    HBOND_DONOR_ACCEPTOR_ELEMENTS,
+    BOND_ORDER_LENGTH_FACTORS,
+    BOND_LENGTH_MIN_FACTOR,
+    BOND_LENGTH_MAX_FACTOR,
+)
 
 
 def _get_excluded_pairs(mol: Chem.Mol) -> set:
@@ -42,6 +51,83 @@ def _get_excluded_pairs(mol: Chem.Mol) -> set:
                 if k != i:
                     excluded.add((min(i, k), max(i, k)))
     return excluded
+
+
+def _get_hbond_pairs(mol: Chem.Mol, coords: np.ndarray) -> set:
+    """
+    Return the set of (min_idx, max_idx) pairs that are hydrogen bonds rather
+    than steric clashes.
+
+    A pair qualifies when a polar hydrogen (one covalently bound to N or O)
+    points at an N/O acceptor: the H...A distance is within the physical H-bond
+    range and the D-H...A angle is at least
+    :data:`~biochar.constants.HBOND_MIN_DHA_ANGLE_DEG`.
+
+    Callers hold these pairs to
+    :data:`~biochar.constants.HBOND_MIN_H_ACCEPTOR_DISTANCE` instead of the
+    generic 0.75 × vdW-sum floor.  They are *not* excluded outright, so a real
+    overlap between a donor H and an acceptor is still caught.
+
+    This mirrors the 1-2/1-3 exclusion in :func:`_get_excluded_pairs`: both
+    strip contacts that are ordinary molecular geometry rather than atom
+    overlap.  The acceptor's own D...A heavy-atom distance (~2.6-2.8 Å for
+    O...O) already clears the 2.28 Å O/O floor, so only the H...A pair needs
+    special handling.
+    """
+    # Map each polar hydrogen to the donor heavy atom it is bonded to.
+    polar_h: dict = {}
+    acceptors: set = set()
+    for atom in mol.GetAtoms():
+        if atom.GetAtomicNum() in HBOND_DONOR_ACCEPTOR_ELEMENTS:
+            acceptors.add(atom.GetIdx())
+        elif atom.GetAtomicNum() == 1:
+            nbrs = atom.GetNeighbors()
+            if len(nbrs) == 1 and nbrs[0].GetAtomicNum() in HBOND_DONOR_ACCEPTOR_ELEMENTS:
+                polar_h[atom.GetIdx()] = nbrs[0].GetIdx()
+
+    if not polar_h or not acceptors:
+        return set()
+
+    hbonds: set = set()
+    for h_idx, donor_idx in polar_h.items():
+        h_pos = coords[h_idx]
+        # Vector H->D, used for the D-H...A angle.
+        v_hd = coords[donor_idx] - h_pos
+        n_hd = np.linalg.norm(v_hd)
+        if n_hd < 1e-6:
+            continue
+        for a_idx in acceptors:
+            # The donor itself is a 1-2 pair; both are already excluded upstream,
+            # but skip explicitly so this helper stands on its own.
+            if a_idx == donor_idx:
+                continue
+            v_ha = coords[a_idx] - h_pos
+            n_ha = np.linalg.norm(v_ha)
+            if n_ha < 1e-6:
+                continue
+            cos_theta = float(np.dot(v_hd, v_ha) / (n_hd * n_ha))
+            angle = np.degrees(np.arccos(np.clip(cos_theta, -1.0, 1.0)))
+            if angle >= HBOND_MIN_DHA_ANGLE_DEG:
+                hbonds.add((min(h_idx, a_idx), max(h_idx, a_idx)))
+    return hbonds
+
+
+def _clash_floor(
+    mol: Chem.Mol, i: int, j: int, hbond_pairs: set
+) -> float:
+    """
+    Minimum allowed non-bonded distance (Å) for the atom pair *(i, j)*.
+
+    Defaults to 0.75 × vdW-sum — a real clash is atom overlap, so this keeps
+    normal non-bonded proximity (e.g. peri H-H ≈ 1.95 Å in PAHs) from being
+    flagged.  Hydrogen-bonded donor-acceptor pairs get the reduced H-bond
+    floor instead.
+    """
+    if (min(i, j), max(i, j)) in hbond_pairs:
+        return HBOND_MIN_H_ACCEPTOR_DISTANCE
+    r_vdw_i = VDW_RADII.get(mol.GetAtomWithIdx(i).GetSymbol(), 1.70)
+    r_vdw_j = VDW_RADII.get(mol.GetAtomWithIdx(j).GetSymbol(), 1.70)
+    return 0.75 * (r_vdw_i + r_vdw_j)
 
 
 def _read_skeleton_positions(mol: Chem.Mol) -> dict:
@@ -882,6 +968,10 @@ class ClashResolver:
         """
         # Pre-compute 1-2 and 1-3 exclusions (see _get_excluded_pairs).
         excluded = _get_excluded_pairs(mol)
+        # Hydrogen bonds get a reduced floor here too.  Without this the
+        # resolver pushes apart the very H-bonds the MMFF pass re-forms on the
+        # next iteration, burning iterations and distorting -OH geometry.
+        hbond_pairs = _get_hbond_pairs(mol, coords) if use_vdw_radii else set()
         clashes = []
         distances = squareform(pdist(coords))
 
@@ -896,13 +986,7 @@ class ClashResolver:
                     # flagged every peri-H in a PAH as a clash, and the resolver
                     # then destroyed bond geometry trying to fix "clashes" that
                     # were just normal aromatic-ring proximity.
-                    atom_i = mol.GetAtomWithIdx(i)
-                    atom_j = mol.GetAtomWithIdx(j)
-                    symbol_i = atom_i.GetSymbol()
-                    symbol_j = atom_j.GetSymbol()
-                    r_vdw_i = VDW_RADII.get(symbol_i, 1.70)
-                    r_vdw_j = VDW_RADII.get(symbol_j, 1.70)
-                    min_distance = 0.75 * (r_vdw_i + r_vdw_j)
+                    min_distance = _clash_floor(mol, i, j, hbond_pairs)
                 else:
                     # Use fixed threshold
                     min_distance = 1.5
@@ -971,6 +1055,9 @@ class GeometryValidator:
         # (2.55 Å), so without this exclusion every angle neighbour pair is
         # reported as a clash.
         excluded = _get_excluded_pairs(mol)
+        # Intramolecular O-H...O / N-H...O contacts are hydrogen bonds, not
+        # clashes; they get a reduced floor (see _get_hbond_pairs).
+        hbond_pairs = _get_hbond_pairs(mol, coords)
 
         errors = []
         clashes = []
@@ -985,20 +1072,17 @@ class GeometryValidator:
 
                 atom_i = mol.GetAtomWithIdx(i)
                 atom_j = mol.GetAtomWithIdx(j)
-
-                # Get Van der Waals radii. A real clash is atom overlap — use
-                # 0.75 × vdW-sum so that normal non-bonded proximity (e.g. peri
-                # H-H ≈ 1.95 Å in PAHs) is not flagged as a clash.
                 symbol_i = atom_i.GetSymbol()
                 symbol_j = atom_j.GetSymbol()
-                r_vdw_i = VDW_RADII.get(symbol_i, 1.70)
-                r_vdw_j = VDW_RADII.get(symbol_j, 1.70)
-                min_distance = 0.75 * (r_vdw_i + r_vdw_j)
+                min_distance = _clash_floor(mol, i, j, hbond_pairs)
 
                 distance = distances[i, j]
                 if distance < min_distance:
                     severity = min_distance - distance  # How far below minimum
-                    clash_type = "H-H" if symbol_i == "H" and symbol_j == "H" else \
+                    # An H-bonded pair that still violates the reduced floor is
+                    # genuinely too close — label it so the report is diagnostic.
+                    clash_type = "H-bond" if (i, j) in hbond_pairs else \
+                                 "H-H" if symbol_i == "H" and symbol_j == "H" else \
                                  "H-C" if symbol_i in ["H", "C"] and symbol_j in ["H", "C"] else \
                                  "Other"
 
@@ -1040,14 +1124,17 @@ class GeometryValidator:
             # Calculate distance
             distance = np.linalg.norm(coords[i] - coords[j])
 
-            # Expected distance: sum of covalent radii
+            # Expected distance: sum of covalent radii, scaled by bond order.
+            # The radii are single-bond values, so an unscaled sum over-predicts
+            # every aromatic and multiple bond (aromatic C-C would be reported
+            # as "expected 1.52" when it is really 1.40).
             r_cov_i = COVALENT_RADII.get(symbol_i, 0.76)
             r_cov_j = COVALENT_RADII.get(symbol_j, 0.76)
-            expected_distance = r_cov_i + r_cov_j
+            factor = BOND_ORDER_LENGTH_FACTORS.get(str(bond.GetBondType()), 1.00)
+            expected_distance = (r_cov_i + r_cov_j) * factor
 
-            # Allow 20% deviation
-            min_dist = expected_distance * 0.8
-            max_dist = expected_distance * 1.5
+            min_dist = expected_distance * BOND_LENGTH_MIN_FACTOR
+            max_dist = expected_distance * BOND_LENGTH_MAX_FACTOR
 
             if distance < min_dist or distance > max_dist:
                 errors.append(
