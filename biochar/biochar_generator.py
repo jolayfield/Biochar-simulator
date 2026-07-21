@@ -212,6 +212,15 @@ class GeneratorConfig:
     # to force a pure-aromatic structure (H/C then capped, with a warning).
     allow_aliphatic: bool = True
 
+    # Aliphatic oxygen placement.  In O_C_ratio mode, when the aromatic edge
+    # sites cannot hold the requested oxygen (typical of low-aromaticity chars
+    # whose edges are consumed by aliphatic decoration + H-saturation), the
+    # remainder is placed as aliphatic hydroxyls (-CH2-OH) on the sp3 carbons.
+    # This is what lets high-O/C low-temperature points reach their O/C target.
+    # Set False to keep oxygen on aromatic edges only (the pre-existing
+    # behaviour); no effect when there are no aliphatic carbons.
+    allow_aliphatic_oxygen: bool = True
+
     def __post_init__(self):
         # functional_groups defaults to None → O_C_ratio-driven phenolic placement
         # (no default list here; OxygenAssigner handles the None case)
@@ -718,6 +727,7 @@ class BiocharGenerator:
             self.config.O_C_ratio,
             O_C_tolerance=self.config.O_C_tolerance,
             functional_group_preference=self.config.functional_groups,
+            allow_aliphatic_oxygen=self.config.allow_aliphatic_oxygen,
         )
 
         if self.config.strict and comp.requested_counts:
