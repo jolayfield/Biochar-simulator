@@ -611,6 +611,24 @@ HBOND_MIN_DHA_ANGLE_DEG = 90.0
 # Elements that act as hydrogen-bond donors (when carrying an H) and acceptors.
 HBOND_DONOR_ACCEPTOR_ELEMENTS = (7, 8)  # N, O (atomic numbers)
 
+# Slack (Å) below a clash floor before a contact is reported as a clash.  A
+# contact is a clash only when it is deeper than this below the floor
+# (0.75 × vdW-sum, or HBOND_MIN_H_ACCEPTOR_DISTANCE for a hydrogen bond).
+#
+# Neither floor is meaningful to 0.01 Å: the ETKDG embedding and MMFF relaxation
+# leave contacts scattered by more than that, so a hard `distance < floor`
+# knife-edge reports contacts sitting a hundredth of an ångström inside the
+# floor as clashes.  On the densest chars (e.g. 400 °C manure, O/C 0.24) an
+# H-bond 0.01 Å shorter than 1.5 Å, or a peri H...C 0.005 Å inside the vdW
+# floor, then fails strict validation on seed after seed even though GROMACS
+# energy minimisation would move the atom in the first step.
+#
+# 0.05 Å is well below a genuine overlap: the real clashes this system catches
+# (two functional groups embedded on top of each other) sit 0.2-0.5 Å inside
+# the floor.  Anything within 0.05 Å of the floor is embedding noise, not a
+# clash.
+CLASH_SEVERITY_TOLERANCE = 0.05  # Angstroms
+
 # --- Bond-length validation ------------------------------------------------
 # COVALENT_RADII are *single-bond* radii, so their sum only predicts a single
 # bond.  Scale by bond order to get the expected length: an aromatic C-C is
