@@ -37,25 +37,34 @@ Configuration dict keys
 
 Each entry in ``configurations`` is a plain dict.  Supported keys:
 
-+------------------------+---------+------------------------------------------+
-| Key                    | Default | Description                              |
-+========================+=========+==========================================+
-| ``molecule_name``      | —       | **Required.** Residue name (≤ 5 chars).  |
-+------------------------+---------+------------------------------------------+
-| ``target_num_carbons`` | 50      | Carbon count.                            |
-+------------------------+---------+------------------------------------------+
-| ``H_C_ratio``          | 0.5     | Target H/C ratio.                        |
-+------------------------+---------+------------------------------------------+
-| ``O_C_ratio``          | 0.1     | Target O/C ratio.                        |
-+------------------------+---------+------------------------------------------+
-| ``aromaticity_percent``| 90.0    | Target aromatic fraction (%).            |
-+------------------------+---------+------------------------------------------+
-| ``functional_groups``  | None    | Dict of group → count.                   |
-+------------------------+---------+------------------------------------------+
-| ``defect_fraction``    | 0.0     | Pentagon probability per ring.           |
-+------------------------+---------+------------------------------------------+
-| ``seed``               | None    | RNG seed.                                |
-+------------------------+---------+------------------------------------------+
++----------------------------+---------+------------------------------------------+
+| Key                        | Default | Description                              |
++============================+=========+==========================================+
+| ``molecule_name``          | —       | **Required.** Residue name (≤ 5 chars).  |
++----------------------------+---------+------------------------------------------+
+| ``target_num_carbons``     | 50      | Carbon count.                            |
++----------------------------+---------+------------------------------------------+
+| ``H_C_ratio``              | 0.5     | Target H/C ratio.                        |
++----------------------------+---------+------------------------------------------+
+| ``O_C_ratio``              | 0.1     | Target O/C ratio.                        |
++----------------------------+---------+------------------------------------------+
+| ``aromaticity_percent``    | 90.0    | Target aromatic fraction (%).            |
++----------------------------+---------+------------------------------------------+
+| ``functional_groups``      | None    | Dict of group → count.                   |
++----------------------------+---------+------------------------------------------+
+| ``allow_aliphatic_oxygen`` | True    | Spill high ``O_C_ratio`` onto sp3        |
+|                            |         | carbons as aliphatic –CH₂OH when the     |
+|                            |         | aromatic edges are full. [1]_            |
++----------------------------+---------+------------------------------------------+
+| ``defect_fraction``        | 0.0     | Pentagon probability per ring.           |
++----------------------------+---------+------------------------------------------+
+| ``seed``                   | None    | RNG seed.                                |
++----------------------------+---------+------------------------------------------+
+
+.. [1] Lets low-aromaticity, high-O/C points (low-temperature chars) reach
+   their oxygen target instead of falling to the sweep's fallback path.  See
+   :ref:`aliphatic-oxygen`.  Any :class:`~biochar.biochar_generator.GeneratorConfig`
+   field may appear here — this table lists the common ones.
 
 Running a mixed GROMACS simulation
 -----------------------------------
