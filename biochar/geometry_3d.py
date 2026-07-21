@@ -17,6 +17,7 @@ from .constants import (
     HBOND_MIN_H_ACCEPTOR_DISTANCE,
     HBOND_MIN_DHA_ANGLE_DEG,
     HBOND_DONOR_ACCEPTOR_ELEMENTS,
+    CLASH_SEVERITY_TOLERANCE,
     BOND_ORDER_LENGTH_FACTORS,
     BOND_LENGTH_MIN_FACTOR,
     BOND_LENGTH_MAX_FACTOR,
@@ -991,7 +992,11 @@ class ClashResolver:
                     # Use fixed threshold
                     min_distance = 1.5
 
-                if distances[i, j] < min_distance:
+                # Same tolerance as the validator (see _check_steric_clashes):
+                # a contact within CLASH_SEVERITY_TOLERANCE of the floor is not a
+                # clash, so the resolver leaves it alone rather than nudging an
+                # atom the validator would already accept.
+                if distances[i, j] < min_distance - CLASH_SEVERITY_TOLERANCE:
                     clashes.append((i, j))
 
         return clashes
@@ -1077,7 +1082,10 @@ class GeometryValidator:
                 min_distance = _clash_floor(mol, i, j, hbond_pairs)
 
                 distance = distances[i, j]
-                if distance < min_distance:
+                # Report only overlaps deeper than the tolerance: a contact
+                # within CLASH_SEVERITY_TOLERANCE of the floor is embedding
+                # noise the FF/EM step relaxes, not a clash.
+                if distance < min_distance - CLASH_SEVERITY_TOLERANCE:
                     severity = min_distance - distance  # How far below minimum
                     # An H-bonded pair that still violates the reduced floor is
                     # genuinely too close — label it so the report is diagnostic.
