@@ -166,6 +166,72 @@ class TestTypesAreTheRightElement:
         assert not mismatches, "wrong-element OPLS mappings:\n" + "\n".join(mismatches)
 
 
+class TestEveryAssignableTypeIsMapped:
+    """GromacsExporter writes GROMACS_OPLS_TYPE_MAP.get(t, t), so an unmapped
+    internal type is silently written out under its own name and grompp fails
+    with "Atomtype N not found". Nothing in the export path defines these
+    locally, so every type the pipeline can assign must have an entry."""
+
+    def test_no_opls_atom_type_lacks_a_gromacs_mapping(self):
+        unmapped = sorted(set(OPLS_ATOM_TYPES) - set(GROMACS_OPLS_TYPE_MAP))
+        assert not unmapped, (
+            f"OPLS_ATOM_TYPES entries with no GROMACS_OPLS_TYPE_MAP entry: "
+            f"{unmapped}. Either map them to a verified oplsaa.ff type or "
+            f"remove them along with the code that assigns them."
+        )
+
+    def test_map_has_no_entries_for_unknown_internal_types(self):
+        extra = sorted(set(GROMACS_OPLS_TYPE_MAP) - set(OPLS_ATOM_TYPES))
+        assert not extra, (
+            f"GROMACS_OPLS_TYPE_MAP entries with no OPLS_ATOM_TYPES entry: {extra}"
+        )
+
+
+class TestNitrogenTypingIsSizeIndependent:
+    """The tertiary/quaternary "N"/"NT" types were unmapped but reachable: RDKit
+    kekulization fails on large fused sheets, so an aniline N whose neighbours
+    all read is_aromatic=False fell past the NA branch to "N" (and its
+    hydrogens to "HC"). The same Ar-NH2 therefore typed differently depending
+    only on how big the sheet was."""
+
+    def test_tertiary_and_quaternary_nitrogen_types_are_gone(self):
+        for dead in ("N", "NT"):
+            assert dead not in OPLS_ATOM_TYPES
+
+    @pytest.mark.parametrize("num_carbons", [40, 150])
+    def test_amino_nitrogen_types_as_aniline_n_at_any_size(self, num_carbons):
+        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+
+        generator = BiocharGenerator(
+            GeneratorConfig(
+                target_num_carbons=num_carbons,
+                functional_groups={"amino": 1},
+                molecule_name="NTEST",
+                seed=1,
+                strict=False,
+            )
+        )
+        generator.generate()
+
+        nitrogens = [
+            atom.GetIdx()
+            for atom in generator.mol.GetAtoms()
+            if atom.GetAtomicNum() == 7
+        ]
+        assert nitrogens, "amino group placed no nitrogen"
+
+        for idx in nitrogens:
+            assert generator.atom_types[idx] == "NA"
+            hydrogens = [
+                n.GetIdx()
+                for n in generator.mol.GetAtomWithIdx(idx).GetNeighbors()
+                if n.GetAtomicNum() == 1
+            ]
+            assert hydrogens, "aniline N has no hydrogens"
+            for h_idx in hydrogens:
+                assert generator.atom_types[h_idx] == "HNA"
+
+
 class TestSulfurRegression:
     """opls_202 (sulfide/S=C S) and opls_209 (a *carbon*) were previously used for
     the thiol and thioether sulfurs. These pin the corrected types."""

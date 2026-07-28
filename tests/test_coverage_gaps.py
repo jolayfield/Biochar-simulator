@@ -406,25 +406,27 @@ class TestAtomTyperFallbacks:
                    if mol.GetAtomWithIdx(i).GetAtomicNum() == 1}
         assert h_types == {"HC"}
 
-    def test_n_with_three_nonaromatic_bonds_typed_as_n(self):
+    @pytest.mark.parametrize(
+        "smiles",
+        [
+            "N(C)(C)C",   # trimethylamine: 3 bonds to aliphatic C, no ring
+            "[NH2-]",     # amide anion: 2 bonds, formal -1
+        ],
+    )
+    def test_nitrogen_outside_biochar_chemistry_is_flagged_not_guessed(self, smiles):
+        # These used to type as "N"/"NT", which had no GROMACS_OPLS_TYPE_MAP entry
+        # and so were written into the topology verbatim -- grompp then failed with
+        # "Atomtype N not found". The generator cannot build either molecule (it
+        # makes only ring-dopant N and the amino group's Ar-NH2), so the types were
+        # removed and such a nitrogen now falls through to the X<Z> default that
+        # OPLSPropertyTable.validate() reports as unrecognised.
         from biochar.opls_typing import AtomTyper
-        # Trimethylamine: N has 3 bonds to aliphatic C, no ring membership
-        mol = Chem.MolFromSmiles("N(C)(C)C")
-        mol = Chem.AddHs(mol)
-        types = AtomTyper().assign_atom_types(mol)
-        n_types = {t for i, t in types.items()
-                   if mol.GetAtomWithIdx(i).GetAtomicNum() == 7}
-        assert "N" in n_types
 
-    def test_n_with_two_bonds_typed_as_nt(self):
-        from biochar.opls_typing import AtomTyper
-        # [NH2-]: N has formal -1 charge, 2 H bonds → not matching any special case
-        mol = Chem.MolFromSmiles("[NH2-]")
-        mol = Chem.AddHs(mol)
+        mol = Chem.AddHs(Chem.MolFromSmiles(smiles))
         types = AtomTyper().assign_atom_types(mol)
         n_types = {t for i, t in types.items()
                    if mol.GetAtomWithIdx(i).GetAtomicNum() == 7}
-        assert "NT" in n_types
+        assert n_types == {"X7"}
 
     def test_unknown_element_returns_x_n_fallback(self):
         from biochar.opls_typing import AtomTyper
