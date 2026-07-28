@@ -34,8 +34,6 @@ OPLS_ATOM_TYPES = {
     "HO2": ("H on carboxylic hydroxyl", 1.008, 0.436),
 
     # Nitrogen
-    "N": ("Tertiary nitrogen", 14.007, -0.70),
-    "NT": ("Quaternary nitrogen", 14.007, 0.0),
     "NA": ("Aromatic amine nitrogen (aniline Ar-NH2)", 14.007, -0.60),
     "HNA": ("H on aromatic amine nitrogen", 1.008, 0.30),
 
