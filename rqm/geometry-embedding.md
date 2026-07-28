@@ -1,0 +1,218 @@
+# Feature: 3D Geometry Embedding and Clash Detection <!-- rq-0f766d5b -->
+
+`CoordinateGenerator` (`biochar/geometry_3d.py`) turns a bonded molecular graph into 3D
+coordinates, and `GeometryValidator` decides whether the result is physically acceptable.
+
+The recurring failure mode in this area is not a wrong coordinate — it is a **validation
+threshold that rejects correct structures**. Every threshold below was retuned at least once
+because it flagged real chemistry as an error, and the symptom each time was the same: every
+point in a parameter sweep degrading to the fallback path while the geometry itself was fine.
+The requirements here therefore pin *what must not be called a clash* as tightly as they pin
+what must.
+
+## Embedding Path Selection <!-- rq-80b04b19 -->
+
+Two embedding strategies exist, and the choice between them is made by heavy-atom count, not
+by user request.
+
+- Molecules of **80 heavy atoms or fewer** embed with RDKit ETKDGv3 (falling back to ETKDGv2)
+  followed by MMFF94 relaxation.
+- Molecules of **more than 80 heavy atoms** use a 2D-first path: compute the flat aromatic
+  layout, promote to 3D at `z = 0`, perturb non-ring atoms slightly in `z` so the force field
+  converges, then minimise.
+
+The reason for the split is that ETKDGv3 folds or collapses large flat fused-ring systems.
+A large PAH sheet is genuinely planar, and an embedding algorithm that treats it as a flexible
+molecule produces a crumpled sheet with irreducible self-clashes.
+
+Force-field iteration count also scales with size: 300 iterations at or below 100 heavy atoms,
+400 above 100, and 500 above 300.
+
+Independently of size, a skeleton carrying a **ring-substituting nitrogen** (pyridinic,
+pyrrolic, or graphitic) prefers the flat hex-lattice path, because ETKDGv3 buckles the sheet
+around the substituted ring atom.
+
+```gherkin
+Feature: Select an embedding path that suits the molecule
+
+  @rq-bb1fbb12
+  Scenario: A small molecule uses the distance-geometry embedder
+    Given a molecule with 80 or fewer heavy atoms
+    When coordinates are generated
+    Then ETKDG embedding followed by MMFF94 relaxation produces the coordinates
+
+  @rq-265ec385
+  Scenario: A large flat sheet uses the 2D-first path
+    Given a molecule with more than 80 heavy atoms
+    When coordinates are generated
+    Then the flat 2D layout is promoted to 3D rather than embedded by ETKDG
+    And the resulting sheet is not folded
+
+  @rq-c4e683c4
+  Scenario: Embedding retries a bounded number of times
+    Given an embedding attempt that fails to produce coordinates
+    When the generator retries
+    Then it makes at most 3 independent embedding attempts before giving up
+```
+
+## Clash Detection <!-- rq-c2463a78 -->
+
+A clash is atom overlap. The generic floor for a contact between atoms `i` and `j` is
+**0.75 × (vdW radius i + vdW radius j)** — 2.55 Å for a carbon–carbon pair. A contact is only
+reported when it is *meaningfully* below that floor; see the tolerance section.
+
+### Hydrogen bonds are not clashes <!-- rq-00cacb46 -->
+
+The generic 0.75 × vdW floor evaluates to **2.04 Å** for an O/H pair, which sits squarely
+inside the physical H···A range of roughly 1.6–2.2 Å. Every intramolecular hydrogen bond
+between adjacent hydroxyl groups therefore trips the generic floor. On high-oxygen chars
+(O/C ≥ ~0.2, e.g. 400 °C softwood) such pairs are unavoidable, so strict validation failed on
+every seed and every sweep point fell back.
+
+A polar hydrogen pointing at an N or O acceptor is held to a reduced floor of
+**`HBOND_MIN_H_ACCEPTOR_DISTANCE` = 1.5 Å** instead. The pair qualifies when the donor and
+acceptor are both in `HBOND_DONOR_ACCEPTOR_ELEMENTS` (N, O) and the D–H···A angle is at least
+**`HBOND_MIN_DHA_ANGLE_DEG` = 90°**.
+
+The 90° gate is deliberately permissive. Real hydrogen bonds are near-linear (typically
+> 120°); requiring only 90° asks that the hydrogen point *toward* the acceptor rather than the
+acceptor being jammed into the side of the D–H bond. Hydrogen-bonded pairs are **not** excluded
+outright — a contact shorter than 1.5 Å is too close even for a low-barrier hydrogen bond and
+is still a clash.
+
+```gherkin
+Feature: Distinguish hydrogen bonds from steric clashes
+
+  @rq-6b70c04c
+  Scenario: An intramolecular hydrogen bond is not reported as a clash
+    Given two adjacent hydroxyl groups whose H sits 2.0 Angstrom from the neighbouring O
+    And the D-H...A angle is at least 90 degrees
+    When geometry validation runs
+    Then the contact is not reported as a steric clash
+
+  @rq-6c0f608d
+  Scenario: An overlap too short even for a hydrogen bond is still a clash
+    Given a donor-acceptor pair whose H...A distance is below 1.5 Angstrom
+    When geometry validation runs
+    Then the contact is reported as a steric clash
+
+  @rq-a63f775d
+  Scenario: A non-polar contact does not get the hydrogen-bond floor
+    Given a hydrogen and a carbon at 2.0 Angstrom with no N or O involved
+    When geometry validation runs
+    Then the contact is judged against the generic vdW floor, not the hydrogen-bond floor
+
+  @rq-51d0fb61
+  Scenario: A high-oxygen structure validates without falling back
+    Given a structure generated at an O/C ratio of 0.2 or above
+    When strict validation runs
+    Then hydrogen bonds between adjacent hydroxyls do not force the fallback path
+```
+
+### A clash needs to be deeper than embedding noise <!-- rq-56e62d3f -->
+
+Neither floor is meaningful to 0.01 Å. ETKDG embedding and MMFF relaxation leave contacts
+scattered by more than that, so a hard `distance < floor` comparison is a knife edge: a contact
+a hundredth of an ångström inside the floor gets reported as a clash.
+
+A contact is a clash only when it is more than **`CLASH_SEVERITY_TOLERANCE` = 0.05 Å** below
+its applicable floor. That value is well below genuine overlap — the real clashes this system
+exists to catch (two functional groups embedded on top of each other) sit 0.2–0.5 Å inside the
+floor. Anything within 0.05 Å is embedding noise, and GROMACS energy minimisation would move
+the atom in its first step.
+
+```gherkin
+Feature: Tolerate knife-edge contacts that are embedding noise
+
+  @rq-21834b0c
+  Scenario: A contact marginally inside the floor is not a clash
+    Given a contact 0.01 Angstrom below its applicable clash floor
+    When geometry validation runs
+    Then it is not reported as a clash
+
+  @rq-b6b192ce
+  Scenario: A genuine overlap is still reported
+    Given a contact 0.3 Angstrom below its applicable clash floor
+    When geometry validation runs
+    Then it is reported as a clash with its severity
+
+  @rq-92fec87b
+  Scenario: Severity is reported so a marginal contact can be told from a real one
+    Given any reported clash
+    When the validation message is produced
+    Then it states how far below the floor the contact sits
+```
+
+## Clash Resolution Is Skipped on the Hex-Lattice Path <!-- rq-8e5f5dc1 -->
+
+When `CoordinateGenerator.used_hex_lattice` is true, clash resolution does not run.
+
+Peri-hydrogen contacts in large fused PAHs are real geometry, not errors. They sit inside the
+0.75 × vdW threshold by construction, so a resolver would try to displace hundreds of atoms and
+shatter the ring lattice — replacing a correct structure with a broken one. The flat hex-lattice
+path produces geometrically exact sheets; clash warnings on those structures are artefacts and
+GROMACS energy minimisation resolves them.
+
+```gherkin
+Feature: Do not resolve clashes on geometrically exact lattices
+
+  @rq-49e2ed82
+  Scenario: Hex-lattice structures keep their coordinates
+    Given a structure whose coordinates came from the hex-lattice path
+    When the generator finishes geometry
+    Then clash resolution does not run
+    And the ring lattice is left intact
+
+  @rq-3c400653
+  Scenario: Small-molecule structures still get clash resolution
+    Given a structure embedded by ETKDG rather than the hex lattice
+    When the generator finishes geometry
+    Then clash resolution runs
+```
+
+## Bond-Length Validation <!-- rq-ff2c049b -->
+
+`COVALENT_RADII` are single-bond radii, so their sum predicts a single bond only. The expected
+length is scaled by bond order through `BOND_ORDER_LENGTH_FACTORS`: single 1.00, aromatic 0.92,
+double 0.87, triple 0.79. An aromatic C–C is 1.40 Å, not the 1.52 Å the unscaled radii sum
+implies; a C=O is 1.23 Å, not 1.42 Å.
+
+Before this scaling every out-of-range message stated the wrong expectation, even when the bond
+really was out of range — a diagnostic that misleads is worse than no diagnostic.
+
+The accepted band is **`BOND_LENGTH_MIN_FACTOR` = 0.85** to **`BOND_LENGTH_MAX_FACTOR` = 1.40**
+of the scaled expectation. These are tighter than the previous 0.8/1.5 band on purpose:
+correcting the expectation downward for aromatic and multiple bonds would otherwise lower the
+absolute floor and let a genuinely compressed bond through.
+
+```gherkin
+Feature: Judge bond length against the bond order actually present
+
+  @rq-9a9488ab
+  Scenario: An aromatic C-C is measured against the aromatic expectation
+    Given an aromatic carbon-carbon bond of 1.40 Angstrom
+    When bond-length validation runs
+    Then the bond is accepted
+    And the expected length reported is the aromatic value, not the single-bond radii sum
+
+  @rq-64623ade
+  Scenario: A carbonyl is measured against the double-bond expectation
+    Given a C=O bond of 1.23 Angstrom
+    When bond-length validation runs
+    Then the bond is accepted
+
+  @rq-50d3a0c4
+  Scenario: A compressed bond is still rejected after order scaling
+    Given a bond shorter than 0.85 times its order-scaled expected length
+    When bond-length validation runs
+    Then the bond is reported as out of range
+```
+
+## Cross-references <!-- rq-13a85be1 -->
+
+- Clash warnings on hex-lattice structures interact with strict-mode seed retry in the sweep
+  driver; see `parameter-sweep.md` when that document exists.
+- The oxygen placement that produces the adjacent hydroxyls behind most hydrogen-bond contacts
+  is specified in `heteroatom-assignment.md`.
+- Background and the full reasoning for the clash-threshold changes live in
+  `docs/solutions/bugs/physical-features-misread-as-geometry-errors.md`.

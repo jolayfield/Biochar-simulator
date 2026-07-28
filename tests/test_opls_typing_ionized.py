@@ -50,6 +50,7 @@ class TestCarboxylVersusPhenolic:
     def test_carboxyl_hydroxyl_is_not_typed_as_phenol(self):
         assert "OH2" in types_for_element("OC(=O)c1ccccc1", 8)
 
+    # rq-8669a35d
     def test_carboxyl_carbonyl_is_not_typed_as_ketone(self):
         """A carboxylic C=O has its own type; it is not a ketone C=O (OC)."""
         oxygens = types_for_element("OC(=O)c1ccccc1", 8)
@@ -68,6 +69,7 @@ class TestCarboxylVersusPhenolic:
     def test_phenol_hydrogen_still_types_as_ho(self):
         assert h_types_on("Oc1ccccc1", 8) == ["HO"]
 
+    # rq-44655f38
     def test_ether_oxygen_is_untouched(self):
         assert types_for_element("c1ccc2c(c1)Oc1ccccc1-2", 8) == ["OS"]
 
@@ -94,6 +96,7 @@ class TestAnionicOxygen:
             f"carboxylate oxygens are not equivalent: {oxygens}"
         )
 
+    # rq-b37f44d2
     def test_carboxylate_does_not_retain_the_neutral_acid_carbonyl_type(self):
         assert "O" not in types_for_element("[O-]C(=O)c1ccccc1", 8)
 

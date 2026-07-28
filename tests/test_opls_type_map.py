@@ -130,6 +130,7 @@ def _parse_ffbonded_section(ff: Path, header: str, arity: int) -> set:
 
 @requires_oplsaa
 class TestTypesExist:
+    # rq-03a40f15
     def test_every_mapped_type_exists_in_forcefield(self):
         known = _parse_atomtypes(OPLSAA)
         missing = {
@@ -147,6 +148,7 @@ class TestTypesAreTheRightElement:
     """Existence is not enough -- every wrong mapping found so far named a real
     type of the wrong element (e.g. a nitrogen typed as an aromatic carbon)."""
 
+    # rq-03a40f15
     def test_mapped_type_mass_matches_internal_type_mass(self):
         known = _parse_atomtypes(OPLSAA)
         descriptions = _parse_atomtype_descriptions(OPLSAA)
@@ -172,6 +174,7 @@ class TestEveryAssignableTypeIsMapped:
     with "Atomtype N not found". Nothing in the export path defines these
     locally, so every type the pipeline can assign must have an entry."""
 
+    # rq-70e5f033
     def test_no_opls_atom_type_lacks_a_gromacs_mapping(self):
         unmapped = sorted(set(OPLS_ATOM_TYPES) - set(GROMACS_OPLS_TYPE_MAP))
         assert not unmapped, (
@@ -180,6 +183,7 @@ class TestEveryAssignableTypeIsMapped:
             f"remove them along with the code that assigns them."
         )
 
+    # rq-3e169a31
     def test_map_has_no_entries_for_unknown_internal_types(self):
         extra = sorted(set(GROMACS_OPLS_TYPE_MAP) - set(OPLS_ATOM_TYPES))
         assert not extra, (
@@ -194,11 +198,13 @@ class TestNitrogenTypingIsSizeIndependent:
     hydrogens to "HC"). The same Ar-NH2 therefore typed differently depending
     only on how big the sheet was."""
 
+    # rq-4063a024
     def test_tertiary_and_quaternary_nitrogen_types_are_gone(self):
         for dead in ("N", "NT"):
             assert dead not in OPLS_ATOM_TYPES
 
     @pytest.mark.parametrize("num_carbons", [40, 150])
+    # rq-3789a326 rq-c7715c26
     def test_amino_nitrogen_types_as_aniline_n_at_any_size(self, num_carbons):
         from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 
@@ -246,6 +252,7 @@ class TestSulfurRegression:
         assert GROMACS_OPLS_TYPE_MAP["SS"] == "opls_222"
 
     @requires_oplsaa
+    # rq-03a40f15
     def test_sulfur_types_are_actually_sulfur(self):
         known = _parse_atomtypes(OPLSAA)
         for internal in ("SH_", "SS"):
@@ -356,6 +363,7 @@ class TestBondedResolution:
     """Depth 3: every bond and angle the generator emits must be parameterisable."""
 
     @pytest.mark.parametrize("group", _group_params())
+    # rq-35a5407d
     def test_functional_group_emits_only_resolvable_terms(self, group):
         from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 
@@ -383,6 +391,7 @@ class TestBondedResolution:
             "num_graphitic",
         ],
     )
+    # rq-35a5407d
     def test_ring_nitrogen_emits_only_resolvable_terms(self, knob):
         from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 
@@ -407,6 +416,7 @@ class TestSupplementDoesNotShadowForcefield:
     the first place. A value that exists nowhere else cannot drift.
     """
 
+    # rq-78f96107
     def test_no_supplementary_angle_duplicates_a_stock_angletype(self):
         bonded = _parse_bonded_types(OPLSAA)
         angletypes = _parse_ffbonded_section(OPLSAA, "[ angletypes", 3)

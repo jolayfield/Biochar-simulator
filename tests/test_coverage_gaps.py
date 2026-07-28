@@ -413,6 +413,7 @@ class TestAtomTyperFallbacks:
             "[NH2-]",     # amide anion: 2 bonds, formal -1
         ],
     )
+    # rq-70f6b542
     def test_nitrogen_outside_biochar_chemistry_is_flagged_not_guessed(self, smiles):
         # These used to type as "N"/"NT", which had no GROMACS_OPLS_TYPE_MAP entry
         # and so were written into the topology verbatim -- grompp then failed with
