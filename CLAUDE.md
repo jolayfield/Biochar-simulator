@@ -33,10 +33,13 @@ python tests/test_pah_quality.py
 cd docs && make html
 ```
 
-The test discovery root is `tests/` (configured in `pyproject.toml`). The two loose test files at the project root (`test_valence_comprehensive.py`, `test_valence_update.py`) are older scratch tests, not part of the suite.
+The test discovery root is `tests/` (configured in `pyproject.toml`), which holds 25 files; the three
+named above are examples, not the whole suite.
 
-`tests/` holds 16 files; the three named above are examples, not the whole suite. A `PreToolUse` hook in
-`.claude/settings.json` runs the full suite before any `git commit` and blocks the commit if it fails.
+A `PreToolUse` hook in `.claude/settings.json` runs the full suite before a `git commit` and blocks the
+commit if it fails — but **only for commits made through Claude Code**. A `git commit` typed in a
+terminal bypasses it entirely. Treat it as a convenience, not a gate; a real git `pre-commit` hook is
+planned in `docs/plans/2026-07-28-001-refactor-riprap-scaffold-migration-plan.md`.
 
 ## Architecture
 
