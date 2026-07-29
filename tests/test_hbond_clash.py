@@ -92,6 +92,7 @@ def _place_hbond(distance: float, angle_deg: float) -> tuple:
 # ---------------------------------------------------------------------------
 
 class TestHBondDetection:
+    # rq-6b70c04c
     def test_catechol_intramolecular_hbond_is_detected(self):
         """The adjacent -OH pair in catechol registers as a hydrogen bond."""
         mol, coords = _catechol_3d()
@@ -104,12 +105,14 @@ class TestHBondDetection:
                        mol.GetAtomWithIdx(j).GetSymbol()}
             assert symbols == {"H", "O"}
 
+    # rq-6b70c04c
     def test_hbond_pair_gets_reduced_floor(self):
         mol, coords = _catechol_3d()
         pairs = _get_hbond_pairs(mol, coords)
         i, j = next(iter(pairs))
         assert _clash_floor(mol, i, j, pairs) == HBOND_MIN_H_ACCEPTOR_DISTANCE
 
+    # rq-a63f775d
     def test_non_hbond_pair_keeps_vdw_floor(self):
         """A plain aromatic C/H pair is untouched by the H-bond rule."""
         mol, coords = _catechol_3d()
@@ -119,6 +122,7 @@ class TestHBondDetection:
         # 0.75 * (1.70 + 1.70)
         assert _clash_floor(mol, i, j, pairs) == pytest.approx(2.55)
 
+    # rq-a63f775d
     def test_no_polar_hydrogens_yields_no_pairs(self):
         """Benzene has no donors, so the helper short-circuits to empty."""
         mol = Chem.AddHs(Chem.MolFromSmiles("c1ccccc1"))
@@ -130,11 +134,13 @@ class TestHBondDetection:
 class TestHBondAngleGate:
     """The angle gate must admit near-linear contacts and reject sideways ones."""
 
+    # rq-6b70c04c
     def test_linear_contact_is_an_hbond(self):
         mol, coords, (donor, h, acceptor) = _place_hbond(distance=1.9, angle_deg=175.0)
         pairs = _get_hbond_pairs(mol, coords)
         assert (min(h, acceptor), max(h, acceptor)) in pairs
 
+    # rq-a63f775d
     def test_sideways_contact_is_not_excused(self):
         """An acceptor jammed into the side of the D-H bond is a real clash."""
         mol, coords, (donor, h, acceptor) = _place_hbond(distance=1.9, angle_deg=30.0)
@@ -144,6 +150,7 @@ class TestHBondAngleGate:
         assert _clash_floor(mol, h, acceptor, pairs) == pytest.approx(2.04)
 
     @pytest.mark.parametrize("angle", [HBOND_MIN_DHA_ANGLE_DEG + 1.0, 120.0, 180.0])
+    # rq-6b70c04c
     def test_angles_at_or_above_gate_are_hbonds(self, angle):
         mol, coords, (donor, h, acceptor) = _place_hbond(distance=1.9, angle_deg=angle)
         pairs = _get_hbond_pairs(mol, coords)
@@ -153,6 +160,7 @@ class TestHBondAngleGate:
 class TestGenuineOverlapStillCaught:
     """The reduced floor must not become a blanket exemption."""
 
+    # rq-6c0f608d
     def test_overlapping_donor_acceptor_is_still_a_clash(self):
         mol, coords, (donor, h, acceptor) = _place_hbond(distance=1.0, angle_deg=175.0)
         errors = GeometryValidator._check_steric_clashes(mol, coords)
@@ -163,11 +171,13 @@ class TestGenuineOverlapStillCaught:
         assert h_a, f"an H...O contact of 1.0 Å must still be reported; got {clashes}"
         assert "type: H-bond" in h_a[0]
 
+    # rq-6b70c04c
     def test_normal_hbond_distance_is_not_a_clash(self):
         mol, coords, (donor, h, acceptor) = _place_hbond(distance=1.9, angle_deg=175.0)
         errors = GeometryValidator._check_steric_clashes(mol, coords)
         assert not [e for e in errors if "Steric clash" in e]
 
+    # rq-6b70c04c
     def test_catechol_reports_no_steric_clash(self):
         mol, coords = _catechol_3d()
         errors = GeometryValidator._check_steric_clashes(mol, coords)
@@ -186,6 +196,7 @@ class TestHighOxygenCharRegression:
     """
 
     @pytest.mark.parametrize("seed", [0, 1, 2])
+    # rq-51d0fb61
     def test_400C_softwood_builds_clash_free(self, seed):
         from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 
@@ -206,6 +217,7 @@ class TestHighOxygenCharRegression:
         assert comp.O_C_ratio == pytest.approx(cfg.O_C_ratio, rel=0.10)
 
     @pytest.mark.parametrize("seed", [0, 1, 2])
+    # rq-50d3a0c4
     def test_400C_softwood_bond_lengths_are_sane(self, seed):
         """Geometry refinement must not be skipped just because there is no clash.
 
@@ -227,6 +239,7 @@ class TestHighOxygenCharRegression:
         bad_bonds = [e for e in errors if "bond length" in e]
         assert not bad_bonds, f"unrelaxed geometry at seed {seed}: {bad_bonds}"
 
+    # rq-51d0fb61
     def test_400C_softwood_passes_strict_mode(self):
         """The full strict path -- what the sweep actually invokes."""
         from biochar.biochar_generator import BiocharGenerator, GeneratorConfig

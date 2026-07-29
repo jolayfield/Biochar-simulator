@@ -42,18 +42,22 @@ def _bond_length_errors(mol, coords):
 class TestExpectedLengthIsBondOrderAware:
     """The reported expectation must match real bond lengths."""
 
+    # rq-9a9488ab
     def test_aromatic_cc_expectation_is_140_not_152(self):
         expected = (COVALENT_RADII["C"] * 2) * BOND_ORDER_LENGTH_FACTORS["AROMATIC"]
         assert expected == pytest.approx(1.40, abs=0.02)
 
+    # rq-64623ade
     def test_carbonyl_expectation_is_123_not_142(self):
         expected = (COVALENT_RADII["C"] + COVALENT_RADII["O"]) * \
             BOND_ORDER_LENGTH_FACTORS["DOUBLE"]
         assert expected == pytest.approx(1.23, abs=0.03)
 
+    # rq-9a9488ab
     def test_single_bond_expectation_is_unscaled(self):
         assert BOND_ORDER_LENGTH_FACTORS["SINGLE"] == 1.00
 
+    # rq-9a9488ab
     def test_message_quotes_the_aromatic_expectation(self):
         """A compressed aromatic bond reports 1.40, not the old 1.52."""
         mol, coords = _optimized("c1ccccc1")
@@ -75,6 +79,7 @@ class TestRealMoleculesValidateClean:
         "c1ccc2ccccc2c1",     # naphthalene: fused rings
         "Cc1ccccc1",          # toluene: sp3 C-C and C-H
     ])
+    # rq-9a9488ab
     def test_no_bond_length_errors(self, smiles):
         mol, coords = _optimized(smiles)
         assert not _bond_length_errors(mol, coords)
@@ -83,18 +88,21 @@ class TestRealMoleculesValidateClean:
 class TestDetectionSensitivityPreserved:
     """Correcting `expected` must not weaken the floor."""
 
+    # rq-50d3a0c4
     def test_compressed_aromatic_bond_still_caught(self):
         mol, coords = _optimized("c1ccccc1")
         d = coords[1] - coords[0]
         coords[1] = coords[0] + d / np.linalg.norm(d) * 1.16
         assert _bond_length_errors(mol, coords)
 
+    # rq-50d3a0c4
     def test_stretched_bond_caught(self):
         mol, coords = _optimized("c1ccccc1")
         d = coords[1] - coords[0]
         coords[1] = coords[0] + d / np.linalg.norm(d) * 2.20
         assert _bond_length_errors(mol, coords)
 
+    # rq-50d3a0c4
     def test_absolute_floor_no_looser_than_before(self):
         """The old band was 0.8-1.5 x the *unscaled* radii sum.
 
@@ -108,6 +116,7 @@ class TestDetectionSensitivityPreserved:
                      * BOND_LENGTH_MIN_FACTOR)
         assert new_floor <= old_floor + 0.05
 
+    # rq-50d3a0c4
     def test_upper_bound_is_tighter_than_before(self):
         old_ceiling = (COVALENT_RADII["C"] * 2) * 1.5
         new_ceiling = ((COVALENT_RADII["C"] * 2)

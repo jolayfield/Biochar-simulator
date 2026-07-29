@@ -85,6 +85,29 @@ class AtomTyper:
             for n in atom.GetNeighbors()
         )
 
+    @staticmethod
+    def _is_aromatic_carbon(mol: Chem.Mol, atom: Chem.Atom) -> bool:
+        """
+        True if *atom* is a carbon belonging to an aromatic ring system.
+
+        For large fused-ring systems RDKit Kekulization can fail, leaving
+        is_aromatic=False on all atoms.  Fall back to ring membership +
+        degree-3 connectivity (2 ring C neighbours + 1 H or O, or 3 ring C
+        neighbours for interior junction atoms) as a reliable proxy.
+
+        Every caller that asks "is this an aromatic carbon?" must go through
+        here — a caller that reads GetIsAromatic() directly silently changes
+        its answer with molecule size.
+        """
+        if atom.GetAtomicNum() != 6:
+            return False
+        if atom.GetIsAromatic():
+            return True
+        return (
+            mol.GetRingInfo().NumAtomRings(atom.GetIdx()) > 0
+            and atom.GetDegree() == 3
+        )
+
     def _determine_atom_type(self, mol: Chem.Mol, atom: Chem.Atom) -> str:
         """
         Determine OPLS atom type for a single atom.
@@ -99,18 +122,11 @@ class AtomTyper:
           hydrogen count.
         """
         atomic_num = atom.GetAtomicNum()
-        is_aromatic = atom.GetIsAromatic()
         formal_charge = atom.GetFormalCharge()
 
         # Carbon
         if atomic_num == 6:
-            # For large fused-ring systems RDKit Kekulization can fail, leaving
-            # is_aromatic=False on all atoms.  Fall back to ring membership +
-            # degree-3 connectivity (2 ring C neighbours + 1 H or O, or 3 ring C
-            # neighbours for interior junction atoms) as a reliable proxy.
-            ring_info = mol.GetRingInfo()
-            in_ring = ring_info.NumAtomRings(atom.GetIdx()) > 0
-            if is_aromatic or (in_ring and atom.GetDegree() == 3):
+            if self._is_aromatic_carbon(mol, atom):
                 return "CA"
             else:
                 # Check if connected to C=O
@@ -201,9 +217,7 @@ class AtomTyper:
             neighbors = list(atom.GetNeighbors())
             h_count = sum(1 for n in neighbors if n.GetAtomicNum() == 1)
             heavy_neighbors = [n for n in neighbors if n.GetAtomicNum() != 1]
-            has_aromatic_c = any(
-                n.GetAtomicNum() == 6 and n.GetIsAromatic() for n in neighbors
-            )
+            has_aromatic_c = any(self._is_aromatic_carbon(mol, n) for n in neighbors)
 
             # Ring-substituting nitrogen (pyridinic / pyrrolic / graphitic).
             # A ring N replaced INTO the skeleton is bonded only to ring carbons
@@ -238,10 +252,13 @@ class AtomTyper:
 
             if has_aromatic_c and h_count >= 1:
                 return "NA"  # Aniline-type aromatic primary amine (Ar-NH2)
-            elif len(atom.GetBonds()) == 3:
-                return "N"
-            else:
-                return "NT"
+
+            # No other nitrogen environment is reachable: the generator makes N
+            # only as ring dopant (handled above) or as the amino group's
+            # Ar-NH2.  Anything else falls through to the X<Z> default, which
+            # OPLSPropertyTable.validate() reports as an unrecognised type —
+            # deliberately louder than guessing a type that GROMACS would
+            # either reject or, worse, silently accept as the wrong chemistry.
 
         # Sulfur
         elif atomic_num == 16:

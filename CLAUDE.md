@@ -4,8 +4,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project knowledge
 
-- `docs/solutions/` — documented solutions to past problems (bugs, conventions, patterns), organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Relevant when implementing or debugging in a documented area.
-- `CONCEPTS.md` — shared domain vocabulary. Relevant when orienting to the codebase or discussing domain concepts.
+- `rqm/ARCHITECTURE.md` — system design overview and the index of the requirements set. **Read this
+  first** when orienting to the codebase.
+- `rqm/*.md` — feature requirements with Gherkin scenarios. Each heading and scenario carries a stable
+  `rq-XXXXXXXX` ID; tests reference those IDs in comments, and `rqm/registry.json` maps them both ways.
+  These are **prospective** — the behaviour we promise. When changing behaviour in a specified area,
+  update the requirement in the same change, then `bash tools/rqm/rq index`.
+- `docs/solutions/` — documented solutions to past problems (bugs, conventions, patterns), organized by
+  category with YAML frontmatter (`module`, `tags`, `problem_type`). These are **retrospective** — what
+  we learned. Relevant when implementing or debugging in a documented area.
+- `CONCEPTS.md` — shared domain vocabulary. Relevant when orienting to the codebase or discussing domain
+  concepts.
+
+`rqm/` and `docs/solutions/` are complements, not duplicates: one states the invariant, the other records
+how it was learned. A fix usually earns an entry in both.
+
+```bash
+bash tools/rqm/rq check          # which requirements no test defends
+bash tools/rqm/rq show rq-xxxxxxxx   # one requirement and everything referencing it
+```
+
+Not every module is specified yet — `rqm/ARCHITECTURE.md` lists what is covered and what is not. An
+unspecified module is not unverified; it means its tests answer to no written requirement.
 
 ## Commands
 
@@ -33,10 +53,13 @@ python tests/test_pah_quality.py
 cd docs && make html
 ```
 
-The test discovery root is `tests/` (configured in `pyproject.toml`). The two loose test files at the project root (`test_valence_comprehensive.py`, `test_valence_update.py`) are older scratch tests, not part of the suite.
+The test discovery root is `tests/` (configured in `pyproject.toml`), which holds 25 files; the three
+named above are examples, not the whole suite.
 
-`tests/` holds 16 files; the three named above are examples, not the whole suite. A `PreToolUse` hook in
-`.claude/settings.json` runs the full suite before any `git commit` and blocks the commit if it fails.
+A `PreToolUse` hook in `.claude/settings.json` runs the full suite before a `git commit` and blocks the
+commit if it fails — but **only for commits made through Claude Code**. A `git commit` typed in a
+terminal bypasses it entirely. Treat it as a convenience, not a gate; a real git `pre-commit` hook is
+planned in `docs/plans/2026-07-28-001-refactor-riprap-scaffold-migration-plan.md`.
 
 ## Architecture
 

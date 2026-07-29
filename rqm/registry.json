@@ -1,0 +1,682 @@
+{
+  "rq-00cacb46": {
+    "decl": "### Hydrogen bonds are not clashes",
+    "file": "geometry-embedding",
+    "level": 3,
+    "refs": [],
+    "title": "Hydrogen bonds are not clashes",
+    "type": "section"
+  },
+  "rq-03a40f15": {
+    "decl": "Scenario: Every mapped type names the right element",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every mapped type names the right element",
+    "type": "scenario"
+  },
+  "rq-0f766d5b": {
+    "decl": "# Feature: 3D Geometry Embedding and Clash Detection",
+    "file": "geometry-embedding",
+    "refs": [],
+    "title": "Feature: 3D Geometry Embedding and Clash Detection",
+    "type": "file"
+  },
+  "rq-12b97d18": {
+    "decl": "## Public surface",
+    "file": "ARCHITECTURE",
+    "level": 2,
+    "refs": [],
+    "title": "Public surface",
+    "type": "section"
+  },
+  "rq-13a85be1": {
+    "decl": "## Cross-references",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
+  "rq-1548650e": {
+    "decl": "Scenario: Analog-derived types remain stable across edits",
+    "file": "opls-typing",
+    "refs": [],
+    "title": "Analog-derived types remain stable across edits",
+    "type": "scenario"
+  },
+  "rq-157f1ec7": {
+    "decl": "## Cross-references",
+    "file": "heteroatom-assignment",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
+  "rq-1729edcb": {
+    "decl": "## Nearest-Analog Values Are Chosen, Not Validated",
+    "file": "opls-typing",
+    "level": 2,
+    "refs": [],
+    "title": "Nearest-Analog Values Are Chosen, Not Validated",
+    "type": "section"
+  },
+  "rq-18307b81": {
+    "decl": "## Layering",
+    "file": "ARCHITECTURE",
+    "level": 2,
+    "refs": [],
+    "title": "Layering",
+    "type": "section"
+  },
+  "rq-21834b0c": {
+    "decl": "Scenario: A contact marginally inside the floor is not a clash",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_clash_tolerance.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A contact marginally inside the floor is not a clash",
+    "type": "scenario"
+  },
+  "rq-265ec385": {
+    "decl": "Scenario: A large flat sheet uses the 2D-first path",
+    "file": "geometry-embedding",
+    "refs": [],
+    "title": "A large flat sheet uses the 2D-first path",
+    "type": "scenario"
+  },
+  "rq-29741bdc": {
+    "decl": "## Ether Bond Types Must Be Repaired After Sanitisation",
+    "file": "heteroatom-assignment",
+    "level": 2,
+    "refs": [],
+    "title": "Ether Bond Types Must Be Repaired After Sanitisation",
+    "type": "section"
+  },
+  "rq-2f5ab3f8": {
+    "decl": "Scenario: A lactone request places a phenolic group",
+    "file": "heteroatom-assignment",
+    "refs": [],
+    "title": "A lactone request places a phenolic group",
+    "type": "scenario"
+  },
+  "rq-35a5407d": {
+    "decl": "Scenario: Every emitted angle resolves in the forcefield",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every emitted angle resolves in the forcefield",
+    "type": "scenario"
+  },
+  "rq-3789a326": {
+    "decl": "Scenario: An amino nitrogen types as aniline N on a small flake",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An amino nitrogen types as aniline N on a small flake",
+    "type": "scenario"
+  },
+  "rq-3c400653": {
+    "decl": "Scenario: Small-molecule structures still get clash resolution",
+    "file": "geometry-embedding",
+    "refs": [],
+    "title": "Small-molecule structures still get clash resolution",
+    "type": "scenario"
+  },
+  "rq-3e169a31": {
+    "decl": "Scenario: The map holds no entries for types that do not exist",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The map holds no entries for types that do not exist",
+    "type": "scenario"
+  },
+  "rq-4063a024": {
+    "decl": "Scenario: Kekulization failure does not change any atom type",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Kekulization failure does not change any atom type",
+    "type": "scenario"
+  },
+  "rq-44655f38": {
+    "decl": "Scenario: An ether C-O bond survives sanitisation as a single bond",
+    "file": "heteroatom-assignment",
+    "refs": [
+      {
+        "file": "tests/test_opls_typing_ionized.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An ether C-O bond survives sanitisation as a single bond",
+    "type": "scenario"
+  },
+  "rq-49e2ed82": {
+    "decl": "Scenario: Hex-lattice structures keep their coordinates",
+    "file": "geometry-embedding",
+    "refs": [],
+    "title": "Hex-lattice structures keep their coordinates",
+    "type": "scenario"
+  },
+  "rq-4f998061": {
+    "decl": "## Requirements set",
+    "file": "ARCHITECTURE",
+    "level": 2,
+    "refs": [],
+    "title": "Requirements set",
+    "type": "section"
+  },
+  "rq-4fa5b8be": {
+    "decl": "Scenario: Shortfall spills onto sp3 carbons",
+    "file": "heteroatom-assignment",
+    "refs": [
+      {
+        "file": "tests/test_aliphatic_oxygen.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Shortfall spills onto sp3 carbons",
+    "type": "scenario"
+  },
+  "rq-50c742cf": {
+    "decl": "## Supported Functional Groups",
+    "file": "heteroatom-assignment",
+    "level": 2,
+    "refs": [],
+    "title": "Supported Functional Groups",
+    "type": "section"
+  },
+  "rq-50d3a0c4": {
+    "decl": "Scenario: A compressed bond is still rejected after order scaling",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_bond_length_validation.py",
+        "kind": "code"
+      },
+      {
+        "file": "tests/test_hbond_clash.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A compressed bond is still rejected after order scaling",
+    "type": "scenario"
+  },
+  "rq-51d0fb61": {
+    "decl": "Scenario: A high-oxygen structure validates without falling back",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_clash_tolerance.py",
+        "kind": "code"
+      },
+      {
+        "file": "tests/test_hbond_clash.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A high-oxygen structure validates without falling back",
+    "type": "scenario"
+  },
+  "rq-56e62d3f": {
+    "decl": "### A clash needs to be deeper than embedding noise",
+    "file": "geometry-embedding",
+    "level": 3,
+    "refs": [],
+    "title": "A clash needs to be deeper than embedding noise",
+    "type": "section"
+  },
+  "rq-60a0144a": {
+    "decl": "## Single-molecule pipeline",
+    "file": "ARCHITECTURE",
+    "level": 2,
+    "refs": [],
+    "title": "Single-molecule pipeline",
+    "type": "section"
+  },
+  "rq-64623ade": {
+    "decl": "Scenario: A carbonyl is measured against the double-bond expectation",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_bond_length_validation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A carbonyl is measured against the double-bond expectation",
+    "type": "scenario"
+  },
+  "rq-6b70c04c": {
+    "decl": "Scenario: An intramolecular hydrogen bond is not reported as a clash",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_hbond_clash.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An intramolecular hydrogen bond is not reported as a clash",
+    "type": "scenario"
+  },
+  "rq-6c0f608d": {
+    "decl": "Scenario: An overlap too short even for a hydrogen bond is still a clash",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_hbond_clash.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An overlap too short even for a hydrogen bond is still a clash",
+    "type": "scenario"
+  },
+  "rq-70e5f033": {
+    "decl": "Scenario: No assignable type lacks a GROMACS mapping",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
+    "title": "No assignable type lacks a GROMACS mapping",
+    "type": "scenario"
+  },
+  "rq-70f6b542": {
+    "decl": "Scenario: An unreachable nitrogen environment is flagged, not guessed",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_coverage_gaps.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An unreachable nitrogen environment is flagged, not guessed",
+    "type": "scenario"
+  },
+  "rq-7709e5f5": {
+    "decl": "## Typing Must Not Depend on Molecule Size",
+    "file": "opls-typing",
+    "level": 2,
+    "refs": [],
+    "title": "Typing Must Not Depend on Molecule Size",
+    "type": "section"
+  },
+  "rq-78f96107": {
+    "decl": "Scenario: The supplement never shadows a stock entry",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The supplement never shadows a stock entry",
+    "type": "scenario"
+  },
+  "rq-794e1efe": {
+    "decl": "## Three Depths of Force-Field Verification",
+    "file": "opls-typing",
+    "level": 2,
+    "refs": [],
+    "title": "Three Depths of Force-Field Verification",
+    "type": "section"
+  },
+  "rq-7d3e9432": {
+    "decl": "Scenario: A quinone request places a phenolic group",
+    "file": "heteroatom-assignment",
+    "refs": [],
+    "title": "A quinone request places a phenolic group",
+    "type": "scenario"
+  },
+  "rq-7efb46e4": {
+    "decl": "# Architecture",
+    "file": "ARCHITECTURE",
+    "refs": [],
+    "title": "Architecture",
+    "type": "file"
+  },
+  "rq-80b04b19": {
+    "decl": "## Embedding Path Selection",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "Embedding Path Selection",
+    "type": "section"
+  },
+  "rq-8176d084": {
+    "decl": "Scenario: Small molecules are bounded by their perimeter",
+    "file": "heteroatom-assignment",
+    "refs": [],
+    "title": "Small molecules are bounded by their perimeter",
+    "type": "scenario"
+  },
+  "rq-85c279ce": {
+    "decl": "Scenario: No free valence remains after assignment",
+    "file": "heteroatom-assignment",
+    "refs": [],
+    "title": "No free valence remains after assignment",
+    "type": "scenario"
+  },
+  "rq-8669a35d": {
+    "decl": "Scenario: A carboxyl hydroxyl does not type as a phenol",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_typing_ionized.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A carboxyl hydroxyl does not type as a phenol",
+    "type": "scenario"
+  },
+  "rq-8e4335b8": {
+    "decl": "Scenario: Every supplement entry states where its value came from",
+    "file": "opls-typing",
+    "refs": [],
+    "title": "Every supplement entry states where its value came from",
+    "type": "scenario"
+  },
+  "rq-8e5f5dc1": {
+    "decl": "## Clash Resolution Is Skipped on the Hex-Lattice Path",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "Clash Resolution Is Skipped on the Hex-Lattice Path",
+    "type": "section"
+  },
+  "rq-915e673b": {
+    "decl": "## The Supplementary Angle Table Is Narrowly Scoped",
+    "file": "opls-typing",
+    "level": 2,
+    "refs": [],
+    "title": "The Supplementary Angle Table Is Narrowly Scoped",
+    "type": "section"
+  },
+  "rq-92c69795": {
+    "decl": "## Export",
+    "file": "ARCHITECTURE",
+    "level": 2,
+    "refs": [],
+    "title": "Export",
+    "type": "section"
+  },
+  "rq-92fec87b": {
+    "decl": "Scenario: Severity is reported so a marginal contact can be told from a real one",
+    "file": "geometry-embedding",
+    "refs": [],
+    "title": "Severity is reported so a marginal contact can be told from a real one",
+    "type": "scenario"
+  },
+  "rq-9a9488ab": {
+    "decl": "Scenario: An aromatic C-C is measured against the aromatic expectation",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_bond_length_validation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An aromatic C-C is measured against the aromatic expectation",
+    "type": "scenario"
+  },
+  "rq-a63f775d": {
+    "decl": "Scenario: A non-polar contact does not get the hydrogen-bond floor",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_hbond_clash.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A non-polar contact does not get the hydrogen-bond floor",
+    "type": "scenario"
+  },
+  "rq-a7480504": {
+    "decl": "## Carboxyl and Phenolic Oxygens Are Different Types",
+    "file": "opls-typing",
+    "level": 2,
+    "refs": [],
+    "title": "Carboxyl and Phenolic Oxygens Are Different Types",
+    "type": "section"
+  },
+  "rq-a9492b86": {
+    "decl": "## Groups That Fall Back to Phenolic",
+    "file": "heteroatom-assignment",
+    "level": 2,
+    "refs": [],
+    "title": "Groups That Fall Back to Phenolic",
+    "type": "section"
+  },
+  "rq-ad6d4b29": {
+    "decl": "Scenario: Exact-count mode does not spill",
+    "file": "heteroatom-assignment",
+    "refs": [
+      {
+        "file": "tests/test_aliphatic_oxygen.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Exact-count mode does not spill",
+    "type": "scenario"
+  },
+  "rq-b37f44d2": {
+    "decl": "Scenario: Both carboxylate oxygens take the anionic type",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_typing_ionized.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Both carboxylate oxygens take the anionic type",
+    "type": "scenario"
+  },
+  "rq-b40b353d": {
+    "decl": "Scenario: Forcefield-backed tests fail loudly when the forcefield is absent",
+    "file": "opls-typing",
+    "refs": [],
+    "title": "Forcefield-backed tests fail loudly when the forcefield is absent",
+    "type": "scenario"
+  },
+  "rq-b6b192ce": {
+    "decl": "Scenario: A genuine overlap is still reported",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_clash_tolerance.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A genuine overlap is still reported",
+    "type": "scenario"
+  },
+  "rq-b8fce9a6": {
+    "decl": "Scenario: The repair runs after every sanitising stage",
+    "file": "heteroatom-assignment",
+    "refs": [],
+    "title": "The repair runs after every sanitising stage",
+    "type": "scenario"
+  },
+  "rq-bb1fbb12": {
+    "decl": "Scenario: A small molecule uses the distance-geometry embedder",
+    "file": "geometry-embedding",
+    "refs": [],
+    "title": "A small molecule uses the distance-geometry embedder",
+    "type": "scenario"
+  },
+  "rq-bb785e6d": {
+    "decl": "## What this project is",
+    "file": "ARCHITECTURE",
+    "level": 2,
+    "refs": [],
+    "title": "What this project is",
+    "type": "section"
+  },
+  "rq-be69350a": {
+    "decl": "## Two Placement Modes",
+    "file": "heteroatom-assignment",
+    "level": 2,
+    "refs": [],
+    "title": "Two Placement Modes",
+    "type": "section"
+  },
+  "rq-bed2cb4c": {
+    "decl": "## Every Assignable Type Must Be Mapped",
+    "file": "opls-typing",
+    "level": 2,
+    "refs": [],
+    "title": "Every Assignable Type Must Be Mapped",
+    "type": "section"
+  },
+  "rq-c2463a78": {
+    "decl": "## Clash Detection",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "Clash Detection",
+    "type": "section"
+  },
+  "rq-c2a9e7d9": {
+    "decl": "Scenario: The spill can be disabled",
+    "file": "heteroatom-assignment",
+    "refs": [
+      {
+        "file": "tests/test_aliphatic_oxygen.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The spill can be disabled",
+    "type": "scenario"
+  },
+  "rq-c2c2dbbd": {
+    "decl": "# Feature: OPLS-AA Atom Typing and Force-Field Mapping",
+    "file": "opls-typing",
+    "refs": [],
+    "title": "Feature: OPLS-AA Atom Typing and Force-Field Mapping",
+    "type": "file"
+  },
+  "rq-c4e683c4": {
+    "decl": "Scenario: Embedding retries a bounded number of times",
+    "file": "geometry-embedding",
+    "refs": [],
+    "title": "Embedding retries a bounded number of times",
+    "type": "scenario"
+  },
+  "rq-c7715c26": {
+    "decl": "Scenario: An amino nitrogen types as aniline N on a large sheet",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An amino nitrogen types as aniline N on a large sheet",
+    "type": "scenario"
+  },
+  "rq-d3ef932d": {
+    "decl": "Scenario: A carbonyl request places a phenolic group",
+    "file": "heteroatom-assignment",
+    "refs": [],
+    "title": "A carbonyl request places a phenolic group",
+    "type": "scenario"
+  },
+  "rq-e13b2348": {
+    "decl": "## Surface pipeline",
+    "file": "ARCHITECTURE",
+    "level": 2,
+    "refs": [],
+    "title": "Surface pipeline",
+    "type": "section"
+  },
+  "rq-e9a1bf8b": {
+    "decl": "## Aliphatic Oxygen Spill",
+    "file": "heteroatom-assignment",
+    "level": 2,
+    "refs": [],
+    "title": "Aliphatic Oxygen Spill",
+    "type": "section"
+  },
+  "rq-ef429ed9": {
+    "decl": "## Cross-references",
+    "file": "opls-typing",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
+  "rq-f16a145c": {
+    "decl": "Scenario: A high oxygen target is reachable at low aromaticity",
+    "file": "heteroatom-assignment",
+    "refs": [
+      {
+        "file": "tests/test_aliphatic_oxygen.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A high oxygen target is reachable at low aromaticity",
+    "type": "scenario"
+  },
+  "rq-faf5d18d": {
+    "decl": "## Standing constraints",
+    "file": "ARCHITECTURE",
+    "level": 2,
+    "refs": [],
+    "title": "Standing constraints",
+    "type": "section"
+  },
+  "rq-fbb6a9c0": {
+    "decl": "Scenario: The oxygen count still matches the request",
+    "file": "heteroatom-assignment",
+    "refs": [],
+    "title": "The oxygen count still matches the request",
+    "type": "scenario"
+  },
+  "rq-fc4fac56": {
+    "decl": "## Hydrogen Saturation",
+    "file": "heteroatom-assignment",
+    "level": 2,
+    "refs": [],
+    "title": "Hydrogen Saturation",
+    "type": "section"
+  },
+  "rq-ff2c049b": {
+    "decl": "## Bond-Length Validation",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "Bond-Length Validation",
+    "type": "section"
+  },
+  "rq-ffb45a6e": {
+    "decl": "# Feature: Heteroatom and Functional Group Assignment",
+    "file": "heteroatom-assignment",
+    "refs": [],
+    "title": "Feature: Heteroatom and Functional Group Assignment",
+    "type": "file"
+  }
+}

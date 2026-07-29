@@ -43,16 +43,19 @@ def _clashes(mol, coords):
 
 
 class TestBoundaryContactIgnored:
+    # rq-21834b0c
     def test_contact_just_inside_floor_is_not_a_clash(self):
         floor = 0.75 * (VDW_RADII["O"] + VDW_RADII["O"])  # 2.28
         mol, coords = _two_atoms(8, 8, floor - 0.03)  # 0.03 < 0.05 tolerance
         assert _clashes(mol, coords) == []
 
+    # rq-21834b0c
     def test_contact_at_the_floor_is_not_a_clash(self):
         floor = 0.75 * (VDW_RADII["C"] + VDW_RADII["H"])
         mol, coords = _two_atoms(6, 1, floor)  # exactly at floor
         assert _clashes(mol, coords) == []
 
+    # rq-21834b0c
     def test_tolerance_value_is_below_a_real_overlap(self):
         # Genuine overlaps (two groups embedded on each other) sit 0.2-0.5 A in;
         # the tolerance must stay well under that.
@@ -60,15 +63,18 @@ class TestBoundaryContactIgnored:
 
 
 class TestGenuineOverlapStillCaught:
+    # rq-b6b192ce
     def test_overlap_beyond_tolerance_is_a_clash(self):
         floor = 0.75 * (VDW_RADII["O"] + VDW_RADII["O"])
         mol, coords = _two_atoms(8, 8, floor - 0.10)  # 0.10 > 0.05 tolerance
         assert len(_clashes(mol, coords)) == 1
 
+    # rq-b6b192ce
     def test_deep_overlap_is_a_clash(self):
         mol, coords = _two_atoms(8, 8, 1.20)  # far inside the 2.28 floor
         assert len(_clashes(mol, coords)) == 1
 
+    # rq-b6b192ce
     def test_boundary_at_exactly_tolerance_depth(self):
         """A contact exactly CLASH_SEVERITY_TOLERANCE below the floor is the
         edge of the band: `distance < floor - tol` is strict, so it is NOT a
@@ -81,6 +87,7 @@ class TestGenuineOverlapStillCaught:
 
 
 class TestResolverSharesTolerance:
+    # rq-21834b0c
     def test_resolver_ignores_boundary_contact(self):
         """The resolver must use the same definition of a clash, or it would
         nudge an atom the validator already accepts."""
@@ -88,6 +95,7 @@ class TestResolverSharesTolerance:
         mol, coords = _two_atoms(8, 8, floor - 0.03)
         assert ClashResolver._detect_clashes(mol, coords) == []
 
+    # rq-b6b192ce
     def test_resolver_still_detects_real_overlap(self):
         mol, coords = _two_atoms(8, 8, 1.20)
         assert ClashResolver._detect_clashes(mol, coords) == [(0, 1)]
@@ -101,6 +109,7 @@ class TestManure400Regression:
     this asserts the tolerance closes the last gap.
     """
 
+    # rq-51d0fb61
     def test_manure_400_passes_strict(self):
         from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 

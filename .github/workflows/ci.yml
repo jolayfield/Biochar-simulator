@@ -7,6 +7,61 @@ on:
     branches: [main]
 
 jobs:
+  # Requirements traceability. Runs in seconds and is independent of the test
+  # matrix, so it reports separately rather than gating on Python version.
+  #
+  # Deliberately warn-only for now: `rq check` reports every specified
+  # requirement that no test references, and 16 of them currently have no
+  # defending test. Those are real coverage gaps being closed incrementally,
+  # not failures to block a PR on. What IS enforced here is `index`, which
+  # exits non-zero on duplicate IDs -- a duplicate silently merges two distinct
+  # requirements into one registry entry, which is corruption rather than a gap.
+  #
+  # Promote `check` to a hard failure once the unreferenced count reaches zero.
+  rqm:
+    name: Requirements traceability
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # rqm.sh needs bash >= 4 (associative arrays) and jq. ubuntu-latest has
+      # both; this asserts it rather than discovering it mid-run.
+      - name: Check tooling
+        run: |
+          bash --version | head -1
+          jq --version
+          [ "${BASH_VERSINFO[0]}" -ge 4 ] || { echo "::error::bash >= 4 required"; exit 1; }
+        shell: bash
+
+      # Rebuilds the registry from scratch and fails on duplicate IDs.
+      - name: Rebuild the requirements registry
+        run: bash tools/rqm/rq index
+
+      # The registry is committed, so a rebuild that changes it means someone
+      # edited rqm/ without re-indexing. Left as a warning rather than an error
+      # because the diff is regenerable, but it should not go unnoticed.
+      - name: Warn if the committed registry is stale
+        run: |
+          if ! git diff --quiet rqm/registry.json; then
+            echo "::warning::rqm/registry.json is stale -- run 'bash tools/rqm/rq index' and commit"
+            git diff --stat rqm/registry.json
+          fi
+
+      - name: Check traceability
+        run: bash tools/rqm/rq check || true
+
+      - name: Summarise coverage
+        run: |
+          total=$(jq '[.[] | select(.type=="scenario")] | length' rqm/registry.json)
+          covered=$(jq '[.[] | select(.type=="scenario" and (.refs|length)>0)] | length' rqm/registry.json)
+          echo "### Requirements traceability" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "$covered of $total scenarios have a defending test." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Unreferenced scenarios:" >> "$GITHUB_STEP_SUMMARY"
+          jq -r '.[] | select(.type=="scenario" and (.refs|length)==0) | "- \(.file): \(.title)"' \
+            rqm/registry.json >> "$GITHUB_STEP_SUMMARY"
+
   test:
     name: Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest

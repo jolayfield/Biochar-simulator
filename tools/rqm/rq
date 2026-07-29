@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# Wrapper that points the vendored rqm.sh at this repository's layout.
+#
+# rqm.sh defaults to SRC_DIR=src because riprap generates src/-layout projects.
+# This repo uses a flat biochar/ package, so the default would scan nothing and
+# report every requirement as unreferenced -- a silent false negative, which is
+# the one failure mode a traceability tool must not have. Always invoke through
+# this wrapper rather than calling rqm.sh directly.
+#
+# When Phase 3 of the riprap migration moves biochar/ to src/biochar/, change
+# SRC_DIR below to "src" and this wrapper becomes a no-op that can be deleted.
+#
+# Requires bash >= 4.0 (rqm.sh uses associative arrays). macOS ships bash 3.2 as
+# /bin/bash, so the `env bash` shebang matters -- install a modern bash with
+# `brew install bash` if this fails with "declare: -A: invalid option".
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$REPO_ROOT"
+
+export RQM_DIR="rqm"
+export SRC_DIR="biochar"
+export TESTS_DIR="tests"
+
+exec "${REPO_ROOT}/tools/rqm/rqm.sh" "$@"

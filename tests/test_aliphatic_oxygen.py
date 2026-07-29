@@ -87,6 +87,7 @@ class TestRegistryAndSites:
 # ---------------------------------------------------------------------------
 
 class TestExplicitPlacement:
+    # rq-4fa5b8be
     def test_places_aliphatic_hydroxyl_on_sp3_carbon(self):
         mol = _aromatic_flake_with_methyls(2)
         assigner = OxygenAssigner(seed=1)
@@ -97,6 +98,7 @@ class TestExplicitPlacement:
         assert _count_oxygens(out) == 2
         assert len(_aliphatic_hydroxyl_carbons(out)) == 2
 
+    # rq-ad6d4b29
     def test_cannot_exceed_aliphatic_site_count(self):
         mol = _aromatic_flake_with_methyls(2)
         assigner = OxygenAssigner(seed=1)
@@ -124,6 +126,7 @@ class TestExplicitPlacement:
 # ---------------------------------------------------------------------------
 
 class TestRatioModeSpill:
+    # rq-4fa5b8be
     def test_spills_to_aliphatic_when_aromatic_exhausted(self):
         """With few aromatic sites and a high O target, the shortfall lands on
         the sp3 carbons instead of being silently dropped."""
@@ -138,6 +141,7 @@ class TestRatioModeSpill:
         assert len(_aliphatic_hydroxyl_carbons(out)) == \
             comp.placed_counts["aliphatic_hydroxyl"]
 
+    # rq-c2a9e7d9
     def test_opt_out_reproduces_aromatic_only(self):
         mol = _aromatic_flake_with_methyls(8)
         assigner = OxygenAssigner(seed=2)
@@ -147,6 +151,7 @@ class TestRatioModeSpill:
         assert comp.placed_counts.get("aliphatic_hydroxyl", 0) == 0
         assert _aliphatic_hydroxyl_carbons(out) == []
 
+    # rq-ad6d4b29
     def test_pure_aromatic_unaffected_by_flag(self):
         """A structure with no sp3 carbons behaves identically either way."""
         mol = Chem.MolFromSmiles("c1cc2ccc3cccc4ccc(c1)c2c34")  # pyrene
@@ -176,6 +181,7 @@ class TestHighOxygenCharComposition:
         ("grass", 300, 0.270),
         ("manure", 300, 0.307),
     ])
+    # rq-f16a145c
     def test_reaches_oc_target(self, feedstock, T, target):
         from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 
@@ -187,6 +193,7 @@ class TestHighOxygenCharComposition:
         # Within the 10% O/C tolerance the validator uses.
         assert comp.O_C_ratio == pytest.approx(cfg.O_C_ratio, rel=0.10)
 
+    # rq-c2a9e7d9
     def test_opt_out_still_short(self):
         """With the spill disabled, hardwood 300 stays oxygen-starved -- proving
         the aliphatic placement is what closes the gap."""
