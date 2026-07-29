@@ -8,7 +8,6 @@ and their error/warning paths in detail.
 """
 
 import pytest
-import numpy as np
 
 from rdkit import Chem
 from rdkit.Chem import AllChem

@@ -347,7 +347,9 @@ def _gro_extent_nm(gro_text: str) -> float:
     xs, ys, zs = [], [], []
     for ln in lines[2:2 + n]:
         # .gro columns are fixed-width: x,y,z are 8.3f at cols 20-28,28-36,36-44
-        xs.append(float(ln[20:28])); ys.append(float(ln[28:36])); zs.append(float(ln[36:44]))
+        xs.append(float(ln[20:28]))
+        ys.append(float(ln[28:36]))
+        zs.append(float(ln[36:44]))
     return max(max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs))
 
 

@@ -28,8 +28,6 @@ Or via CLI: ``biochar-md-setup sweep_out/.../manifest.csv --output-root ...``
 from __future__ import annotations
 
 import csv
-import dataclasses
-import os
 import shutil
 import stat
 from dataclasses import dataclass, field
@@ -721,7 +719,7 @@ def _render_pipeline_script(
         "",
         "# ---- [6/8] Add ions to reach the target water chemistry ----",
         f'# Ion profile: {ion.name} ({ion.description})',
-        f'"$GMX" grompp -f "$SIM/wet_em.mdp" -c "$SIM/solvated.gro" -p "$SIM/wet.top" -o "$SIM/genion.tpr" -maxwarn 2',
+        '"$GMX" grompp -f "$SIM/wet_em.mdp" -c "$SIM/solvated.gro" -p "$SIM/wet.top" -o "$SIM/genion.tpr" -maxwarn 2',
     ]
     if cations:
         for sym, conc_mM, pq in cations:
@@ -739,14 +737,14 @@ def _render_pipeline_script(
         "",
         "# ---- [7/8] Wet EM ----",
         'mkdir -p "$SIM/wet_em"',
-        f'"$GMX" grompp -f "$SIM/wet_em.mdp" -c "$SIM/solvated.gro" -p "$SIM/wet.top" -o "$SIM/wet_em/em.tpr" -maxwarn 2',
+        '"$GMX" grompp -f "$SIM/wet_em.mdp" -c "$SIM/solvated.gro" -p "$SIM/wet.top" -o "$SIM/wet_em/em.tpr" -maxwarn 2',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/wet_em/em.tpr" -deffnm "$SIM/wet_em/em"',
         "",
         "# ---- [8/8] Wet NVT then NPT (semiisotropic) ----",
         'mkdir -p "$SIM/wet_nvt" "$SIM/wet_npt"',
-        f'"$GMX" grompp -f "$SIM/wet_nvt.mdp" -c "$SIM/wet_em/em.gro" -p "$SIM/wet.top" -o "$SIM/wet_nvt/nvt.tpr" -maxwarn 2',
+        '"$GMX" grompp -f "$SIM/wet_nvt.mdp" -c "$SIM/wet_em/em.gro" -p "$SIM/wet.top" -o "$SIM/wet_nvt/nvt.tpr" -maxwarn 2',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/wet_nvt/nvt.tpr" -deffnm "$SIM/wet_nvt/nvt"',
-        f'"$GMX" grompp -f "$SIM/wet_npt.mdp" -c "$SIM/wet_nvt/nvt.gro" -p "$SIM/wet.top" -o "$SIM/wet_npt/npt.tpr" -maxwarn 2',
+        '"$GMX" grompp -f "$SIM/wet_npt.mdp" -c "$SIM/wet_nvt/nvt.gro" -p "$SIM/wet.top" -o "$SIM/wet_npt/npt.tpr" -maxwarn 2',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/wet_npt/npt.tpr" -deffnm "$SIM/wet_npt/npt"',
         "",
         'echo "Pipeline complete for {label}: $(date)"'.replace("{label}", label),

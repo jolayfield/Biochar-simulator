@@ -1,0 +1,26 @@
+name: biochar-ci
+
+# Mirrors the conda-forge install path README.md recommends. Kept minimal on
+# purpose: this environment exists to prove the package installs and imports
+# from conda-forge, not to duplicate the pip matrix.
+#
+# rdkit is the reason conda-forge is the recommended path at all -- it is the
+# dependency most likely to break under a pip-only install.
+channels:
+  - conda-forge
+dependencies:
+  - python >=3.9
+  - pip
+
+  # Runtime, matching the floors declared in pyproject.toml.
+  - numpy >=1.24.0
+  - scipy >=1.10.0
+  - networkx >=3.1
+  - rdkit >=2023.9.1
+
+  # Optional extras exercised by the suite.
+  - scikit-learn >=1.3
+
+  - pip:
+      - pytest >=7.0
+      - pytest-xdist >=3.0

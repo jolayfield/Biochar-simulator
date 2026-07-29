@@ -123,6 +123,11 @@ class TestBuildPoint:
         with pytest.raises(SweepError):
             build_point(pt, tmp_path, on_validation_fail="nonsense")
 
+    # ~100s: the request is infeasible by construction, so every one of the
+    # retries runs a full generation attempt before failing. That is the point
+    # of the test, and it makes it the single longest test in the suite outside
+    # the marked regressions.
+    @pytest.mark.slow
     def test_crash_recorded_not_raised(self, tmp_path):
         # an infeasible request (more oxygens than the scaffold can hold) should
         # be caught and recorded, not propagate

@@ -7,6 +7,58 @@ on:
     branches: [main]
 
 jobs:
+  # Lint. Seconds, and independent of the test matrix so a style finding is
+  # never confused with a broken build.
+  #
+  # The ruleset in pyproject.toml is deliberately narrow (E + F, several
+  # ignored). A linter switched on at full strength against a codebase that has
+  # never been linted produces hundreds of findings and gets disabled within a
+  # week. Its first run on this repo found a genuine bug -- examples/
+  # example_usage.py called Path() without importing it, so the example crashed
+  # with NameError before running anything.
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install ruff
+        run: pip install "ruff>=0.6"
+      - name: ruff check
+        run: ruff check .
+
+  # Install from conda-forge, the path README.md and CLAUDE.md tell users to
+  # take. It had never been exercised: every leg above installs from PyPI, so a
+  # conda-only packaging break would have reached users with CI fully green.
+  #
+  # Deliberately smoke-only -- it verifies the package imports and the console
+  # entry points resolve. The behavioural suite is the matrix's job.
+  conda:
+    name: conda-forge install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: biochar-ci
+          environment-file: devtools/conda-envs/test_env.yaml
+          auto-activate-base: false
+      - name: Install the package into the conda env
+        shell: bash -el {0}
+        run: pip install -e . --no-deps
+      - name: Smoke test
+        shell: bash -el {0}
+        run: |
+          python -c "import biochar; print('biochar', biochar.__version__)"
+          biochar-gen --help > /dev/null
+          biochar-sweep --help > /dev/null
+          biochar-md-setup --help > /dev/null
+          biochar-condense --help > /dev/null
+          echo "all four console entry points resolve"
+
   # Requirements traceability. Runs in seconds and is independent of the test
   # matrix, so it reports separately rather than gating on Python version.
   #
@@ -82,11 +134,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # Installs through pyproject.toml so the declared dependency floors
+      # (numpy>=1.24, rdkit>=2023.9.1, scipy>=1.10, networkx>=3.1) are actually
+      # resolved. The previous hand-written `pip install rdkit networkx ...`
+      # followed by `--no-deps` meant those floors were never exercised: a bad
+      # floor would have shipped with CI green.
       - name: Install dependencies
         run: |
-          pip install rdkit networkx numpy scipy scikit-learn
-          pip install pytest pytest-cov
-          pip install -e . --no-deps
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,ml]"
 
       # The forcefield-backed tests only parse oplsaa.ff (atomtypes.atp,
       # ffnonbonded.itp, ffbonded.itp) -- they never invoke gmx. gromacs-data
@@ -109,8 +165,14 @@ jobs:
           fi
           echo "forcefield OK: $(ls "$GMXDATA/top/oplsaa.ff" | wc -l) files"
 
+      # -n auto: the suite is CPU-bound and the legs were taking ~40 min each.
+      # Coverage needs --cov-context or it under-reports under xdist, so
+      # pytest-cov's xdist integration is used as-is (it combines worker data).
+      #
+      # Runs the FULL suite including -m slow. The slow marker exists to keep
+      # the pre-commit hook fast, not to hide tests from CI.
       - name: Run tests
-        run: pytest tests/ -v --tb=short -rs --cov=biochar --cov-report=term-missing
+        run: pytest tests/ -n auto --tb=short -rs -q --cov=biochar --cov-report=term-missing
 
       - name: Upload coverage
         if: matrix.python-version == '3.11'

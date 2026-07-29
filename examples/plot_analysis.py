@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from pathlib import Path
 
 ANA = Path('/Users/layf0001/Claude Cowork/Biochar-simulator/sim_200/analysis')
@@ -19,7 +18,8 @@ def read_xvg(path):
     t, y = [], []
     with open(path) as f:
         for line in f:
-            if line.startswith(('#', '@')): continue
+            if line.startswith(('#', '@')):
+                continue
             vals = line.split()
             if len(vals) >= 2:
                 t.append(float(vals[0]))

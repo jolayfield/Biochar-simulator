@@ -135,11 +135,14 @@ def _smooth(t: np.ndarray, y: np.ndarray) -> dict:
         w = np.exp(-0.5 * ((t - tc) / _BANDWIDTH) ** 2)
         wsum = w.sum()
         if wsum < 1e-6 or t.size == 0:
-            mean.append(float("nan")); spread.append(float("nan")); n.append(0)
+            mean.append(float("nan"))
+            spread.append(float("nan"))
+            n.append(0)
             continue
         m = _weighted_median(y, w)
         sp = _weighted_median(np.abs(y - m), w)  # weighted MAD
-        mean.append(m); spread.append(sp)
+        mean.append(m)
+        spread.append(sp)
         n.append(int(np.count_nonzero(np.abs(t - tc) <= 2 * _BANDWIDTH)))
     mean = _fill_and_clamp(np.array(mean))
     return {
@@ -209,7 +212,8 @@ def _fit_aromaticity(arom_rows: List[List[str]]) -> dict:
         hc, ar = _to_float(r[HC]), _to_float(r[AR])
         if hc is not None and ar is not None:
             pts.append((hc, ar))
-    x = np.array([p[0] for p in pts]); y = np.array([p[1] for p in pts])
+    x = np.array([p[0] for p in pts])
+    y = np.array([p[1] for p in pts])
     b, a = np.polyfit(x, y, 1)  # slope, intercept
     pred = a + b * x
     ss_res = float(np.sum((y - pred) ** 2))
@@ -227,7 +231,9 @@ def _dedup_report(davis_rows, arom_rows) -> int:
     for r in davis_rows:
         if len(r) <= ci["H_pct"]:
             continue
-        t = _to_float(r[ci["temp"]]); c = _to_float(r[ci["C_pct"]]); h = _to_float(r[ci["H_pct"]])
+        t = _to_float(r[ci["temp"]])
+        c = _to_float(r[ci["C_pct"]])
+        h = _to_float(r[ci["H_pct"]])
         if t and c and h and c > 0:
             keys.add((round(t / 10) * 10, round((h / _M_H) / (c / _M_C), 2)))
     dups = 0
@@ -484,7 +490,8 @@ def compare_models(path_a: Path, path_b: Path) -> Dict[str, dict]:
     absolute and max prediction delta. Used to evaluate a refit (e.g. davis-only
     vs davis+Charchive).
     """
-    a = json.load(open(path_a)); b = json.load(open(path_b))
+    a = json.load(open(path_a))
+    b = json.load(open(path_b))
     out = {}
     shared = set(a["properties"]) & set(b["properties"])
     for prop in sorted(shared):

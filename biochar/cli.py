@@ -11,7 +11,6 @@ import argparse
 import json
 import logging
 import sys
-from pathlib import Path
 
 
 def _build_parser() -> argparse.ArgumentParser:

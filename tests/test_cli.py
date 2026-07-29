@@ -36,7 +36,6 @@ class TestParser:
 
     def test_feedstock_invalid_rejected(self):
         """An unknown feedstock must be rejected at parse time."""
-        import pytest
         with pytest.raises(SystemExit):
             _build_parser().parse_args(["--feedstock", "unicorn"])
 
