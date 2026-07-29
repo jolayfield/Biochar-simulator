@@ -4,6 +4,7 @@
 Generate 3D coordinates for biochar molecules and validate geometry.
 """
 
+import logging
 from typing import Tuple, List, Optional
 import numpy as np
 
@@ -22,6 +23,8 @@ from .constants import (
     BOND_LENGTH_MIN_FACTOR,
     BOND_LENGTH_MAX_FACTOR,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _get_excluded_pairs(mol: Chem.Mol) -> set:
@@ -703,25 +706,60 @@ class CoordinateGenerator:
             # Kekulize (or de-aromatize on failure) once outside the retry loop
             # so EmbedMolecule / MMFF don't throw on the same issue repeatedly.
             mol_safe = _kekulize_or_dearomatize(mol)
+
+            # Embedders are tried best-first: ETKDGv3's torsion knowledge gives
+            # the best geometry when it applies, plain distance geometry the
+            # worst. But on a substituted fused-PAH sheet the knowledge-based
+            # terms are frequently unsatisfiable, and a failure is not cheap --
+            # each one burns its full maxIterations budget before returning -1.
+            #
+            # Measured on 400 C softwood (73 heavy atoms), before this loop
+            # remembered anything:
+            #
+            #   ETKDGv3          18.1s  -> failed
+            #   ETKDGv2          18.7s  -> failed
+            #   EmbedParameters   0.06s -> succeeded
+            #
+            # and that ran once per attempt, so generate() spent 110 of its
+            # 111 seconds re-discovering the same two failures three times.
+            #
+            # Only the random seed changes between attempts; the molecule does
+            # not. An embedder that exhausted 200 iterations on this graph is
+            # not going to succeed on the next seed, so record the failure and
+            # stop paying for it. Ordering and first-attempt behaviour are
+            # unchanged -- a molecule ETKDGv3 can embed still gets ETKDGv3.
+            embedders = [
+                ("ETKDGv3", AllChem.ETKDGv3),
+                ("ETKDGv2", AllChem.ETKDGv2),
+                ("EmbedParameters", AllChem.EmbedParameters),
+            ]
+            exhausted: set = set()
+
             for attempt in range(max_embedding_attempts):
                 seed = (self.seed + attempt) if self.seed is not None else attempt
                 mol_copy = Chem.RWMol(mol_safe)
 
                 result = -1
-                for params_fn in [
-                    lambda: AllChem.ETKDGv3(),
-                    lambda: AllChem.ETKDGv2(),
-                    lambda: AllChem.EmbedParameters(),
-                ]:
+                for name, params_fn in embedders:
+                    if name in exhausted:
+                        continue
                     params = params_fn()
                     params.randomSeed = seed
                     params.maxIterations = 200
                     result = AllChem.EmbedMolecule(mol_copy, params)
                     if result == 0:
                         break
+                    exhausted.add(name)
+                    logger.debug(
+                        "%s could not embed this molecule (attempt %d); "
+                        "skipping it for the remaining attempts",
+                        name, attempt,
+                    )
 
                 if result != 0:
-                    continue
+                    # Every embedder is exhausted; further attempts would only
+                    # re-run the ones that already failed.
+                    break
 
                 ff_energy = float('inf')
                 # MMFF first — requires MMFFMolProperties, else call throws.

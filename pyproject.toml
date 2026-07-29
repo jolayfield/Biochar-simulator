@@ -102,6 +102,21 @@ markers = [
     "slow: end-to-end regression that generates real structures (tens of seconds each)",
 ]
 
+# NOTE ON --dist loadscope: measured and rejected, 2026-07-29.
+#
+# loadscope groups tests by class so a class-scoped fixture is built once rather
+# than once per worker. That sounds strictly better and is not, because it also
+# serialises a whole class onto a single worker.
+#
+#   slow tier, -n auto (14 cores):   loadscope 304s   vs   load 141s
+#   slow tier, -n 2    (CI-like):    loadscope 170s   vs   load 183s
+#
+# A 7% gain at CI's worker count does not pay for a 2x loss on a developer
+# machine. The shared fixture is kept regardless -- under the default scheduler
+# it still avoids a rebuild whenever two tests of a class land on the same
+# worker, and is merely neutral when they do not. Do not add loadscope back
+# without re-measuring both columns.
+
 [tool.coverage.run]
 source = ["biochar"]
 omit = ["tests/*", "examples/*"]

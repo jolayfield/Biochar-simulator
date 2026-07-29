@@ -196,30 +196,43 @@ class TestHighOxygenCharRegression:
     reported as steric clashes, so `sweep.build_point` fell back on all points.
     """
 
-    @pytest.mark.parametrize("seed", [0, 1, 2])
-    # rq-51d0fb61
-    def test_400C_softwood_builds_clash_free(self, seed):
+    # Both tests below assert different things about the *same* structure, and
+    # building one takes tens of seconds. Generating it once per seed and
+    # sharing it halves this class's cost.
+    #
+    # Safe to share because both tests only read: validate_geometry does not
+    # mutate, and the composition assertions are comparisons. A test that
+    # needed to modify the molecule would have to take its own copy.
+    #
+    # scope="class" (not "function") is what does the work; see the note on
+    # --dist loadscope in pyproject.toml, without which xdist would scatter
+    # these across workers and rebuild the structure anyway.
+    @pytest.fixture(scope="class", params=[0, 1, 2], ids=lambda s: f"seed{s}")
+    def softwood_400(self, request):
         from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 
         cfg = GeneratorConfig(
             temperature=400, feedstock="softwood",
-            molecule_name="sw400", seed=seed, strict=False,
+            molecule_name="sw400", seed=request.param, strict=False,
         )
-        gen = BiocharGenerator(cfg)
-        mol, coords, comp = gen.generate()
+        mol, coords, comp = BiocharGenerator(cfg).generate()
+        return cfg, mol, coords, comp
+
+    # rq-51d0fb61
+    def test_400C_softwood_builds_clash_free(self, softwood_400):
+        cfg, mol, coords, comp = softwood_400
 
         errors = GeometryValidator.validate_geometry(mol, coords)[1]
         clashes = [e for e in errors if "Steric clash" in e]
-        assert not clashes, f"unexpected clashes at seed {seed}: {clashes}"
+        assert not clashes, f"unexpected clashes at seed {cfg.seed}: {clashes}"
 
         # The composition was always on target; guard against regressing it
         # while chasing the geometry.
         assert comp.H_C_ratio == pytest.approx(cfg.H_C_ratio, rel=0.10)
         assert comp.O_C_ratio == pytest.approx(cfg.O_C_ratio, rel=0.10)
 
-    @pytest.mark.parametrize("seed", [0, 1, 2])
     # rq-50d3a0c4
-    def test_400C_softwood_bond_lengths_are_sane(self, seed):
+    def test_400C_softwood_bond_lengths_are_sane(self, softwood_400):
         """Geometry refinement must not be skipped just because there is no clash.
 
         The FF pass in `_generate_geometry` used to sit behind `if
@@ -228,17 +241,11 @@ class TestHighOxygenCharRegression:
         invisible -- until H-bond-aware detection removed the clashes and left
         a 1.16 Å aromatic bond unrelaxed.
         """
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
-
-        cfg = GeneratorConfig(
-            temperature=400, feedstock="softwood",
-            molecule_name="sw400", seed=seed, strict=False,
-        )
-        mol, coords, _ = BiocharGenerator(cfg).generate()
+        cfg, mol, coords, _ = softwood_400
 
         errors = GeometryValidator.validate_geometry(mol, coords)[1]
         bad_bonds = [e for e in errors if "bond length" in e]
-        assert not bad_bonds, f"unrelaxed geometry at seed {seed}: {bad_bonds}"
+        assert not bad_bonds, f"unrelaxed geometry at seed {cfg.seed}: {bad_bonds}"
 
     # rq-51d0fb61
     def test_400C_softwood_passes_strict_mode(self):
