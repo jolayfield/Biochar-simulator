@@ -246,7 +246,6 @@ def _generate_training_data() -> tuple[np.ndarray, np.ndarray]:
     Build (X, y) from representative PAH/biochar structures using OPLS charges
     as targets.  Returns arrays suitable for ``sklearn`` fit calls.
     """
-    from .constants import OPLS_ATOM_TYPES
     from .opls_typing import AtomTyper, ChargeAssigner
 
     smiles_list = [

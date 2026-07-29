@@ -2,7 +2,6 @@
 Tests for biochar/valence.py — valence ranges, validator, report, safe bond adder.
 """
 
-import pytest
 from rdkit import Chem
 
 from biochar.valence import (
@@ -12,7 +11,6 @@ from biochar.valence import (
     ValenceValidator,
     ValenceReport,
     SafeBondAdder,
-    STANDARD_VALENCES,
 )
 
 

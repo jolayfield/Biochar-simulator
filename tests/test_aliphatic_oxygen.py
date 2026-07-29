@@ -167,6 +167,7 @@ class TestRatioModeSpill:
 # End-to-end: the sweep point that hit the composition ceiling
 # ---------------------------------------------------------------------------
 
+@pytest.mark.slow
 class TestHighOxygenCharComposition:
     """hardwood 300 °C (O/C 0.245) placed 1 oxygen before; must now reach target.
 

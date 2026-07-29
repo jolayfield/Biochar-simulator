@@ -14,7 +14,6 @@ from biochar.constants import (
     PH_MIN,
     PROTONATION_STATES,
     FUNCTIONAL_GROUPS,
-    ProtonationState,
 )
 
 

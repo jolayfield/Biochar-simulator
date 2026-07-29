@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Read `AGENTS.md` first.** It holds the working rules that apply to any coding agent — how requirements
+move with the code, which green runs are not evidence, and the force-field rules. This file adds the
+Claude-Code-specific configuration and the architecture reference; it does not repeat `AGENTS.md`.
+
 ## Project knowledge
 
 - `rqm/ARCHITECTURE.md` — system design overview and the index of the requirements set. **Read this
@@ -39,9 +43,14 @@ pip install biochar
 # Development install (editable, with extras)
 pip install -e ".[dev,viz]"
 
-# Run unit tests
-python -m pytest tests/test_generator.py -v
-python -m pytest tests/test_surface_builder.py -v
+# Install the pre-commit gate (once per clone)
+bash tools/hooks/install.sh
+
+# Fast tier -- ~24s. Always pass -n auto; serially this is 5m39s.
+python -m pytest -m "not slow" -n auto
+
+# Full suite, including the slow regressions
+python -m pytest -n auto
 
 # Run a single test
 python -m pytest tests/test_generator.py::TestCarbonSkeleton::test_pah_assembler_benzene -v
@@ -53,13 +62,21 @@ python tests/test_pah_quality.py
 cd docs && make html
 ```
 
-The test discovery root is `tests/` (configured in `pyproject.toml`), which holds 25 files; the three
-named above are examples, not the whole suite.
+The test discovery root is `tests/` (configured in `pyproject.toml`), which holds 25 files.
 
-A `PreToolUse` hook in `.claude/settings.json` runs the full suite before a `git commit` and blocks the
-commit if it fails — but **only for commits made through Claude Code**. A `git commit` typed in a
-terminal bypasses it entirely. Treat it as a convenience, not a gate; a real git `pre-commit` hook is
-planned in `docs/plans/2026-07-28-001-refactor-riprap-scaffold-migration-plan.md`.
+**The suite has two tiers.** 15 of 842 tests account for roughly 98% of the runtime — end-to-end
+regressions that generate real structures across several seeds. They carry the `slow` marker so the tier
+you run constantly stays fast: 807 tests in ~24s under `-n auto`, versus ~22 minutes for everything.
+When adding a test that takes more than a few seconds, mark the individual case `slow`, not its whole
+class — a class-level marker exiles its fast siblings from the pre-commit tier.
+
+**The commit gate is `tools/hooks/pre-commit`**, installed by `bash tools/hooks/install.sh`. It runs
+secrets, ruff, the fast tier, and `rq index`. Bypass with `git commit --no-verify`; CI still runs
+everything.
+
+The old `PreToolUse` hook in `.claude/settings.json` is kept as a convenience but is **not** the gate: it
+only fires for commits made through Claude Code, and its 600s timeout could never cover the full suite.
+Do not rely on it.
 
 ## Architecture
 

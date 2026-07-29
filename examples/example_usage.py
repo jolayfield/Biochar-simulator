@@ -5,6 +5,8 @@ Demonstrates how to use the BiocharGenerator to create biochar building blocks
 for GROMACS molecular dynamics simulations.
 """
 
+from pathlib import Path
+
 from biochar import BiocharGenerator, GeneratorConfig, generate_biochar
 
 
@@ -99,7 +101,7 @@ def example_3_convenience_function():
     )
 
     print(f"\nGenerated structure with {mol.GetNumAtoms()} atoms")
-    print(f"Output files created successfully")
+    print("Output files created successfully")
 
 
 def example_4_large_structure():
@@ -145,7 +147,7 @@ def example_5_pentagon_defects():
 
     generator = BiocharGenerator(config)
     mol, coords, composition = generator.generate()
-    print(f"Generated defective biochar with ~15% pentagonal rings")
+    print("Generated defective biochar with ~15% pentagonal rings")
     generator.print_summary()
 
     generator.export_gromacs(
@@ -175,7 +177,7 @@ def example_6_porous_surface():
     )
 
     print(f"\nGenerated {len(sheets)} sheets for slit-pore system")
-    print(f"Pore diameter: 10.0 Å")
+    print("Pore diameter: 10.0 Å")
     print(f"Files: {gro_path.name}, {top_path.name}")
     for itp in itp_paths:
         print(f"  {itp.name}")

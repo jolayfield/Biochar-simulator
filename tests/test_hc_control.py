@@ -22,7 +22,6 @@ from rdkit import RDLogger
 from biochar.biochar_generator import (
     BiocharGenerator,
     GeneratorConfig,
-    ValidationError,
 )
 
 RDLogger.DisableLog("rdApp.*")
@@ -49,9 +48,26 @@ def _aromatic_fraction(mol):
 class TestHighHCReached:
     """Steps 2+3: high H/C targets are reached within tolerance."""
 
-    @pytest.mark.parametrize("target", [0.5, 0.6, 0.7, 0.8])
-    @pytest.mark.parametrize("n_carbons", [50, 100])
-    def test_high_hc_within_tolerance(self, target, n_carbons):
+    # Measured 2026-07-29: [50-0.6] and [50-0.7] take ~80s each, while every
+    # other combination is under 3.5s. Those two sit at the edge of what a
+    # 50-carbon scaffold can reach, so H/C-aware growth retries to its limit
+    # before succeeding. They are marked slow individually rather than by
+    # marking the class, which would exile six fast cases from the tier that
+    # runs before every commit.
+    @pytest.mark.parametrize(
+        "n_carbons,target",
+        [
+            (50, 0.5),
+            pytest.param(50, 0.6, marks=pytest.mark.slow),
+            pytest.param(50, 0.7, marks=pytest.mark.slow),
+            (50, 0.8),
+            (100, 0.5),
+            (100, 0.6),
+            (100, 0.7),
+            (100, 0.8),
+        ],
+    )
+    def test_high_hc_within_tolerance(self, n_carbons, target):
         mol, comp = _build(
             target_num_carbons=n_carbons, H_C_ratio=target,
             O_C_ratio=0.05, seed=42, strict=False,

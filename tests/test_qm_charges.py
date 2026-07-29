@@ -7,7 +7,6 @@ executable is on PATH (``conda install -c conda-forge mopac``).
 
 import shutil
 
-import numpy as np
 import pytest
 
 from biochar.qm_charges import (

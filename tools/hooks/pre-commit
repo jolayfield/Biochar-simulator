@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+#
+# Pre-commit gate: lint + the fast test tier + requirements traceability.
+#
+# This replaces a gate that did not work. The previous arrangement was a
+# PreToolUse hook in .claude/settings.json, which had three problems:
+#
+#   1. It only ran for commits made through Claude Code. A `git commit` typed
+#      in a terminal never touched it.
+#   2. Its timeout was 600s against a suite that takes ~1350s, so it could not
+#      have passed even when it did run.
+#   3. Observed 2026-07-28: it did not fire at all.
+#
+# A real git hook fixes (1). Running only the fast tier fixes (2): the 12
+# end-to-end regression tests marked `slow` account for ~70% of suite runtime
+# and belong in CI, not in front of every commit. A gate people wait 22 minutes
+# for is a gate people bypass with --no-verify.
+#
+# Install with:  bash tools/hooks/install.sh
+# Bypass with:   git commit --no-verify   (CI still runs the full suite)
+set -uo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+fail=0
+note() { printf '\n\033[1m%s\033[0m\n' "$*"; }
+bad()  { printf '\033[31m%s\033[0m\n' "$*"; fail=1; }
+
+# Prefer the project's conda env; fall back to whatever python is on PATH so the
+# hook degrades to a warning rather than blocking work in an unusual shell.
+PY="${BIOCHAR_PYTHON:-/opt/miniconda3/envs/biochar/bin/python}"
+if [ ! -x "$PY" ]; then
+  PY="$(command -v python3 || command -v python || true)"
+fi
+if [ -z "$PY" ] || ! "$PY" -c "import biochar" >/dev/null 2>&1; then
+  printf '\033[33mpre-commit: no python with biochar importable; skipping tests.\033[0m\n'
+  printf '\033[33m  Set BIOCHAR_PYTHON to your env interpreter to enable this gate.\033[0m\n'
+  exit 0
+fi
+
+note "pre-commit: secrets"
+if ! bash tools/hooks/check-secrets.sh; then
+  bad "  blocked: possible secret in staged changes"
+fi
+
+note "pre-commit: ruff"
+if "$PY" -m ruff check . >/dev/null 2>&1; then
+  echo "  clean"
+else
+  "$PY" -m ruff check . 2>&1 | tail -20
+  bad "  blocked: ruff findings above"
+fi
+
+# -n auto matters here. Serial, this tier is 5m39s and would get bypassed;
+# parallel it is ~24s. Falls back to serial if xdist is missing rather than
+# erroring out on a machine that has not installed the dev extras.
+note "pre-commit: fast tests (pytest -m 'not slow')"
+if "$PY" -c "import xdist" >/dev/null 2>&1; then
+  PYTEST_PARALLEL=(-n auto)
+else
+  PYTEST_PARALLEL=()
+  printf '\033[33m  pytest-xdist not installed; running serially (slow)\033[0m\n'
+fi
+if out=$("$PY" -m pytest -m "not slow" -q -x --no-header "${PYTEST_PARALLEL[@]}" 2>&1); then
+  echo "$out" | tail -3
+else
+  echo "$out" | tail -25
+  bad "  blocked: fast-tier tests failed"
+fi
+
+# Traceability is advisory here: an unreferenced requirement is a coverage gap
+# to close, not a reason to block an unrelated commit. A duplicate ID is
+# different -- it silently merges two requirements into one registry entry --
+# so `index` failing does block.
+note "pre-commit: requirements traceability"
+if command -v jq >/dev/null 2>&1; then
+  if bash tools/rqm/rq index >/dev/null 2>&1; then
+    if ! git diff --quiet rqm/registry.json 2>/dev/null; then
+      printf '\033[33m  rqm/registry.json is stale -- run: bash tools/rqm/rq index\033[0m\n'
+    else
+      echo "  registry current"
+    fi
+  else
+    bad "  blocked: rq index failed (duplicate requirement ID?)"
+  fi
+else
+  printf '\033[33m  jq not installed; skipping traceability check\033[0m\n'
+fi
+
+if [ "$fail" -ne 0 ]; then
+  printf '\n\033[31mCommit blocked.\033[0m Fix the above, or bypass with: git commit --no-verify\n'
+  exit 1
+fi
+printf '\n\033[32mpre-commit: all checks passed\033[0m\n'

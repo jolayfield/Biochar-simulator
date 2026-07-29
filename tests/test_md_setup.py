@@ -7,7 +7,6 @@ correct files, paths, and shell-script commands are produced.
 """
 
 import csv
-import shutil
 import stat
 from pathlib import Path
 
@@ -24,7 +23,7 @@ from biochar.md_setup import (
     setup_md_from_manifest,
     setup_one_structure,
 )
-from biochar.sweep import load_sweep_config, run_sweep
+from biochar.sweep import run_sweep
 
 
 # --------------------------------------------------------------------------- #
@@ -64,7 +63,7 @@ def built_structure(tmp_path):
     gen = BiocharGenerator(GeneratorConfig(
         target_num_carbons=30, H_C_ratio=0.5, O_C_ratio=0.1, strict=False, seed=7,
     ))
-    result = gen.generate()
+    gen.generate()  # populates the generator; the return value is not needed here
     gro, top, itp = gen.export_gromacs(str(tmp_path / "src"), basename="mini")
     return Path(gro), Path(top)
 

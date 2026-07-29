@@ -22,7 +22,6 @@ from .heteroatom_assignment import (
     NitrogenSubstitutor,
     HydrogenAssigner,
     HeteroatomValidator,
-    CompositionInfo,
     CompositionResult,
     attach_aliphatic_carbons,
     _fix_heteroatom_bond_types,

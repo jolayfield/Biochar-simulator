@@ -13,7 +13,7 @@ import numpy as np
 from rdkit import Chem
 
 from biochar.ml_charges import MLChargeRefinement, _generate_training_data
-from biochar.opls_typing import AtomTyper, ChargeAssigner
+from biochar.opls_typing import AtomTyper
 from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 
 

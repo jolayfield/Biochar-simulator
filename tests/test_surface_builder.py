@@ -3,7 +3,6 @@ Tests for src/surface_builder.py — porous slit-pore surface generation.
 """
 
 import pytest
-from pathlib import Path
 
 import numpy as np
 

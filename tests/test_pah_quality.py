@@ -11,8 +11,7 @@ import logging
 from pathlib import Path
 import numpy as np
 from dataclasses import dataclass
-from typing import List, Dict, Optional
-import json
+from typing import List, Dict
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -27,7 +26,6 @@ from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
 from biochar.geometry_3d import GeometryValidator
 from biochar.constants import PAH_LIBRARY
 from rdkit import Chem
-from rdkit.Chem import AllChem
 
 
 @dataclass
@@ -307,7 +305,6 @@ class PAHQualityTester:
                       f"planarity={metrics.ring_planarity:.3f}Å")
 
             except Exception as e:
-                import traceback
                 print(f"  ✗ {target}C failed: {str(e)[:60]}")
 
         self.results['large_structures'] = results
@@ -443,11 +440,11 @@ class PAHQualityTester:
             bond_errors = [m.bond_errors for m in seed_data]
             clashes = [m.steric_clashes for m in seed_data]
 
-            report.append(f"\nBond Errors:")
+            report.append("\nBond Errors:")
             report.append(f"  Mean: {np.mean(bond_errors):.1f} ± {np.std(bond_errors):.1f}")
             report.append(f"  Range: {min(bond_errors)}-{max(bond_errors)}")
 
-            report.append(f"\nSteric Clashes:")
+            report.append("\nSteric Clashes:")
             report.append(f"  Mean: {np.mean(clashes):.1f} ± {np.std(clashes):.1f}")
             report.append(f"  Range: {min(clashes)}-{max(clashes)}")
 
@@ -478,9 +475,9 @@ class PAHQualityTester:
             report.append(f"  Bond errors: {best_size[1].bond_errors}")
             report.append(f"  Steric clashes: {best_size[1].steric_clashes}")
 
-        report.append(f"\n✓ Supported sizes: 6C to 200C+")
-        report.append(f"  Skeleton: parity-aware PAH seed + 4-node ring growth")
-        report.append(f"  Geometry: 2D-first embedding for >80 heavy atoms")
+        report.append("\n✓ Supported sizes: 6C to 200C+")
+        report.append("  Skeleton: parity-aware PAH seed + 4-node ring growth")
+        report.append("  Geometry: 2D-first embedding for >80 heavy atoms")
 
         return "\n".join(report)
 
@@ -504,10 +501,12 @@ def main():
     tester.test_library_smiles()
     tester.test_kekulizability()
     tester.test_atom_count_accuracy()
-    pah_results = tester.test_pah_sizes()
-    comp_results = tester.test_compositions(target_carbons=50)
-    seed_results = tester.test_seed_variation(target_carbons=50, num_seeds=5)
-    large_results = tester.test_large_structures()
+    # Each of these records its findings on `tester`; generate_report() below
+    # reads them from there, so the return values are deliberately discarded.
+    tester.test_pah_sizes()
+    tester.test_compositions(target_carbons=50)
+    tester.test_seed_variation(target_carbons=50, num_seeds=5)
+    tester.test_large_structures()
 
     # Generate and print report
     print(tester.generate_report())

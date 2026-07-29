@@ -19,12 +19,10 @@ import numpy as np
 import pytest
 
 from rdkit import Chem
-from rdkit.Chem import AllChem
 
 from biochar.constants import (
     VDW_RADII,
     CLASH_SEVERITY_TOLERANCE,
-    HBOND_MIN_H_ACCEPTOR_DISTANCE,
 )
 from biochar.geometry_3d import GeometryValidator, ClashResolver
 
@@ -101,6 +99,7 @@ class TestResolverSharesTolerance:
         assert ClashResolver._detect_clashes(mol, coords) == [(0, 1)]
 
 
+@pytest.mark.slow
 class TestManure400Regression:
     """400 C manure (O/C 0.236) failed strict on seeds 0-2, each on a single
     boundary contact (severity 0.00-0.03 A).  It must now pass on seed 0.

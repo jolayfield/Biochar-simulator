@@ -188,6 +188,7 @@ class TestGenuineOverlapStillCaught:
 # End-to-end regression: the sweep point that drove everything to fallback
 # ---------------------------------------------------------------------------
 
+@pytest.mark.slow
 class TestHighOxygenCharRegression:
     """400 °C softwood (O/C ~= 0.205) must pass strict validation.
 

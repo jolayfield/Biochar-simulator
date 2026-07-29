@@ -1,0 +1,25 @@
+# Normalise line endings so a Windows checkout does not produce spurious diffs.
+* text=auto eol=lf
+
+# Shell scripts and git hooks must keep LF even on Windows -- CRLF makes the
+# interpreter fail with "bad interpreter: no such file or directory".
+*.sh        text eol=lf
+tools/hooks/pre-commit  text eol=lf
+tools/rqm/rq            text eol=lf
+
+# Binary: never touch, never diff.
+*.pkl   binary
+*.png   binary
+*.pdf   binary
+*.pptx  binary
+*.xtc   binary
+*.trr   binary
+*.edr   binary
+
+# GROMACS and structure files are data, not prose -- keep them out of language
+# statistics and collapse them in diffs by default.
+*.gro   linguist-generated
+*.itp   linguist-generated
+*.top   linguist-generated
+*.mdp   linguist-generated
+rqm/registry.json linguist-generated

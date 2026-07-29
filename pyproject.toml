@@ -49,6 +49,11 @@ qm = []
 dev = [
     "pytest>=7.0",
     "pytest-cov",
+    # The suite is CPU-bound, has no shared fixtures or output paths, and runs
+    # ~22 min single-process on a 14-core machine. xdist is the difference
+    # between a suite people run and one they route around.
+    "pytest-xdist>=3.0",
+    "ruff>=0.6",
     "sphinx>=7.0",
     "sphinx-rtd-theme",
     "sphinx-autodoc-typehints",
@@ -81,6 +86,51 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 
+# Measured 2026-07-28: 12 tests consume ~943s of the suite's ~1350s -- 70% of
+# total runtime, averaging ~79s each. They are the end-to-end regression tests
+# that generate real temperature/feedstock structures across several seeds, some
+# under strict mode where a failed seed retries up to 8 times.
+#
+# The split is per-class, not per-file, on purpose. Those same files hold 44
+# unit tests that run in 1.15s against synthetic coordinates; a file-level split
+# would exile real coverage of the H-bond floor, the severity tolerance, and
+# bond-order scaling into a tier nobody runs before committing.
+#
+#   pytest -m "not slow"   fast tier -- what the pre-commit hook runs
+#   pytest                 everything -- what CI runs
+markers = [
+    "slow: end-to-end regression that generates real structures (tens of seconds each)",
+]
+
 [tool.coverage.run]
 source = ["biochar"]
 omit = ["tests/*", "examples/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+# Deliberately narrow to start. The codebase has never been linted, so enabling
+# the full default set would produce hundreds of findings and the job would be
+# switched off within a week. E (pycodestyle errors) and F (pyflakes) catch the
+# things that are actually bugs -- undefined names, unused imports, redefined
+# functions. Widen once this is green and stays green.
+select = ["E", "F"]
+ignore = [
+    "E501",  # line length -- the formatter's job, not the linter's
+    "E741",  # ambiguous variable names (l, I, O): O is an element symbol here
+    # Module-level import not at top of file. This flags a deliberate,
+    # documented convention: biochar/__init__.py registers a logging
+    # NullHandler before its re-exports so the package never emits
+    # "No handler found", and several modules bind `logger` before importing
+    # from .constants. Satisfying E402 would mean reordering working code to
+    # suit the linter.
+    "E402",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Star-imports and long setup blocks are idiomatic in test modules.
+"tests/*" = ["F403", "F405"]
+# __init__.py re-exports the public API; imported-but-unused is the point.
+"biochar/__init__.py" = ["F401"]

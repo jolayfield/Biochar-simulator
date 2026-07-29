@@ -995,7 +995,6 @@ class TestEtherSpanDefault:
     """ISSUE-C: generate_biochar default must match GeneratorConfig default (3)."""
 
     def test_generate_biochar_default_ether_span_is_3(self):
-        from biochar.biochar_generator import generate_biochar
         # Without passing max_ether_span, it should use the GeneratorConfig default of 3.
         # We verify by inspecting the config on a generator built via the convenience API.
         config = GeneratorConfig(target_num_carbons=20, seed=1, strict=False)

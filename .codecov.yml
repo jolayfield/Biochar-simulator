@@ -1,0 +1,28 @@
+# Coverage is a signal, not a gate. CI already uploads with
+# fail_ci_if_error: false; this stops Codecov itself from failing a PR over a
+# fraction of a percent, which trains people to ignore the check.
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        # Allow a small dip: a PR that adds a large well-tested module can still
+        # move the overall percentage down.
+        threshold: 1%
+        informational: true
+    patch:
+      default:
+        target: 70%
+        threshold: 10%
+        informational: true
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: true
+
+ignore:
+  - "tests/"
+  - "examples/"
+  - "docs/"
+  - "tools/"
