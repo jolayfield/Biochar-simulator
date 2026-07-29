@@ -1,8 +1,14 @@
 # refactor: map Biochar-simulator onto the MolSSI riprap scaffold
 
-**Status:** proposed
+**Status:** phases 0-3 complete; phase 4 optional, phase 5 deferred
 **Type:** refactor
 **Date:** 2026-07-28
+
+> **Progress.** Phase 0 and 1 merged in PR #34, phase 2 in PR #35, phase 3 in the PR carrying this
+> edit. PR #36 (not in the original plan) fixed the embedder-retry defect that profiling turned up
+> while doing the phase 2 follow-up work. Remaining: phase 4 (subpackage decomposition, optional and
+> `rqm/`-guided) and phase 5 (container, deferred). The largest open item is not in this plan at all
+> — 16 of 41 `rqm/` scenarios still have no defending test.
 
 ## Summary
 
