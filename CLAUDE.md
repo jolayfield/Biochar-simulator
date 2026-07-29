@@ -80,10 +80,12 @@ Do not rely on it.
 
 ## Architecture
 
-The package lives entirely in `biochar/`.
+The package lives entirely in `src/biochar/` (src layout — the package is importable only when
+installed, so a test run cannot silently exercise the working tree instead of the installed package).
+After moving branches or a fresh clone, run `pip install -e ".[dev,ml]"` or imports will fail.
 
 **`pyproject.toml` is the source of truth for what is public.** `[project.scripts]` declares the four console
-entry points; `biochar/__init__.py`'s `__all__` declares the public Python API. Do not infer the public surface
+entry points; `src/biochar/__init__.py`'s `__all__` declares the public Python API. Do not infer the public surface
 from this file — check those two.
 
 | Console script | Module | Purpose |
@@ -107,7 +109,7 @@ from this file — check those two.
 - **`qm_charges.py`** — LigParGen-style QM partial charges (1.14*CM1A) via an external MOPAC binary.
   Requires a MOPAC install; raises `QMChargeError` when unavailable.
 - **`ml_charges.py`** — ML-based partial charge refinement.
-- **`valence.py`** — valence validation system (see `VALENCE_SYSTEM.md`).
+- **`valence.py`** — valence validation system (see `docs/guides/VALENCE_SYSTEM.md`).
 - **`cli.py`**, **`sweep_cli.py`**, **`md_setup_cli.py`**, **`condensation_cli.py`** — argument parsing only;
   the logic lives in the module each one wraps.
 

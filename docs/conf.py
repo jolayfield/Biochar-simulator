@@ -4,7 +4,9 @@ import os
 import sys
 
 # Make the package importable without installation
-sys.path.insert(0, os.path.abspath(".."))
+# The package lives under src/ (src layout), so autodoc needs that on the path,
+# not the repository root.
+sys.path.insert(0, os.path.abspath("../src"))
 
 # ---------------------------------------------------------------------------
 # Project information

@@ -74,11 +74,13 @@ Repository = "https://github.com/jolayfield/Biochar-simulator"
 "Bug Tracker" = "https://github.com/jolayfield/Biochar-simulator/issues"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["biochar*"]
 
 [tool.setuptools.package-data]
-biochar = ["data/*.pkl", "data/*.json", "data/*.csv"]
+# py.typed marks the package as carrying inline type information (PEP 561);
+# without it type checkers ignore the annotations entirely for consumers.
+biochar = ["py.typed", "data/*.pkl", "data/*.json", "data/*.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -118,6 +120,8 @@ markers = [
 # without re-measuring both columns.
 
 [tool.coverage.run]
+# The package name, not a path: under the src layout coverage should follow
+# the *installed* package, which is what the tests import.
 source = ["biochar"]
 omit = ["tests/*", "examples/*"]
 
@@ -136,7 +140,7 @@ ignore = [
     "E501",  # line length -- the formatter's job, not the linter's
     "E741",  # ambiguous variable names (l, I, O): O is an element symbol here
     # Module-level import not at top of file. This flags a deliberate,
-    # documented convention: biochar/__init__.py registers a logging
+    # documented convention: src/biochar/__init__.py registers a logging
     # NullHandler before its re-exports so the package never emits
     # "No handler found", and several modules bind `logger` before importing
     # from .constants. Satisfying E402 would mean reordering working code to
@@ -148,4 +152,4 @@ ignore = [
 # Star-imports and long setup blocks are idiomatic in test modules.
 "tests/*" = ["F403", "F405"]
 # __init__.py re-exports the public API; imported-but-unused is the point.
-"biochar/__init__.py" = ["F401"]
+"src/biochar/__init__.py" = ["F401"]

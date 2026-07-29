@@ -19,7 +19,7 @@ Outputs are `.gro`, `.itp`, and `.top` files ready for molecular dynamics.
 ## Public surface <!-- rq-12b97d18 -->
 
 `pyproject.toml` is the source of truth for what is public — `[project.scripts]` declares the
-console entry points and `biochar/__init__.py`'s `__all__` declares the Python API. Do not infer
+console entry points and `src/biochar/__init__.py`'s `__all__` declares the Python API. Do not infer
 the public surface from this document.
 
 | Console script | Module | Purpose |
@@ -33,8 +33,14 @@ The four CLI modules parse arguments only; logic lives in the module each one wr
 
 ## Layering <!-- rq-18307b81 -->
 
-The package is a flat `biochar/` directory, but its imports form an almost-clean DAG. The layers
-below are the real structure and the intended seams for any future decomposition.
+The package is a single flat module directory under `src/biochar/`, but its imports form an
+almost-clean DAG. The layers below are the real structure and the intended seams for any future
+decomposition.
+
+The src layout is deliberate: because there is no importable `biochar/` at the repository root, the
+package must be installed to be imported. A test run therefore cannot pass by exercising the working
+tree while the installed package is broken — the failure mode that lets a packaging bug reach users
+with CI green.
 
 - **Layer 0** — no intra-package imports: `constants`, `valence`, `qm_charges`
 - **Layer 1** — depend on `constants`: `carbon_skeleton`, `geometry_3d`, `opls_typing`,
