@@ -78,6 +78,30 @@
     "title": "Layering",
     "type": "section"
   },
+  "rq-1a3046af": {
+    "decl": "Scenario: Every emitted dihedral resolves in the forcefield",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every emitted dihedral resolves in the forcefield",
+    "type": "scenario"
+  },
+  "rq-1f2ce9fc": {
+    "decl": "Scenario: A structure with more than three geometry errors reports all of them",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A structure with more than three geometry errors reports all of them",
+    "type": "scenario"
+  },
   "rq-21834b0c": {
     "decl": "Scenario: A contact marginally inside the floor is not a clash",
     "file": "geometry-embedding",
@@ -108,6 +132,14 @@
     "level": 2,
     "refs": [],
     "title": "Ether Bond Types Must Be Repaired After Sanitisation",
+    "type": "section"
+  },
+  "rq-2ceb3ae6": {
+    "decl": "## Every Geometry Error Is Reported",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "Every Geometry Error Is Reported",
     "type": "section"
   },
   "rq-2f5ab3f8": {
@@ -264,6 +296,18 @@
       }
     ],
     "title": "A high-oxygen structure validates without falling back",
+    "type": "scenario"
+  },
+  "rq-5658c4b6": {
+    "decl": "Scenario: Clash resolution does not run when there is nothing to resolve",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Clash resolution does not run when there is nothing to resolve",
     "type": "scenario"
   },
   "rq-56e62d3f": {
@@ -521,6 +565,18 @@
     "title": "Groups That Fall Back to Phenolic",
     "type": "section"
   },
+  "rq-acf97ed2": {
+    "decl": "Scenario: A structure with no reported clashes is still refined",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A structure with no reported clashes is still refined",
+    "type": "scenario"
+  },
   "rq-ad6d4b29": {
     "decl": "Scenario: Exact-count mode does not spill",
     "file": "heteroatom-assignment",
@@ -679,6 +735,14 @@
     ],
     "title": "A carbonyl request places a phenolic group",
     "type": "scenario"
+  },
+  "rq-e05e7026": {
+    "decl": "## Force-Field Refinement Is Not Gated on Clashes",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "Force-Field Refinement Is Not Gated on Clashes",
+    "type": "section"
   },
   "rq-e13b2348": {
     "decl": "## Surface pipeline",

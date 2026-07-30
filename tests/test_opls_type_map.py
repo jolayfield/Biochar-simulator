@@ -358,9 +358,85 @@ def _group_params():
     return params
 
 
+def _parse_dihedraltypes(ff: Path) -> list:
+    """Read the proper-dihedral (func 3) patterns from every [ dihedraltypes ] block.
+
+    Kept separate from _parse_ffbonded_section because these cannot be reduced to a
+    canonicalised tuple: entries may carry 'X' in any position, so matching is a
+    scan rather than a set lookup.
+    """
+    pats, inside = [], False
+    for raw in (ff / "ffbonded.itp").read_text().splitlines():
+        line = raw.split(";", 1)[0].strip()
+        if line.startswith("["):
+            inside = line.startswith("[ dihedraltypes")
+            continue
+        if not inside or not line:
+            continue
+        parts = line.split()
+        if len(parts) >= 5 and parts[4] == "3":
+            pats.append(tuple(parts[:4]))
+    return pats
+
+
+def _dihedral_matches(quad, pattern) -> bool:
+    """OPLS matches a quadruple in either direction, with 'X' as a wildcard."""
+
+    def one_way(ordered):
+        return all(p == "X" or p == q for p, q in zip(pattern, ordered))
+
+    return one_way(quad) or one_way(tuple(reversed(quad)))
+
+
+def _emitted_dihedrals(mol):
+    """The proper dihedrals ITPFileWriter walks, deduplicated the same way."""
+    out, seen = [], set()
+    for atom in mol.GetAtoms():
+        for nb in atom.GetNeighbors():
+            for third in nb.GetNeighbors():
+                if third.GetIdx() == atom.GetIdx():
+                    continue
+                for fourth in third.GetNeighbors():
+                    if fourth.GetIdx() == nb.GetIdx():
+                        continue
+                    quad = (atom.GetIdx(), nb.GetIdx(), third.GetIdx(), fourth.GetIdx())
+                    key = tuple(sorted(quad))
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    out.append(quad)
+    return out
+
+
 @requires_oplsaa
 class TestBondedResolution:
-    """Depth 3: every bond and angle the generator emits must be parameterisable."""
+    """Depth 3: every bond, angle, and dihedral the generator emits must be
+    parameterisable."""
+
+    # rq-1a3046af
+    def test_every_emitted_dihedral_resolves(self):
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
+
+        bonded = _parse_bonded_types(OPLSAA)
+        patterns = _parse_dihedraltypes(OPLSAA)
+        assert patterns, "no proper-dihedral types parsed from ffbonded.itp"
+
+        unresolved: dict[str, set] = {}
+        for group in sorted(FUNCTIONAL_GROUPS):
+            gen = BiocharGenerator(
+                GeneratorConfig(**_config_kwargs(functional_groups={group: 1}))
+            )
+            mol, _, _ = gen.generate()
+            types = gen.atom_types
+            for quad in _emitted_dihedrals(mol):
+                names = tuple(bonded[GROMACS_OPLS_TYPE_MAP[types[i]]] for i in quad)
+                if not any(_dihedral_matches(names, p) for p in patterns):
+                    unresolved.setdefault(group, set()).add("-".join(names))
+
+        assert not unresolved, (
+            f"dihedrals no [ dihedraltypes ] entry covers: "
+            f"{ {g: sorted(v) for g, v in unresolved.items()} }"
+        )
 
     @pytest.mark.parametrize("group", _group_params())
     # rq-35a5407d

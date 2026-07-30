@@ -96,11 +96,17 @@ each of which has caught a real bug that the previous depth missed:
 1. **The name exists** in `oplsaa.ff/atomtypes.atp`.
 2. **The element and mass are consistent** with the internal type's intent. `SS` once mapped to
    `opls_209`, which is a *carbon*; the name existed and resolved cleanly.
-3. **Every bond and angle the topology emits resolves** through the bonded types into
+3. **Every bond, angle, and dihedral the topology emits resolves** through the bonded types into
    `ffbonded.itp`. `SS → opls_222` has the right element and the right mass, yet a thioether
    emits a `CA-S-CA` angle that stock OPLS does not define, and `grompp` refused the topology.
 
 Depth 3 is the one that is easy to skip and expensive to skip.
+
+Dihedrals resolve under the same rule as bonds and angles, with one difference in how a match is
+found: `[ dihedraltypes ]` entries may carry `X` in any position as a wildcard, and an entry
+matches a quadruple read in either direction. Most proper torsions in a fused aromatic system
+match a wildcard entry rather than a fully specified one, so a check that demands an exact
+four-type entry reports gaps that do not exist.
 
 ```gherkin
 Feature: Verify types against a real forcefield, not against a table
@@ -116,6 +122,13 @@ Feature: Verify types against a real forcefield, not against a table
     Given a structure exercising every functional group the generator can place
     When the topology is written
     Then every emitted angle resolves to an angletype in ffbonded.itp or the supplement
+
+  @rq-1a3046af
+  Scenario: Every emitted dihedral resolves in the forcefield
+    Given a structure exercising every functional group the generator can place
+    When the topology is written
+    Then every emitted proper dihedral matches a dihedraltype in ffbonded.itp
+    And wildcard entries count as a match
 
   @rq-b40b353d
   Scenario: Forcefield-backed tests fail loudly when the forcefield is absent

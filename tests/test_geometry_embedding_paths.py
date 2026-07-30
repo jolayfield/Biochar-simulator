@@ -220,3 +220,109 @@ class TestClashSeverityReporting:
             "a deeper overlap must report a larger severity, so a marginal "
             "contact can be told apart from a real one"
         )
+
+
+class TestRefinementIsNotGatedOnClashes:
+    """rqm/geometry-embedding.md: force-field refinement is unconditional on the
+    non-hex-lattice path.
+
+    Both scenarios read the same run. A structure that reports no clash gives the
+    sharpest evidence available from outside: the clash resolver has nothing to do
+    and is never invoked, so any refinement that still happens cannot have been
+    gated on the clash report.
+    """
+
+    @staticmethod
+    def _run_with_spies(monkeypatch):
+        calls = {"relax": 0, "resolve": 0}
+
+        orig_relax = CoordinateGenerator.validate_and_relax
+        orig_resolve = ClashResolver.resolve_clashes
+
+        def spy_relax(self, mol, coords, max_iterations=100):
+            calls["relax"] += 1
+            return orig_relax(self, mol, coords, max_iterations=max_iterations)
+
+        def spy_resolve(mol, coords, **kw):
+            calls["resolve"] += 1
+            return orig_resolve(mol, coords, **kw)
+
+        monkeypatch.setattr(CoordinateGenerator, "validate_and_relax", spy_relax)
+        monkeypatch.setattr(ClashResolver, "resolve_clashes", staticmethod(spy_resolve))
+
+        # 20 carbons with no oxygen: small enough for ETKDG (<= 80 heavy atoms),
+        # and clean enough that no contact is reported.
+        gen = BiocharGenerator(
+            GeneratorConfig(target_num_carbons=20, O_C_ratio=0.0, strict=False, seed=1)
+        )
+        mol, coords, _ = gen.generate()
+
+        errors = GeometryValidator.validate_geometry(mol, coords)[1]
+        clashes = [e for e in errors if "Steric clash" in e]
+        assert not clashes, (
+            f"precondition failed -- this structure was chosen because it has no "
+            f"clashes, but validation reported {len(clashes)}: {clashes[:3]}"
+        )
+        return calls
+
+    # rq-acf97ed2
+    def test_structure_with_no_reported_clashes_is_still_refined(self, monkeypatch):
+        calls = self._run_with_spies(monkeypatch)
+        assert calls["relax"] > 0, (
+            "force-field refinement never ran on a clash-free structure -- "
+            "refinement has been coupled to the clash report"
+        )
+
+    # rq-5658c4b6
+    def test_clash_resolver_is_not_invoked_when_there_is_nothing_to_resolve(
+        self, monkeypatch
+    ):
+        calls = self._run_with_spies(monkeypatch)
+        assert calls["resolve"] == 0, (
+            f"clash resolution ran {calls['resolve']} time(s) on a structure with "
+            f"no reported clash"
+        )
+
+
+class TestEveryGeometryErrorIsReported:
+    """rqm/geometry-embedding.md: a structure report names every geometry error."""
+
+    @staticmethod
+    def _mol_with_many_geometry_errors():
+        """Naphthalene with six atoms collapsed onto one another.
+
+        Produces far more than three geometry errors, so a report that truncates
+        is distinguishable from one that does not.
+        """
+        mol = _naphthalene_with_hs()
+        AllChem.EmbedMolecule(mol, randomSeed=7)
+        coords = np.array(mol.GetConformer().GetPositions())
+        for i in range(6):
+            coords[i] = coords[0] + np.array([0.02 * i, 0.0, 0.0])
+        return mol, coords
+
+    # rq-1f2ce9fc
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "StructureValidator.validate truncates with geom_errors[:3] "
+            "(src/biochar/pipeline/validation.py). Retire this marker with the fix."
+        ),
+    )
+    def test_report_contains_every_geometry_error(self):
+        from biochar.pipeline.validation import StructureValidator
+
+        mol, coords = self._mol_with_many_geometry_errors()
+
+        found = GeometryValidator.validate_geometry(mol, coords)[1]
+        assert len(found) > 3, (
+            "this fixture is meant to produce more than three geometry errors; "
+            f"it produced {len(found)}"
+        )
+
+        report = StructureValidator.validate(mol, coords)
+        reported = [e for e in report.errors if e in found]
+        assert len(reported) == len(found), (
+            f"geometry validation found {len(found)} errors but the structure "
+            f"report carries {len(reported)}"
+        )

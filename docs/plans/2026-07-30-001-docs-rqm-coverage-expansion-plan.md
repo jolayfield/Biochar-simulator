@@ -1,6 +1,6 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phase 0 complete; Phases 1-5 not started
+**Status:** Phases 0 and 1 complete; D3 resolved; Phases 2-5 not started
 **Type:** docs / traceability
 **Date:** 2026-07-30
 
@@ -21,7 +21,24 @@
 > **One consequence is now live.** CI hard-fails on any scenario without a defending test, so
 > from Phase 1 onward a requirements file cannot merge alone — scenario and test land in the same
 > PR, with `xfail(strict=True)` when the behaviour does not exist yet. That constraint is written
-> into `local.md` so it survives this document.
+> into `local.md` so it survives this document. Confirmed deliberate.
+>
+> **Phase 1 landed four scenarios across two files.** Two of the three edits turned out to
+> document behaviour that is already correct and was simply undefended — refinement is genuinely
+> ungated (`rq-acf97ed2`, `rq-5658c4b6`), and every emitted dihedral genuinely resolves
+> (`rq-1a3046af`, verified against all eleven functional groups). Only the error-report
+> truncation is a live defect, and it carries the phase's single `xfail(strict=True)`
+> (`rq-1f2ce9fc`).
+>
+> **The local environment was verifying less than it appeared to.** GROMACS ships inside the
+> conda env, but nothing pointed the tests at it, so 20 force-field tests silently skipped on
+> every local run — the exact trap `AGENTS.md` warns about, in its bad state by default.
+> `export GMXDATA="$CONDA_PREFIX/share/gromacs"` fixes it, and `AGENTS.md` now says so. Without
+> it Phase 1's dihedral scenario would have been written against a test that never ran.
+>
+> **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
+> schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that
+> disagreement becomes a scenario plus a failing test rather than an open question.
 **Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
 **Commit reviewed:** `2ad77a161bf5997e058cf97cf2680632ab99a4b8` (`2ad77a1`)
 
