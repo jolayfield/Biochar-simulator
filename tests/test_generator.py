@@ -991,6 +991,31 @@ class TestEtherSpanGuard:
         assert any("max_ether_span" in r.message for r in caplog.records)
 
 
+class TestHCRatioCeilingGuard:
+    """H_C_ratio >= 2.0 must raise ValueError, not divide by zero in aliphatic decoration."""
+
+    def test_config_h_c_ratio_at_ceiling_raises(self):
+        with pytest.raises(ValueError, match="H_C_ratio"):
+            GeneratorConfig(H_C_ratio=2.0, strict=False)
+
+    def test_config_h_c_ratio_above_ceiling_raises(self):
+        with pytest.raises(ValueError, match="H_C_ratio"):
+            GeneratorConfig(H_C_ratio=2.5, strict=False)
+
+    def test_config_h_c_ratio_below_ceiling_valid(self):
+        config = GeneratorConfig(H_C_ratio=1.5, strict=False)
+        assert config.H_C_ratio == 1.5
+
+    def test_generator_h_c_ratio_at_ceiling_does_not_crash(self):
+        # Regression: BiocharGenerator() itself must not construct with an
+        # invalid config, i.e. the guard fires before generate() ever runs.
+        with pytest.raises(ValueError, match="H_C_ratio"):
+            BiocharGenerator(GeneratorConfig(
+                target_num_carbons=10, H_C_ratio=2.0, O_C_ratio=0.0,
+                seed=1, strict=False,
+            ))
+
+
 class TestEtherSpanDefault:
     """ISSUE-C: generate_biochar default must match GeneratorConfig default (3)."""
 
