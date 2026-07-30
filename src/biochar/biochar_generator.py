@@ -306,6 +306,19 @@ class GeneratorConfig:
         if self.aromaticity_percent is None:
             self.aromaticity_percent = 90.0
 
+        # H/C = 2.0 is the asymptotic ceiling of the aromatic-core-plus-methyls
+        # model used by aliphatic decoration (_generate_carbon_skeleton): H/C
+        # approaches but never reaches 2 as the methyl count grows, since every
+        # structure retains a nonzero aromatic core. At exactly 2.0 the methyl-
+        # count formula divides by (2.0 - H_C_ratio) == 0; above it the request
+        # is unbuildable by this generator regardless.
+        if self.H_C_ratio >= 2.0:
+            raise ValueError(
+                f"H_C_ratio must be < 2.0 (the asymptotic ceiling for this "
+                f"generator's aromatic-core-plus-methyls model; no finite "
+                f"biochar structure reaches it), got {self.H_C_ratio}"
+            )
+
         if self.max_ether_span > 4:
             logger.warning(
                 "max_ether_span=%d may fold the aromatic sheet into a nanotube-like "
