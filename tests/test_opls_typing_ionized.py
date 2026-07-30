@@ -8,7 +8,7 @@ pinned independently of whatever the generator happens to produce.
 import pytest
 from rdkit import Chem
 
-from biochar.opls_typing import AtomTyper
+from biochar.pipeline.opls_typing import AtomTyper
 
 
 def types_of(smiles: str) -> dict:
@@ -165,7 +165,7 @@ class TestGraphiticNitrogenNotCaughtByCationicBranch:
 
     @staticmethod
     def _graphitic():
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
 
         # Coronene has genuine interior junction carbons to substitute.
         mol = Chem.MolFromSmiles("c1cc2ccc3ccc4ccc5ccc6ccc1c1c2c3c4c5c61")

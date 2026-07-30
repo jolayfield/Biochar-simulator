@@ -656,7 +656,7 @@ BOND_LENGTH_MAX_FACTOR = 1.40
 # Experimental-data model provenance & tunables
 # ---------------------------------------------------------------------------
 # Primary characterization dataset behind the temperature/feedstock composition
-# model (see :mod:`biochar.temperature_model`):
+# model (see :mod:`biochar.models.temperature_model`):
 UC_DAVIS_DB_URL = "https://biochar.ucdavis.edu/"   # UC Davis Biochar Database
 # Methodological parent: Wood, Mašek & Erastova, Cell Reports Physical Science
 # 5(7), 2024, DOI 10.1016/j.xcrp.2024.102036.

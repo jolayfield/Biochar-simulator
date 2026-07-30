@@ -21,11 +21,11 @@ from rdkit import Chem
 
 logger = logging.getLogger(__name__)
 
-from .biochar_generator import BiocharGenerator, GeneratorConfig
-from .constants import CARBON_VDW_DIAMETER
-from .gromacs_export import ITPFileWriter
-from .heteroatom_assignment import _fix_heteroatom_bond_types
-from .opls_typing import AtomTyper, ChargeAssigner
+from ..pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
+from ..constants import CARBON_VDW_DIAMETER
+from ..export.gromacs_export import ITPFileWriter
+from ..pipeline.heteroatom_assignment import _fix_heteroatom_bond_types
+from ..pipeline.opls_typing import AtomTyper, ChargeAssigner
 
 
 # ---------------------------------------------------------------------------
@@ -391,7 +391,7 @@ class SurfaceBuilder:
             raise RuntimeError("Must call build() before export_gromacs()")
 
         # Import here to avoid circular imports at module level
-        from .gromacs_export import MultiSheetGROWriter, SurfaceTopologyWriter
+        from ..export.gromacs_export import MultiSheetGROWriter, SurfaceTopologyWriter
 
         output_dir = Path(output_directory)
         output_dir.mkdir(parents=True, exist_ok=True)

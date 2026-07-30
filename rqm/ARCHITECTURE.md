@@ -24,60 +24,76 @@ the public surface from this document.
 
 | Console script | Module | Purpose |
 |---|---|---|
-| `biochar-gen` | `cli.py` | Generate a single structure or series |
-| `biochar-sweep` | `sweep_cli.py` | Run a declarative factorial parameter sweep |
-| `biochar-md-setup` | `md_setup_cli.py` | Generate GROMACS run directories from a sweep manifest |
-| `biochar-condense` | `condensation_cli.py` | Set up a Wood et al. 2024 condensation-annealing run |
+| `biochar-gen` | `cli/cli.py` | Generate a single structure or series |
+| `biochar-sweep` | `cli/sweep_cli.py` | Run a declarative factorial parameter sweep |
+| `biochar-md-setup` | `cli/md_setup_cli.py` | Generate GROMACS run directories from a sweep manifest |
+| `biochar-condense` | `cli/condensation_cli.py` | Set up a Wood et al. 2024 condensation-annealing run |
 
 The four CLI modules parse arguments only; logic lives in the module each one wraps.
 
 ## Layering <!-- rq-18307b81 -->
 
-The package is a single flat module directory under `src/biochar/`, but its imports form an
-almost-clean DAG. The layers below are the real structure and the intended seams for any future
-decomposition.
+The package is organised into subpackages under `src/biochar/` that follow the import graph, plus
+one module — `constants.py` — kept at the package root because it is genuinely shared: every
+subpackage below imports it, so nesting it inside any one of them would force the others to reach
+across subpackage boundaries into an internal of a sibling.
 
 The src layout is deliberate: because there is no importable `biochar/` at the repository root, the
 package must be installed to be imported. A test run therefore cannot pass by exercising the working
 tree while the installed package is broken — the failure mode that lets a packaging bug reach users
 with CI green.
 
-- **Layer 0** — no intra-package imports: `constants`, `valence`, `qm_charges`
-- **Layer 1** — depend on `constants`: `carbon_skeleton`, `geometry_3d`, `opls_typing`,
-  `temperature_model`
-- **Layer 2** — `heteroatom_assignment`, `gromacs_export`, `ml_charges`, `protonation`,
-  `validation`
-- **Layer 3** — `biochar_generator`, which orchestrates the single-molecule pipeline
-- **Layer 4** — `surface_builder`, `condensation`, `sweep`, `md_setup`
-- **Layer 5** — the four CLI modules
+- **`constants.py`** (package root) — no intra-package imports; imported by every subpackage below
+- **`pipeline/`** — the single-molecule generation pipeline and its supporting chemistry:
+  `biochar_generator` (orchestrator), `carbon_skeleton`, `heteroatom_assignment`, `geometry_3d`,
+  `opls_typing`, `valence`, `validation`, `protonation`. Depends only on `constants` and modules
+  within the same subpackage.
+- **`charges/`** — partial-charge backends: `qm_charges` (no intra-package deps), `ml_charges`
+  (depends on `pipeline.opls_typing`)
+- **`export/`** — GROMACS file writers: `gromacs_export` (depends on `constants`,
+  `pipeline.opls_typing`), `md_setup` (no intra-package deps)
+- **`workflows/`** — higher-level orchestration built on `pipeline/`: `sweep`, `condensation`,
+  `surface_builder` (also depends on `export.gromacs_export` and `pipeline.heteroatom_assignment`)
+- **`models/`** — `temperature_model`, the data-driven temperature × feedstock composition model;
+  no intra-package deps
+- **`cli/`** — the four console-entry-point modules; parse arguments only
 
-The layering was not always this clean: `generate_surface` used to live in `biochar_generator.py`
-(Layer 3) despite being a Layer 4 surface-level entry point, which made `surface_builder` import
-`biochar_generator` at module scope while `biochar_generator` imported `SurfaceBuilder` inside a
-function to break the resulting cycle. `generate_surface` now lives in `surface_builder.py`
-alongside the class it wraps, and the deferred import is gone.
+The dependency order is `constants` → `pipeline` → `charges`/`export` → `workflows` → `cli`, with
+`models` sitting alongside `pipeline` (both depend only on `constants`, and `pipeline` reaches into
+`models` for the temperature/feedstock defaults). `__init__.py`'s `__all__` and `pyproject.toml`'s
+`[project.scripts]` are what actually declare the public surface (see above); the subpackage
+boundaries are an internal organisation, not a second public contract — a name's dotted path inside
+`biochar.*` is free to move as long as it stays reachable from the top-level package.
+
+This was a flat module directory until the subpackage split, and the one real cycle it had is
+already gone: `generate_surface` used to live in `biochar_generator.py` despite being a
+`workflows`-level entry point, which made `surface_builder` import `biochar_generator` at module
+scope while `biochar_generator` imported `SurfaceBuilder` inside a function to dodge the resulting
+circular import. `generate_surface` now lives in `workflows/surface_builder.py` alongside the class
+it wraps, and the deferred import is gone.
 
 ## Single-molecule pipeline <!-- rq-60a0144a -->
 
 `BiocharGenerator.generate()` runs five sequential stages, each in its own module.
 
-1. **Carbon skeleton** (`carbon_skeleton.py`) — `PAHAssembler` builds the PAH graph. Targets of
-   40 carbons or fewer take an exact SMILES from `PAH_LIBRARY`; larger targets select the
-   closest seed and fuse rings until the count is within tolerance, with pentagon frequency
+1. **Carbon skeleton** (`pipeline/carbon_skeleton.py`) — `PAHAssembler` builds the PAH graph.
+   Targets of 40 carbons or fewer take an exact SMILES from `PAH_LIBRARY`; larger targets select
+   the closest seed and fuse rings until the count is within tolerance, with pentagon frequency
    controlled by `defect_fraction`. A hex-lattice position tracker keeps coordinates consistent
    so the geometry stage receives a flat, strain-free sheet.
 
-2. **Heteroatom assignment** (`heteroatom_assignment.py`) — `OxygenAssigner` places functional
-   groups; `HydrogenAssigner` fills the remaining valences. Specified in
+2. **Heteroatom assignment** (`pipeline/heteroatom_assignment.py`) — `OxygenAssigner` places
+   functional groups; `HydrogenAssigner` fills the remaining valences. Specified in
    `heteroatom-assignment.md`.
 
-3. **Geometry** (`geometry_3d.py`) — `CoordinateGenerator` embeds in 3D; `GeometryValidator`
-   judges the result. Specified in `geometry-embedding.md`.
+3. **Geometry** (`pipeline/geometry_3d.py`) — `CoordinateGenerator` embeds in 3D;
+   `GeometryValidator` judges the result. Specified in `geometry-embedding.md`.
 
-4. **Typing** (`opls_typing.py`) — `AtomTyper` assigns internal types; `GROMACS_OPLS_TYPE_MAP`
-   translates them at export. Specified in `opls-typing.md`.
+4. **Typing** (`pipeline/opls_typing.py`) — `AtomTyper` assigns internal types;
+   `GROMACS_OPLS_TYPE_MAP` translates them at export. Specified in `opls-typing.md`.
 
-5. **Validation** (`validation.py`) — `ValidationEngine` checks composition ratios and geometry.
+5. **Validation** (`pipeline/validation.py`) — `ValidationEngine` checks composition ratios and
+   geometry.
 
 ## Surface pipeline <!-- rq-e13b2348 -->
 
@@ -89,9 +105,10 @@ the `.top` references one `.itp` for identical sheets, or one per unique sheet t
 
 ## Export <!-- rq-92c69795 -->
 
-`gromacs_export.py` holds `GROFileWriter`, `ITPFileWriter`, and `TOPFileWriter`, orchestrated by
-`GromacsExporter`. Coordinates convert from RDKit ångström to GROMACS nanometres. Residue names
-are hard-limited to 5 characters by the `.gro` format, which constrains `molecule_name`.
+`export/gromacs_export.py` holds `GROFileWriter`, `ITPFileWriter`, and `TOPFileWriter`,
+orchestrated by `GromacsExporter`. Coordinates convert from RDKit ångström to GROMACS nanometres.
+Residue names are hard-limited to 5 characters by the `.gro` format, which constrains
+`molecule_name`.
 
 ## Standing constraints <!-- rq-faf5d18d -->
 

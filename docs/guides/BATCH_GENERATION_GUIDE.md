@@ -12,7 +12,7 @@ The `generate_biochar_series()` function generates multiple biochar structures i
 ## Quick Example
 
 ```python
-from biochar.biochar_generator import generate_biochar_series
+from biochar.pipeline.biochar_generator import generate_biochar_series
 
 # Define configurations
 configs = [
@@ -153,7 +153,7 @@ for mol_name, (gro_path, top_path, itp_path) in results.items():
 ## Example 1: Temperature Series
 
 ```python
-from biochar.biochar_generator import generate_biochar_series
+from biochar.pipeline.biochar_generator import generate_biochar_series
 
 # Typical composition trends with pyrolysis temperature
 configs = [
@@ -294,7 +294,7 @@ results = generate_biochar_series(
 
 ```bash
 # 1. Generate structures
-python3 -c "from biochar.biochar_generator import generate_biochar_series; ..."
+python3 -c "from biochar.pipeline.biochar_generator import generate_biochar_series; ..."
 
 # 2. Prepare system (using combined.top)
 gmx grompp -f md.mdp -p combined.top -c combined.gro -o topol.tpr

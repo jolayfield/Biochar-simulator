@@ -4,20 +4,20 @@ surface_builder
 Configuration & data classes
 -----------------------------
 
-.. autoclass:: biochar.surface_builder.SurfaceConfig
+.. autoclass:: biochar.workflows.surface_builder.SurfaceConfig
    :no-members:
 
-.. autoclass:: biochar.surface_builder.SheetResult
+.. autoclass:: biochar.workflows.surface_builder.SheetResult
    :no-members:
 
 Builder
 -------
 
-.. autoclass:: biochar.surface_builder.SurfaceBuilder
+.. autoclass:: biochar.workflows.surface_builder.SurfaceBuilder
    :members: build, export_gromacs
    :show-inheritance:
 
 Convenience function
 ---------------------
 
-.. autofunction:: biochar.surface_builder.generate_surface
+.. autofunction:: biochar.workflows.surface_builder.generate_surface

@@ -10,20 +10,20 @@ collected by Wood, Mašek & Erastova (2024).
 Module-level helpers
 ---------------------
 
-.. autofunction:: biochar.temperature_model.properties
+.. autofunction:: biochar.models.temperature_model.properties
 
-.. autodata:: biochar.temperature_model.VALID_FEEDSTOCKS
+.. autodata:: biochar.models.temperature_model.VALID_FEEDSTOCKS
 
 ``TemperatureModel``
 ---------------------
 
-.. autoclass:: biochar.temperature_model.TemperatureModel
+.. autoclass:: biochar.models.temperature_model.TemperatureModel
    :members: composition, predict, predict_all, valid_feedstocks, provenance
    :show-inheritance:
 
 Build helper
 ------------
 
-.. autofunction:: biochar.temperature_model.build_model
+.. autofunction:: biochar.models.temperature_model.build_model
 
-.. autofunction:: biochar.temperature_model.compare_models
+.. autofunction:: biochar.models.temperature_model.compare_models

@@ -3,8 +3,8 @@ LigParGen-style QM partial charges (1.14*CM1A) via an external MOPAC binary.
 
 This module reproduces the charge methodology of the LigParGen server
 (Dodda et al., *Nucleic Acids Res.* 45, W331 (2017)) as an opt-in alternative
-to the static OPLS lookup table (:mod:`biochar.opls_typing`) and the ML refiner
-(:mod:`biochar.ml_charges`).
+to the static OPLS lookup table (:mod:`biochar.pipeline.opls_typing`) and the ML refiner
+(:mod:`biochar.charges.ml_charges`).
 
 Pipeline
 --------
@@ -401,8 +401,8 @@ class QMChargeAssigner:
             coords: ``(N, 3)`` array of Cartesian coordinates in Ångströms,
                 ordered to match ``mol`` atom indices.
             atom_types: Unused; accepted for signature parity with
-                :meth:`biochar.ml_charges.MLChargeRefinement.refine` and
-                :meth:`biochar.opls_typing.ChargeAssigner.assign_charges`.
+                :meth:`biochar.charges.ml_charges.MLChargeRefinement.refine` and
+                :meth:`biochar.pipeline.opls_typing.ChargeAssigner.assign_charges`.
 
         Returns:
             ``{atom_idx: charge}`` for every atom in *mol*.

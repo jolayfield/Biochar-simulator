@@ -11,8 +11,8 @@ from datetime import datetime
 import numpy as np
 from rdkit import Chem
 
-from .opls_typing import OPLSPropertyTable
-from .constants import GROMACS_OPLS_TYPE_MAP, SUPPLEMENTARY_ANGLE_PARAMS
+from ..pipeline.opls_typing import OPLSPropertyTable
+from ..constants import GROMACS_OPLS_TYPE_MAP, SUPPLEMENTARY_ANGLE_PARAMS
 
 
 def _angle_suffix(atom_types: Dict[int, str], i: int, j: int, k: int) -> str:

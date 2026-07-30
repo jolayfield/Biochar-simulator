@@ -22,14 +22,14 @@ from rdkit import Chem
 
 class TestGeneratorConfigRoundtrip:
     def test_to_dict_converts_box_size_to_list(self):
-        from biochar.biochar_generator import GeneratorConfig
+        from biochar.pipeline.biochar_generator import GeneratorConfig
         cfg = GeneratorConfig(box_size=np.array([5.0, 5.0, 5.0]))
         d = cfg.to_dict()
         assert isinstance(d["box_size"], list)
         assert d["box_size"] == [5.0, 5.0, 5.0]
 
     def test_from_dict_converts_box_size_list_to_array(self):
-        from biochar.biochar_generator import GeneratorConfig
+        from biochar.pipeline.biochar_generator import GeneratorConfig
         d = GeneratorConfig().to_dict()
         d["box_size"] = [4.0, 4.0, 4.0]
         cfg = GeneratorConfig.from_dict(d)
@@ -37,7 +37,7 @@ class TestGeneratorConfigRoundtrip:
         np.testing.assert_array_equal(cfg.box_size, [4.0, 4.0, 4.0])
 
     def test_to_dict_without_box_size_is_none(self):
-        from biochar.biochar_generator import GeneratorConfig
+        from biochar.pipeline.biochar_generator import GeneratorConfig
         d = GeneratorConfig().to_dict()
         assert d["box_size"] is None
 
@@ -48,13 +48,13 @@ class TestGeneratorConfigRoundtrip:
 
 class TestBiocharGeneratorPreGenerate:
     def test_export_gromacs_before_generate_raises(self):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
         gen = BiocharGenerator(GeneratorConfig(seed=1))
         with pytest.raises(RuntimeError, match="generate()"):
             gen.export_gromacs()
 
     def test_print_summary_before_generate_prints_message(self, capsys):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
         gen = BiocharGenerator(GeneratorConfig(seed=1))
         gen.print_summary()
         out = capsys.readouterr().out
@@ -69,7 +69,7 @@ class TestBiocharGeneratorPreGenerate:
 class TestPrintSummaryVariants:
     @pytest.fixture(scope="class")
     def gen_with_pyridinic(self):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
         # Naphthalene (C10H8): H/C = 0.8 — always passes strict validation.
         # We patch pyridinic/nitrogen counts on the composition object so that
         # print_summary exercises the ring-N and nitrogen print branches.
@@ -101,7 +101,7 @@ class TestPrintSummaryVariants:
         assert "Validation" in out
 
     def test_print_summary_shows_sulfur(self, capsys):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
         # Perylene-sized molecule; H/C=0.6 is achievable for 20-carbon PAH.
         cfg = GeneratorConfig(
             target_num_carbons=20,
@@ -117,7 +117,7 @@ class TestPrintSummaryVariants:
         assert "Sulfurs" in out
 
     def test_print_summary_shows_errors_and_warnings_when_present(self, capsys):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
         # Naphthalene (C10H8) has H/C=0.8; use 0.8 to pass validation.
         cfg = GeneratorConfig(target_num_carbons=10, H_C_ratio=0.8, seed=42)
         gen = BiocharGenerator(cfg)
@@ -136,7 +136,7 @@ class TestPrintSummaryVariants:
 
 class TestGenerateBiocharSeriesVerbose:
     def test_verbose_header_and_footer_printed(self, tmp_path, capsys):
-        from biochar.biochar_generator import generate_biochar_series
+        from biochar.pipeline.biochar_generator import generate_biochar_series
         # Naphthalene (C10H8): H/C=0.8; use that to satisfy strict validation.
         configs = [
             {
@@ -159,7 +159,7 @@ class TestGenerateBiocharSeriesVerbose:
         assert "BATCH GENERATION COMPLETE" in out
 
     def test_combined_top_verbose_mentions_combined_topology(self, tmp_path, capsys):
-        from biochar.biochar_generator import generate_biochar_series
+        from biochar.pipeline.biochar_generator import generate_biochar_series
         configs = [
             {
                 "molecule_name": "BC001",
@@ -193,7 +193,7 @@ class TestGenerateBiocharSeriesVerbose:
 
 class TestSkeletonValidatorRejections:
     def test_validate_none_mol_fails(self):
-        from biochar.carbon_skeleton import CarbonSkeleton, SkeletonValidator
+        from biochar.pipeline.carbon_skeleton import CarbonSkeleton, SkeletonValidator
         skeleton = CarbonSkeleton(
             mol=None, smiles="", num_carbons=0,
             num_aromatic_carbons=0, aromaticity_percent=0.0,
@@ -203,7 +203,7 @@ class TestSkeletonValidatorRejections:
         assert any("None" in e for e in errors)
 
     def test_validate_zero_carbons_fails(self):
-        from biochar.carbon_skeleton import CarbonSkeleton, SkeletonValidator
+        from biochar.pipeline.carbon_skeleton import CarbonSkeleton, SkeletonValidator
         mol = Chem.MolFromSmiles("C")
         skeleton = CarbonSkeleton(
             mol=mol, smiles="C", num_carbons=0,
@@ -214,7 +214,7 @@ class TestSkeletonValidatorRejections:
         assert any("carbon" in e.lower() for e in errors)
 
     def test_validate_aromatic_carbons_exceed_total_fails(self):
-        from biochar.carbon_skeleton import CarbonSkeleton, SkeletonValidator
+        from biochar.pipeline.carbon_skeleton import CarbonSkeleton, SkeletonValidator
         mol = Chem.MolFromSmiles("c1ccccc1")
         skeleton = CarbonSkeleton(
             mol=mol, smiles="c1ccccc1", num_carbons=6,
@@ -226,7 +226,7 @@ class TestSkeletonValidatorRejections:
         assert any("aromatic" in e.lower() for e in errors)
 
     def test_validate_aromaticity_out_of_range_fails(self):
-        from biochar.carbon_skeleton import CarbonSkeleton, SkeletonValidator
+        from biochar.pipeline.carbon_skeleton import CarbonSkeleton, SkeletonValidator
         mol = Chem.MolFromSmiles("c1ccccc1")
         skeleton = CarbonSkeleton(
             mol=mol, smiles="c1ccccc1", num_carbons=6,
@@ -238,7 +238,7 @@ class TestSkeletonValidatorRejections:
         assert any("aromaticity" in e.lower() or "110" in e for e in errors)
 
     def test_validate_disconnected_graph_fails(self):
-        from biochar.carbon_skeleton import CarbonSkeleton, SkeletonValidator
+        from biochar.pipeline.carbon_skeleton import CarbonSkeleton, SkeletonValidator
         # Two disconnected benzene rings in one mol object
         mol = Chem.MolFromSmiles("c1ccccc1.c1ccccc1")
         skeleton = CarbonSkeleton(
@@ -258,7 +258,7 @@ class TestNDopingPlacementTruncation:
     """Substitutor places as many N as possible and records actual count."""
 
     def test_pyridinic_truncation_fewer_sites_than_requested(self):
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
         mol = Chem.MolFromSmiles("c1ccccc1")  # 6 edge carbons max
         sub = NitrogenSubstitutor(seed=1)
         result = sub.substitute(mol, n_pyridinic=100)
@@ -266,7 +266,7 @@ class TestNDopingPlacementTruncation:
         assert sub.placed_pyridinic < 100
 
     def test_graphitic_zero_placed_when_no_interior_carbons(self):
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
         # Benzene has no interior carbons (all are edge) → 0 graphitic N possible
         mol = Chem.MolFromSmiles("c1ccccc1")
         sub = NitrogenSubstitutor(seed=1)
@@ -275,7 +275,7 @@ class TestNDopingPlacementTruncation:
         assert sub.placed_graphitic == 0
 
     def test_pyrrolic_zero_placed_when_no_five_membered_rings(self):
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
         # Naphthalene has only 6-membered rings — no 5-ring sites
         mol = Chem.MolFromSmiles("c1ccc2ccccc2c1")
         sub = NitrogenSubstitutor(seed=1)
@@ -284,7 +284,7 @@ class TestNDopingPlacementTruncation:
         assert sub.placed_pyrrolic == 0
 
     def test_placed_counts_always_set_even_on_truncation(self):
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
         mol = Chem.MolFromSmiles("c1ccc2ccc3ccccc3c2c1")  # anthracene — no 5-rings
         sub = NitrogenSubstitutor(seed=1)
         sub.substitute(mol, n_pyridinic=50, n_pyrrolic=50, n_graphitic=50)
@@ -299,23 +299,23 @@ class TestNDopingPlacementTruncation:
 
 class TestGetValenceRange:
     def test_unknown_element_returns_default_1_4(self):
-        from biochar.valence import get_valence_range
+        from biochar.pipeline.valence import get_valence_range
         min_v, max_v = get_valence_range(100)  # Fermium — not in STANDARD_VALENCES
         assert (min_v, max_v) == (1, 4)
 
     def test_nitrogen_positive_charge_extends_max_to_4(self):
-        from biochar.valence import get_valence_range
+        from biochar.pipeline.valence import get_valence_range
         min_v, max_v = get_valence_range(7, formal_charge=1)
         assert max_v == 4  # ammonium-like: extended to 4
 
     def test_nitrogen_negative_charge_lowers_min_valence(self):
-        from biochar.valence import get_valence_range
+        from biochar.pipeline.valence import get_valence_range
         min_v, max_v = get_valence_range(7, formal_charge=-1)
         standard_min = 3
         assert min_v < standard_min
 
     def test_sulfur_positive_charge_extends_max(self):
-        from biochar.valence import get_valence_range
+        from biochar.pipeline.valence import get_valence_range
         min_v, max_v = get_valence_range(16, formal_charge=1)
         assert max_v > 2  # extended beyond standard S max of 2
 
@@ -326,14 +326,14 @@ class TestGetValenceRange:
 
 class TestSafeBondAdderExistingBond:
     def test_existing_bond_rejected(self):
-        from biochar.valence import SafeBondAdder
+        from biochar.pipeline.valence import SafeBondAdder
         mol = Chem.MolFromSmiles("CC")
         can_add, reason = SafeBondAdder.can_add_bond(mol, 0, 1, bond_type=1)
         assert not can_add
         assert "already exists" in reason
 
     def test_nonexistent_bond_can_be_added(self):
-        from biochar.valence import SafeBondAdder
+        from biochar.pipeline.valence import SafeBondAdder
         mol = Chem.MolFromSmiles("CCC")  # C0-C1-C2; no bond between C0 and C2
         can_add, _ = SafeBondAdder.can_add_bond(mol, 0, 2, bond_type=1)
         assert can_add
@@ -345,7 +345,7 @@ class TestSafeBondAdderExistingBond:
 
 class TestValenceReport:
     def test_get_summary_returns_expected_fields(self):
-        from biochar.valence import ValenceReport
+        from biochar.pipeline.valence import ValenceReport
         mol = Chem.MolFromSmiles("CC")
         mol = Chem.AddHs(mol)
         summary = ValenceReport.get_summary(mol)
@@ -355,14 +355,14 @@ class TestValenceReport:
         assert summary["element_counts"]["C"] == 2
 
     def test_get_summary_all_valid_for_valid_molecule(self):
-        from biochar.valence import ValenceReport
+        from biochar.pipeline.valence import ValenceReport
         mol = Chem.MolFromSmiles("c1ccccc1")
         mol = Chem.AddHs(mol)
         summary = ValenceReport.get_summary(mol)
         assert summary["all_valid"]
 
     def test_print_summary_produces_output(self, capsys):
-        from biochar.valence import ValenceReport
+        from biochar.pipeline.valence import ValenceReport
         mol = Chem.MolFromSmiles("c1ccccc1")
         mol = Chem.AddHs(mol)
         ValenceReport.print_summary(mol)
@@ -376,7 +376,7 @@ class TestValenceReport:
 
 class TestValenceValidatorPrintReport:
     def test_print_valence_report_produces_output(self, capsys):
-        from biochar.valence import ValenceValidator
+        from biochar.pipeline.valence import ValenceValidator
         mol = Chem.MolFromSmiles("c1ccccc1")
         mol = Chem.AddHs(mol)
         ValenceValidator.print_valence_report(mol)
@@ -391,14 +391,14 @@ class TestValenceValidatorPrintReport:
 
 class TestAtomTyperFallbacks:
     def test_aliphatic_carbon_typed_as_ct(self):
-        from biochar.opls_typing import AtomTyper
+        from biochar.pipeline.opls_typing import AtomTyper
         mol = Chem.MolFromSmiles("CC")  # ethane — all sp3
         mol = Chem.AddHs(mol)
         types = AtomTyper().assign_atom_types(mol)
         assert "CT" in types.values()
 
     def test_h_on_aliphatic_c_typed_as_hc(self):
-        from biochar.opls_typing import AtomTyper
+        from biochar.pipeline.opls_typing import AtomTyper
         mol = Chem.MolFromSmiles("C")
         mol = Chem.AddHs(mol)
         types = AtomTyper().assign_atom_types(mol)
@@ -421,7 +421,7 @@ class TestAtomTyperFallbacks:
         # makes only ring-dopant N and the amino group's Ar-NH2), so the types were
         # removed and such a nitrogen now falls through to the X<Z> default that
         # OPLSPropertyTable.validate() reports as unrecognised.
-        from biochar.opls_typing import AtomTyper
+        from biochar.pipeline.opls_typing import AtomTyper
 
         mol = Chem.AddHs(Chem.MolFromSmiles(smiles))
         types = AtomTyper().assign_atom_types(mol)
@@ -430,7 +430,7 @@ class TestAtomTyperFallbacks:
         assert n_types == {"X7"}
 
     def test_unknown_element_returns_x_n_fallback(self):
-        from biochar.opls_typing import AtomTyper
+        from biochar.pipeline.opls_typing import AtomTyper
         # Xenon (54) passes through all element-specific branches
         rw = Chem.RWMol()
         rw.AddAtom(Chem.Atom(54))
@@ -445,37 +445,37 @@ class TestAtomTyperFallbacks:
 
 class TestChargeAssignerPrivateMethods:
     def test_estimate_charge_carbon_returns_typical_value(self):
-        from biochar.opls_typing import ChargeAssigner
+        from biochar.pipeline.opls_typing import ChargeAssigner
         mol = Chem.MolFromSmiles("CC")
         charge = ChargeAssigner()._estimate_charge(mol, 0, "XUNKNOWN")
         assert charge == pytest.approx(-0.15)
 
     def test_estimate_charge_oxygen(self):
-        from biochar.opls_typing import ChargeAssigner
+        from biochar.pipeline.opls_typing import ChargeAssigner
         mol = Chem.MolFromSmiles("O")
         charge = ChargeAssigner()._estimate_charge(mol, 0, "XUNKNOWN")
         assert charge == pytest.approx(-0.50)
 
     def test_estimate_charge_nitrogen(self):
-        from biochar.opls_typing import ChargeAssigner
+        from biochar.pipeline.opls_typing import ChargeAssigner
         mol = Chem.MolFromSmiles("N")
         charge = ChargeAssigner()._estimate_charge(mol, 0, "XUNKNOWN")
         assert charge == pytest.approx(-0.30)
 
     def test_estimate_charge_sulfur(self):
-        from biochar.opls_typing import ChargeAssigner
+        from biochar.pipeline.opls_typing import ChargeAssigner
         mol = Chem.MolFromSmiles("S")
         charge = ChargeAssigner()._estimate_charge(mol, 0, "XUNKNOWN")
         assert charge == pytest.approx(-0.20)
 
     def test_estimate_charge_hydrogen(self):
-        from biochar.opls_typing import ChargeAssigner
+        from biochar.pipeline.opls_typing import ChargeAssigner
         mol = Chem.MolFromSmiles("[H][H]")
         charge = ChargeAssigner()._estimate_charge(mol, 0, "XUNKNOWN")
         assert charge == pytest.approx(0.10)
 
     def test_estimate_charge_unknown_element_returns_zero(self):
-        from biochar.opls_typing import ChargeAssigner
+        from biochar.pipeline.opls_typing import ChargeAssigner
         rw = Chem.RWMol()
         rw.AddAtom(Chem.Atom(54))  # Xe
         mol = rw.GetMol()
@@ -483,14 +483,14 @@ class TestChargeAssignerPrivateMethods:
         assert charge == pytest.approx(0.0)
 
     def test_equilibrate_already_neutral_unchanged(self):
-        from biochar.opls_typing import ChargeAssigner
+        from biochar.pipeline.opls_typing import ChargeAssigner
         mol = Chem.MolFromSmiles("CC")
         charges = {0: 0.1, 1: -0.1}  # sums to 0
         result = ChargeAssigner()._equilibrate_charges(mol, charges)
         assert result == charges
 
     def test_equilibrate_imbalanced_charge_corrected_to_zero(self):
-        from biochar.opls_typing import ChargeAssigner
+        from biochar.pipeline.opls_typing import ChargeAssigner
         # Water molecule: give O a non-zero charge with no H's to spread to
         mol = Chem.MolFromSmiles("O")
         charges = {0: 0.4}
@@ -504,7 +504,7 @@ class TestChargeAssignerPrivateMethods:
 
 class TestOPLSPropertyTableUnknownType:
     def test_unknown_type_uses_rdkit_atom_mass(self):
-        from biochar.opls_typing import OPLSPropertyTable
+        from biochar.pipeline.opls_typing import OPLSPropertyTable
         mol = Chem.MolFromSmiles("C")
         mol = Chem.AddHs(mol)
         n = mol.GetNumAtoms()
@@ -540,7 +540,7 @@ class TestConstantsHelperFallbacks:
 
 class TestFixHeteroatomBondTypes:
     def test_spurious_aromatic_co_bond_reset_to_single(self):
-        from biochar.heteroatom_assignment import _fix_heteroatom_bond_types
+        from biochar.pipeline.heteroatom_assignment import _fix_heteroatom_bond_types
         # Build benzene with a pendant O, then manually mark C-O bond as AROMATIC.
         rw = Chem.RWMol(Chem.MolFromSmiles("c1ccccc1"))
         o_idx = rw.AddAtom(Chem.Atom(8))
@@ -558,7 +558,7 @@ class TestFixHeteroatomBondTypes:
         assert fixed.GetBondBetweenAtoms(c_idx, o_idx).GetBondTypeAsDouble() != 1.5
 
     def test_aromatic_ring_nitrogen_bonds_left_intact(self):
-        from biochar.heteroatom_assignment import _fix_heteroatom_bond_types
+        from biochar.pipeline.heteroatom_assignment import _fix_heteroatom_bond_types
         mol = Chem.MolFromSmiles("c1ccncc1")  # pyridine
         Chem.SanitizeMol(mol)
         fixed = _fix_heteroatom_bond_types(mol)
@@ -567,7 +567,7 @@ class TestFixHeteroatomBondTypes:
             assert bond.GetBondTypeAsDouble() == 1.5  # still AROMATIC
 
     def test_already_correct_molecule_returned_unchanged(self):
-        from biochar.heteroatom_assignment import _fix_heteroatom_bond_types
+        from biochar.pipeline.heteroatom_assignment import _fix_heteroatom_bond_types
         mol = Chem.MolFromSmiles("c1ccccc1")  # no heteroatoms
         fixed = _fix_heteroatom_bond_types(mol)
         assert fixed is mol  # no changes → same object returned
@@ -579,17 +579,17 @@ class TestFixHeteroatomBondTypes:
 
 class TestSafeSanitize:
     def test_does_not_raise_on_simple_mol(self):
-        from biochar.heteroatom_assignment import _safe_sanitize
+        from biochar.pipeline.heteroatom_assignment import _safe_sanitize
         mol = Chem.MolFromSmiles("c1ccccc1")
         _safe_sanitize(mol)  # must not raise
 
     def test_does_not_raise_on_rw_mol(self):
-        from biochar.heteroatom_assignment import _safe_sanitize
+        from biochar.pipeline.heteroatom_assignment import _safe_sanitize
         mol = Chem.RWMol(Chem.MolFromSmiles("c1ccc2ccccc2c1"))
         _safe_sanitize(mol)  # must not raise
 
     def test_does_not_raise_on_mol_with_heteroatoms(self):
-        from biochar.heteroatom_assignment import _safe_sanitize
+        from biochar.pipeline.heteroatom_assignment import _safe_sanitize
         mol = Chem.MolFromSmiles("c1ccncc1")  # pyridine
         _safe_sanitize(mol)  # must not raise
 
@@ -600,7 +600,7 @@ class TestSafeSanitize:
 
 class TestValidateAndNormaliseSpec:
     def test_unknown_group_keys_removed(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         result = OxygenAssigner(seed=1)._validate_and_normalise_spec(
             {"phenolic": 2, "bogusgroup": 3}
         )
@@ -608,7 +608,7 @@ class TestValidateAndNormaliseSpec:
         assert result.get("phenolic") == 2
 
     def test_fallback_groups_mapped_to_phenolic(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         # "carbonyl" and "quinone" both map to "phenolic" (see _FALLBACK_GROUPS)
         result = OxygenAssigner(seed=1)._validate_and_normalise_spec(
             {"carbonyl": 1, "quinone": 2}
@@ -618,14 +618,14 @@ class TestValidateAndNormaliseSpec:
         assert result.get("phenolic", 0) == 3
 
     def test_all_unknown_keys_returns_empty_dict(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         result = OxygenAssigner(seed=1)._validate_and_normalise_spec(
             {"fake1": 1, "fake2": 2}
         )
         assert result == {}
 
     def test_lactone_mapped_to_phenolic(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         result = OxygenAssigner(seed=1)._validate_and_normalise_spec(
             {"lactone": 3, "phenolic": 1}
         )
@@ -638,7 +638,7 @@ class TestValidateAndNormaliseSpec:
 
 class TestValidationModuleGaps:
     def test_chemical_feasibility_unusual_atom_generates_warning(self):
-        from biochar.validation import ChemicalFeasibilityValidator
+        from biochar.pipeline.validation import ChemicalFeasibilityValidator
         # Gold (79): atomic_num > 18 and not in [16, 17, 35]
         rw = Chem.RWMol()
         c_idx = rw.AddAtom(Chem.Atom(6))
@@ -651,20 +651,20 @@ class TestValidationModuleGaps:
         assert any("Unusual atom" in w or "Au" in w for w in report.warnings)
 
     def test_chemical_feasibility_high_total_charge_generates_warning(self):
-        from biochar.validation import ChemicalFeasibilityValidator
+        from biochar.pipeline.validation import ChemicalFeasibilityValidator
         # Three ammonium ions: total formal charge = 3 > 2
         mol = Chem.MolFromSmiles("[NH4+].[NH4+].[NH4+]")
         report = ChemicalFeasibilityValidator.validate(mol)
         assert any("charge" in w.lower() for w in report.warnings)
 
     def test_structure_validator_is_connected_empty_mol_returns_true(self):
-        from biochar.validation import StructureValidator
+        from biochar.pipeline.validation import StructureValidator
         # _is_connected with 0-atom mol returns True (line 263)
         mol = Chem.RWMol().GetMol()
         assert StructureValidator._is_connected(mol)
 
     def test_structure_validator_large_molecule_no_warning(self):
-        from biochar.validation import StructureValidator
+        from biochar.pipeline.validation import StructureValidator
         # num_atoms > 5000 triggers "very large" warning (line 221); skip —
         # small mol should produce no such warning
         mol = Chem.MolFromSmiles("c1ccccc1")

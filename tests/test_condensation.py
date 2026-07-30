@@ -1,5 +1,5 @@
 """
-Tests for biochar.condensation — the Wood et al. 2024 annealing setup (Phase 1).
+Tests for biochar.workflows.condensation — the Wood et al. 2024 annealing setup (Phase 1).
 
 Locks the exact protocol numbers (HTT-scaled peak temperature/timestep and the
 NVT/anneal/final durations) against Wood Tables 6 & 7, and checks the run-script
@@ -10,7 +10,7 @@ import stat
 
 import pytest
 
-from biochar.condensation import (
+from biochar.workflows.condensation import (
     AnnealSpec,
     CondensationError,
     add_surface_and_validation,
@@ -203,7 +203,7 @@ class TestSetupCondensation:
 
 class TestGenerateAndCondense:
     def test_end_to_end(self, tmp_path):
-        gen = pytest.importorskip("biochar.biochar_generator")
+        gen = pytest.importorskip("biochar.pipeline.biochar_generator")
         cfg = gen.GeneratorConfig(target_num_carbons=30, H_C_ratio=0.5, O_C_ratio=0.1,
                                   molecule_name="BC30", strict=False, seed=1)
         out = generate_and_condense(tmp_path / "run", n_copies=12,
@@ -317,7 +317,7 @@ class TestCli:
         ))
 
     def test_from_files(self, tmp_path):
-        from biochar.condensation_cli import main
+        from biochar.cli.condensation_cli import main
         (tmp_path / "m.gro").write_text(_valid_gro())
         (tmp_path / "m.itp").write_text(_ITP)
         run = tmp_path / "run"
@@ -327,7 +327,7 @@ class TestCli:
         assert "ref_t           = 2000" in (run / "nvt.mdp").read_text()  # 600 C
 
     def test_no_surface_no_validation(self, tmp_path):
-        from biochar.condensation_cli import main
+        from biochar.cli.condensation_cli import main
         (tmp_path / "m.gro").write_text(_valid_gro())
         (tmp_path / "m.itp").write_text(_ITP)
         run = tmp_path / "run"
@@ -339,8 +339,8 @@ class TestCli:
         assert not (run / "analyze.sh").exists()
 
     def test_generate(self, tmp_path):
-        pytest.importorskip("biochar.biochar_generator")
-        from biochar.condensation_cli import main
+        pytest.importorskip("biochar.pipeline.biochar_generator")
+        from biochar.cli.condensation_cli import main
         run = tmp_path / "run"
         rc = main(["generate", "--output-dir", str(run), "--copies", "10", "--htt", "800",
                    "--carbons", "30", "--hc", "0.5", "--oc", "0.1", "--name", "BC30", "--seed", "1"])

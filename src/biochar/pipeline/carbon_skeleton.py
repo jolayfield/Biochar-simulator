@@ -14,7 +14,7 @@ import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem, RWMol
 
-from .constants import PAH_LIBRARY
+from ..constants import PAH_LIBRARY
 
 
 # Target aromatic C–C bond length (Å) for hex-lattice layout.  Used to

@@ -151,7 +151,7 @@ class TestGenerateBiocharFunction:
 
 class TestCLI:
     def test_ph_flag_runs_and_charges_the_structure(self, tmp_path):
-        from biochar.cli import main
+        from biochar.cli.cli import main
 
         rc = main([
             "--carbons", "24", "--carboxyl", "3", "--pH", "7",
@@ -164,7 +164,7 @@ class TestCLI:
         assert itp, "no .itp written"
 
     def test_out_of_range_ph_exits_cleanly_without_a_traceback(self, tmp_path, capsys):
-        from biochar.cli import main
+        from biochar.cli.cli import main
 
         rc = main([
             "--carbons", "24", "--pH", "99",
@@ -176,7 +176,7 @@ class TestCLI:
         assert "Traceback" not in err
 
     def test_omitting_ph_still_works(self, tmp_path):
-        from biochar.cli import main
+        from biochar.cli.cli import main
 
         rc = main([
             "--carbons", "24", "--carboxyl", "3",
@@ -189,19 +189,19 @@ class TestCLI:
 
 class TestSweepAxis:
     def test_ph_is_a_valid_sweep_axis(self):
-        from biochar.sweep import expand_grid
+        from biochar.workflows.sweep import expand_grid
 
         points = expand_grid({"pH": [3.0, 7.0, 11.0]})
         assert len(points) == 3
 
     def test_ph_axis_produces_readable_labels(self):
-        from biochar.sweep import expand_grid
+        from biochar.workflows.sweep import expand_grid
 
         labels = [p.label for p in expand_grid({"pH": [3.0, 7.0]})]
         assert all("pH" in lbl for lbl in labels), labels
 
     def test_ph_sweep_produces_a_titration_series(self, tmp_path):
-        from biochar.sweep import run_sweep
+        from biochar.workflows.sweep import run_sweep
 
         summary = run_sweep(
             {
@@ -227,7 +227,7 @@ class TestSweepAxis:
 
     def test_net_charge_is_recorded_in_the_manifest(self, tmp_path):
         """Downstream md_setup consumers must see the charge budget."""
-        from biochar.sweep import run_sweep
+        from biochar.workflows.sweep import run_sweep
 
         summary = run_sweep(
             {
@@ -316,7 +316,7 @@ class TestSurfacePh:
 
     @staticmethod
     def _surface(**kw):
-        from biochar.surface_builder import SurfaceBuilder, SurfaceConfig
+        from biochar.workflows.surface_builder import SurfaceBuilder, SurfaceConfig
 
         base = dict(
             target_num_carbons=24,
@@ -428,7 +428,7 @@ class TestProtonationBondTypes:
         CLAUDE.md: '_fix_heteroatom_bond_types must be called after any RDKit
         SanitizeMol pass that touches a molecule containing ether oxygens.'
         """
-        from biochar.protonation import ProtonationAssigner
+        from biochar.pipeline.protonation import ProtonationAssigner
 
         mol = Chem.AddHs(Chem.MolFromSmiles("Oc1ccc2c(c1)Oc1ccccc1-2"))
         out, _ = ProtonationAssigner(seed=1).assign(mol, pH=13.0)
@@ -446,7 +446,7 @@ class TestProtonationBondTypes:
 
 class TestCensusMatchesReality:
     def test_ionized_counts_never_exceed_the_net_charge_they_imply(self):
-        from biochar.protonation import ProtonationAssigner
+        from biochar.pipeline.protonation import ProtonationAssigner
 
         mol = Chem.AddHs(Chem.MolFromSmiles("OC(=O)c1cc(C(=O)O)cc(C(=O)O)c1"))
         out, comp = ProtonationAssigner(seed=1).assign(mol, pH=12.0)
@@ -460,7 +460,7 @@ class TestCensusMatchesReality:
         from unittest.mock import patch
 
         from biochar.constants import PROTONATION_STATES, ProtonationState
-        from biochar.protonation import ProtonationAssigner
+        from biochar.pipeline.protonation import ProtonationAssigner
 
         clashing = dict(PROTONATION_STATES)
         clashing["hydroxyl"] = ProtonationState(
@@ -470,7 +470,7 @@ class TestCensusMatchesReality:
             description="duplicate neutral type",
         )
         with patch.dict(
-            "biochar.protonation.PROTONATION_STATES", clashing, clear=True
+            "biochar.pipeline.protonation.PROTONATION_STATES", clashing, clear=True
         ):
             with pytest.raises(ValueError, match="neutral_type"):
                 ProtonationAssigner(seed=1)

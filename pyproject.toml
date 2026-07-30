@@ -63,10 +63,10 @@ dev = [
 ]
 
 [project.scripts]
-biochar-gen = "biochar.cli:main"
-biochar-sweep = "biochar.sweep_cli:main"
-biochar-md-setup = "biochar.md_setup_cli:main"
-biochar-condense = "biochar.condensation_cli:main"
+biochar-gen = "biochar.cli.cli:main"
+biochar-sweep = "biochar.cli.sweep_cli:main"
+biochar-md-setup = "biochar.cli.md_setup_cli:main"
+biochar-condense = "biochar.cli.condensation_cli:main"
 
 [project.urls]
 Homepage = "https://github.com/jolayfield/Biochar-simulator"

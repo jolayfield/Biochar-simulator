@@ -1,26 +1,26 @@
 gromacs_export
 ==============
 
-.. autoclass:: biochar.gromacs_export.GromacsExporter
+.. autoclass:: biochar.export.gromacs_export.GromacsExporter
    :members:
    :undoc-members:
 
-.. autoclass:: biochar.gromacs_export.GROFileWriter
+.. autoclass:: biochar.export.gromacs_export.GROFileWriter
    :members:
    :undoc-members:
 
-.. autoclass:: biochar.gromacs_export.TOPFileWriter
+.. autoclass:: biochar.export.gromacs_export.TOPFileWriter
    :members:
    :undoc-members:
 
-.. autoclass:: biochar.gromacs_export.ITPFileWriter
+.. autoclass:: biochar.export.gromacs_export.ITPFileWriter
    :members:
    :undoc-members:
 
-.. autoclass:: biochar.gromacs_export.MultiSheetGROWriter
+.. autoclass:: biochar.export.gromacs_export.MultiSheetGROWriter
    :members:
    :undoc-members:
 
-.. autoclass:: biochar.gromacs_export.SurfaceTopologyWriter
+.. autoclass:: biochar.export.gromacs_export.SurfaceTopologyWriter
    :members:
    :undoc-members:

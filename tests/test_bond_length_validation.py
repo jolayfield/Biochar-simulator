@@ -24,7 +24,7 @@ from biochar.constants import (
     BOND_LENGTH_MIN_FACTOR,
     BOND_LENGTH_MAX_FACTOR,
 )
-from biochar.geometry_3d import GeometryValidator
+from biochar.pipeline.geometry_3d import GeometryValidator
 
 
 def _optimized(smiles: str, seed: int = 3):

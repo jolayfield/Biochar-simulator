@@ -115,7 +115,7 @@ only numpy; core functionality, not an optional extra).
 ## Verification
 
 ```bash
-python3 -c "from biochar.temperature_model import build_model; build_model()"  # writes JSON, prints dedup count + LOO-RMSE per property/feedstock
+python3 -c "from biochar.models.temperature_model import build_model; build_model()"  # writes JSON, prints dedup count + LOO-RMSE per property/feedstock
 python3 -m pytest tests/test_temperature_model.py -v
 python3 -m pytest tests/ -v   # full suite stays green
 ```

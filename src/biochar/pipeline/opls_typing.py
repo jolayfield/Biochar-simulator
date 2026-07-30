@@ -12,7 +12,7 @@ from rdkit import Chem
 
 logger = logging.getLogger(__name__)
 
-from .constants import OPLS_ATOM_TYPES
+from ..constants import OPLS_ATOM_TYPES
 
 
 @dataclass

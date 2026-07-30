@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 from rdkit import Chem
 
-from .constants import FUNCTIONAL_GROUPS
+from ..constants import FUNCTIONAL_GROUPS
 from .valence import ValenceValidator
 
 

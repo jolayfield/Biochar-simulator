@@ -9,7 +9,7 @@ import shutil
 
 import pytest
 
-from biochar.qm_charges import (
+from biochar.charges.qm_charges import (
     QMChargeAssigner,
     QMChargeError,
     cm1a_from_am1,
@@ -136,13 +136,13 @@ class TestDriver:
 
 class TestConfigWiring:
     def test_qm_accepted(self):
-        from biochar.biochar_generator import GeneratorConfig
+        from biochar.pipeline.biochar_generator import GeneratorConfig
 
         cfg = GeneratorConfig(charge_method="qm", target_num_carbons=10)
         assert cfg.charge_method == "qm"
 
     def test_invalid_method_rejected(self):
-        from biochar.biochar_generator import GeneratorConfig
+        from biochar.pipeline.biochar_generator import GeneratorConfig
 
         with pytest.raises(ValueError, match="charge_method"):
             GeneratorConfig(charge_method="bogus")

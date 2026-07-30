@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import argparse
 
-from .condensation import (
+from ..workflows.condensation import (
     add_surface_and_validation,
     generate_and_condense,
     setup_condensation,
@@ -58,8 +58,8 @@ def _finish(args) -> int:
 
 
 def _cmd_generate(args) -> int:
-    from .biochar_generator import GeneratorConfig
-    from .constants import WOOD_PENTAGON_FRACTION, WOOD_HEPTAGON_FRACTION
+    from ..pipeline.biochar_generator import GeneratorConfig
+    from ..constants import WOOD_PENTAGON_FRACTION, WOOD_HEPTAGON_FRACTION
 
     if args.wood_curvature:
         defect_fraction = WOOD_PENTAGON_FRACTION

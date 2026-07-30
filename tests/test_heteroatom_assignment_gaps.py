@@ -14,9 +14,9 @@ it. Deleting the fallback entirely would have kept every other test green.
 import pytest
 from rdkit import Chem
 
-from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
-from biochar.heteroatom_assignment import _fix_heteroatom_bond_types
-from biochar.valence import ValenceValidator
+from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
+from biochar.pipeline.heteroatom_assignment import _fix_heteroatom_bond_types
+from biochar.pipeline.valence import ValenceValidator
 
 
 def _generate(**kw):
@@ -100,8 +100,8 @@ class TestEtherRepairSurvivesEveryStage:
         # .heteroatom_assignment import _fix_heteroatom_bond_types`), so it
         # holds its own binding distinct from the defining module's -- both
         # must be patched to see every call site.
-        monkeypatch.setattr("biochar.biochar_generator._fix_heteroatom_bond_types", spy)
-        monkeypatch.setattr("biochar.heteroatom_assignment._fix_heteroatom_bond_types", spy)
+        monkeypatch.setattr("biochar.pipeline.biochar_generator._fix_heteroatom_bond_types", spy)
+        monkeypatch.setattr("biochar.pipeline.heteroatom_assignment._fix_heteroatom_bond_types", spy)
 
         mol, _ = _generate(
             target_num_carbons=24, functional_groups={"ether": 2},

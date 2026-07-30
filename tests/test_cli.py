@@ -6,7 +6,7 @@ import json
 import pytest
 from pathlib import Path
 
-from biochar.cli import _build_parser, main
+from biochar.cli.cli import _build_parser, main
 
 
 class TestParser:

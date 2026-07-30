@@ -32,9 +32,9 @@ class ValidationError(Exception):
     """Raised in strict mode when the generated structure fails validation."""
 from .geometry_3d import CoordinateGenerator, GeometryValidator, ClashResolver
 from .opls_typing import AtomTyper, ChargeAssigner
-from .gromacs_export import GromacsExporter
+from ..export.gromacs_export import GromacsExporter
 from .validation import ValidationEngine
-from .constants import MIN_BUILDABLE_AROMATICITY
+from ..constants import MIN_BUILDABLE_AROMATICITY
 
 
 @dataclass
@@ -177,13 +177,13 @@ class GeneratorConfig:
     # "qm"    — LigParGen-style QM charges: AM1 (via an external MOPAC binary) →
     #           CM1A mapping → ×1.14 scaling.  Requires ``mopac`` on PATH
     #           (``conda install -c conda-forge mopac``).  See
-    #           :mod:`biochar.qm_charges`.
+    #           :mod:`biochar.charges.qm_charges`.
     charge_method: str = "opls"
 
     # Data-driven composition by pyrolysis temperature (°C) and optional feedstock.
     # When `temperature` is set, any of H_C_ratio / O_C_ratio / aromaticity_percent
     # left as None are filled from the UC Davis Biochar Database model
-    # (:mod:`biochar.temperature_model`).  `feedstock` (one of
+    # (:mod:`biochar.models.temperature_model`).  `feedstock` (one of
     # ``temperature_model.VALID_FEEDSTOCKS``: softwood, hardwood, grass, manure,
     # corn_stover, wood) selects a feedstock-specific H/C·O/C curve where the data
     # supports it, otherwise the pooled curve is used.  A data-derived aromaticity
@@ -240,7 +240,7 @@ class GeneratorConfig:
             )
 
         if self.pH is not None:
-            from .constants import PH_MAX, PH_MIN
+            from ..constants import PH_MAX, PH_MIN
 
             if not PH_MIN <= self.pH <= PH_MAX:
                 raise ValueError(
@@ -263,14 +263,14 @@ class GeneratorConfig:
 
         # --- resolve composition: explicit > (temperature,feedstock)-derived > default ---
         if self.feedstock is not None:
-            from .temperature_model import VALID_FEEDSTOCKS
+            from ..models.temperature_model import VALID_FEEDSTOCKS
             if self.feedstock not in VALID_FEEDSTOCKS:
                 raise ValueError(
                     f"feedstock must be one of {VALID_FEEDSTOCKS} or None, "
                     f"got {self.feedstock!r}"
                 )
         if self.temperature is not None:
-            from .temperature_model import get_default_model
+            from ..models.temperature_model import get_default_model
             model = get_default_model()
             valid_range = model.get_valid_range(self.feedstock)
             if valid_range is not None:
@@ -435,7 +435,7 @@ class BiocharGenerator:
         grompp does reject it, supply the missing parameter in
         SUPPLEMENTARY_ANGLE_PARAMS with a provenanced value, per
         docs/solutions/conventions/verify-opls-types-against-real-forcefield.md.
-        Silence it with logging (this logger is 'biochar.biochar_generator').
+        Silence it with logging (this logger is 'biochar.pipeline.biochar_generator').
         """
         cfg = self.config
         doped = (cfg.num_pyridinic or 0) + (cfg.num_pyrrolic or 0) + (cfg.num_graphitic or 0)
@@ -928,12 +928,12 @@ class BiocharGenerator:
         self.charges = charger.assign_charges(mol, self.atom_types)
 
         if self.config.charge_method == "ml":
-            from .ml_charges import MLChargeRefinement
+            from ..charges.ml_charges import MLChargeRefinement
             refiner = MLChargeRefinement()
             self.charges = refiner.refine(mol, self.atom_types)
             logger.info("ML charge refinement applied.")
         elif self.config.charge_method == "qm":
-            from .qm_charges import QMChargeAssigner
+            from ..charges.qm_charges import QMChargeAssigner
             assigner = QMChargeAssigner()
             self.charges = assigner.assign(mol, coords, self.atom_types)
             logger.info("QM (1.14*CM1A) charge assignment applied.")

@@ -22,7 +22,7 @@ from biochar.constants import (
     HBOND_MIN_H_ACCEPTOR_DISTANCE,
     HBOND_MIN_DHA_ANGLE_DEG,
 )
-from biochar.geometry_3d import (
+from biochar.pipeline.geometry_3d import (
     GeometryValidator,
     _clash_floor,
     _get_hbond_pairs,
@@ -209,7 +209,7 @@ class TestHighOxygenCharRegression:
     # these across workers and rebuild the structure anyway.
     @pytest.fixture(scope="class", params=[0, 1, 2], ids=lambda s: f"seed{s}")
     def softwood_400(self, request):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
         cfg = GeneratorConfig(
             temperature=400, feedstock="softwood",
@@ -250,7 +250,7 @@ class TestHighOxygenCharRegression:
     # rq-51d0fb61
     def test_400C_softwood_passes_strict_mode(self):
         """The full strict path -- what the sweep actually invokes."""
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
         cfg = GeneratorConfig(
             temperature=400, feedstock="softwood",

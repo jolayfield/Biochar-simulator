@@ -24,7 +24,7 @@ from biochar.constants import (
     VDW_RADII,
     CLASH_SEVERITY_TOLERANCE,
 )
-from biochar.geometry_3d import GeometryValidator, ClashResolver
+from biochar.pipeline.geometry_3d import GeometryValidator, ClashResolver
 
 
 def _two_atoms(sym_a, sym_b, distance):
@@ -110,7 +110,7 @@ class TestManure400Regression:
 
     # rq-51d0fb61
     def test_manure_400_passes_strict(self):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
         cfg = GeneratorConfig(
             temperature=400, feedstock="manure", molecule_name="mn400",

@@ -4,7 +4,7 @@ Tests for biochar/valence.py — valence ranges, validator, report, safe bond ad
 
 from rdkit import Chem
 
-from biochar.valence import (
+from biochar.pipeline.valence import (
     get_valence_range,
     get_max_valence,
     get_min_valence,
@@ -133,7 +133,7 @@ class TestAnionSurvivesHydrogenAssignment:
         ]
 
     def test_phenolate_oxygen_keeps_its_charge_and_gains_no_hydrogen(self):
-        from biochar.heteroatom_assignment import HydrogenAssigner
+        from biochar.pipeline.heteroatom_assignment import HydrogenAssigner
 
         mol = self._phenolate()
         before = self._anionic_oxygens(mol)
@@ -153,7 +153,7 @@ class TestAnionSurvivesHydrogenAssignment:
 
     def test_neutral_phenol_oxygen_still_keeps_its_hydrogen(self):
         """Regression guard: the neutral path must be unchanged."""
-        from biochar.heteroatom_assignment import HydrogenAssigner
+        from biochar.pipeline.heteroatom_assignment import HydrogenAssigner
 
         mol = Chem.AddHs(Chem.MolFromSmiles("Oc1ccccc1"))
         out, _ = HydrogenAssigner(seed=0).assign_hydrogens(mol, target_H_C_ratio=1.0)
@@ -232,7 +232,7 @@ class TestValenceValidatorMolecule:
         assert len(all_vals) == mol.GetNumAtoms()
 
     def test_returns_list_of_valence_info_objects(self):
-        from biochar.valence import ValenceInfo
+        from biochar.pipeline.valence import ValenceInfo
         mol = Chem.MolFromSmiles("CCO")
         mol = Chem.AddHs(mol)
         all_vals = ValenceValidator.get_all_valences(mol)

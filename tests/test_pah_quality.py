@@ -22,8 +22,8 @@ logging.basicConfig(level=logging.CRITICAL)
 from rdkit import RDLogger
 RDLogger.DisableLog('rdApp.*')
 
-from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
-from biochar.geometry_3d import GeometryValidator
+from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
+from biochar.pipeline.geometry_3d import GeometryValidator
 from biochar.constants import PAH_LIBRARY
 from rdkit import Chem
 
@@ -167,7 +167,7 @@ class PAHQualityTester:
         sizes = [6, 16, 22, 24, 26, 28, 30, 40, 50, 100, 200]
         results = {}
 
-        from biochar.carbon_skeleton import PAHAssembler
+        from biochar.pipeline.carbon_skeleton import PAHAssembler
         for size in sizes:
             asm = PAHAssembler(seed=42)
             sk = asm.generate(size)
@@ -189,7 +189,7 @@ class PAHQualityTester:
         targets = [10, 18, 22, 26, 30, 40, 50, 75, 100, 150, 200]
         results = {}
 
-        from biochar.carbon_skeleton import PAHAssembler
+        from biochar.pipeline.carbon_skeleton import PAHAssembler
         for target in targets:
             asm = PAHAssembler(seed=42)
             sk = asm.generate(target)
