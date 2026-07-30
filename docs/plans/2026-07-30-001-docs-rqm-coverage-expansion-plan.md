@@ -100,12 +100,12 @@ for each. That is what makes back-annotation mechanical rather than interpretive
 `rr-plan` requires unresolved material decisions to be surfaced before requirements are written,
 and recorded when deferred. These are recorded, not resolved — each changes what gets written.
 
-**D1 — Do we adopt Feature API sections?** `rr-plan` requires them for new files describing
-interfaces reachable from elsewhere in the code. This repo's four existing `rqm/` documents have
-none, and `rqm/registry.json` holds zero API entries, so half the tooling's entity model is
-unexercised. *Recommendation:* adopt for new files covering `export/` and `workflows/`, whose
-writer and builder classes are consumed across subpackage boundaries; do not retrofit the three
-existing documents.
+**D1 — Do we adopt Feature API sections? — RESOLVED: yes, for every new file.** Broader than the
+recommendation this decision replaced, which would have limited them to `export/` and
+`workflows/`. Every new requirements file carries one; the three existing documents are not
+retrofitted. The rule and the three mechanical constraints `rqm.sh` enforces — exact `## Feature
+API` heading, top-level backticked bullets only, sub-bullets never stamped — are recorded in
+`.riprap/user/skills/rr-plan/local.md`, which is where the skill will actually read them.
 
 **D2 — What is the charge-sum tolerance?** The suite asserts charge-sums-to-formal-charge at
 fifteen-plus sites using 1e-4, 1e-5, and 1e-6 with no stated rationale. A requirement must pick

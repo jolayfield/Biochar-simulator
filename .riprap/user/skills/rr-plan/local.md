@@ -51,11 +51,28 @@ three tests is really three scenarios.
 
 ## Feature API sections
 
-Whether new files carry a `## Feature API` section is an open decision (D1 in
-`docs/plans/2026-07-30-001-docs-rqm-coverage-expansion-plan.md`). No existing `rqm/` document has
-one, and `rqm/registry.json` currently holds zero API entries. Until that is settled, add one
-only for a document covering interfaces consumed across subpackage boundaries — the `export/`
-writers and the `workflows/` builders — and not for `pipeline/` internals.
+**Every new requirements file carries a `## Feature API` section.** The three documents written
+before this rule — `geometry-embedding.md`, `heteroatom-assignment.md`, `opls-typing.md` — are not
+retrofitted; per the right-sizing rule, an in-place edit to one of them does not gain an API
+section just because it is being touched.
+
+Three mechanical constraints, all enforced by `rqm.sh` and pinned by its own test suite. Getting
+any of them wrong means `stamp` silently assigns no ID, and the item never enters the registry:
+
+- The heading must be exactly `## Feature API` — level 2, that exact text. A level-1 heading ends
+  the section, as does any other level-2 heading.
+- An API item is a **top-level bullet whose text begins with a backtick**: `` - `write_gro(...)` ``.
+  That is the only shape `stamp` recognises.
+- **Sub-bullets never receive IDs**, by design. Put one identifiable interface per top-level
+  bullet and its behaviour in indented sub-bullets beneath it.
+
+Write signatures in Python. `SKILL.md`'s example and `tools/rqm/bse.md` are both Rust — the
+structure they show carries over, the syntax does not. Prefer real type annotations, since this
+package ships `py.typed`.
+
+Document the interface's contract, not its implementation: what it accepts, what it returns, what
+it raises, and which of its behaviours callers are entitled to rely on. A silent fallback or a
+silent truncation **is** part of the contract and belongs here.
 
 ## Domain constraints worth knowing before drafting
 
