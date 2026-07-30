@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Tuple
 
 from rdkit import Chem
 
-from .constants import PH_MAX, PH_MIN, PROTONATION_STATES
+from ..constants import PH_MAX, PH_MIN, PROTONATION_STATES
 from .heteroatom_assignment import (
     CompositionResult,
     _fix_heteroatom_bond_types,

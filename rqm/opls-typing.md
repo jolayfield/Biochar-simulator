@@ -1,6 +1,6 @@
 # Feature: OPLS-AA Atom Typing and Force-Field Mapping <!-- rq-c2c2dbbd -->
 
-`AtomTyper` (`src/biochar/opls_typing.py`) assigns each atom an internal OPLS type, and
+`AtomTyper` (`src/biochar/pipeline/opls_typing.py`) assigns each atom an internal OPLS type, and
 `GROMACS_OPLS_TYPE_MAP` (`src/biochar/constants.py`) translates those to the `opls_XXX` names that
 GROMACS resolves against a real `oplsaa.ff`.
 

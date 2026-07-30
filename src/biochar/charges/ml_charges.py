@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_MODEL_PATH = Path(__file__).parent / "data" / "charges_gpr_cm5.pkl"
+_DEFAULT_MODEL_PATH = Path(__file__).parent.parent / "data" / "charges_gpr_cm5.pkl"
 
 
 class MLChargeRefinement:
@@ -67,11 +67,11 @@ class MLChargeRefinement:
         Args:
             mol: RDKit molecule.
             atom_types: Mapping ``{atom_idx: opls_type}`` from
-                :class:`~biochar.opls_typing.AtomTyper`.
+                :class:`~biochar.pipeline.opls_typing.AtomTyper`.
 
         Returns:
             Dict ``{atom_idx: charge}``, same structure as
-            :meth:`~biochar.opls_typing.ChargeAssigner.assign_charges`.
+            :meth:`~biochar.pipeline.opls_typing.ChargeAssigner.assign_charges`.
         """
         X = self._featurize(mol, atom_types)
         raw_q = self._model.predict(X).astype(float)
@@ -246,7 +246,7 @@ def _generate_training_data() -> tuple[np.ndarray, np.ndarray]:
     Build (X, y) from representative PAH/biochar structures using OPLS charges
     as targets.  Returns arrays suitable for ``sklearn`` fit calls.
     """
-    from .opls_typing import AtomTyper, ChargeAssigner
+    from ..pipeline.opls_typing import AtomTyper, ChargeAssigner
 
     smiles_list = [
         "c1ccccc1",               # benzene
@@ -325,7 +325,7 @@ def build_and_save_bundled_model(output_path: Optional[Path] = None) -> Path:
     Intended to be run once during development to regenerate
     ``biochar/data/charges_gpr_cm5.pkl``::
 
-        python -c "from biochar.ml_charges import build_and_save_bundled_model; build_and_save_bundled_model()"
+        python -c "from biochar.charges.ml_charges import build_and_save_bundled_model; build_and_save_bundled_model()"
 
     Returns:
         Path where the model was saved.

@@ -12,8 +12,8 @@ import pytest
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from biochar.heteroatom_assignment import CompositionInfo
-from biochar.validation import (
+from biochar.pipeline.heteroatom_assignment import CompositionInfo
+from biochar.pipeline.validation import (
     CompositionValidator,
     ChemicalFeasibilityValidator,
     StructureValidator,
@@ -274,7 +274,7 @@ class TestConstantsSanity:
 
 class TestOPLSTypingSpecific:
     def test_aromatic_carbons_typed_as_CA(self):
-        from biochar.opls_typing import AtomTyper
+        from biochar.pipeline.opls_typing import AtomTyper
         mol = Chem.MolFromSmiles("c1ccccc1")
         typer = AtomTyper()
         atom_types = typer.assign_atom_types(mol)
@@ -285,7 +285,7 @@ class TestOPLSTypingSpecific:
                 )
 
     def test_aromatic_hydrogens_typed_as_HA(self):
-        from biochar.opls_typing import AtomTyper
+        from biochar.pipeline.opls_typing import AtomTyper
         mol = Chem.MolFromSmiles("c1ccccc1")
         mol = Chem.AddHs(mol)
         typer = AtomTyper()
@@ -299,7 +299,7 @@ class TestOPLSTypingSpecific:
                     )
 
     def test_property_table_length_matches_atom_count(self):
-        from biochar.opls_typing import AtomTyper, ChargeAssigner, OPLSPropertyTable
+        from biochar.pipeline.opls_typing import AtomTyper, ChargeAssigner, OPLSPropertyTable
         mol = Chem.MolFromSmiles("c1ccccc1O")
         mol = Chem.AddHs(mol)
         typer = AtomTyper()
@@ -312,7 +312,7 @@ class TestOPLSTypingSpecific:
 
     def test_charge_sum_is_approximately_zero(self):
         """Total charge of a neutral molecule should be near zero."""
-        from biochar.opls_typing import AtomTyper, ChargeAssigner, OPLSPropertyTable
+        from biochar.pipeline.opls_typing import AtomTyper, ChargeAssigner, OPLSPropertyTable
         mol = Chem.MolFromSmiles("c1ccccc1")
         mol = Chem.AddHs(mol)
         typer = AtomTyper()
@@ -330,21 +330,21 @@ class TestOPLSTypingSpecific:
 
 class TestGeometryValidatorPublicMethods:
     def test_check_aromaticity_benzene(self):
-        from biochar.geometry_3d import GeometryValidator
+        from biochar.pipeline.geometry_3d import GeometryValidator
         mol = Chem.MolFromSmiles("c1ccccc1")
         is_aromatic, num_aromatic = GeometryValidator.check_aromaticity(mol)
         assert is_aromatic
         assert num_aromatic == 6
 
     def test_check_aromaticity_ethane_not_aromatic(self):
-        from biochar.geometry_3d import GeometryValidator
+        from biochar.pipeline.geometry_3d import GeometryValidator
         mol = Chem.MolFromSmiles("CC")
         is_aromatic, num_aromatic = GeometryValidator.check_aromaticity(mol)
         assert not is_aromatic
         assert num_aromatic == 0
 
     def test_measure_ring_planarity_benzene(self):
-        from biochar.geometry_3d import GeometryValidator
+        from biochar.pipeline.geometry_3d import GeometryValidator
         mol, coords = _benzene_3d()
         planarity, assessment = GeometryValidator.measure_ring_planarity(mol, coords)
         assert isinstance(planarity, float)
@@ -353,7 +353,7 @@ class TestGeometryValidatorPublicMethods:
         assert planarity < 0.5
 
     def test_measure_ring_planarity_no_rings(self):
-        from biochar.geometry_3d import GeometryValidator
+        from biochar.pipeline.geometry_3d import GeometryValidator
         mol = Chem.MolFromSmiles("CC")
         mol = Chem.AddHs(mol)
         AllChem.EmbedMolecule(mol, randomSeed=0)

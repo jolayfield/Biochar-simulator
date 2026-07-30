@@ -21,11 +21,11 @@ Import directly from the `biochar` package (no path manipulation needed):
 
 ```python
 from biochar import BiocharGenerator, GeneratorConfig, generate_biochar, generate_surface
-from biochar.biochar_generator import generate_biochar_series
+from biochar.pipeline.biochar_generator import generate_biochar_series
 ```
 
 > ⚠ **Common mistake**: `generate_biochar_series` is not re-exported from the top-level `biochar`
-> package — import it from `biochar.biochar_generator` directly.
+> package — import it from `biochar.pipeline.biochar_generator` directly.
 
 ---
 
@@ -91,7 +91,7 @@ As of v1.2, all generated structures satisfy both minimum and maximum valence:
 ### How to Verify
 
 ```python
-from biochar.valence import ValenceValidator
+from biochar.pipeline.valence import ValenceValidator
 
 # Check after generation
 is_valid, errors = ValenceValidator.validate_molecule(mol)
@@ -106,7 +106,7 @@ else:
 ### Interpreting the Valence Report
 
 ```python
-from biochar.valence import ValenceValidator
+from biochar.pipeline.valence import ValenceValidator
 ValenceValidator.print_valence_report(mol)
 ```
 

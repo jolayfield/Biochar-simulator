@@ -52,7 +52,7 @@ pip install biochar
 ### Single molecule
 
 ```python
-from biochar.biochar_generator import generate_biochar
+from biochar.pipeline.biochar_generator import generate_biochar
 
 mol, coords, gro_path, top_path, itp_path = generate_biochar(
     target_num_carbons=100,
@@ -117,7 +117,7 @@ print(result.ring_composition)  # e.g. {"hexagons": 12, "pentagons": 2}
 ### Slit-pore surface
 
 ```python
-from biochar.biochar_generator import generate_surface
+from biochar.workflows.surface_builder import generate_surface
 
 # Two identical sheets, 10 Å pore
 sheets, gro, top, itps = generate_surface(
@@ -144,7 +144,7 @@ sheets, gro, top, itps = generate_surface(
 ### Batch generation (temperature/composition series)
 
 ```python
-from biochar.biochar_generator import generate_biochar_series
+from biochar.pipeline.biochar_generator import generate_biochar_series
 
 configs = [
     {"molecule_name": "BC400", "target_num_carbons": 80,  "H_C_ratio": 0.65, "O_C_ratio": 0.20, "seed": 1},
@@ -206,7 +206,7 @@ fixed:                  # applied to every grid point
 ```
 
 Temperature and feedstock are mapped to `H_C_ratio` / `O_C_ratio` targets via
-`biochar.temperature_model`, so a single temperature axis drives the oxygen
+`biochar.models.temperature_model`, so a single temperature axis drives the oxygen
 chemistry automatically. The example
 [`examples/sweeps/oxygen_group_grid.yaml`](examples/sweeps/oxygen_group_grid.yaml)
 sweeps explicit `functional_groups` counts instead.
@@ -214,7 +214,7 @@ sweeps explicit `functional_groups` counts instead.
 ### Python API
 
 ```python
-from biochar.sweep import load_sweep_config, run_sweep
+from biochar.workflows.sweep import load_sweep_config, run_sweep
 
 cfg = load_sweep_config("examples/sweeps/temperature_grid.yaml")
 summary = run_sweep(cfg, quiet=True)
@@ -502,7 +502,7 @@ biochar-md-setup sweep_out/temperature_grid/manifest.csv \
 ### Python API
 
 ```python
-from biochar.md_setup import setup_md_from_manifest
+from biochar.export.md_setup import setup_md_from_manifest
 
 results = setup_md_from_manifest(
     "sweep_out/temperature_grid/manifest.csv",
@@ -561,7 +561,7 @@ solvation** — the pipeline anneals the bare surface, inserts the molecules
 a topology that already accounts for them:
 
 ```python
-from biochar.md_setup import MDSetupConfig, PreSolvationStage, MoleculeInsertion
+from biochar.export.md_setup import MDSetupConfig, PreSolvationStage, MoleculeInsertion
 
 stage = PreSolvationStage(
     name="Insert sorbate molecules",
@@ -583,7 +583,7 @@ PFAS-sorption simulations.
 
 ## Wood-style condensation (bulk & surface models)
 
-`biochar.condensation` is a **parallel construction mode** that reproduces the
+`biochar.workflows.condensation` is a **parallel construction mode** that reproduces the
 Wood, Mašek & Erastova (2024, *Cell Rep. Phys. Sci.* 5, 102037) protocol:
 instead of a single flat sheet, it packs **many copies of one biochar molecule**
 into a box and condenses them into an amorphous **bulk** via HTT-scaled simulated
@@ -609,7 +609,7 @@ and `analyze.sh` (true density, SASA, convergence, TEM).
 ### Python API
 
 ```python
-from biochar.condensation import generate_and_condense, add_surface_and_validation
+from biochar.workflows.condensation import generate_and_condense, add_surface_and_validation
 
 run = generate_and_condense("cond_600", n_copies=50, htt_c=600)  # pack + anneal setup
 add_surface_and_validation(run)                                   # + surface + analysis

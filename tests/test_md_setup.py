@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from biochar.md_setup import (
+from biochar.export.md_setup import (
     ION_PROFILES,
     IonProfile,
     MDSetupConfig,
@@ -23,7 +23,7 @@ from biochar.md_setup import (
     setup_md_from_manifest,
     setup_one_structure,
 )
-from biochar.sweep import run_sweep
+from biochar.workflows.sweep import run_sweep
 
 
 # --------------------------------------------------------------------------- #
@@ -58,7 +58,7 @@ class TestIonProfiles:
 @pytest.fixture()
 def built_structure(tmp_path):
     """Build one real biochar structure+GROMACS export to feed into md_setup."""
-    from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+    from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
     gen = BiocharGenerator(GeneratorConfig(
         target_num_carbons=30, H_C_ratio=0.5, O_C_ratio=0.1, strict=False, seed=7,
@@ -264,7 +264,7 @@ class TestSetupMdFromManifest:
 # --------------------------------------------------------------------------- #
 class TestMdSetupCli:
     def test_cli_runs_end_to_end(self, small_sweep_manifest, tmp_path):
-        from biochar.md_setup_cli import main
+        from biochar.cli.md_setup_cli import main
 
         out_root = tmp_path / "cli_runs"
         rc = main([str(small_sweep_manifest), "--output-root", str(out_root)])
@@ -273,7 +273,7 @@ class TestMdSetupCli:
         assert len(list(out_root.iterdir())) == 2
 
     def test_cli_rejects_bad_ion_profile(self, small_sweep_manifest, tmp_path):
-        from biochar.md_setup_cli import main
+        from biochar.cli.md_setup_cli import main
 
         with pytest.raises(SystemExit):
             main([str(small_sweep_manifest), "--output-root", str(tmp_path / "x"),

@@ -95,7 +95,7 @@ mol, coords, gro, top, itp = generate_biochar(
 
 ### Batch Generation (NEW)
 ```python
-from biochar.biochar_generator import generate_biochar_series
+from biochar.pipeline.biochar_generator import generate_biochar_series
 
 configs = [
     {"molecule_name": "BC400", "H_C_ratio": 0.65, "O_C_ratio": 0.20},

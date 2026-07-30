@@ -1,6 +1,6 @@
 # Feature: Heteroatom and Functional Group Assignment <!-- rq-ffb45a6e -->
 
-`OxygenAssigner` and `HydrogenAssigner` (`src/biochar/heteroatom_assignment.py`) decorate a bare PAH
+`OxygenAssigner` and `HydrogenAssigner` (`src/biochar/pipeline/heteroatom_assignment.py`) decorate a bare PAH
 skeleton with functional groups and then saturate the remaining free valences.
 
 Two things in this module surprise people. First, three of the functional groups a caller can

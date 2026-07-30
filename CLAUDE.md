@@ -90,32 +90,39 @@ from this file — check those two.
 
 | Console script | Module | Purpose |
 |---|---|---|
-| `biochar-gen` | `cli.py` | Generate a single structure or series |
-| `biochar-sweep` | `sweep_cli.py` | Run a declarative factorial parameter sweep |
-| `biochar-md-setup` | `md_setup_cli.py` | Generate GROMACS run directories from a sweep manifest |
-| `biochar-condense` | `condensation_cli.py` | Set up a Wood et al. 2024 condensation-annealing run |
+| `biochar-gen` | `cli/cli.py` | Generate a single structure or series |
+| `biochar-sweep` | `cli/sweep_cli.py` | Run a declarative factorial parameter sweep |
+| `biochar-md-setup` | `cli/md_setup_cli.py` | Generate GROMACS run directories from a sweep manifest |
+| `biochar-condense` | `cli/condensation_cli.py` | Set up a Wood et al. 2024 condensation-annealing run |
 
 ### Module map
 
-`biochar_generator.py` orchestrates the single-molecule pipeline (five steps, below). Beyond that pipeline:
+The package is organised into subpackages (`pipeline/`, `charges/`, `export/`, `workflows/`,
+`models/`, `cli/`) that follow the import graph, plus `constants.py` kept at the package root
+since every subpackage imports it. Full layering detail lives in `rqm/ARCHITECTURE.md`; this is
+a quick index.
 
-- **`sweep.py`** — declarative parameter-sweep driver; `run_sweep`, `expand_grid`, `build_point`, and the
-  sweep manifest that `md_setup` consumes.
-- **`md_setup.py`** — writes GROMACS run inputs (`.mdp` templates plus a driver script) per structure;
-  `setup_md_from_manifest`, ion profiles, pre-solvation stages.
-- **`condensation.py`** — Wood et al. 2024 condensation-annealing setup (parallel construction mode).
-- **`temperature_model.py`** — data-driven temperature × feedstock property model; `TemperatureModel`,
-  `properties`, `VALID_FEEDSTOCKS`.
-- **`qm_charges.py`** — LigParGen-style QM partial charges (1.14*CM1A) via an external MOPAC binary.
-  Requires a MOPAC install; raises `QMChargeError` when unavailable.
-- **`ml_charges.py`** — ML-based partial charge refinement.
-- **`valence.py`** — valence validation system (see `docs/guides/VALENCE_SYSTEM.md`).
-- **`cli.py`**, **`sweep_cli.py`**, **`md_setup_cli.py`**, **`condensation_cli.py`** — argument parsing only;
-  the logic lives in the module each one wraps.
+`pipeline/biochar_generator.py` orchestrates the single-molecule pipeline (five steps, below).
+Beyond that pipeline:
+
+- **`workflows/sweep.py`** — declarative parameter-sweep driver; `run_sweep`, `expand_grid`,
+  `build_point`, and the sweep manifest that `export/md_setup.py` consumes.
+- **`export/md_setup.py`** — writes GROMACS run inputs (`.mdp` templates plus a driver script) per
+  structure; `setup_md_from_manifest`, ion profiles, pre-solvation stages.
+- **`workflows/condensation.py`** — Wood et al. 2024 condensation-annealing setup (parallel
+  construction mode).
+- **`models/temperature_model.py`** — data-driven temperature × feedstock property model;
+  `TemperatureModel`, `properties`, `VALID_FEEDSTOCKS`.
+- **`charges/qm_charges.py`** — LigParGen-style QM partial charges (1.14*CM1A) via an external
+  MOPAC binary. Requires a MOPAC install; raises `QMChargeError` when unavailable.
+- **`charges/ml_charges.py`** — ML-based partial charge refinement.
+- **`pipeline/valence.py`** — valence validation system (see `docs/guides/VALENCE_SYSTEM.md`).
+- **`cli/cli.py`**, **`cli/sweep_cli.py`**, **`cli/md_setup_cli.py`**, **`cli/condensation_cli.py`**
+  — argument parsing only; the logic lives in the module each one wraps.
 
 ### Generation pipeline (single molecule)
 
-`BiocharGenerator.generate()` runs five sequential steps, each in its own module:
+`BiocharGenerator.generate()` runs five sequential steps, each in its own module under `pipeline/`:
 
 1. **`carbon_skeleton.py`** — `PAHAssembler` builds a PAH graph. For targets ≤40 C it picks an exact SMILES from `PAH_LIBRARY` (in `constants.py`). For larger targets it selects the closest library seed then iteratively fuses rings (hexagons or pentagons controlled by `defect_fraction`) until the carbon count is within tolerance. A custom hex-lattice position tracker keeps all coordinates consistent so `geometry_3d` receives a flat, strain-free sheet.
 
@@ -129,11 +136,11 @@ from this file — check those two.
 
 ### Surface pipeline
 
-`generate_surface()` → `SurfaceBuilder` (`surface_builder.py`). Generates each sheet through the single-molecule pipeline, flattens to the xy plane (SVD best-fit rotation), then stacks along z with spacing `pore_diameter + 3.4 Å` (graphene interlayer distance). Identical sheets are generated once and deep-copied. The combined `.gro` has all sheets as separate residues; `.top` references one `.itp` (identical sheets) or one `.itp` per unique sheet type.
+`generate_surface()` → `SurfaceBuilder` (`workflows/surface_builder.py`). Generates each sheet through the single-molecule pipeline, flattens to the xy plane (SVD best-fit rotation), then stacks along z with spacing `pore_diameter + 3.4 Å` (graphene interlayer distance). Identical sheets are generated once and deep-copied. The combined `.gro` has all sheets as separate residues; `.top` references one `.itp` (identical sheets) or one `.itp` per unique sheet type.
 
 ### GROMACS export
 
-`gromacs_export.py` contains three writers: `GROFileWriter`, `ITPFileWriter`, `TOPFileWriter`, orchestrated by `GromacsExporter`. Coordinates are converted from RDKit Å → GROMACS nm (× 0.1). Residue names are hard-limited to 5 characters by GROMACS `.gro` format.
+`export/gromacs_export.py` contains three writers: `GROFileWriter`, `ITPFileWriter`, `TOPFileWriter`, orchestrated by `GromacsExporter`. Coordinates are converted from RDKit Å → GROMACS nm (× 0.1). Residue names are hard-limited to 5 characters by GROMACS `.gro` format.
 
 ### Key constraints
 

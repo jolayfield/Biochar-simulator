@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from biochar.gromacs_export import (
+from biochar.export.gromacs_export import (
     GROFileWriter,
     TOPFileWriter,
     ITPFileWriter,
@@ -20,7 +20,7 @@ from biochar.gromacs_export import (
     MultiSheetGROWriter,
     SurfaceTopologyWriter,
 )
-from biochar.opls_typing import AtomTyper, ChargeAssigner
+from biochar.pipeline.opls_typing import AtomTyper, ChargeAssigner
 
 
 # ---------------------------------------------------------------------------

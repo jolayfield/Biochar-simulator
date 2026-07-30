@@ -19,7 +19,7 @@ import pytest
 from rdkit import Chem
 from rdkit import RDLogger
 
-from biochar.biochar_generator import (
+from biochar.pipeline.biochar_generator import (
     BiocharGenerator,
     GeneratorConfig,
 )
@@ -148,7 +148,7 @@ class TestUnreachableReporting:
 
     def test_warning_logged_when_unreachable(self, caplog):
         import logging
-        with caplog.at_level(logging.WARNING, logger="biochar.heteroatom_assignment"):
+        with caplog.at_level(logging.WARNING, logger="biochar.pipeline.heteroatom_assignment"):
             _build(
                 target_num_carbons=100, H_C_ratio=0.9, O_C_ratio=0.0,
                 allow_aliphatic=False, seed=3, strict=False,

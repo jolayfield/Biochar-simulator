@@ -112,7 +112,7 @@ Do not compare against intuition — compare against the old code path directly.
 new helper to a no-op reproduces the previous behaviour exactly, without stashing files:
 
 ```python
-import biochar.geometry_3d as G
+import biochar.pipeline.geometry_3d as G
 G._get_hbond_pairs = lambda mol, coords: set()
 ```
 

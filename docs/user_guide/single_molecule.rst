@@ -2,8 +2,8 @@ Single Molecule Generation
 ==========================
 
 The primary API for generating a single biochar molecule is
-:func:`~biochar.biochar_generator.generate_biochar` (convenience function) or
-the lower-level :class:`~biochar.biochar_generator.BiocharGenerator` class.
+:func:`~biochar.pipeline.biochar_generator.generate_biochar` (convenience function) or
+the lower-level :class:`~biochar.pipeline.biochar_generator.BiocharGenerator` class.
 
 Generation pipeline
 -------------------
@@ -159,7 +159,7 @@ Pass an integer ``seed`` to get deterministic output:
 Using the class API
 -------------------
 
-For more control, use :class:`~biochar.biochar_generator.BiocharGenerator`
+For more control, use :class:`~biochar.pipeline.biochar_generator.BiocharGenerator`
 directly:
 
 .. code-block:: python

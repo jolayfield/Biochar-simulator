@@ -13,7 +13,7 @@ characterization tests here exist to prove.
 import pytest
 from rdkit import Chem
 
-from biochar.opls_typing import AtomTyper, ChargeAssigner, OPLSPropertyTable
+from biochar.pipeline.opls_typing import AtomTyper, ChargeAssigner, OPLSPropertyTable
 
 
 def charges_for(smiles: str):
@@ -110,7 +110,7 @@ class TestGraphiticNitrogenChargeIsNoLongerSmearedAway:
 
     @staticmethod
     def _graphitic_mol():
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
 
         mol = Chem.MolFromSmiles("c1cc2ccc3ccc4ccc5ccc6ccc1c1c2c3c4c5c61")
         sub = NitrogenSubstitutor(seed=1)

@@ -120,8 +120,8 @@ through one typed seam.
 ## 4. The interface contract (what biochar-pfas imports)
 
 ```python
-from biochar.sweep     import run_sweep, load_sweep_config           # generate surfaces
-from biochar.md_setup  import (setup_md_from_manifest, MDSetupConfig,  # equilibrate
+from biochar.workflows.sweep     import run_sweep, load_sweep_config           # generate surfaces
+from biochar.export.md_setup  import (setup_md_from_manifest, MDSetupConfig,  # equilibrate
                                PreSolvationStage, IonProfile)
 ```
 

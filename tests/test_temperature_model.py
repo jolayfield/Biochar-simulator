@@ -4,7 +4,7 @@ Tests for the data-driven temperature × feedstock property model.
 
 import pytest
 
-from biochar.temperature_model import (
+from biochar.models.temperature_model import (
     TemperatureModel,
     properties,
     get_default_model,
@@ -13,7 +13,7 @@ from biochar.temperature_model import (
     _classify_feedstock,
     _MODEL_PATH,
 )
-from biochar.biochar_generator import GeneratorConfig, BiocharGenerator
+from biochar.pipeline.biochar_generator import GeneratorConfig, BiocharGenerator
 from biochar.constants import MIN_BUILDABLE_AROMATICITY, UC_DAVIS_DB_URL
 
 M = get_default_model()

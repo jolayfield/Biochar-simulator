@@ -116,7 +116,7 @@ class TestProtonationStatesTable:
 # U3 — the ProtonationAssigner engine
 # ---------------------------------------------------------------------------
 
-from biochar.protonation import ProtonationAssigner, fraction_ionized
+from biochar.pipeline.protonation import ProtonationAssigner, fraction_ionized
 
 
 class TestFractionIonized:
@@ -332,7 +332,7 @@ class TestUntouchedGroups:
         assert net_formal(out) == 0
 
     def test_graphitic_nitrogen_is_never_titrated(self):
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
 
         mol = Chem.MolFromSmiles("c1cc2ccc3ccc4ccc5ccc6ccc1c1c2c3c4c5c61")
         sub = NitrogenSubstitutor(seed=1)
@@ -380,7 +380,7 @@ class TestOutputIsUsable:
     """The assigner's output must survive the rest of the pipeline."""
 
     def test_ionized_output_types_and_charges_correctly(self):
-        from biochar.opls_typing import AtomTyper, ChargeAssigner
+        from biochar.pipeline.opls_typing import AtomTyper, ChargeAssigner
 
         out, comp = ProtonationAssigner(seed=1).assign(_mol(TRIACID), pH=12.0)
         types = AtomTyper().assign_atom_types(out)
@@ -389,7 +389,7 @@ class TestOutputIsUsable:
         assert sum(charges.values()) == pytest.approx(comp.net_charge, abs=1e-6)
 
     def test_ionized_output_passes_valence_validation(self):
-        from biochar.valence import ValenceValidator
+        from biochar.pipeline.valence import ValenceValidator
 
         out, _ = ProtonationAssigner(seed=1).assign(_mol(TRIACID), pH=12.0)
         ok, errors = ValenceValidator.validate_molecule(out)
@@ -397,7 +397,7 @@ class TestOutputIsUsable:
 
     def test_hydrogen_assignment_does_not_reprotonate_the_result(self):
         """End to end with U2: the anions must survive H saturation."""
-        from biochar.heteroatom_assignment import HydrogenAssigner
+        from biochar.pipeline.heteroatom_assignment import HydrogenAssigner
 
         out, comp = ProtonationAssigner(seed=1).assign(_mol(TRIACID), pH=12.0)
         after, _ = HydrogenAssigner(seed=0).assign_hydrogens(out, target_H_C_ratio=1.0)

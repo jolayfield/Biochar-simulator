@@ -33,7 +33,7 @@ fixed:
 
 # Each key is a GeneratorConfig field; the sweep takes the product of the lists.
 # temperature + feedstock derive H/C, O/C, and aromaticity from the built-in
-# temperature model (see biochar.temperature_model.VALID_FEEDSTOCKS).
+# temperature model (see biochar.models.temperature_model.VALID_FEEDSTOCKS).
 axes:
   temperature: [300, 400, 500, 600, 700]
   feedstock: [softwood, hardwood]
@@ -95,7 +95,7 @@ def main(argv=None) -> int:
     elif getattr(args, "verbose", False):
         logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-    from biochar.sweep import run_sweep, SweepError
+    from biochar.workflows.sweep import run_sweep, SweepError
 
     cfg_path = Path(args.config)
     if not cfg_path.exists():

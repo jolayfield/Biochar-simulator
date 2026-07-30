@@ -33,7 +33,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-_DATA_DIR = Path(__file__).parent / "data"
+_DATA_DIR = Path(__file__).parent.parent / "data"
 _MODEL_PATH = _DATA_DIR / "temperature_model.json"
 _DAVIS_CSV = _DATA_DIR / "davis-biochar-db.csv"
 _AROM_CSV = _DATA_DIR / "biochar_data.csv"
@@ -252,7 +252,7 @@ def build_model(output_path: Optional[Path] = None) -> Path:
 
     Dev/offline entry point::
 
-        python -c "from biochar.temperature_model import build_model; build_model()"
+        python -c "from biochar.models.temperature_model import build_model; build_model()"
 
     Returns the path written. Prints a short QC report (dedup count, per-property
     point counts, aromaticity fit R²).
@@ -453,7 +453,7 @@ def get_valid_range(feedstock: Optional[str] = None) -> Optional[Tuple[float, fl
 
     Example::
 
-        from biochar.temperature_model import get_valid_range
+        from biochar.models.temperature_model import get_valid_range
         lo, hi = get_valid_range("softwood")  # e.g. (200.0, 900.0)
     """
     if feedstock is not None and feedstock not in VALID_FEEDSTOCKS:

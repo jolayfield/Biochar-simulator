@@ -1,6 +1,6 @@
 # Feature: 3D Geometry Embedding and Clash Detection <!-- rq-0f766d5b -->
 
-`CoordinateGenerator` (`biochar/geometry_3d.py`) turns a bonded molecular graph into 3D
+`CoordinateGenerator` (`src/biochar/pipeline/geometry_3d.py`) turns a bonded molecular graph into 3D
 coordinates, and `GeometryValidator` decides whether the result is physically acceptable.
 
 The recurring failure mode in this area is not a wrong coordinate — it is a **validation

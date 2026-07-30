@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from biochar.md_setup import (
+from biochar.export.md_setup import (
     ION_PROFILES,
     MDSetupConfig,
     MDSetupError,
@@ -16,7 +16,7 @@ from biochar.md_setup import (
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         prog="biochar-md-setup",
-        description="Turn a biochar.sweep manifest into ready-to-submit GROMACS run directories.",
+        description="Turn a biochar.workflows.sweep manifest into ready-to-submit GROMACS run directories.",
     )
     parser.add_argument("manifest_csv", help="Path to a sweep manifest.csv")
     parser.add_argument("--output-root", required=True, help="Directory to write one subfolder per structure")

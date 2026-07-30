@@ -1,7 +1,7 @@
 Batch Generation
 ================
 
-:func:`~biochar.biochar_generator.generate_biochar_series` generates multiple
+:func:`~biochar.pipeline.biochar_generator.generate_biochar_series` generates multiple
 biochar structures in one call and optionally writes a combined topology
 suitable for running a mixed-molecule GROMACS simulation.
 
@@ -63,7 +63,7 @@ Each entry in ``configurations`` is a plain dict.  Supported keys:
 
 .. [1] Lets low-aromaticity, high-O/C points (low-temperature chars) reach
    their oxygen target instead of falling to the sweep's fallback path.  See
-   :ref:`aliphatic-oxygen`.  Any :class:`~biochar.biochar_generator.GeneratorConfig`
+   :ref:`aliphatic-oxygen`.  Any :class:`~biochar.pipeline.biochar_generator.GeneratorConfig`
    field may appear here — this table lists the common ones.
 
 Running a mixed GROMACS simulation

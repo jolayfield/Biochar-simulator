@@ -18,11 +18,11 @@ import pytest
 from rdkit import Chem
 
 from biochar.constants import FUNCTIONAL_GROUPS, GROMACS_OPLS_TYPE_MAP
-from biochar.heteroatom_assignment import (
+from biochar.pipeline.heteroatom_assignment import (
     OxygenAssigner,
     attach_aliphatic_carbons,
 )
-from biochar.opls_typing import AtomTyper, ChargeAssigner
+from biochar.pipeline.opls_typing import AtomTyper, ChargeAssigner
 import random
 
 
@@ -184,7 +184,7 @@ class TestHighOxygenCharComposition:
     ])
     # rq-f16a145c
     def test_reaches_oc_target(self, feedstock, T, target):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
         cfg = GeneratorConfig(
             temperature=T, feedstock=feedstock, molecule_name="x",
@@ -198,7 +198,7 @@ class TestHighOxygenCharComposition:
     def test_opt_out_still_short(self):
         """With the spill disabled, hardwood 300 stays oxygen-starved -- proving
         the aliphatic placement is what closes the gap."""
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
         cfg = GeneratorConfig(
             temperature=300, feedstock="hardwood", molecule_name="x",

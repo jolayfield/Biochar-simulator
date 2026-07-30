@@ -98,7 +98,7 @@ More than two sheets create multiple consecutive pores with equal gaps:
 Using the class API
 -------------------
 
-For programmatic control, use :class:`~biochar.surface_builder.SurfaceBuilder`
+For programmatic control, use :class:`~biochar.workflows.surface_builder.SurfaceBuilder`
 directly:
 
 .. code-block:: python

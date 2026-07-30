@@ -10,7 +10,7 @@ import logging
 # "No handler found" warnings when used without logging configured.
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-from .biochar_generator import (
+from .pipeline.biochar_generator import (
     BiocharGenerator,
     BiocharResult,
     GeneratorConfig,
@@ -18,11 +18,11 @@ from .biochar_generator import (
     generate_biochar,
     generate_biochar_series,
 )
-from .heteroatom_assignment import CompositionResult, CompositionInfo
-from .surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult, generate_surface
-from .temperature_model import TemperatureModel, properties, VALID_FEEDSTOCKS
-from .qm_charges import QMChargeError
-from .sweep import (
+from .pipeline.heteroatom_assignment import CompositionResult, CompositionInfo
+from .workflows.surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult, generate_surface
+from .models.temperature_model import TemperatureModel, properties, VALID_FEEDSTOCKS
+from .charges.qm_charges import QMChargeError
+from .workflows.sweep import (
     run_sweep,
     expand_grid,
     build_point,
@@ -31,7 +31,7 @@ from .sweep import (
     PointResult,
     SweepError,
 )
-from .md_setup import (
+from .export.md_setup import (
     setup_md_from_manifest,
     setup_one_structure,
     MDSetupConfig,
@@ -42,7 +42,7 @@ from .md_setup import (
     PreSolvationStage,
     MoleculeInsertion,
 )
-from .condensation import (
+from .workflows.condensation import (
     AnnealSpec,
     CondensationError,
     anneal_spec_for_htt,

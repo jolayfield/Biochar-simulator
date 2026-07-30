@@ -6,7 +6,7 @@ import pytest
 
 import numpy as np
 
-from biochar.surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult, generate_surface
+from biochar.workflows.surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult, generate_surface
 
 
 # ---------------------------------------------------------------------------

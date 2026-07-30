@@ -9,17 +9,17 @@ import pytest
 from rdkit import Chem
 
 from biochar.constants import OPLS_ATOM_TYPES, PAH_LIBRARY
-from biochar.carbon_skeleton import PAHAssembler, SkeletonValidator
-from biochar.heteroatom_assignment import (
+from biochar.pipeline.carbon_skeleton import PAHAssembler, SkeletonValidator
+from biochar.pipeline.heteroatom_assignment import (
     OxygenAssigner,
     HydrogenAssigner,
     HeteroatomValidator,
     CompositionInfo,
 )
-from biochar.geometry_3d import CoordinateGenerator, GeometryValidator
-from biochar.opls_typing import AtomTyper, ChargeAssigner
-from biochar.validation import ValidationEngine
-from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+from biochar.pipeline.geometry_3d import CoordinateGenerator, GeometryValidator
+from biochar.pipeline.opls_typing import AtomTyper, ChargeAssigner
+from biochar.pipeline.validation import ValidationEngine
+from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
 
 class TestConstants:
@@ -296,7 +296,7 @@ class TestDefectRings:
 
     def test_grow_graph_pure_hexagon(self):
         """Pure hexagon growth produces even node count and a valid mol."""
-        from biochar.carbon_skeleton import _grow_graph, _graph_to_mol
+        from biochar.pipeline.carbon_skeleton import _grow_graph, _graph_to_mol
         import networkx as nx
 
         G = nx.cycle_graph(6)  # benzene seed
@@ -307,7 +307,7 @@ class TestDefectRings:
 
     def test_grow_graph_with_defects_even_node_count(self):
         """Defect growth always produces an even node count."""
-        from biochar.carbon_skeleton import _grow_graph
+        from biochar.pipeline.carbon_skeleton import _grow_graph
         import networkx as nx
 
         for seed in range(5):
@@ -319,7 +319,7 @@ class TestDefectRings:
 
     def test_grow_graph_with_defects_has_pentagons(self):
         """With defect_fraction=1.0, all added rings should be pentagons."""
-        from biochar.carbon_skeleton import _grow_graph
+        from biochar.pipeline.carbon_skeleton import _grow_graph
         import networkx as nx
 
         G = nx.cycle_graph(6)  # benzene (6 nodes)
@@ -393,7 +393,7 @@ class TestHeptagonRings:
 
     def test_fuse_heptagon_adds_five_nodes(self):
         """A heptagon fused onto one edge adds exactly five new vertices."""
-        from biochar.carbon_skeleton import _fuse_heptagon
+        from biochar.pipeline.carbon_skeleton import _fuse_heptagon
         import networkx as nx
 
         G = nx.cycle_graph(6)  # benzene: nodes 0..5, edge (0,1) present
@@ -405,7 +405,7 @@ class TestHeptagonRings:
 
     def test_choose_ring_size_probabilities(self):
         """_choose_ring_size returns 5/6/7 per the requested fractions."""
-        from biochar.carbon_skeleton import _choose_ring_size
+        from biochar.pipeline.carbon_skeleton import _choose_ring_size
         import random
 
         rng = random.Random(0)
@@ -418,7 +418,7 @@ class TestHeptagonRings:
 
     def test_grow_graph_heptagon_only_even_node_count(self):
         """Heptagon-only growth still yields an even node count (Kekulé-valid)."""
-        from biochar.carbon_skeleton import _grow_graph
+        from biochar.pipeline.carbon_skeleton import _grow_graph
         import networkx as nx
 
         for seed in range(5):
@@ -488,34 +488,34 @@ class TestCompositionResult:
     """Test the new CompositionResult properties."""
 
     def test_molecular_formula_carbon_only(self):
-        from biochar.heteroatom_assignment import CompositionResult
+        from biochar.pipeline.heteroatom_assignment import CompositionResult
         comp = CompositionResult(num_carbons=24, num_hydrogens=12)
         assert comp.molecular_formula == "C24H12"
 
     def test_molecular_formula_with_oxygen(self):
-        from biochar.heteroatom_assignment import CompositionResult
+        from biochar.pipeline.heteroatom_assignment import CompositionResult
         comp = CompositionResult(num_carbons=24, num_hydrogens=12, num_oxygens=2)
         assert comp.molecular_formula == "C24H12O2"
 
     def test_molecular_formula_with_nitrogen(self):
-        from biochar.heteroatom_assignment import CompositionResult
+        from biochar.pipeline.heteroatom_assignment import CompositionResult
         comp = CompositionResult(num_carbons=24, num_hydrogens=14, num_oxygens=0, num_nitrogens=1)
         assert comp.molecular_formula == "C24H14N1"
 
     def test_molecular_weight_coronene(self):
-        from biochar.heteroatom_assignment import CompositionResult
+        from biochar.pipeline.heteroatom_assignment import CompositionResult
         # Coronene C24H12: MW = 24*12.011 + 12*1.008 = 288.264 + 12.096 = 300.360
         comp = CompositionResult(num_carbons=24, num_hydrogens=12)
         assert abs(comp.molecular_weight - 300.360) < 0.01
 
     def test_molecular_weight_with_oxygen(self):
-        from biochar.heteroatom_assignment import CompositionResult
+        from biochar.pipeline.heteroatom_assignment import CompositionResult
         comp = CompositionResult(num_carbons=10, num_hydrogens=8, num_oxygens=1)
         expected = 10 * 12.011 + 8 * 1.008 + 1 * 15.999
         assert abs(comp.molecular_weight - expected) < 0.001
 
     def test_n_c_ratio_default_zero(self):
-        from biochar.heteroatom_assignment import CompositionResult
+        from biochar.pipeline.heteroatom_assignment import CompositionResult
         comp = CompositionResult(num_carbons=20)
         assert comp.N_C_ratio == 0.0
         assert comp.num_nitrogens == 0
@@ -536,7 +536,7 @@ class TestAminoGroup:
         assert "HNA" in GROMACS_OPLS_TYPE_MAP
 
     def test_amino_placement_on_naphthalene(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         from rdkit import Chem
         mol = Chem.MolFromSmiles("c1ccc2ccccc2c1")
         assert mol is not None
@@ -550,7 +550,7 @@ class TestAminoGroup:
         assert comp.N_C_ratio > 0.0
 
     def test_amino_composition_tracking(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         from rdkit import Chem
         mol = Chem.MolFromSmiles("c1ccc2ccc3ccccc3c2c1")  # anthracene
         assigner = OxygenAssigner(seed=1)
@@ -562,7 +562,7 @@ class TestAminoGroup:
         assert "amino" in comp.placed_counts
 
     def test_amino_does_not_add_oxygens(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         from rdkit import Chem
         mol = Chem.MolFromSmiles("c1ccc2ccccc2c1")
         assigner = OxygenAssigner(seed=42)
@@ -604,7 +604,7 @@ class TestSulfurGroup:
             assert t in GROMACS_OPLS_TYPE_MAP
 
     def test_molecular_formula_with_sulfur(self):
-        from biochar.heteroatom_assignment import CompositionResult
+        from biochar.pipeline.heteroatom_assignment import CompositionResult
         comp = CompositionResult(
             num_carbons=24, num_hydrogens=14, num_oxygens=0,
             num_nitrogens=0, num_sulfurs=2,
@@ -612,13 +612,13 @@ class TestSulfurGroup:
         assert comp.molecular_formula == "C24H14S2"
 
     def test_s_c_ratio_default_zero(self):
-        from biochar.heteroatom_assignment import CompositionResult
+        from biochar.pipeline.heteroatom_assignment import CompositionResult
         comp = CompositionResult(num_carbons=20)
         assert comp.S_C_ratio == 0.0
         assert comp.num_sulfurs == 0
 
     def test_thiol_placement_on_naphthalene(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         from rdkit import Chem
         mol = Chem.MolFromSmiles("c1ccc2ccccc2c1")
         assigner = OxygenAssigner(seed=42)
@@ -632,7 +632,7 @@ class TestSulfurGroup:
         assert comp.num_oxygens == 0
 
     def test_thioether_placement(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         from rdkit import Chem
         mol = Chem.MolFromSmiles("c1ccc2ccc3ccccc3c2c1")  # anthracene
         assigner = OxygenAssigner(seed=1)
@@ -644,8 +644,8 @@ class TestSulfurGroup:
         assert "thioether" in comp.placed_counts
 
     def test_sulfur_atom_typing(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
-        from biochar.opls_typing import AtomTyper
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.opls_typing import AtomTyper
         from rdkit import Chem
         mol = Chem.MolFromSmiles("c1ccc2ccc3ccccc3c2c1")
         assigner = OxygenAssigner(seed=3)
@@ -683,7 +683,7 @@ class TestRingNitrogenSubstitution:
             assert t in GROMACS_OPLS_TYPE_MAP
 
     def test_substitutor_pyridinic_count(self):
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
         mol = Chem.MolFromSmiles("c1ccc2ccc3ccccc3c2c1")  # anthracene
         sub = NitrogenSubstitutor(seed=3)
         out = sub.substitute(mol, n_pyridinic=2)
@@ -692,7 +692,7 @@ class TestRingNitrogenSubstitution:
         assert sub.placed_pyridinic == 2
 
     def test_substitutor_graphitic_carries_positive_charge(self):
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
         # Pyrene has interior junction carbons suitable for graphitic N.
         mol = Chem.MolFromSmiles("c1cc2ccc3cccc4ccc(c1)c2c34")  # pyrene
         sub = NitrogenSubstitutor(seed=1)
@@ -704,7 +704,7 @@ class TestRingNitrogenSubstitution:
         assert n_atoms[0].GetFormalCharge() == 1
 
     def test_substitutor_robust_when_oversubscribed(self):
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
         mol = Chem.MolFromSmiles("c1ccccc1")  # benzene, only 6 edge carbons
         sub = NitrogenSubstitutor(seed=1)
         out = sub.substitute(mol, n_pyridinic=99)  # request far more than possible
@@ -729,8 +729,8 @@ class TestRingNitrogenSubstitution:
         assert "N3" in comp.molecular_formula
 
     def test_ring_n_atom_typing(self):
-        from biochar.heteroatom_assignment import NitrogenSubstitutor
-        from biochar.opls_typing import AtomTyper
+        from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
+        from biochar.pipeline.opls_typing import AtomTyper
         mol = Chem.MolFromSmiles("c1ccc2ccc3ccccc3c2c1")  # anthracene
         mol = NitrogenSubstitutor(seed=3).substitute(mol, n_pyridinic=1)
         types = set(AtomTyper().assign_atom_types(mol).values())
@@ -938,7 +938,7 @@ class TestSeedIsolation:
 
     def test_two_calls_same_seed_same_smiles(self):
         """Two generate_biochar calls with the same seed must produce the same SMILES."""
-        from biochar.biochar_generator import generate_biochar
+        from biochar.pipeline.biochar_generator import generate_biochar
         # O_C_ratio=0 avoids oxygen placement variability; H_C_ratio tuned for 24C.
         r1 = generate_biochar(
             target_num_carbons=24, H_C_ratio=0.5, O_C_ratio=0.0, seed=42, write_files=False
@@ -955,7 +955,7 @@ class TestSeedIsolation:
 
     def test_different_seeds_different_structures(self):
         """Different seeds should (almost certainly) produce different compositions."""
-        from biochar.biochar_generator import generate_biochar
+        from biochar.pipeline.biochar_generator import generate_biochar
         r1 = generate_biochar(
             target_num_carbons=30, H_C_ratio=0.5, O_C_ratio=0.0, seed=1, write_files=False
         )
@@ -971,12 +971,12 @@ class TestEtherSpanGuard:
     """ISSUE-G: max_ether_span < 3 must raise ValueError."""
 
     def test_ether_span_too_small_raises(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         with pytest.raises(ValueError, match="max_ether_span"):
             OxygenAssigner(max_ether_span=2)
 
     def test_ether_span_minimum_valid(self):
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         assigner = OxygenAssigner(max_ether_span=3)
         assert assigner._max_ether_span == 3
 
@@ -986,7 +986,7 @@ class TestEtherSpanGuard:
 
     def test_config_max_ether_span_5_warns(self, caplog):
         import logging
-        with caplog.at_level(logging.WARNING, logger="biochar.biochar_generator"):
+        with caplog.at_level(logging.WARNING, logger="biochar.pipeline.biochar_generator"):
             GeneratorConfig(max_ether_span=5, strict=False)
         assert any("max_ether_span" in r.message for r in caplog.records)
 
@@ -1038,14 +1038,14 @@ class TestTemperatureRangeWarning:
 
     def test_out_of_range_temperature_warns(self, caplog):
         import logging
-        with caplog.at_level(logging.WARNING, logger="biochar.biochar_generator"):
+        with caplog.at_level(logging.WARNING, logger="biochar.pipeline.biochar_generator"):
             # Use a temperature well below any realistic training data minimum
             GeneratorConfig(temperature=50, strict=False)
         assert any("outside the data range" in r.message for r in caplog.records)
 
     def test_in_range_temperature_no_warning(self, caplog):
         import logging
-        with caplog.at_level(logging.WARNING, logger="biochar.biochar_generator"):
+        with caplog.at_level(logging.WARNING, logger="biochar.pipeline.biochar_generator"):
             GeneratorConfig(temperature=600, strict=False)
         range_warns = [r for r in caplog.records if "outside the data range" in r.message]
         assert len(range_warns) == 0
@@ -1056,11 +1056,11 @@ class TestFunctionalGroupValidation:
 
     def test_excessive_functional_groups_warns(self, caplog):
         import logging
-        from biochar.heteroatom_assignment import OxygenAssigner
+        from biochar.pipeline.heteroatom_assignment import OxygenAssigner
         from rdkit import Chem
         mol = Chem.MolFromSmiles("c1ccc2ccc3cccc4ccc1c2c34")  # pyrene (16 C)
         assigner = OxygenAssigner(seed=0)
-        with caplog.at_level(logging.WARNING, logger="biochar.heteroatom_assignment"):
+        with caplog.at_level(logging.WARNING, logger="biochar.pipeline.heteroatom_assignment"):
             assigner.assign_oxygens(
                 mol,
                 target_O_C_ratio=0.0,
@@ -1095,7 +1095,7 @@ class TestRingComposition:
         assert gen.ring_composition["hexagons"] >= 0
 
     def test_ring_composition_in_biochar_result(self):
-        from biochar.biochar_generator import generate_biochar
+        from biochar.pipeline.biochar_generator import generate_biochar
         result = generate_biochar(target_num_carbons=24, seed=0, O_C_ratio=0.0, write_files=False)
         assert result.ring_composition is not None
         assert "hexagons" in result.ring_composition
@@ -1107,7 +1107,7 @@ class TestChargeNeutrality:
     """ISSUE-K: Static OPLS charge assignment must produce a neutral molecule."""
 
     def test_charges_sum_to_zero(self):
-        from biochar.opls_typing import AtomTyper, ChargeAssigner
+        from biochar.pipeline.opls_typing import AtomTyper, ChargeAssigner
         mol = Chem.MolFromSmiles("c1cc(O)ccc1C(=O)O")  # 4-hydroxybenzoic acid
         assert mol is not None
         typer = AtomTyper()
@@ -1122,7 +1122,7 @@ class TestBatchProgressCallback:
     """ISSUE-I: generate_biochar_series progress_callback and on_error."""
 
     def test_progress_callback_called(self, tmp_path):
-        from biochar.biochar_generator import generate_biochar_series
+        from biochar.pipeline.biochar_generator import generate_biochar_series
         calls = []
         def cb(done, total, name):
             calls.append((done, total, name))
@@ -1145,7 +1145,7 @@ class TestBatchProgressCallback:
         assert calls[1] == (2, 2, "BC2")
 
     def test_on_error_skip_continues(self, tmp_path):
-        from biochar.biochar_generator import generate_biochar_series
+        from biochar.pipeline.biochar_generator import generate_biochar_series
         configs = [
             {"molecule_name": "BC1", "target_num_carbons": 24,
              "H_C_ratio": 0.5, "O_C_ratio": 0.0, "seed": 1},
@@ -1166,7 +1166,7 @@ class TestBatchProgressCallback:
         assert "TOOLONG_NAME" not in results
 
     def test_on_error_raise_propagates(self, tmp_path):
-        from biochar.biochar_generator import generate_biochar_series
+        from biochar.pipeline.biochar_generator import generate_biochar_series
         configs = [
             {"molecule_name": "TOOLONG_NAME", "target_num_carbons": 24},
         ]

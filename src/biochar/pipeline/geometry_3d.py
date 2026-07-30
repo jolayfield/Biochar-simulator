@@ -12,7 +12,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from scipy.spatial.distance import pdist, squareform
 
-from .constants import (
+from ..constants import (
     VDW_RADII,
     COVALENT_RADII,
     HBOND_MIN_H_ACCEPTOR_DISTANCE,

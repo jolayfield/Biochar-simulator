@@ -206,7 +206,7 @@ class TestNitrogenTypingIsSizeIndependent:
     @pytest.mark.parametrize("num_carbons", [40, 150])
     # rq-3789a326 rq-c7715c26
     def test_amino_nitrogen_types_as_aniline_n_at_any_size(self, num_carbons):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
         generator = BiocharGenerator(
             GeneratorConfig(
@@ -294,7 +294,7 @@ class TestNitrogenRegression:
 
 def _config_kwargs(**extra):
     """Build a GeneratorConfig kwargs dict, tolerating signature drift."""
-    from biochar.biochar_generator import GeneratorConfig
+    from biochar.pipeline.biochar_generator import GeneratorConfig
 
     params = inspect.signature(GeneratorConfig).parameters
     kwargs = {"target_num_carbons": 20, "strict": False, "seed": 1}
@@ -365,7 +365,7 @@ class TestBondedResolution:
     @pytest.mark.parametrize("group", _group_params())
     # rq-35a5407d
     def test_functional_group_emits_only_resolvable_terms(self, group):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
         gen = BiocharGenerator(
             GeneratorConfig(**_config_kwargs(functional_groups={group: 2}))
@@ -393,7 +393,7 @@ class TestBondedResolution:
     )
     # rq-35a5407d
     def test_ring_nitrogen_emits_only_resolvable_terms(self, knob):
-        from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
+        from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 
         gen = BiocharGenerator(GeneratorConfig(**_config_kwargs(**{knob: 2})))
         mol, _, _ = gen.generate()

@@ -17,9 +17,9 @@ import pytest
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from biochar.biochar_generator import BiocharGenerator, GeneratorConfig
-from biochar.carbon_skeleton import PAHAssembler
-from biochar.geometry_3d import ClashResolver, CoordinateGenerator, GeometryValidator
+from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
+from biochar.pipeline.carbon_skeleton import PAHAssembler
+from biochar.pipeline.geometry_3d import ClashResolver, CoordinateGenerator, GeometryValidator
 
 
 def _naphthalene_with_hs():

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from biochar.sweep import (
+from biochar.workflows.sweep import (
     SweepError,
     GridPoint,
     PointResult,
@@ -236,14 +236,14 @@ class TestLoadConfig:
 # --------------------------------------------------------------------------- #
 class TestSweepCLI:
     def test_template_subcommand(self, capsys):
-        from biochar.sweep_cli import main
+        from biochar.cli.sweep_cli import main
         rc = main(["template"])
         out = capsys.readouterr().out
         assert rc == 0
         assert "axes:" in out and "temperature" in out
 
     def test_run_subcommand(self, tmp_path, capsys):
-        from biochar.sweep_cli import main
+        from biochar.cli.sweep_cli import main
         cfg = tmp_path / "cfg.json"
         cfg.write_text(json.dumps({
             "name": "cli_grid",
@@ -257,6 +257,6 @@ class TestSweepCLI:
         assert (tmp_path / "out" / "manifest.csv").exists()
 
     def test_run_missing_config(self, capsys):
-        from biochar.sweep_cli import main
+        from biochar.cli.sweep_cli import main
         rc = main(["run", "/no/such/file.yaml"])
         assert rc == 1

@@ -17,7 +17,7 @@ validation status, the seed that was used, and the output file paths.
 
 Example
 -------
->>> from biochar.sweep import run_sweep
+>>> from biochar.workflows.sweep import run_sweep
 >>> summary = run_sweep({
 ...     "name": "pfas_grid",
 ...     "output_directory": "sweep_out",
@@ -47,7 +47,7 @@ from io import StringIO
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
-from .biochar_generator import (
+from ..pipeline.biochar_generator import (
     BiocharGenerator,
     GeneratorConfig,
     ValidationError,
