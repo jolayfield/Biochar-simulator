@@ -51,9 +51,11 @@ with CI green.
 - **Layer 4** — `surface_builder`, `condensation`, `sweep`, `md_setup`
 - **Layer 5** — the four CLI modules
 
-One layering violation remains: `surface_builder` imports `biochar_generator` at module scope
-while `biochar_generator` imports `SurfaceBuilder` inside a function to break the resulting
-cycle. `generate_surface` is a surface-level entry point living in the single-molecule module.
+The layering was not always this clean: `generate_surface` used to live in `biochar_generator.py`
+(Layer 3) despite being a Layer 4 surface-level entry point, which made `surface_builder` import
+`biochar_generator` at module scope while `biochar_generator` imported `SurfaceBuilder` inside a
+function to break the resulting cycle. `generate_surface` now lives in `surface_builder.py`
+alongside the class it wraps, and the deferred import is gone.
 
 ## Single-molecule pipeline <!-- rq-60a0144a -->
 

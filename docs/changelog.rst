@@ -50,7 +50,7 @@ Changelog
 
 - New :class:`~biochar.surface_builder.SurfaceBuilder` and
   :class:`~biochar.surface_builder.SurfaceConfig` for parallel-sheet slit pores
-- New :func:`~biochar.biochar_generator.generate_surface` convenience function
+- New :func:`~biochar.surface_builder.generate_surface` convenience function
 - :class:`~biochar.gromacs_export.MultiSheetGROWriter` and
   :class:`~biochar.gromacs_export.SurfaceTopologyWriter` in ``gromacs_export``
 - Identical-sheet optimisation: one ``.itp``, ``count = N`` in ``.top``

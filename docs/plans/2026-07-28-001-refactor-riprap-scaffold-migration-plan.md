@@ -4,11 +4,13 @@
 **Type:** refactor
 **Date:** 2026-07-28
 
-> **Progress.** Phase 0 and 1 merged in PR #34, phase 2 in PR #35, phase 3 in the PR carrying this
-> edit. PR #36 (not in the original plan) fixed the embedder-retry defect that profiling turned up
-> while doing the phase 2 follow-up work. Remaining: phase 4 (subpackage decomposition, optional and
-> `rqm/`-guided) and phase 5 (container, deferred). The largest open item is not in this plan at all
-> — 16 of 41 `rqm/` scenarios still have no defending test.
+> **Progress.** Phase 0 and 1 merged in PR #34, phase 2 in PR #35, phase 3 in PR #37. PR #36 (not
+> in the original plan) fixed the embedder-retry defect that profiling turned up while doing the
+> phase 2 follow-up work. PR #38 (also not in the original plan) closed the 16-scenario `rqm/`
+> coverage gap Phase 1 left open — `bash tools/rqm/rq check` now reports 41 of 41 scenarios
+> covered. Remaining: phase 4 (subpackage decomposition, optional and `rqm/`-guided) and phase 5
+> (container, deferred). Neither is blocking; both are lower priority than they were when this plan
+> was written, now that the traceability spine is fully load-bearing rather than partial.
 
 ## Summary
 
@@ -305,6 +307,10 @@ steps), `biochar/charges/` (`qm_charges`, `ml_charges`), `biochar/export/`
 `generate_surface` out of `biochar_generator.py` into the surface module, retiring the
 deferred import at `biochar_generator.py:1363`. `__init__.py` re-exports it either way, so
 the public API is unchanged.
+
+> Done, ahead of the rest of Phase 4, on branch `refactor/break-surface-builder-cycle` —
+> the one item in Phase 4 with a real functional payoff, split out from the line-count
+> tidying that makes up the rest of the phase.
 
 Sequencing note: `__init__.py.__all__` is the public API contract and `pyproject.toml`
 `[project.scripts]` declares the entry points. Both must keep working unchanged through
