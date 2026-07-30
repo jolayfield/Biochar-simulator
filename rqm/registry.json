@@ -45,7 +45,12 @@
   "rq-1548650e": {
     "decl": "Scenario: Analog-derived types remain stable across edits",
     "file": "opls-typing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
     "title": "Analog-derived types remain stable across edits",
     "type": "scenario"
   },
@@ -88,7 +93,12 @@
   "rq-265ec385": {
     "decl": "Scenario: A large flat sheet uses the 2D-first path",
     "file": "geometry-embedding",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
     "title": "A large flat sheet uses the 2D-first path",
     "type": "scenario"
   },
@@ -103,7 +113,12 @@
   "rq-2f5ab3f8": {
     "decl": "Scenario: A lactone request places a phenolic group",
     "file": "heteroatom-assignment",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_heteroatom_assignment_gaps.py",
+        "kind": "code"
+      }
+    ],
     "title": "A lactone request places a phenolic group",
     "type": "scenario"
   },
@@ -134,7 +149,12 @@
   "rq-3c400653": {
     "decl": "Scenario: Small-molecule structures still get clash resolution",
     "file": "geometry-embedding",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
     "title": "Small-molecule structures still get clash resolution",
     "type": "scenario"
   },
@@ -177,7 +197,12 @@
   "rq-49e2ed82": {
     "decl": "Scenario: Hex-lattice structures keep their coordinates",
     "file": "geometry-embedding",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
     "title": "Hex-lattice structures keep their coordinates",
     "type": "scenario"
   },
@@ -348,7 +373,12 @@
   "rq-7d3e9432": {
     "decl": "Scenario: A quinone request places a phenolic group",
     "file": "heteroatom-assignment",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_heteroatom_assignment_gaps.py",
+        "kind": "code"
+      }
+    ],
     "title": "A quinone request places a phenolic group",
     "type": "scenario"
   },
@@ -370,14 +400,24 @@
   "rq-8176d084": {
     "decl": "Scenario: Small molecules are bounded by their perimeter",
     "file": "heteroatom-assignment",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_heteroatom_assignment_gaps.py",
+        "kind": "code"
+      }
+    ],
     "title": "Small molecules are bounded by their perimeter",
     "type": "scenario"
   },
   "rq-85c279ce": {
     "decl": "Scenario: No free valence remains after assignment",
     "file": "heteroatom-assignment",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_heteroatom_assignment_gaps.py",
+        "kind": "code"
+      }
+    ],
     "title": "No free valence remains after assignment",
     "type": "scenario"
   },
@@ -396,7 +436,12 @@
   "rq-8e4335b8": {
     "decl": "Scenario: Every supplement entry states where its value came from",
     "file": "opls-typing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
     "title": "Every supplement entry states where its value came from",
     "type": "scenario"
   },
@@ -427,7 +472,12 @@
   "rq-92fec87b": {
     "decl": "Scenario: Severity is reported so a marginal contact can be told from a real one",
     "file": "geometry-embedding",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
     "title": "Severity is reported so a marginal contact can be told from a real one",
     "type": "scenario"
   },
@@ -498,7 +548,12 @@
   "rq-b40b353d": {
     "decl": "Scenario: Forcefield-backed tests fail loudly when the forcefield is absent",
     "file": "opls-typing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_opls_type_map.py",
+        "kind": "code"
+      }
+    ],
     "title": "Forcefield-backed tests fail loudly when the forcefield is absent",
     "type": "scenario"
   },
@@ -517,14 +572,24 @@
   "rq-b8fce9a6": {
     "decl": "Scenario: The repair runs after every sanitising stage",
     "file": "heteroatom-assignment",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_heteroatom_assignment_gaps.py",
+        "kind": "code"
+      }
+    ],
     "title": "The repair runs after every sanitising stage",
     "type": "scenario"
   },
   "rq-bb1fbb12": {
     "decl": "Scenario: A small molecule uses the distance-geometry embedder",
     "file": "geometry-embedding",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
     "title": "A small molecule uses the distance-geometry embedder",
     "type": "scenario"
   },
@@ -582,7 +647,12 @@
   "rq-c4e683c4": {
     "decl": "Scenario: Embedding retries a bounded number of times",
     "file": "geometry-embedding",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
     "title": "Embedding retries a bounded number of times",
     "type": "scenario"
   },
@@ -601,7 +671,12 @@
   "rq-d3ef932d": {
     "decl": "Scenario: A carbonyl request places a phenolic group",
     "file": "heteroatom-assignment",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_heteroatom_assignment_gaps.py",
+        "kind": "code"
+      }
+    ],
     "title": "A carbonyl request places a phenolic group",
     "type": "scenario"
   },
@@ -652,7 +727,12 @@
   "rq-fbb6a9c0": {
     "decl": "Scenario: The oxygen count still matches the request",
     "file": "heteroatom-assignment",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/test_heteroatom_assignment_gaps.py",
+        "kind": "code"
+      }
+    ],
     "title": "The oxygen count still matches the request",
     "type": "scenario"
   },

@@ -432,3 +432,109 @@ class TestSupplementDoesNotShadowForcefield:
             "SUPPLEMENTARY_ANGLE_PARAMS shadows angletypes oplsaa.ff already "
             f"defines -- remove them and let the forcefield supply them: {shadowed}"
         )
+
+
+class TestAnalogDerivedTypesAreStable:
+    """NGR, SS, and the two SUPPLEMENTARY_ANGLE_PARAMS entries are nearest-
+    analog choices, not QM-validated -- see rqm/opls-typing.md. NGR in
+    particular was moved deliberately (2026-07-17, reviewed) away from the
+    stock pyridine N it used to share with NPY; a value drifting back would be
+    invisible to every other test here, since it would still resolve and still
+    have the right element."""
+
+    # rq-1548650e
+    def test_analog_derived_values_match_their_recorded_provenance(self):
+        assert GROMACS_OPLS_TYPE_MAP["SS"] == "opls_222"      # "S in thioanisoles"
+        assert GROMACS_OPLS_TYPE_MAP["NGR"] == "opls_379"     # "CytH+ N3" -- do not restore opls_520
+
+        assert SUPPLEMENTARY_ANGLE_PARAMS[("CA", "SS", "CA")] == (104.200, 518.816)
+        assert SUPPLEMENTARY_ANGLE_PARAMS[("NPY", "CA", "OH")] == (120.000, 585.760)
+
+
+class TestSupplementEntriesCarryProvenance:
+    """SUPPLEMENTARY_ANGLE_PARAMS entries are hand-picked analog values, not
+    machine-derivable ones, so the comment naming the analog IS the
+    justification for why the entry is trustworthy at all. This inspects the
+    source text directly since the provenance lives in a comment, not a field
+    any runtime object carries."""
+
+    # rq-8e4335b8
+    def test_every_supplement_entry_has_a_preceding_comment(self):
+        import inspect
+        import re
+
+        import biochar.constants as constants_module
+
+        source = inspect.getsource(constants_module)
+        block_match = re.search(
+            r"^SUPPLEMENTARY_ANGLE_PARAMS.*?=\s*\{(.*?)\n\}",
+            source, re.S | re.M,
+        )
+        assert block_match, "could not locate the SUPPLEMENTARY_ANGLE_PARAMS block"
+        lines = block_match.group(1).split("\n")
+
+        key_line = re.compile(r'^\s*\(\s*["\']')
+        undocumented = []
+        for i, line in enumerate(lines):
+            if not key_line.match(line):
+                continue
+            j = i - 1
+            has_comment = False
+            while j >= 0 and lines[j].strip().startswith("#"):
+                has_comment = True
+                j -= 1
+            if not has_comment:
+                undocumented.append(line.strip())
+
+        assert not undocumented, (
+            f"SUPPLEMENTARY_ANGLE_PARAMS entries with no preceding provenance "
+            f"comment: {undocumented}"
+        )
+        # Sanity check the parser actually found the real entries, so a
+        # regex/formatting change can't silently make this pass vacuously.
+        assert len(SUPPLEMENTARY_ANGLE_PARAMS) == sum(
+            1 for line in lines if key_line.match(line)
+        )
+
+
+class TestForcefieldAbsentSkipIsVisible:
+    """When no oplsaa.ff is discoverable, the forcefield-backed tests must
+    skip -- loudly, by name -- rather than pass having verified nothing. This
+    runs a real forcefield-backed test in a clean subprocess with every
+    discovery path (BIOCHAR_OPLSAA_FF, GMXDATA, GMXLIB, `gmx` on PATH)
+    removed, and inspects pytest's own report rather than trusting that the
+    skipif mechanism (already covered by pytest itself) was wired up right."""
+
+    # rq-b40b353d
+    def test_a_forcefield_backed_test_skips_by_name_when_ff_is_absent(self):
+        import subprocess
+        import sys
+
+        env = {
+            k: v for k, v in os.environ.items()
+            if k not in ("BIOCHAR_OPLSAA_FF", "GMXDATA", "GMXLIB")
+        }
+        # A PATH with no gmx/gmx_mpi on it, so shutil.which() genuinely fails
+        # rather than happening to find a real GROMACS install on this host.
+        env["PATH"] = "/usr/bin:/bin"
+
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "pytest",
+                f"{__file__}::TestTypesExist::test_every_mapped_type_exists_in_forcefield",
+                "-rs", "-q", "--no-header",
+            ],
+            cwd=str(Path(__file__).resolve().parent.parent),
+            env=env, capture_output=True, text=True, timeout=60,
+        )
+
+        combined = result.stdout + result.stderr
+        assert "1 skipped" in combined, (
+            f"expected the test to skip, not pass/fail/error:\n{combined}"
+        )
+        assert "oplsaa.ff" in combined, (
+            f"skip reason must name the missing forcefield:\n{combined}"
+        )
+        assert result.returncode == 0, (
+            "a clean skip must not report as a suite failure"
+        )
