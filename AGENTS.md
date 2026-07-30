@@ -14,6 +14,9 @@ tool-specific configuration.
   what we learned, and why.
 - **`CONCEPTS.md`** — domain vocabulary. The internal atom type / OPLS type name
   / bonded type distinction is load-bearing; read it before touching export.
+- **`docs/reviews/`** — dated, commit-pinned assessments. **Point-in-time**: what
+  was true at one commit. Nothing in a review is scheduled, and line numbers in
+  one drift; re-verify a finding before acting on it.
 
 `rqm/` and `docs/solutions/` are complements, not duplicates. One states the
 invariant, the other records how it was learned.
