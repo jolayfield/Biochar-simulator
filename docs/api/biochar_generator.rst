@@ -6,9 +6,9 @@ Convenience functions
 
 .. autofunction:: biochar.biochar_generator.generate_biochar
 
-.. autofunction:: biochar.biochar_generator.generate_surface
-
 .. autofunction:: biochar.biochar_generator.generate_biochar_series
+
+See :func:`biochar.surface_builder.generate_surface` on the :doc:`surface_builder` page.
 
 Configuration
 -------------

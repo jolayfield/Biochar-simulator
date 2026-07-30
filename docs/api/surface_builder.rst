@@ -16,3 +16,8 @@ Builder
 .. autoclass:: biochar.surface_builder.SurfaceBuilder
    :members: build, export_gromacs
    :show-inheritance:
+
+Convenience function
+---------------------
+
+.. autofunction:: biochar.surface_builder.generate_surface

@@ -17,10 +17,9 @@ from .biochar_generator import (
     ValidationError,
     generate_biochar,
     generate_biochar_series,
-    generate_surface,
 )
 from .heteroatom_assignment import CompositionResult, CompositionInfo
-from .surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult
+from .surface_builder import SurfaceBuilder, SurfaceConfig, SheetResult, generate_surface
 from .temperature_model import TemperatureModel, properties, VALID_FEEDSTOCKS
 from .qm_charges import QMChargeError
 from .sweep import (
