@@ -1,6 +1,7 @@
 # refactor: map Biochar-simulator onto the MolSSI riprap scaffold
 
-**Status:** phases 0-3 complete; phase 4 optional, phase 5 deferred
+**Status:** phases 0-3 complete; phase 4's one functional item (the surface_builder cycle) done,
+its subpackage-split remainder optional; phase 5 deferred
 **Type:** refactor
 **Date:** 2026-07-28
 
@@ -8,9 +9,10 @@
 > in the original plan) fixed the embedder-retry defect that profiling turned up while doing the
 > phase 2 follow-up work. PR #38 (also not in the original plan) closed the 16-scenario `rqm/`
 > coverage gap Phase 1 left open — `bash tools/rqm/rq check` now reports 41 of 41 scenarios
-> covered. Remaining: phase 4 (subpackage decomposition, optional and `rqm/`-guided) and phase 5
-> (container, deferred). Neither is blocking; both are lower priority than they were when this plan
-> was written, now that the traceability spine is fully load-bearing rather than partial.
+> covered. PR #40 broke the `biochar_generator` <-> `surface_builder` import cycle, the one item
+> in Phase 4 with a real functional payoff. Remaining: the rest of Phase 4 (subpackage split across
+> five 1,000+-line modules, optional and `rqm/`-guided) and phase 5 (container, deferred). Neither
+> is blocking.
 
 ## Summary
 
@@ -308,9 +310,10 @@ steps), `biochar/charges/` (`qm_charges`, `ml_charges`), `biochar/export/`
 deferred import at `biochar_generator.py:1363`. `__init__.py` re-exports it either way, so
 the public API is unchanged.
 
-> Done, ahead of the rest of Phase 4, on branch `refactor/break-surface-builder-cycle` —
-> the one item in Phase 4 with a real functional payoff, split out from the line-count
-> tidying that makes up the rest of the phase.
+> **Done.** Merged 2026-07-30 as PR #40 (`1065060`) — the one item in Phase 4 with a real
+> functional payoff, split out from the line-count tidying that makes up the rest of the
+> phase. The rest of Phase 4 (subpackage split across five 1,000+-line modules) remains
+> optional and not started.
 
 Sequencing note: `__init__.py.__all__` is the public API contract and `pyproject.toml`
 `[project.scripts]` declares the entry points. Both must keep working unchanged through
