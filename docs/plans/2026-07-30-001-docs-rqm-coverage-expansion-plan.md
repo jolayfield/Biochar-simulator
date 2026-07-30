@@ -1,8 +1,27 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** drafted, not started
+**Status:** Phase 0 complete; Phases 1-5 not started
 **Type:** docs / traceability
 **Date:** 2026-07-30
+
+> **Progress.** Phase 0 landed all five items, including the optional one. Vendoring upstream's
+> `test_rqm.sh` immediately earned itself: 27 of its 28 tests pass against our `rqm.sh`, and the
+> one failure is real. `stamp --fix-duplicates` is broken on macOS — `rqm.sh:271` is the file's
+> only `sed -i`, and BSD `sed -i` requires an argument GNU `sed -i` does not. All nine `stamp`
+> tests pass, so the ordinary `rq stamp` path every later phase depends on is unaffected. Not
+> patched locally: the vendored files stay byte-for-byte so they can be re-synced, and the bug
+> belongs upstream. Documented in `tools/rqm/README.md`.
+>
+> **D5 resolved: `rr-plan` is vendored.** `SKILL.md` sits at `.claude/skills/rr-plan/SKILL.md`
+> byte-for-byte, with every local path redirect and house convention in
+> `.riprap/user/skills/rr-plan/local.md` — the extension point upstream reads last and lets take
+> precedence. This mirrors the rule already established for `rqm.sh`: vendor verbatim, configure
+> beside it.
+>
+> **One consequence is now live.** CI hard-fails on any scenario without a defending test, so
+> from Phase 1 onward a requirements file cannot merge alone — scenario and test land in the same
+> PR, with `xfail(strict=True)` when the behaviour does not exist yet. That constraint is written
+> into `local.md` so it survives this document.
 **Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
 **Commit reviewed:** `2ad77a161bf5997e058cf97cf2680632ab99a4b8` (`2ad77a1`)
 
