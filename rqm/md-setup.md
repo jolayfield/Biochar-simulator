@@ -27,11 +27,17 @@ about the protocol being reproduced, not a default that GROMACS would sanity-che
   - Returns one dict per row: `label`, `status`, `run_dir`, `gro_path`, `top_path`,
     `skipped_reason`.
 
-- `setup_one_structure(gro_path: str | Path, top_path: str | Path, output_dir: str | Path, label: str = "structure", config: Optional[MDSetupConfig] = None) -> Path` <!-- rq-6f1c55c5 -->
+- `setup_one_structure(gro_path: str | Path, top_path: str | Path, output_dir: str | Path, label: str = "structure", config: Optional[MDSetupConfig] = None, pyrolysis_temperature_c: Optional[float] = None, status: Optional[str] = None, include_paths: Optional[list] = None) -> Path` <!-- rq-6f1c55c5 -->
   - Writes the `.mdp` set, the driver script, and copies of the structure, topology, and every
     include file the topology needs.
   - Raises `MDSetupError` when a required input is missing, rather than writing a directory that
     cannot run.
+  - Renders the annealing stages for `pyrolysis_temperature_c`. Without one it uses the lowest
+    Wood anchor, 400 °C, so an unknown structure gets the mildest schedule rather than one that
+    could over-anneal it.
+  - Writes `run_provenance.json` recording the label, status, source files, net charge, and the
+    annealing schedule used — including whether the temperature came from the manifest or the
+    default.
 
 - `MDSetupConfig(solvent_pad_nm: float = 1.2, water_model: str = "spce", ion_profile: str = "mn_calcareous_default", ntomp: int = 8, gmx_bin: str = "gmx", cluster: Optional[str] = None, ...)` <!-- rq-00cf61e3 -->
   - Options for one run directory. `cluster="slurm"` additionally writes a dependent-job chain
@@ -130,6 +136,11 @@ once the peak exceeds roughly 1500 K.
 A fixed peak applies the 400 °C schedule to every structure. An 800 °C char annealed to 1000 K is
 not driven through the graphitisation the protocol exists to reproduce, and the run completes and
 reports a structure that looks converged.
+
+The pyrolysis temperature reaches setup only when the sweep varied it, since it travels as a
+sweep axis. When it is absent the 400 °C anchor applies — the mildest schedule, chosen so an
+unknown structure is under-annealed rather than over-annealed — and the run directory records
+that the value was a default rather than a measurement.
 
 The scaling has one implementation, `workflows.condensation.anneal_spec_for_htt`. Two
 implementations of one published protocol will disagree, and the disagreement will be silent

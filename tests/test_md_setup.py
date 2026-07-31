@@ -167,14 +167,16 @@ class TestPreSolvationStage:
         ins_idx = text.index("insert-molecules")
         assert ins_idx < text.index('"$GMX" solvate')
         # solvation onward uses the stage's topology, not the bare biochar one
-        assert 'cp "$SIM/merged.top" "$SIM/wet.top.base"' in text
+        # solvate updates wet.top in place, so it is created from the stage's
+        # topology before that stage runs (rqm/md-setup.md rq-62e0732a).
+        assert 'cp "$SIM/merged.top" "$SIM/wet.top"' in text
 
     def test_no_stage_uses_bare_topology(self, built_structure, tmp_path):
         gro, top = built_structure
         out = setup_one_structure(gro, top, tmp_path / "run", label="mini")
         text = (out / "run_pipeline.sh").read_text()
         assert "insert-molecules" not in text
-        assert f'cp "$SIM/{top.name}" "$SIM/wet.top.base"' in text
+        assert f'cp "$SIM/{top.name}" "$SIM/wet.top"' in text
 
     def test_missing_extra_file_raises(self, built_structure, tmp_path):
         gro, top = built_structure

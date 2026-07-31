@@ -533,6 +533,10 @@
     "file": "md-setup",
     "refs": [
       {
+        "file": "tests/test_md_setup.py",
+        "kind": "code"
+      },
+      {
         "file": "tests/test_md_setup_contract.py",
         "kind": "code"
       }
@@ -609,7 +613,7 @@
     "type": "scenario"
   },
   "rq-6f1c55c5": {
-    "decl": "- `setup_one_structure(gro_path: str | Path, top_path: str | Path, output_dir: str | Path, label: str = \"structure\", config: Optional[MDSetupConfig] = None) -> Path`",
+    "decl": "- `setup_one_structure(gro_path: str | Path, top_path: str | Path, output_dir: str | Path, label: str = \"structure\", config: Optional[MDSetupConfig] = None, pyrolysis_temperature_c: Optional[float] = None, status: Optional[str] = None, include_paths: Optional[list] = None) -> Path`",
     "file": "md-setup",
     "refs": [],
     "title": "setup_one_structure",

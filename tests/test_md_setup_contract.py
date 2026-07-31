@@ -8,8 +8,8 @@ That is deliberate. What md_setup emits is never read by Python again -- the
 first consumer is grompp, hours later and usually on another machine -- so the
 text itself is the contract, and no GROMACS binary is needed to check it.
 
-Several scenarios assert behaviour the module does not have yet and carry
-xfail(strict=True) naming the gap.
+Every scenario here passes. The eight that once carried xfail(strict=True) were
+retired by XPASS when their fixes landed.
 """
 
 import csv
@@ -85,6 +85,18 @@ def _script(run_dir):
     return (run_dir / "run_pipeline.sh").read_text()
 
 
+def _commands(run_dir):
+    """Script lines that are commands, with comments and blanks dropped.
+
+    Matching bare substrings against the whole script is too loose: a comment
+    mentioning `solvate` or `genion.tpr` reads as the command itself.
+    """
+    return [
+        ln for ln in _script(run_dir).splitlines()
+        if ln.strip() and not ln.strip().startswith("#")
+    ]
+
+
 def _mdp(run_dir, name):
     return (run_dir / name).read_text()
 
@@ -100,18 +112,11 @@ def _mdp_value(text, key):
 
 class TestStageOrdering:
     # rq-62e0732a
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "solvate is passed $SIM/wet.top, which no earlier line creates -- the "
-            "cp on the next line writes wet.top.base. Retire this marker with the fix."
-        ),
-    )
     def test_solvation_topology_exists_before_solvate_runs(self, tmp_path):
-        lines = _script(_run_dir(tmp_path)).splitlines()
+        lines = _commands(_run_dir(tmp_path))
 
         solvate_at = next(
-            (i for i, ln in enumerate(lines) if " solvate " in ln), None
+            (i for i, ln in enumerate(lines) if "solvate -cp" in ln), None
         )
         assert solvate_at is not None, "no solvate stage in the rendered script"
 
@@ -130,19 +135,12 @@ class TestStageOrdering:
 
 class TestIonPlacement:
     # rq-39ce3988
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "One genion.tpr is built from pre-ion coordinates and reused for every "
-            "species, so each species is placed against a structure that has none of "
-            "the previous ones. Retire this marker with the fix."
-        ),
-    )
     def test_each_species_is_placed_against_the_previous_result(self, tmp_path):
         # mn_calcareous_default names more than one cation.
-        lines = _script(_run_dir(tmp_path, ion_profile="mn_calcareous_default")).splitlines()
+        lines = _commands(_run_dir(tmp_path, ion_profile="mn_calcareous_default"))
 
-        genion_at = [i for i, ln in enumerate(lines) if "genion" in ln]
+        # The invocations, not the grompp lines that build genion.tpr.
+        genion_at = [i for i, ln in enumerate(lines) if "genion -s" in ln]
         assert len(genion_at) > 1, "need a profile with several cations for this check"
 
         for first, second in zip(genion_at, genion_at[1:]):
@@ -157,15 +155,8 @@ class TestWarningSuppression:
     DRY_STAGES = ("dry_em.mdp", "anneal_nvt.mdp", "anneal_npt.mdp", "final_npt.mdp")
 
     # rq-dd80065b
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "Every grompp call passes a bare -maxwarn 2, including the dry stages "
-            "which have nothing to excuse. Retire this marker with the fix."
-        ),
-    )
     def test_dry_stages_suppress_nothing(self, tmp_path):
-        lines = _script(_run_dir(tmp_path)).splitlines()
+        lines = _commands(_run_dir(tmp_path))
         offenders = [
             ln.strip()
             for ln in lines
@@ -179,16 +170,9 @@ class TestWarningSuppression:
         )
 
     # rq-af56cae9
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "-maxwarn 2 is used with no comment naming the two warnings it absorbs. "
-            "Retire this marker with the fix."
-        ),
-    )
     def test_a_suppressed_warning_is_named_where_allowed(self, tmp_path):
         lines = _script(_run_dir(tmp_path)).splitlines()
-        undocumented = []
+        undocumented = []  # comments are the evidence here, so keep them
         for i, ln in enumerate(lines):
             if "grompp" not in ln or "-maxwarn" not in ln:
                 continue
@@ -209,13 +193,6 @@ class TestAnnealingSchedule:
     """
 
     # rq-5b7a5ab8
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "ANNEAL_NPT_MDP is a static template with a 1000 K peak for every "
-            "structure. Retire this marker with the fix."
-        ),
-    )
     def test_peak_temperature_follows_the_pyrolysis_temperature(self, tmp_path):
         gro, top, itp = _structure(tmp_path)
         manifest = _manifest(tmp_path, [{
@@ -234,13 +211,6 @@ class TestAnnealingSchedule:
         )
 
     # rq-997c1640
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "The timestep is fixed at 1 fs regardless of peak temperature. "
-            "Retire this marker with the fix."
-        ),
-    )
     def test_timestep_drops_with_the_schedule(self, tmp_path):
         gro, top, itp = _structure(tmp_path)
         manifest = _manifest(tmp_path, [{
@@ -275,14 +245,6 @@ class TestWetPressureCoupling:
 
 class TestRunDirectoryProvenance:
     # rq-9e4f2d8e
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "setup_md_from_manifest does not pass status through, so a fallback run "
-            "directory is indistinguishable from a strict_pass one. Retire this "
-            "marker with the fix."
-        ),
-    )
     def test_fallback_status_is_recorded_in_the_run_directory(self, tmp_path):
         gro, top, itp = _structure(tmp_path)
         manifest = _manifest(tmp_path, [{
@@ -317,14 +279,6 @@ class TestRunDirectoryProvenance:
 
 class TestIncludeFiles:
     # rq-2fdbb62b
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "The include is guessed as top_path.with_suffix('.itp') and the "
-            "manifest's itp_path column is never read, so a surface's "
-            "<base>_sheet.itp is silently not copied. Retire this marker with the fix."
-        ),
-    )
     def test_include_is_resolved_from_the_manifest(self, tmp_path):
         # Surface layout: topology surf.top includes surf_sheet.itp.
         gro, top, itp = _structure(tmp_path, stem="surf", itp_stem="surf_sheet")

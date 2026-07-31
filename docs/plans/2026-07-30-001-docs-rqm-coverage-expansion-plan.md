@@ -1,9 +1,11 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phases 0-3 complete, Phase 2's export defects fixed; D1 and D3 resolved; Phases 4-5
-not started
+**Status:** Phases 0-3 complete, the export and md-setup defects fixed; D1 and D3 resolved;
+Phases 4-5 not started
 **Type:** docs / traceability
 **Date:** 2026-07-30
+**Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
+**Commit reviewed:** `2ad77a161bf5997e058cf97cf2680632ab99a4b8` (`2ad77a1`)
 
 > **Progress.** Phase 0 landed all five items, including the optional one. Vendoring upstream's
 > `test_rqm.sh` immediately earned itself: 27 of its 28 tests pass against our `rqm.sh`, and the
@@ -73,11 +75,28 @@ not started
 > is linear in the number of torsions and provably the same set. The test computes the same list
 > the slow way on a small molecule, so the two methods cross-check.
 >
+> **Phase 3's eight md-setup defects are fixed**, again ahead of the next phase. All eight markers
+> retired by XPASS. The annealing schedule now renders from
+> `workflows.condensation.anneal_spec_for_htt`, so the protocol has one implementation rather than
+> two that had already drifted; `wet.top` is created before `solvate` updates it, and the dead
+> `wet.top.base` it replaced had no consumer anywhere; the genion `.tpr` is rebuilt between
+> species in both the local and SLURM paths; `-maxwarn` is spent only where the topology declares
+> a charge, read from the `; total charge:` line `gromacs_export` writes; and every run directory
+> carries a `run_provenance.json` naming its status, sources, charge, and schedule.
+>
+> Two things worth carrying forward. Fixing the local path alone would have recreated the very
+> divergence being fixed, so the SLURM renderers took the same treatment. And `md_setup` now
+> imports `workflows.condensation`, which runs against the documented layer order; that is
+> recorded in `rqm/ARCHITECTURE.md` with the reason and the exit route, rather than left to be
+> discovered later.
+>
+> Two tests of my own needed tightening rather than the code: both matched bare substrings, so a
+> comment mentioning `solvate` or a grompp line building `genion.tpr` read as the command itself.
+> They now match invocations.
+>
 > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that
 > disagreement becomes a scenario plus a failing test rather than an open question.
-**Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
-**Commit reviewed:** `2ad77a161bf5997e058cf97cf2680632ab99a4b8` (`2ad77a1`)
 
 ## Summary
 

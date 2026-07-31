@@ -51,14 +51,24 @@ with CI green.
 - **`charges/`** — partial-charge backends: `qm_charges` (no intra-package deps), `ml_charges`
   (depends on `pipeline.opls_typing`)
 - **`export/`** — GROMACS file writers: `gromacs_export` (depends on `constants`,
-  `pipeline.opls_typing`), `md_setup` (no intra-package deps)
+  `pipeline.opls_typing`), `md_setup` (depends on `workflows.condensation` for
+  `anneal_spec_for_htt`)
 - **`workflows/`** — higher-level orchestration built on `pipeline/`: `sweep`, `condensation`,
   `surface_builder` (also depends on `export.gromacs_export` and `pipeline.heteroatom_assignment`)
 - **`models/`** — `temperature_model`, the data-driven temperature × feedstock composition model;
   no intra-package deps
 - **`cli/`** — the four console-entry-point modules; parse arguments only
 
-The dependency order is `constants` → `pipeline` → `charges`/`export` → `workflows` → `cli`, with
+`export.md_setup` → `workflows.condensation` runs against that order, and is deliberate. Both
+modules render the Wood annealing schedule, and two implementations of one published protocol
+drift apart silently because both keep producing runnable input — they already had, disagreeing on
+peak temperature and on which axis a semi-isotropic barostat holds. One implementation is worth
+more here than layer purity, and no cycle is possible: `condensation` imports nothing from within
+the package. If it ever needs to, move `AnnealSpec` and `anneal_spec_for_htt` down to
+`constants.py` rather than duplicating them.
+
+The dependency order is otherwise `constants` → `pipeline` → `charges`/`export` → `workflows` →
+`cli`, with
 `models` sitting alongside `pipeline` (both depend only on `constants`, and `pipeline` reaches into
 `models` for the temperature/feedstock defaults). `__init__.py`'s `__all__` and `pyproject.toml`'s
 `[project.scripts]` are what actually declare the public surface (see above); the subpackage
