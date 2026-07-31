@@ -1,6 +1,6 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phases 0-2 complete and their export defects fixed; D1 and D3 resolved; Phases 3-5
+**Status:** Phases 0-3 complete, Phase 2's export defects fixed; D1 and D3 resolved; Phases 4-5
 not started
 **Type:** docs / traceability
 **Date:** 2026-07-30

@@ -7,6 +7,13 @@
     "title": "Hydrogen bonds are not clashes",
     "type": "section"
   },
+  "rq-00cf61e3": {
+    "decl": "- `MDSetupConfig(solvent_pad_nm: float = 1.2, water_model: str = \"spce\", ion_profile: str = \"mn_calcareous_default\", ntomp: int = 8, gmx_bin: str = \"gmx\", cluster: Optional[str] = None, ...)`",
+    "file": "md-setup",
+    "refs": [],
+    "title": "MDSetupConfig",
+    "type": "api-item"
+  },
   "rq-03a40f15": {
     "decl": "Scenario: Every mapped type names the right element",
     "file": "opls-typing",
@@ -62,6 +69,13 @@
     "title": "Cross-references",
     "type": "section"
   },
+  "rq-1433518c": {
+    "decl": "# Feature: GROMACS Run Directory Setup",
+    "file": "md-setup",
+    "refs": [],
+    "title": "Feature: GROMACS Run Directory Setup",
+    "type": "file"
+  },
   "rq-14ed3cdc": {
     "decl": "# Feature: GROMACS Topology and Structure Export",
     "file": "gromacs-export",
@@ -87,6 +101,14 @@
     "level": 2,
     "refs": [],
     "title": "Cross-references",
+    "type": "section"
+  },
+  "rq-15d0c9f2": {
+    "decl": "## Feature API",
+    "file": "md-setup",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
     "type": "section"
   },
   "rq-1729edcb": {
@@ -137,6 +159,14 @@
     "title": "A structure with more than three geometry errors reports all of them",
     "type": "scenario"
   },
+  "rq-212c17a8": {
+    "decl": "## Include Files Come From the Manifest",
+    "file": "md-setup",
+    "level": 2,
+    "refs": [],
+    "title": "Include Files Come From the Manifest",
+    "type": "section"
+  },
   "rq-21834b0c": {
     "decl": "Scenario: A contact marginally inside the floor is not a clash",
     "file": "geometry-embedding",
@@ -148,6 +178,13 @@
     ],
     "title": "A contact marginally inside the floor is not a clash",
     "type": "scenario"
+  },
+  "rq-2533ac5e": {
+    "decl": "- `IonProfile(name: str, ca_mM: float = 0.0, mg_mM: float = 0.0, na_mM: float = 0.0, k_mM: float = 0.0, counter_ion: str = \"CL\", description: str = \"\")`",
+    "file": "md-setup",
+    "refs": [],
+    "title": "IonProfile",
+    "type": "api-item"
   },
   "rq-25d4feed": {
     "decl": "## The Topology Carries Every Non-Bonded Interaction It Excludes",
@@ -209,12 +246,40 @@
     "title": "A lactone request places a phenolic group",
     "type": "scenario"
   },
+  "rq-2fdbb62b": {
+    "decl": "Scenario: An include file the topology needs is resolved from the manifest, not a filename guess",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An include file the topology needs is resolved from the manifest, not a filename guess",
+    "type": "scenario"
+  },
+  "rq-2fe208c2": {
+    "decl": "## Ion Placement Accumulates",
+    "file": "md-setup",
+    "level": 2,
+    "refs": [],
+    "title": "Ion Placement Accumulates",
+    "type": "section"
+  },
   "rq-312047ff": {
     "decl": "- `GROFileWriter.write(filepath: str, mol: Chem.Mol, coords: np.ndarray, molecule_name: str = \"BC\", box_vectors: Optional[np.ndarray] = None, title: Optional[str] = None) -> None`",
     "file": "gromacs-export",
     "refs": [],
     "title": "GROFileWriter",
     "type": "api-item"
+  },
+  "rq-317d0c21": {
+    "decl": "## The Annealing Schedule Follows the Pyrolysis Temperature",
+    "file": "md-setup",
+    "level": 2,
+    "refs": [],
+    "title": "The Annealing Schedule Follows the Pyrolysis Temperature",
+    "type": "section"
   },
   "rq-330a61eb": {
     "decl": "- `TOPFileWriter.write(filepath: str, mol: Chem.Mol, atom_types: Dict[int, str], charges: Dict[int, float], molecule_name: str = \"BIOCHAR\", forcefield_path: str = \"oplsaa.ff/forcefield.itp\", include_dihedrals: bool = True) -> None`",
@@ -245,6 +310,18 @@
       }
     ],
     "title": "An amino nitrogen types as aniline N on a small flake",
+    "type": "scenario"
+  },
+  "rq-39ce3988": {
+    "decl": "Scenario: Every ion species is placed against the coordinates the previous species produced",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every ion species is placed against the coordinates the previous species produced",
     "type": "scenario"
   },
   "rq-3c400653": {
@@ -307,6 +384,14 @@
     "title": "Hex-lattice structures keep their coordinates",
     "type": "scenario"
   },
+  "rq-4f5a5569": {
+    "decl": "## Every Stage Consumes What an Earlier Stage Produced",
+    "file": "md-setup",
+    "level": 2,
+    "refs": [],
+    "title": "Every Stage Consumes What an Earlier Stage Produced",
+    "type": "section"
+  },
   "rq-4f998061": {
     "decl": "## Requirements set",
     "file": "ARCHITECTURE",
@@ -349,6 +434,18 @@
       }
     ],
     "title": "A compressed bond is still rejected after order scaling",
+    "type": "scenario"
+  },
+  "rq-51c8f769": {
+    "decl": "Scenario: The wet stage holds the lateral lattice and lets the box relax along z",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The wet stage holds the lateral lattice and lets the box relax along z",
     "type": "scenario"
   },
   "rq-51d0fb61": {
@@ -399,6 +496,18 @@
     "title": "A clash needs to be deeper than embedding noise",
     "type": "section"
   },
+  "rq-5b7a5ab8": {
+    "decl": "Scenario: The annealing peak temperature follows the pyrolysis temperature",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The annealing peak temperature follows the pyrolysis temperature",
+    "type": "scenario"
+  },
   "rq-6024903d": {
     "decl": "Scenario: Every interatomic distance scales by exactly one tenth",
     "file": "gromacs-export",
@@ -418,6 +527,18 @@
     "refs": [],
     "title": "Single-molecule pipeline",
     "type": "section"
+  },
+  "rq-62e0732a": {
+    "decl": "Scenario: The topology the solvation step updates exists before that step runs",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The topology the solvation step updates exists before that step runs",
+    "type": "scenario"
   },
   "rq-64623ade": {
     "decl": "Scenario: A carbonyl is measured against the double-bond expectation",
@@ -447,6 +568,22 @@
     "title": "Cross-references",
     "type": "section"
   },
+  "rq-68fe810a": {
+    "decl": "## Cross-references",
+    "file": "md-setup",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
+  "rq-6a530d39": {
+    "decl": "## The Wet Stage Holds the Sheet and Relaxes the Solvent",
+    "file": "md-setup",
+    "level": 2,
+    "refs": [],
+    "title": "The Wet Stage Holds the Sheet and Relaxes the Solvent",
+    "type": "section"
+  },
   "rq-6b70c04c": {
     "decl": "Scenario: An intramolecular hydrogen bond is not reported as a clash",
     "file": "geometry-embedding",
@@ -470,6 +607,13 @@
     ],
     "title": "An overlap too short even for a hydrogen bond is still a clash",
     "type": "scenario"
+  },
+  "rq-6f1c55c5": {
+    "decl": "- `setup_one_structure(gro_path: str | Path, top_path: str | Path, output_dir: str | Path, label: str = \"structure\", config: Optional[MDSetupConfig] = None) -> Path`",
+    "file": "md-setup",
+    "refs": [],
+    "title": "setup_one_structure",
+    "type": "api-item"
   },
   "rq-70e5f033": {
     "decl": "Scenario: No assignable type lacks a GROMACS mapping",
@@ -605,6 +749,13 @@
     "title": "A carboxyl hydroxyl does not type as a phenol",
     "type": "scenario"
   },
+  "rq-86c5ecb3": {
+    "decl": "- `setup_md_from_manifest(manifest_csv: str | Path, output_root: str | Path, ion_profile: str = \"mn_calcareous_default\", config: Optional[MDSetupConfig] = None) -> list[dict]`",
+    "file": "md-setup",
+    "refs": [],
+    "title": "setup_md_from_manifest",
+    "type": "api-item"
+  },
   "rq-86ce8bbe": {
     "decl": "## The Residue Name Fits the Format",
     "file": "gromacs-export",
@@ -612,6 +763,13 @@
     "refs": [],
     "title": "The Residue Name Fits the Format",
     "type": "section"
+  },
+  "rq-8d689517": {
+    "decl": "- `get_ion_profile(name_or_profile) -> IonProfile`",
+    "file": "md-setup",
+    "refs": [],
+    "title": "get_ion_profile",
+    "type": "api-item"
   },
   "rq-8e4335b8": {
     "decl": "Scenario: Every supplement entry states where its value came from",
@@ -661,6 +819,26 @@
     "title": "Severity is reported so a marginal contact can be told from a real one",
     "type": "scenario"
   },
+  "rq-93d3a759": {
+    "decl": "## A Suppressed Warning Is Named",
+    "file": "md-setup",
+    "level": 2,
+    "refs": [],
+    "title": "A Suppressed Warning Is Named",
+    "type": "section"
+  },
+  "rq-997c1640": {
+    "decl": "Scenario: The timestep drops with the schedule it belongs to",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The timestep drops with the schedule it belongs to",
+    "type": "scenario"
+  },
   "rq-9a9488ab": {
     "decl": "Scenario: An aromatic C-C is measured against the aromatic expectation",
     "file": "geometry-embedding",
@@ -671,6 +849,18 @@
       }
     ],
     "title": "An aromatic C-C is measured against the aromatic expectation",
+    "type": "scenario"
+  },
+  "rq-9e4f2d8e": {
+    "decl": "Scenario: A structure that only passed as a fallback is marked as such in its run directory",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A structure that only passed as a fallback is marked as such in its run directory",
     "type": "scenario"
   },
   "rq-a22b8e8d": {
@@ -735,6 +925,18 @@
       }
     ],
     "title": "Exact-count mode does not spill",
+    "type": "scenario"
+  },
+  "rq-af56cae9": {
+    "decl": "Scenario: A suppressed warning is named where it is allowed",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A suppressed warning is named where it is allowed",
     "type": "scenario"
   },
   "rq-b0c8554c": {
@@ -841,6 +1043,14 @@
     "title": "Every Assignable Type Must Be Mapped",
     "type": "section"
   },
+  "rq-c039505d": {
+    "decl": "## A Run Directory Records What It Was Made From",
+    "file": "md-setup",
+    "level": 2,
+    "refs": [],
+    "title": "A Run Directory Records What It Was Made From",
+    "type": "section"
+  },
   "rq-c2463a78": {
     "decl": "## Clash Detection",
     "file": "geometry-embedding",
@@ -910,6 +1120,30 @@
       }
     ],
     "title": "A carbonyl request places a phenolic group",
+    "type": "scenario"
+  },
+  "rq-da9561c4": {
+    "decl": "Scenario: A row that produced no structure files gets no run directory",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A row that produced no structure files gets no run directory",
+    "type": "scenario"
+  },
+  "rq-dd80065b": {
+    "decl": "Scenario: A stage with no expected warning suppresses nothing",
+    "file": "md-setup",
+    "refs": [
+      {
+        "file": "tests/test_md_setup_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A stage with no expected warning suppresses nothing",
     "type": "scenario"
   },
   "rq-e05e7026": {
