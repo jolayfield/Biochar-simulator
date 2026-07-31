@@ -19,6 +19,26 @@
     "title": "Every mapped type names the right element",
     "type": "scenario"
   },
+  "rq-07b27c79": {
+    "decl": "Scenario: Atom names agree between the structure and the topology at any size",
+    "file": "gromacs-export",
+    "refs": [
+      {
+        "file": "tests/test_gromacs_export_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Atom names agree between the structure and the topology at any size",
+    "type": "scenario"
+  },
+  "rq-0e187d3e": {
+    "decl": "## Feature API",
+    "file": "gromacs-export",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-0f766d5b": {
     "decl": "# Feature: 3D Geometry Embedding and Clash Detection",
     "file": "geometry-embedding",
@@ -41,6 +61,13 @@
     "refs": [],
     "title": "Cross-references",
     "type": "section"
+  },
+  "rq-14ed3cdc": {
+    "decl": "# Feature: GROMACS Topology and Structure Export",
+    "file": "gromacs-export",
+    "refs": [],
+    "title": "Feature: GROMACS Topology and Structure Export",
+    "type": "file"
   },
   "rq-1548650e": {
     "decl": "Scenario: Analog-derived types remain stable across edits",
@@ -76,6 +103,14 @@
     "level": 2,
     "refs": [],
     "title": "Layering",
+    "type": "section"
+  },
+  "rq-190f0328": {
+    "decl": "## A Charged Molecule Says So",
+    "file": "gromacs-export",
+    "level": 2,
+    "refs": [],
+    "title": "A Charged Molecule Says So",
     "type": "section"
   },
   "rq-1a3046af": {
@@ -114,6 +149,14 @@
     "title": "A contact marginally inside the floor is not a clash",
     "type": "scenario"
   },
+  "rq-25d4feed": {
+    "decl": "## The Topology Carries Every Non-Bonded Interaction It Excludes",
+    "file": "gromacs-export",
+    "level": 2,
+    "refs": [],
+    "title": "The Topology Carries Every Non-Bonded Interaction It Excludes",
+    "type": "section"
+  },
   "rq-265ec385": {
     "decl": "Scenario: A large flat sheet uses the 2D-first path",
     "file": "geometry-embedding",
@@ -142,6 +185,18 @@
     "title": "Every Geometry Error Is Reported",
     "type": "section"
   },
+  "rq-2f3c2379": {
+    "decl": "Scenario: A ring carbon carries an improper term",
+    "file": "gromacs-export",
+    "refs": [
+      {
+        "file": "tests/test_gromacs_export_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A ring carbon carries an improper term",
+    "type": "scenario"
+  },
   "rq-2f5ab3f8": {
     "decl": "Scenario: A lactone request places a phenolic group",
     "file": "heteroatom-assignment",
@@ -153,6 +208,20 @@
     ],
     "title": "A lactone request places a phenolic group",
     "type": "scenario"
+  },
+  "rq-312047ff": {
+    "decl": "- `GROFileWriter.write(filepath: str, mol: Chem.Mol, coords: np.ndarray, molecule_name: str = \"BC\", box_vectors: Optional[np.ndarray] = None, title: Optional[str] = None) -> None`",
+    "file": "gromacs-export",
+    "refs": [],
+    "title": "GROFileWriter",
+    "type": "api-item"
+  },
+  "rq-330a61eb": {
+    "decl": "- `TOPFileWriter.write(filepath: str, mol: Chem.Mol, atom_types: Dict[int, str], charges: Dict[int, float], molecule_name: str = \"BIOCHAR\", forcefield_path: str = \"oplsaa.ff/forcefield.itp\", include_dihedrals: bool = True) -> None`",
+    "file": "gromacs-export",
+    "refs": [],
+    "title": "TOPFileWriter",
+    "type": "api-item"
   },
   "rq-35a5407d": {
     "decl": "Scenario: Every emitted angle resolves in the forcefield",
@@ -298,6 +367,18 @@
     "title": "A high-oxygen structure validates without falling back",
     "type": "scenario"
   },
+  "rq-5340daab": {
+    "decl": "Scenario: A residue name longer than five characters is truncated",
+    "file": "gromacs-export",
+    "refs": [
+      {
+        "file": "tests/test_gromacs_export_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A residue name longer than five characters is truncated",
+    "type": "scenario"
+  },
   "rq-5658c4b6": {
     "decl": "Scenario: Clash resolution does not run when there is nothing to resolve",
     "file": "geometry-embedding",
@@ -318,6 +399,18 @@
     "title": "A clash needs to be deeper than embedding noise",
     "type": "section"
   },
+  "rq-6024903d": {
+    "decl": "Scenario: Every interatomic distance scales by exactly one tenth",
+    "file": "gromacs-export",
+    "refs": [
+      {
+        "file": "tests/test_gromacs_export_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every interatomic distance scales by exactly one tenth",
+    "type": "scenario"
+  },
   "rq-60a0144a": {
     "decl": "## Single-molecule pipeline",
     "file": "ARCHITECTURE",
@@ -337,6 +430,22 @@
     ],
     "title": "A carbonyl is measured against the double-bond expectation",
     "type": "scenario"
+  },
+  "rq-6659180d": {
+    "decl": "## Aromatic Rings Carry the Terms That Keep Them Planar",
+    "file": "gromacs-export",
+    "level": 2,
+    "refs": [],
+    "title": "Aromatic Rings Carry the Terms That Keep Them Planar",
+    "type": "section"
+  },
+  "rq-66a857ff": {
+    "decl": "## Cross-references",
+    "file": "gromacs-export",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
   },
   "rq-6b70c04c": {
     "decl": "Scenario: An intramolecular hydrogen bond is not reported as a clash",
@@ -393,6 +502,18 @@
     "refs": [],
     "title": "Typing Must Not Depend on Molecule Size",
     "type": "section"
+  },
+  "rq-78e7477d": {
+    "decl": "Scenario: The topology states a non-zero total charge and how to neutralise it",
+    "file": "gromacs-export",
+    "refs": [
+      {
+        "file": "tests/test_gromacs_export_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The topology states a non-zero total charge and how to neutralise it",
+    "type": "scenario"
   },
   "rq-78f96107": {
     "decl": "Scenario: The supplement never shadows a stock entry",
@@ -453,6 +574,13 @@
     "title": "Small molecules are bounded by their perimeter",
     "type": "scenario"
   },
+  "rq-8340860d": {
+    "decl": "- `ITPFileWriter.write(filepath: str, mol: Chem.Mol, atom_types: Dict[int, str], charges: Dict[int, float], molecule_name: str = \"BIOCHAR\", include_dihedrals: bool = True) -> None`",
+    "file": "gromacs-export",
+    "refs": [],
+    "title": "ITPFileWriter",
+    "type": "api-item"
+  },
   "rq-85c279ce": {
     "decl": "Scenario: No free valence remains after assignment",
     "file": "heteroatom-assignment",
@@ -476,6 +604,14 @@
     ],
     "title": "A carboxyl hydroxyl does not type as a phenol",
     "type": "scenario"
+  },
+  "rq-86ce8bbe": {
+    "decl": "## The Residue Name Fits the Format",
+    "file": "gromacs-export",
+    "level": 2,
+    "refs": [],
+    "title": "The Residue Name Fits the Format",
+    "type": "section"
   },
   "rq-8e4335b8": {
     "decl": "Scenario: Every supplement entry states where its value came from",
@@ -537,6 +673,18 @@
     "title": "An aromatic C-C is measured against the aromatic expectation",
     "type": "scenario"
   },
+  "rq-a22b8e8d": {
+    "decl": "Scenario: The exclusion count matches what OPLS-AA expects",
+    "file": "gromacs-export",
+    "refs": [
+      {
+        "file": "tests/test_gromacs_export_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The exclusion count matches what OPLS-AA expects",
+    "type": "scenario"
+  },
   "rq-a63f775d": {
     "decl": "Scenario: A non-polar contact does not get the hydrogen-bond floor",
     "file": "geometry-embedding",
@@ -587,6 +735,26 @@
       }
     ],
     "title": "Exact-count mode does not spill",
+    "type": "scenario"
+  },
+  "rq-b0c8554c": {
+    "decl": "## Coordinates Convert to Nanometres",
+    "file": "gromacs-export",
+    "level": 2,
+    "refs": [],
+    "title": "Coordinates Convert to Nanometres",
+    "type": "section"
+  },
+  "rq-b2e50e9d": {
+    "decl": "Scenario: No two atoms share a name in the structure file",
+    "file": "gromacs-export",
+    "refs": [
+      {
+        "file": "tests/test_gromacs_export_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "No two atoms share a name in the structure file",
     "type": "scenario"
   },
   "rq-b37f44d2": {
@@ -724,6 +892,14 @@
     "title": "An amino nitrogen types as aniline N on a large sheet",
     "type": "scenario"
   },
+  "rq-c817effd": {
+    "decl": "## Atom Names Identify One Atom Each",
+    "file": "gromacs-export",
+    "level": 2,
+    "refs": [],
+    "title": "Atom Names Identify One Atom Each",
+    "type": "section"
+  },
   "rq-d3ef932d": {
     "decl": "Scenario: A carbonyl request places a phenolic group",
     "file": "heteroatom-assignment",
@@ -751,6 +927,13 @@
     "refs": [],
     "title": "Surface pipeline",
     "type": "section"
+  },
+  "rq-e17f705d": {
+    "decl": "- `GromacsExporter(output_directory: str = \".\")`",
+    "file": "gromacs-export",
+    "refs": [],
+    "title": "GromacsExporter",
+    "type": "api-item"
   },
   "rq-e9a1bf8b": {
     "decl": "## Aliphatic Oxygen Spill",
@@ -780,6 +963,18 @@
     "title": "A high oxygen target is reachable at low aromaticity",
     "type": "scenario"
   },
+  "rq-f256712c": {
+    "decl": "Scenario: Partial charges sum to the formal charge",
+    "file": "gromacs-export",
+    "refs": [
+      {
+        "file": "tests/test_gromacs_export_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Partial charges sum to the formal charge",
+    "type": "scenario"
+  },
   "rq-faf5d18d": {
     "decl": "## Standing constraints",
     "file": "ARCHITECTURE",
@@ -787,6 +982,18 @@
     "refs": [],
     "title": "Standing constraints",
     "type": "section"
+  },
+  "rq-fb164878": {
+    "decl": "Scenario: Every excluded 1-4 pair is listed for rescaled treatment",
+    "file": "gromacs-export",
+    "refs": [
+      {
+        "file": "tests/test_gromacs_export_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every excluded 1-4 pair is listed for rescaled treatment",
+    "type": "scenario"
   },
   "rq-fbb6a9c0": {
     "decl": "Scenario: The oxygen count still matches the request",

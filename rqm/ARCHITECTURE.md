@@ -127,13 +127,14 @@ These hold across the whole system and are easy to violate locally.
 
 | Document | Covers |
 |---|---|
-| `geometry-embedding.md` | Embedding path selection, clash detection, bond-length validation |
+| `geometry-embedding.md` | Embedding path selection, clash detection, bond-length validation, refinement, error reporting |
 | `heteroatom-assignment.md` | Functional group placement, fallbacks, oxygen spill, hydrogen saturation |
 | `opls-typing.md` | Internal typing, GROMACS mapping, forcefield verification depths |
+| `gromacs-export.md` | Coordinate units, atom naming, exclusions and 1–4 pairs, impropers, charge reporting |
 
-Not yet specified, in rough priority order: carbon skeleton growth, valence validation, GROMACS
-export, parameter sweep, pH protonation, temperature/feedstock model, surface stacking, MD
-setup, condensation annealing, QM and ML charge backends.
+Not yet specified, in rough priority order: MD setup, generation config resolution, surface
+stacking, carbon skeleton growth, parameter sweep, temperature/feedstock model, pH protonation,
+valence validation, condensation annealing, QM and ML charge backends.
 
 An absent document is not an absent requirement — it means the behaviour is currently defended
 by tests that no specification points at. `tools/rqm/rq check` reports the converse: specified

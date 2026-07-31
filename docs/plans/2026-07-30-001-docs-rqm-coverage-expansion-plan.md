@@ -1,6 +1,6 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phases 0 and 1 complete; D3 resolved; Phases 2-5 not started
+**Status:** Phases 0-2 complete; D1 and D3 resolved; Phases 3-5 not started
 **Type:** docs / traceability
 **Date:** 2026-07-30
 
@@ -35,6 +35,22 @@
 > every local run — the exact trap `AGENTS.md` warns about, in its bad state by default.
 > `export GMXDATA="$CONDA_PREFIX/share/gromacs"` fixes it, and `AGENTS.md` now says so. Without
 > it Phase 1's dihedral scenario would have been written against a test that never ran.
+>
+> **Phase 2 landed `rqm/gromacs-export.md`** — nine scenarios, four `api-item` entries, and the
+> repo's first `## Feature API` section. Five scenarios pass; four carry `xfail(strict=True)`.
+>
+> Probing before writing changed the scenario list in both directions. **One planned scenario was
+> dropped as fiction:** the review's claim that `tuple(sorted(...))` collapses distinct dihedrals
+> does not manifest — 102 proper torsions, 102 distinct four-atom sets, nothing lost, and the
+> exporter writes exactly 102. **One unplanned scenario was added, and it is the most serious
+> finding of the phase:** no `[ pairs ]` section is written. With `nrexcl = 3` and OPLS-AA's
+> `gen-pairs = yes` / `fudgeLJ = 0.5`, `gen-pairs` supplies pair *parameters* but never the pair
+> *list*, so every 1–4 interaction is excluded and none is restored. That is a different force
+> field from the one the topology claims.
+>
+> The atom-name defect is also worse than the review described: truncation to five characters does
+> not merely disagree with the `.itp`, it makes `C10000` and `C1000` the same atom name inside one
+> `.gro`.
 >
 > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that
