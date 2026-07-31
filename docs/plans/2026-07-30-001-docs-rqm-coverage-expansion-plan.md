@@ -102,6 +102,22 @@ resolved; Phases 4-5 not started
 > the data-layer cap was redundant as well as lossy. Full suite including the slow regressions:
 > 921 passed, 1 skipped, zero xfails.
 >
+> **Phase 4 landed `rqm/generation-config.md`** — nine scenarios, three `api-item` entries. Seven
+> pass; two carry `xfail(strict=True)`.
+>
+> The document's organising idea came out of reading the code rather than the plan: a request that
+> cannot be honoured meets one of three fates — refused at construction, adjusted with a warning,
+> or attempted and measured — and the failure mode is the third quietly doing the second's job.
+>
+> Two open defects. `strict=True` raises only when a group places *zero*, so a request for 40 ether
+> bridges answered with 6 is recorded as a success; the shortfall then reaches a sweep manifest as
+> `strict_pass`. And `TemperatureModel.get_valid_range` takes no property argument, so a
+> temperature inside H/C's support but outside pH's or conductivity's warns about nothing.
+>
+> One scenario was corrected against the code: the crossed-doping warning fires at generation, not
+> construction, because it describes the structure about to be built rather than a request that
+> cannot be honoured. The requirement now says so.
+>
 > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that
 > disagreement becomes a scenario plus a failing test rather than an open question.
