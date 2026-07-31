@@ -32,6 +32,143 @@ def _angle_suffix(atom_types: Dict[int, str], i: int, j: int, k: int) -> str:
     return f" {theta0:.3f} {force_constant:.3f}"
 
 
+_GRO_ATOM_NAME_WIDTH = 5
+_BASE36 = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+# OPLS-AA keeps sp2 centres planar with an improper torsion, supplied as a
+# #define in ffbonded.itp rather than as a [ dihedraltypes ] entry. The .rtp
+# [ bondedtypes ] row declares improper function type 1 -- the periodic *proper*
+# form -- because, as ffbonded.itp puts it, these are "implemented as proper
+# dihedrals [1+cos(2*x+180)] for the moment, to keep things compatible". The
+# macro name is written where parameters would otherwise go; the preprocessor
+# substitutes it when the forcefield is #included.
+_AROMATIC_IMPROPER = "improper_Z_CA_X_Y"
+_IMPROPER_FUNCT = 1
+
+
+def _atom_name(symbol: str, idx: int) -> str:
+    """A per-atom name that fits the .gro field and still identifies one atom.
+
+    The .gro atom-name column is five characters. Truncating a longer name is not
+    an option: ``C10000`` and ``C1000`` would collapse onto the same name, so one
+    name would identify several atoms *and* stop matching the .itp, which does not
+    truncate. Both files call this, so they agree by construction.
+
+    Decimal is used while it fits, which keeps the familiar C0/C1/H12 names for
+    everything below the width limit. Past that the index is written in base 36,
+    buying 36^4 = 1.68M single-letter-element atoms in the same five columns.
+    """
+    budget = _GRO_ATOM_NAME_WIDTH - len(symbol)
+    if budget < 1:
+        raise ValueError(f"element symbol {symbol!r} leaves no room for an index")
+    if len(str(idx)) <= budget:
+        return f"{symbol}{idx}"
+
+    encoded, n = "", idx
+    while n:
+        encoded = _BASE36[n % 36] + encoded
+        n //= 36
+    encoded = encoded or "0"
+    if len(encoded) > budget:
+        raise ValueError(
+            f"atom index {idx} does not fit {budget} character(s) after {symbol!r}; "
+            f"the .gro atom-name field cannot identify this many atoms uniquely"
+        )
+    return f"{symbol}{encoded}"
+
+
+def _pairs_1_4(mol: Chem.Mol):
+    """Atom index pairs exactly three bonds apart, 0-based and ordered.
+
+    nrexcl = 3 removes these from the plain non-bonded loop. OPLS-AA does not
+    discard them -- it restores them at half strength, and [ defaults ]
+    gen-pairs=yes generates the *parameters* for the pairs a topology lists. It
+    does not generate the list. Omitting [ pairs ] therefore silently drops every
+    1-4 interaction instead of rescaling it.
+
+    Walked over the bond graph rather than read off Chem.GetDistanceMatrix: that
+    matrix is N x N, so a 10,000-atom sheet would allocate 100M entries and scan
+    50M pairs to find a list that is linear in the number of torsions.
+
+    Candidates come from torsion paths i-j-k-l, then any that are also 1-2 or 1-3
+    bonded are dropped. In a fused ring the two ends of a torsion can be closer
+    than three bonds by another route, and such a pair is already excluded by
+    nrexcl -- listing it would double-count.
+    """
+    adjacency = [
+        {n.GetIdx() for n in atom.GetNeighbors()} for atom in mol.GetAtoms()
+    ]
+    # 1-2 and 1-3 partners of each atom, by the shortest route available.
+    near = []
+    for i, direct in enumerate(adjacency):
+        two_away = set().union(*(adjacency[n] for n in direct)) if direct else set()
+        near.append((direct | two_away) - {i})
+
+    pairs = set()
+    for bond in mol.GetBonds():
+        j, k = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+        for i in adjacency[j] - {k}:
+            for l_ in adjacency[k] - {j}:
+                if i == l_ or l_ in near[i]:
+                    continue
+                pairs.add((min(i, l_), max(i, l_)))
+    return sorted(pairs)
+
+
+def _aromatic_impropers(mol: Chem.Mol):
+    """Improper torsions holding aromatic ring carbons in their ring plane.
+
+    Proper dihedrals restrain rotation about a bond; nothing in them stops a
+    substituted ring carbon pyramidalising out of plane. Without these a sheet is
+    planar only because it was written that way.
+
+    Atom order follows the convention in oplsaa.ff's own residue templates
+    (``CG CE2 CD2 HD2`` for a phenylalanine ring CH): the central atom sits
+    third, its three neighbours occupy the other positions, and the substituent
+    -- the neighbour outside the ring where there is one -- goes last.
+    """
+    out = []
+    for atom in mol.GetAtoms():
+        if atom.GetSymbol() != "C" or not atom.GetIsAromatic() or not atom.IsInRing():
+            continue
+        neighbours = list(atom.GetNeighbors())
+        if len(neighbours) != 3:
+            continue
+        substituent = next(
+            (n for n in neighbours if not (n.GetIsAromatic() and n.IsInRing())),
+            neighbours[-1],
+        )
+        others = [n.GetIdx() for n in neighbours if n.GetIdx() != substituent.GetIdx()]
+        out.append((others[0], others[1], atom.GetIdx(), substituent.GetIdx()))
+    return out
+
+
+def _write_pairs(f, mol: Chem.Mol) -> None:
+    """Emit [ pairs ], the 1-4 list nrexcl excludes and OPLS-AA rescales."""
+    f.write("\n[ pairs ]\n")
+    f.write("; ai aj funct   ; 1-4 interactions, rescaled by fudgeLJ/fudgeQQ\n")
+    for i, j in _pairs_1_4(mol):
+        f.write(f"{i + 1:5d} {j + 1:5d} 1\n")
+
+
+def _write_impropers(f, mol: Chem.Mol) -> None:
+    """Emit the improper torsions that hold aromatic centres planar.
+
+    A separate [ dihedrals ] block from the proper torsions, which is how
+    pdb2gmx writes them too.
+    """
+    impropers = _aromatic_impropers(mol)
+    if not impropers:
+        return
+    f.write("\n[ dihedrals ]\n")
+    f.write("; ai aj ak al funct   ; impropers: keep aromatic centres planar\n")
+    for i, j, k, l_ in impropers:
+        f.write(
+            f"{i + 1:5d} {j + 1:5d} {k + 1:5d} {l_ + 1:5d} "
+            f"{_IMPROPER_FUNCT}    {_AROMATIC_IMPROPER}\n"
+        )
+
+
 def _write_qtot_footer(f, mol: Chem.Mol, qtot: float) -> None:
     """
     Record the molecule's net charge after an ``[ atoms ]`` block.
@@ -137,7 +274,7 @@ class GROFileWriter:
             # Atom lines
             for atom_idx, atom in enumerate(mol.GetAtoms()):
                 residue_num = 1
-                atom_name = f"{atom.GetSymbol()}{atom_idx:d}"[:5]  # Truncate to 5 chars max
+                atom_name = _atom_name(atom.GetSymbol(), atom_idx)
                 atom_num = atom_idx + 1
 
                 x, y, z = coords_nm[atom_idx]
@@ -208,7 +345,7 @@ class TOPFileWriter:
                 opls_type = GROMACS_OPLS_TYPE_MAP.get(prop.opls_type, prop.opls_type)
                 residue_num = 1
                 residue_name = molecule_name
-                atom_name = f"{prop.symbol}{prop.atom_idx}"
+                atom_name = _atom_name(prop.symbol, prop.atom_idx)
                 cgnr = 1
                 charge = prop.charge
                 mass = prop.mass
@@ -231,6 +368,8 @@ class TOPFileWriter:
                 j = bond.GetEndAtomIdx() + 1
                 # GROMACS harmonic bond: funct=1
                 f.write(f"{i:5d} {j:5d} 1\n")
+
+            _write_pairs(f, mol)
 
             # Angles section
             f.write("\n[ angles ]\n")
@@ -283,6 +422,8 @@ class TOPFileWriter:
                                         f"{dihedral[2] + 1:5d} {dihedral[3] + 1:5d} 3\n"
                                     )
                                     dihedrals_written.add(dih_sorted)
+
+                _write_impropers(f, mol)
 
             # System section
             f.write("\n[ system ]\n")
@@ -349,7 +490,7 @@ class ITPFileWriter:
                 opls_type = GROMACS_OPLS_TYPE_MAP.get(prop.opls_type, prop.opls_type)
                 residue_num = 1
                 residue_name = molecule_name
-                atom_name = f"{prop.symbol}{prop.atom_idx}"
+                atom_name = _atom_name(prop.symbol, prop.atom_idx)
                 cgnr = 1
                 charge = prop.charge
                 mass = prop.mass
@@ -371,6 +512,8 @@ class ITPFileWriter:
                 i = bond.GetBeginAtomIdx() + 1
                 j = bond.GetEndAtomIdx() + 1
                 f.write(f"{i:5d} {j:5d} 1\n")
+
+            _write_pairs(f, mol)
 
             # Angles section
             f.write("\n[ angles ]\n")
@@ -416,6 +559,8 @@ class ITPFileWriter:
                                         f"{dihedral[2] + 1:5d} {dihedral[3] + 1:5d} 3\n"
                                     )
                                     dihedrals_written.add(dih_sorted)
+
+                _write_impropers(f, mol)
 
 
 class GromacsExporter:
@@ -554,7 +699,7 @@ class MultiSheetGROWriter:
                 residue_name = sheet.molecule_name[:5]
                 for atom_idx, atom in enumerate(sheet.mol.GetAtoms()):
                     global_atom_num += 1
-                    atom_name = f"{atom.GetSymbol()}{atom_idx}"[:5]
+                    atom_name = _atom_name(atom.GetSymbol(), atom_idx)
                     x_nm, y_nm, z_nm = sheet.coords[atom_idx] * 0.1  # Å → nm
                     # Format: residue_name LEFT-aligned, atom_name RIGHT-aligned
                     f.write(

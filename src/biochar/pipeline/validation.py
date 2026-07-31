@@ -241,7 +241,15 @@ class StructureValidator:
         if coords is not None:
             geom_valid, geom_errors = GeometryValidator.validate_geometry(mol, coords)
             if not geom_valid:
-                errors.extend(geom_errors[:3])  # Limit to first 3 errors
+                # Every error, not a sample. Truncating here biases the report
+                # toward whichever check runs first: a sheet with one out-of-range
+                # bond and a long tail of clash contacts shows the contacts and
+                # drops the bond, which is how the bond-length defect stayed hidden
+                # (docs/solutions/bugs/physical-features-misread-as-geometry-errors.md).
+                # Callers that want a summary truncate for display -- print_summary
+                # already shows three and states the full count. A caller handed a
+                # truncated list cannot recover what was dropped.
+                errors.extend(geom_errors)
 
             # Check planarity of aromatic systems
             planarity, assessment = GeometryValidator.measure_ring_planarity(mol, coords)

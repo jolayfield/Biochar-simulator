@@ -1,10 +1,15 @@
 name: CI
 
+# The `pull_request` trigger deliberately carries NO branch filter. With
+# `branches: [main]` a PR based on any other branch matches nothing, runs zero
+# checks, and still reports MERGEABLE / CLEAN -- a green-looking PR that was
+# never tested. That happened twice in one session (#21 on #20, #23 on #21);
+# see docs/solutions/workflow-issues/stacked-pr-ci-and-base-branch-traps.md.
+# Do not add a filter back.
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
   # Lint. Seconds, and independent of the test matrix so a style finding is
@@ -62,14 +67,19 @@ jobs:
   # Requirements traceability. Runs in seconds and is independent of the test
   # matrix, so it reports separately rather than gating on Python version.
   #
-  # Deliberately warn-only for now: `rq check` reports every specified
-  # requirement that no test references, and 16 of them currently have no
-  # defending test. Those are real coverage gaps being closed incrementally,
-  # not failures to block a PR on. What IS enforced here is `index`, which
-  # exits non-zero on duplicate IDs -- a duplicate silently merges two distinct
-  # requirements into one registry entry, which is corruption rather than a gap.
+  # Three things are enforced here, each catching a different failure:
   #
-  # Promote `check` to a hard failure once the unreferenced count reaches zero.
+  #   index  -- exits non-zero on duplicate IDs. A duplicate silently merges two
+  #             distinct requirements into one registry entry: corruption, not a gap.
+  #   check  -- exits non-zero on a stale reference, i.e. a test citing an rq- ID
+  #             that no longer exists. No longer suppressed with `|| true`.
+  #   scenarios covered -- every `type: scenario` entry has at least one test.
+  #
+  # The last one is scoped to scenarios on purpose. `rq check` also warns about
+  # unreferenced `section` and `file` entries, but those are document headings
+  # ("## Layering", "## Public surface") that no test could reasonably cite --
+  # roughly 30 of them at present. Failing on the raw warning count would fail
+  # every run forever, so the gate reads the registry directly instead.
   rqm:
     name: Requirements traceability
     runs-on: ubuntu-latest
@@ -99,8 +109,25 @@ jobs:
             git diff --stat rqm/registry.json
           fi
 
+      # Stale references are errors in rqm.sh itself, so this is a hard failure.
       - name: Check traceability
-        run: bash tools/rqm/rq check || true
+        run: bash tools/rqm/rq check
+
+      # Every promise the requirements make must have a test that claims to
+      # defend it. A scenario landing without one is the gap this whole system
+      # exists to surface, so it blocks the PR rather than warning.
+      - name: Every scenario has a defending test
+        run: |
+          unref=$(jq -r '.[] | select(.type=="scenario" and (.refs|length)==0)
+                          | "\(.file): \(.title)"' rqm/registry.json)
+          if [ -n "$unref" ]; then
+            echo "::error::scenarios with no defending test:"
+            printf '%s\n' "$unref"
+            echo "Add a '# rq-xxxxxxxx' comment to the test that defends each," \
+                 "then run 'bash tools/rqm/rq index'."
+            exit 1
+          fi
+          echo "all scenarios have a defending test"
 
       - name: Summarise coverage
         run: |

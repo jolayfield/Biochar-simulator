@@ -1,6 +1,43 @@
 Changelog
 =========
 
+.. note::
+
+   ``CHANGELOG.md`` at the repository root is the canonical history. This page
+   is not a full mirror of it: releases 0.3.0 and 0.4.0 are recorded there and
+   are not reproduced here.
+
+Unreleased
+----------
+
+.. warning::
+
+   **Exported topologies changed. Re-run anything whose results matter.**
+   Structures exported before this release were missing every 1–4 non-bonded
+   interaction and had no term holding aromatic rings planar. Trajectories from
+   those topologies are not comparable with trajectories from new ones. The
+   structures themselves are unaffected — only the force field applied to them.
+
+- **1–4 interactions are no longer silently dropped.** Topologies declare
+  ``nrexcl = 3`` but wrote no ``[ pairs ]`` section; OPLS-AA's ``gen-pairs``
+  supplies pair parameters, never the pair list, so every 1–4 interaction was
+  excluded and none restored.
+- **Aromatic rings carry improper torsions**, so ring carbons are held planar
+  rather than free to pyramidalise during dynamics.
+- **Atom names above five characters no longer collide** between ``.gro`` and
+  ``.itp`` or within a single ``.gro``. Affects systems above ~10,000 atoms of
+  one element.
+- **The local MD run pipeline could not pass solvation** — ``gmx solvate -p``
+  was handed a topology nothing had created.
+- **Multi-species ion placement discarded all but the last species.**
+- **Annealing follows the pyrolysis temperature** (Wood scaling) instead of
+  applying the 400 °C schedule to every structure.
+- **Validation reports every geometry error**, not the first three. No pass/fail
+  decision changes; ``n_validation_errors`` in sweep manifests becomes the true
+  count.
+- **Run directories carry** ``run_provenance.json`` recording status, sources,
+  net charge, and the annealing schedule used.
+
 0.2.0 (2026-06-01)
 -------------------
 

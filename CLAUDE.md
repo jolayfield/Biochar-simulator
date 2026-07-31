@@ -17,6 +17,8 @@ Claude-Code-specific configuration and the architecture reference; it does not r
 - `docs/solutions/` — documented solutions to past problems (bugs, conventions, patterns), organized by
   category with YAML frontmatter (`module`, `tags`, `problem_type`). These are **retrospective** — what
   we learned. Relevant when implementing or debugging in a documented area.
+- `docs/reviews/` — dated, commit-pinned assessments of the codebase. **Point-in-time**: what was
+  true at one commit, not a plan and not scheduled. Re-verify before acting on a finding.
 - `CONCEPTS.md` — shared domain vocabulary. Relevant when orienting to the codebase or discussing domain
   concepts.
 

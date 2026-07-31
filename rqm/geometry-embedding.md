@@ -170,6 +170,40 @@ Feature: Do not resolve clashes on geometrically exact lattices
     Then clash resolution runs
 ```
 
+## Force-Field Refinement Is Not Gated on Clashes <!-- rq-e05e7026 -->
+
+On the non-hex-lattice path every structure goes through force-field refinement, whether or not
+clash detection reported anything. Clash *resolution* is conditional — there is nothing to
+displace when no contact is flagged — but refinement is unconditional.
+
+A clean clash report does not mean the embedding is strain-free. The two rules look at different
+things: clash detection measures non-bonded contacts, and ETKDG can satisfy every one of those
+while leaving a compressed aromatic bond of 1.16 Å where 1.40 Å is expected. Only the force-field
+pass relaxes that.
+
+Gating refinement on the clash report would make it depend on whichever contacts the clash rules
+happen to flag. Such a dependency is invisible while it holds — refinement runs by side effect
+for as long as some contact is always reported — and silently stops the moment the clash rules
+become more precise. The two passes are therefore kept independent.
+
+```gherkin
+Feature: Refine geometry regardless of what clash detection found
+
+  @rq-acf97ed2
+  Scenario: A structure with no reported clashes is still refined
+    Given a structure embedded off the hex-lattice path
+    And geometry validation reports no steric clash
+    When the generator finishes geometry
+    Then force-field refinement runs
+
+  @rq-5658c4b6
+  Scenario: Clash resolution does not run when there is nothing to resolve
+    Given a structure embedded off the hex-lattice path
+    And geometry validation reports no steric clash
+    When the generator finishes geometry
+    Then the clash resolver is not invoked
+```
+
 ## Bond-Length Validation <!-- rq-ff2c049b -->
 
 `COVALENT_RADII` are single-bond radii, so their sum predicts a single bond only. The expected
@@ -206,6 +240,26 @@ Feature: Judge bond length against the bond order actually present
     Given a bond shorter than 0.85 times its order-scaled expected length
     When bond-length validation runs
     Then the bond is reported as out of range
+```
+
+## Every Geometry Error Is Reported <!-- rq-2ceb3ae6 -->
+
+A structure report names every geometry error found, not a sample of them.
+
+Completeness is what makes the report a diagnostic. Reporting a fixed-size prefix of the error
+list biases it toward whichever check runs first: a sheet carrying one out-of-range bond and a
+long tail of clash contacts shows the contacts and drops the bond, and the one error worth acting
+on is the one that never appears. A caller that wants a summary can truncate a complete list;
+a caller given a truncated list cannot recover what was dropped.
+
+```gherkin
+Feature: Report every geometry error, not a sample
+
+  @rq-1f2ce9fc
+  Scenario: A structure with more than three geometry errors reports all of them
+    Given a structure whose geometry validation finds more than three errors
+    When the structure report is produced
+    Then the report contains every one of those errors
 ```
 
 ## Cross-references <!-- rq-13a85be1 -->

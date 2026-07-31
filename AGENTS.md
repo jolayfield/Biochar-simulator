@@ -14,6 +14,9 @@ tool-specific configuration.
   what we learned, and why.
 - **`CONCEPTS.md`** — domain vocabulary. The internal atom type / OPLS type name
   / bonded type distinction is load-bearing; read it before touching export.
+- **`docs/reviews/`** — dated, commit-pinned assessments. **Point-in-time**: what
+  was true at one commit. Nothing in a review is scheduled, and line numbers in
+  one drift; re-verify a finding before acting on it.
 
 `rqm/` and `docs/solutions/` are complements, not duplicates. One states the
 invariant, the other records how it was learned.
@@ -37,9 +40,19 @@ Always `-n auto`. 15 of 842 tests are ~98% of the runtime; they are marked
 
 **A green run is not automatically evidence.** Two silent-skip traps here:
 
-- Forcefield-backed tests skip without a discoverable `oplsaa.ff`. Set `GMXDATA`
-  or `BIOCHAR_OPLSAA_FF`, and check the skip count — 3 skips is normal, 21 means
-  the forcefield was missing and those tests verified nothing.
+- Forcefield-backed tests skip without a discoverable `oplsaa.ff`. **Check the
+  skip count: 1 is normal (MOPAC), 21 means the forcefield was missing and those
+  20 tests verified nothing.** The conda env already ships GROMACS, but nothing
+  points the tests at it, so the default is the bad case:
+
+  ```bash
+  export GMXDATA="$CONDA_PREFIX/share/gromacs"   # note: parent of top/, not top/ itself
+  ```
+
+  `BIOCHAR_OPLSAA_FF` also works but points straight at the `oplsaa.ff`
+  directory, and `tests/test_constants_ff.py` does not honour it — that file
+  reads only `GMXDATA` and `gmx` on `PATH`. Prefer `GMXDATA`, which un-skips
+  both files.
 - `python3` without rdkit silently is not the project environment.
 
 **Measure the structure, do not assume it.** A requested composition is a

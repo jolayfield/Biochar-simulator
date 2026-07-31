@@ -2,6 +2,87 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
+## [Unreleased]
+
+> **Exported topologies changed. Re-run anything whose results matter.**
+> Structures exported before this release were missing every 1–4 non-bonded
+> interaction and had no term holding aromatic rings planar. Trajectories from
+> those topologies are not comparable with trajectories from new ones. The
+> structures themselves are unaffected — only the force field applied to them.
+
+### Fixed — force field
+
+- **1–4 interactions are no longer silently dropped.** `[ moleculetype ]`
+  declares `nrexcl = 3`, which correctly excludes 1–4 pairs from the plain
+  non-bonded loop, but OPLS-AA restores them at half strength via `gen-pairs` /
+  `fudgeLJ` / `fudgeQQ` — and `gen-pairs` supplies the pair *parameters*, never
+  the pair *list*. No `[ pairs ]` section was written, so every 1–4 interaction
+  was excluded and none restored. Exported topologies now carry the full 1–4
+  pair list.
+- **Aromatic rings now carry improper torsions.** Proper dihedrals restrain
+  rotation about a bond and do nothing to stop a substituted ring carbon
+  pyramidalising, so sheets were planar only because they were written that way.
+  Impropers are emitted for every three-connected aromatic ring carbon as
+  `improper_Z_CA_X_Y` (function type 1, per `oplsaa.ff`'s own residue templates).
+- **Atom names above five characters no longer collide or diverge.** The `.gro`
+  atom-name field is five characters; truncating made `C10000` and `C1000` the
+  same name inside one file, and disagree with the untruncated `.itp`. Indices
+  that do not fit are now base-36, and all four writers share one helper.
+  Affects systems above ~10,000 atoms of one element — stacked surfaces mainly.
+
+### Fixed — MD run setup
+
+- **The local run pipeline could not pass solvation.** `gmx solvate -p` updates
+  a topology in place, and the generated script passed it a `wet.top` that
+  nothing created. Under `set -euo pipefail` the run aborted there. (The SLURM
+  path was unaffected.)
+- **Multi-species ion placement discarded all but the last species.** One
+  `genion.tpr` was built from pre-ion coordinates and reused for every cation,
+  so each was placed into a structure containing none of the previous ones while
+  the topology accumulated all of them. The run input is now rebuilt between
+  species, in both the local and SLURM paths.
+- **Annealing follows the pyrolysis temperature.** The schedule applied the
+  400 °C Wood protocol (1000 K peak, 1 fs) to every structure regardless of
+  temperature; an 800 °C char now anneals to 3000 K at 0.5 fs. Rendered from
+  `workflows.condensation.anneal_spec_for_htt`, so the protocol has one
+  implementation rather than two that had drifted apart. When a manifest records
+  no temperature the mildest anchor applies, and the run directory says so.
+- **Include files are resolved from the sweep manifest** rather than guessed as
+  `<topology stem>.itp`. The guess held for a single molecule and failed for a
+  surface, whose topology is `<base>.top` while its include is
+  `<base>_sheet.itp` — so the include was silently not copied and `grompp` could
+  not find the moleculetype.
+- **`grompp` warnings are no longer blanket-suppressed.** Every call passed
+  `-maxwarn 2`, absorbing whichever two warnings arrived — including the two
+  that matter most here, a net-charged system under PME and a structure/topology
+  atom mismatch. `-maxwarn 1` is now spent only where the topology declares a
+  non-zero charge and only before `genion -neutral`; a neutral structure
+  suppresses nothing.
+
+### Changed
+
+- **Validation reports every geometry error, not the first three.** This does
+  not change any pass/fail decision — `is_valid` was already `len(errors) == 0`
+  — but `n_validation_errors` in sweep manifests is now the true count rather
+  than one capped at 3, so numbers will not match manifests generated earlier.
+  Console output is unchanged: `print_summary` still shows three and states the
+  total.
+- **Run directories carry `run_provenance.json`** recording label, status,
+  source files, net charge, and the annealing schedule used. A `fallback`
+  structure is no longer indistinguishable from a `strict_pass` one at the point
+  results are collected.
+
+### Added — project
+
+- `rqm/gromacs-export.md` and `rqm/md-setup.md`, plus a `docs/reviews/`
+  category for dated, commit-pinned assessments. 64 requirement scenarios, each
+  with a defending test.
+- CI now fails on any specified scenario with no defending test, and on a stale
+  traceability reference.
+- The `pull_request` CI trigger no longer filters on `branches: [main]`, which
+  had let a PR based on any other branch run zero checks while reporting
+  `MERGEABLE / CLEAN`.
+
 ## [0.4.0] — July 11, 2026
 
 ### Added
@@ -291,6 +372,5 @@ The implementation reuses the existing `BiocharGenerator` pipeline for each shee
 
 ---
 
-**Current Version**: 0.1.4  
-**Last Updated**: May 31, 2026  
+**Released version**: 0.4.0 (see `pyproject.toml`, which is authoritative)  
 **Status**: Production Ready

@@ -28,11 +28,21 @@ Or via CLI: ``biochar-md-setup sweep_out/.../manifest.csv --output-root ...``
 from __future__ import annotations
 
 import csv
+import json
+import re
 import shutil
 import stat
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
+from ..workflows.condensation import anneal_spec_for_htt
+
+# The heat-treatment temperature to assume when the manifest does not record one.
+# 400 C is the lowest Wood anchor, so an unknown structure gets the mildest
+# schedule rather than one that could over-anneal it. Run directories state which
+# value was used, so a fallback is visible rather than silent.
+_DEFAULT_HTT_C = 400.0
 
 
 class MDSetupError(Exception):
@@ -567,8 +577,125 @@ def _read_gro_dims(gro_path: Path) -> tuple[int, tuple[float, float, float]]:
     return n_atoms, box
 
 
-def _write_mdp_templates(run_dir: Path) -> None:
+_NET_CHARGE_RE = re.compile(r"formal\s*([+-]?\d+)\s*e")
+
+# grompp cannot suppress a warning by name -- -maxwarn takes a count -- so the
+# count is the whole of the control. It is therefore spent only where a specific
+# warning is expected, and the comment below travels with it so a reader can tell
+# which one was accepted. Stages with nothing to excuse pass no -maxwarn at all
+# and fail on the first surprise.
+_NET_CHARGE_WARNING = (
+    "# Expected warning: system has non-zero total charge under PME. "
+    "The structure is a real anion/cation; `genion -neutral` balances it at "
+    "solvation. -maxwarn 1 covers exactly that one warning."
+)
+
+
+def _net_charge_from_top(top_path: Path) -> int:
+    """The formal charge a topology declares, or 0 when it declares none.
+
+    `gromacs_export` writes `; total charge: ... (formal -4 e)` after [ atoms ].
+    Reading it lets the pipeline spend a -maxwarn only on the stages that really
+    do run charged, instead of blanket-suppressing every warning at every stage.
+    """
+    try:
+        match = _NET_CHARGE_RE.search(top_path.read_text())
+    except OSError:
+        return 0
+    return int(match.group(1)) if match else 0
+
+
+def _grompp_maxwarn(net_charge: int, before_neutralisation: bool) -> str:
+    """The -maxwarn argument for one stage, empty when nothing is expected."""
+    if net_charge != 0 and before_neutralisation:
+        return " -maxwarn 1"
+    return ""
+
+
+def _anneal_schedule_lines(spec) -> tuple[str, str]:
+    """(dt line, annealing-temp line) for an AnnealSpec.
+
+    The Wood peak/timestep scaling has one implementation,
+    `workflows.condensation.anneal_spec_for_htt`. Rendering from it here rather
+    than restating the numbers is what stops the two copies of this protocol
+    drifting apart -- they already had.
+    """
+    peak = spec.peak_T_K
+    return (
+        f"dt              = {spec.timestep_fs / 1000.0:g}",
+        f"annealing-temp      = 300 300 {peak:g} {peak:g} 300 300",
+    )
+
+
+def _apply_anneal_spec(mdp_text: str, spec) -> str:
+    """Rewrite an annealing .mdp's timestep and peak temperature from `spec`.
+
+    Only `dt` and `annealing-temp` move. The NVT stage's `ref_t` stays at 300 K
+    on purpose: it is a pre-equilibration that exists to initialise velocities
+    safely before the ramp, not part of the ramp.
+    """
+    dt_line, temp_line = _anneal_schedule_lines(spec)
+    out = []
+    for raw in mdp_text.splitlines():
+        key = raw.split(";", 1)[0].split("=", 1)[0].strip()
+        if key == "dt":
+            out.append(dt_line)
+        elif key == "annealing-temp":
+            out.append(temp_line)
+        elif raw.startswith("; Schedule:"):
+            out.append(
+                f"; Schedule: hold 300K (0.5ns) -> heat to {spec.peak_T_K:g}K (1ns) -> "
+                f"hold {spec.peak_T_K:g}K (1ns) -> cool to 300K (2ns) -> hold 300K (1ns)"
+            )
+        else:
+            out.append(raw)
+    return "\n".join(out) + ("\n" if mdp_text.endswith("\n") else "")
+
+
+def _write_run_provenance(
+    run_dir: Path,
+    *,
+    label: str,
+    status: Optional[str],
+    gro_path: Path,
+    top_path: Path,
+    includes,
+    htt_c: Optional[float],
+    anneal_spec,
+    net_charge: int,
+) -> None:
+    """Record what this run directory was built from.
+
+    A `fallback` structure did not meet the composition targets that were asked
+    for. It is still worth simulating, but a directory that looks identical to a
+    `strict_pass` one loses that distinction exactly where results are collected
+    and compared.
+    """
+    payload = {
+        "label": label,
+        "status": status,
+        "source_gro": str(gro_path),
+        "source_top": str(top_path),
+        "source_includes": [str(p) for p in includes],
+        "net_charge_e": net_charge,
+        "pyrolysis_temperature_c": htt_c,
+        "pyrolysis_temperature_source": "manifest" if htt_c is not None else "default",
+        "anneal_peak_K": anneal_spec.peak_T_K,
+        "anneal_timestep_fs": anneal_spec.timestep_fs,
+    }
+    (run_dir / "run_provenance.json").write_text(json.dumps(payload, indent=2) + "\n")
+
+
+def _write_mdp_templates(run_dir: Path, anneal_spec=None) -> None:
+    """Write the .mdp set, rendering the annealing stages from `anneal_spec`.
+
+    Without a spec the templates are written as-is, which is the 400 C anchor of
+    the Wood schedule. `setup_one_structure` always supplies one.
+    """
+    anneal_files = {"anneal_nvt.mdp", "anneal_npt.mdp"}
     for filename, content in _MDP_FILES.items():
+        if anneal_spec is not None and filename in anneal_files:
+            content = _apply_anneal_spec(content, anneal_spec)
         (run_dir / filename).write_text(content)
 
 
@@ -612,6 +739,7 @@ def _render_pipeline_script(
     cfg: MDSetupConfig,
     ion: IonProfile,
     pre_solvation_stage: Optional[PreSolvationStage] = None,
+    net_charge: int = 0,
 ) -> str:
     """Build a run_pipeline.sh for one structure: dry anneal, then solvate + wet stages.
 
@@ -629,6 +757,9 @@ def _render_pipeline_script(
     `pre_solvation_stage.solvation_top` instead of the bare biochar topology.
     """
     gmx = cfg.gmx_bin
+    # Charged until `genion -neutral` runs; only those stages may spend a warning.
+    charged = _grompp_maxwarn(net_charge, before_neutralisation=True)
+    neutral = _grompp_maxwarn(net_charge, before_neutralisation=False)
     # genion only supports one -pname/-nname pair per invocation in most
     # GROMACS builds; multi-cation profiles need sequential genion calls.
     # We emit one genion stage per cation actually requested (>0 mM), each
@@ -665,24 +796,25 @@ def _render_pipeline_script(
         'exec > >(tee -a "$LOGFILE") 2>&1',
         f'echo "Pipeline started for {label}: $(date)"',
         "",
+        *( [_NET_CHARGE_WARNING, ""] if charged else [] ),
         "# ---- [1/8] Dry Energy Minimization ----",
         'mkdir -p "$SIM/dry_em"',
-        f'"$GMX" grompp -f "$SIM/dry_em.mdp" -c "$SIM/{gro_name}" -p "$SIM/{top_name}" -o "$SIM/dry_em/em.tpr" -maxwarn 2',
+        f'"$GMX" grompp -f "$SIM/dry_em.mdp" -c "$SIM/{gro_name}" -p "$SIM/{top_name}" -o "$SIM/dry_em/em.tpr"{charged}',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/dry_em/em.tpr" -deffnm "$SIM/dry_em/em"',
         "",
         "# ---- [2/8] Anneal NVT pre-equilibration ----",
         'mkdir -p "$SIM/anneal_nvt"',
-        f'"$GMX" grompp -f "$SIM/anneal_nvt.mdp" -c "$SIM/dry_em/em.gro" -p "$SIM/{top_name}" -o "$SIM/anneal_nvt/nvt.tpr" -maxwarn 2',
+        f'"$GMX" grompp -f "$SIM/anneal_nvt.mdp" -c "$SIM/dry_em/em.gro" -p "$SIM/{top_name}" -o "$SIM/anneal_nvt/nvt.tpr"{charged}',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/anneal_nvt/nvt.tpr" -deffnm "$SIM/anneal_nvt/nvt"',
         "",
         "# ---- [3/8] Simulated annealing NPT (300 -> 1000 -> 300 K) ----",
         'mkdir -p "$SIM/anneal_npt"',
-        f'"$GMX" grompp -f "$SIM/anneal_npt.mdp" -c "$SIM/anneal_nvt/nvt.gro" -p "$SIM/{top_name}" -o "$SIM/anneal_npt/npt.tpr" -maxwarn 2',
+        f'"$GMX" grompp -f "$SIM/anneal_npt.mdp" -c "$SIM/anneal_nvt/nvt.gro" -p "$SIM/{top_name}" -o "$SIM/anneal_npt/npt.tpr"{charged}',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/anneal_npt/npt.tpr" -deffnm "$SIM/anneal_npt/npt"',
         "",
         "# ---- [4/8] Final dry NPT (1 bar, 300 K) ----",
         'mkdir -p "$SIM/final_npt"',
-        f'"$GMX" grompp -f "$SIM/final_npt.mdp" -c "$SIM/anneal_npt/npt.gro" -p "$SIM/{top_name}" -o "$SIM/final_npt/npt.tpr" -maxwarn 2',
+        f'"$GMX" grompp -f "$SIM/final_npt.mdp" -c "$SIM/anneal_npt/npt.gro" -p "$SIM/{top_name}" -o "$SIM/final_npt/npt.tpr"{charged}',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/final_npt/npt.tpr" -deffnm "$SIM/final_npt/npt"',
         'echo "Dry annealing complete: $(date)"',
         "",
@@ -713,16 +845,27 @@ def _render_pipeline_script(
         "# ---- [5/8] Box + solvate ----",
         "# Box padding computed from the final dry structure, not hand-tuned:",
         f'"$GMX" editconf -f {dry_structure_expr} -o "$SIM/boxed.gro" -c -d {cfg.solvent_pad_nm} -bt cubic',
+        "# solvate UPDATES a topology in place, so the run's working copy must",
+        "# exist first. The script runs under `set -euo pipefail`.",
+        f'cp "$SIM/{solv_top_name}" "$SIM/wet.top"',
         f'"$GMX" solvate -cp "$SIM/boxed.gro" -cs {cfg.water_model}.gro -p "$SIM/wet.top" -o "$SIM/solvated.gro"',
-        f'cp "$SIM/{solv_top_name}" "$SIM/wet.top.base"',
         f'grep -q "{cfg.water_model}" "$SIM/wet.top" || echo \'#include "oplsaa.ff/{cfg.water_model}.itp"\' >> "$SIM/wet.top"',
         "",
         "# ---- [6/8] Add ions to reach the target water chemistry ----",
         f'# Ion profile: {ion.name} ({ion.description})',
-        '"$GMX" grompp -f "$SIM/wet_em.mdp" -c "$SIM/solvated.gro" -p "$SIM/wet.top" -o "$SIM/genion.tpr" -maxwarn 2',
+        f'"$GMX" grompp -f "$SIM/wet_em.mdp" -c "$SIM/solvated.gro" -p "$SIM/wet.top" -o "$SIM/genion.tpr"{charged}',
     ]
+    # genion places one species per call, reading coordinates from a .tpr and
+    # writing a new structure. The .tpr must therefore be rebuilt between calls:
+    # reusing the first one places every species into the pre-ion structure, so
+    # each species erases the last while the topology accumulates all of them.
     if cations:
-        for sym, conc_mM, pq in cations:
+        for n, (sym, conc_mM, pq) in enumerate(cations):
+            if n:
+                script_lines.append(
+                    f'"$GMX" grompp -f "$SIM/wet_em.mdp" -c "$SIM/solvated.gro" '
+                    f'-p "$SIM/wet.top" -o "$SIM/genion.tpr"{charged}'
+                )
             script_lines.append(
                 f'echo SOL | "$GMX" genion -s "$SIM/genion.tpr" -p "$SIM/wet.top" '
                 f'-o "$SIM/solvated.gro" -pname {sym} -pq {pq} -nname {ion.counter_ion} '
@@ -737,14 +880,14 @@ def _render_pipeline_script(
         "",
         "# ---- [7/8] Wet EM ----",
         'mkdir -p "$SIM/wet_em"',
-        '"$GMX" grompp -f "$SIM/wet_em.mdp" -c "$SIM/solvated.gro" -p "$SIM/wet.top" -o "$SIM/wet_em/em.tpr" -maxwarn 2',
+        f'"$GMX" grompp -f "$SIM/wet_em.mdp" -c "$SIM/solvated.gro" -p "$SIM/wet.top" -o "$SIM/wet_em/em.tpr"{neutral}',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/wet_em/em.tpr" -deffnm "$SIM/wet_em/em"',
         "",
         "# ---- [8/8] Wet NVT then NPT (semiisotropic) ----",
         'mkdir -p "$SIM/wet_nvt" "$SIM/wet_npt"',
-        '"$GMX" grompp -f "$SIM/wet_nvt.mdp" -c "$SIM/wet_em/em.gro" -p "$SIM/wet.top" -o "$SIM/wet_nvt/nvt.tpr" -maxwarn 2',
+        f'"$GMX" grompp -f "$SIM/wet_nvt.mdp" -c "$SIM/wet_em/em.gro" -p "$SIM/wet.top" -o "$SIM/wet_nvt/nvt.tpr"{neutral}',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/wet_nvt/nvt.tpr" -deffnm "$SIM/wet_nvt/nvt"',
-        '"$GMX" grompp -f "$SIM/wet_npt.mdp" -c "$SIM/wet_nvt/nvt.gro" -p "$SIM/wet.top" -o "$SIM/wet_npt/npt.tpr" -maxwarn 2',
+        f'"$GMX" grompp -f "$SIM/wet_npt.mdp" -c "$SIM/wet_nvt/nvt.gro" -p "$SIM/wet.top" -o "$SIM/wet_npt/npt.tpr"{neutral}',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/wet_npt/npt.tpr" -deffnm "$SIM/wet_npt/npt"',
         "",
         'echo "Pipeline complete for {label}: $(date)"'.replace("{label}", label),
@@ -757,6 +900,7 @@ def _render_pipeline_script(
 def _render_solvate_ions_slurm(
     cfg: MDSetupConfig, ion: IonProfile,
     pre_solvation_stage: Optional[PreSolvationStage] = None,
+    net_charge: int = 0,
 ) -> str:
     """A small custom sbatch script for the (optional insertion +)
     box+solvate+genion step.
@@ -791,13 +935,22 @@ def _render_solvate_ions_slurm(
         )
         if conc > 0
     ]
+    charged = _grompp_maxwarn(net_charge, before_neutralisation=True)
     if cations:
-        genion_lines = [
-            f'echo SOL | singularity exec "$sif_file" gmx genion -s genion.tpr -p wet.top '
-            f'-o solvated.gro -pname {sym} -pq {pq} -nname {ion.counter_ion} '
-            f'-conc {conc_mM / 1000.0:.6f} -neutral'
-            for sym, conc_mM, pq in cations
-        ]
+        # As in the local pipeline: rebuild the run input between species, or
+        # each one is placed into the structure the previous one started from.
+        genion_lines = []
+        for n, (sym, conc_mM, pq) in enumerate(cations):
+            if n:
+                genion_lines.append(
+                    f'singularity exec "$sif_file" gmx grompp -f wet_em.mdp '
+                    f'-c solvated.gro -p wet.top -o genion.tpr{charged}'
+                )
+            genion_lines.append(
+                f'echo SOL | singularity exec "$sif_file" gmx genion -s genion.tpr -p wet.top '
+                f'-o solvated.gro -pname {sym} -pq {pq} -nname {ion.counter_ion} '
+                f'-conc {conc_mM / 1000.0:.6f} -neutral'
+            )
     else:
         genion_lines = [
             f'echo SOL | singularity exec "$sif_file" gmx genion -s genion.tpr -p wet.top '
@@ -855,7 +1008,7 @@ touch .marker
 {insertion_block}singularity exec "$sif_file" gmx editconf -f {dry_structure_var} -o boxed.gro -c -d {cfg.solvent_pad_nm} -bt cubic
 singularity exec "$sif_file" gmx solvate -cp boxed.gro -cs {cfg.water_model}.gro -p wet.top -o solvated.gro
 grep -q "{cfg.water_model}" wet.top || echo '#include "oplsaa.ff/{cfg.water_model}.itp"' >> wet.top
-singularity exec "$sif_file" gmx grompp -f wet_em.mdp -c solvated.gro -p wet.top -o genion.tpr -maxwarn 2
+singularity exec "$sif_file" gmx grompp -f wet_em.mdp -c solvated.gro -p wet.top -o genion.tpr{charged}
 {genion_block}
 run_status=$?
 
@@ -874,6 +1027,7 @@ def _render_slurm_chain_script(
     top_name: str,
     cfg: MDSetupConfig,
     pre_solvation_stage: Optional[PreSolvationStage] = None,
+    net_charge: int = 0,
 ) -> str:
     """Build `submit_chain.sh`: sbatch the 7 (or 8, with an insertion stage) MD
     stages as a SLURM dependency chain through the site's `gromacs_plumed.slurm`
@@ -908,12 +1062,13 @@ def _render_slurm_chain_script(
         return [
             f'J_{name}=$(sbatch --parsable -p {part}{gpu_sbatch} --cpus-per-task={cpus}{dep} \\',
             f'  "{script}"{cpu_flag} -f "$SIM/{mdp}" -c {conf_expr} -p {top_expr} \\',
-            f'  -o {out} -maxwarn 2 -results-dir "$SIM" -results-name {name})',
+            f'  -o {out}{charged} -results-dir "$SIM" -results-name {name})',
             f'echo "[{name}] submitted as job $J_{name}"',
             "",
         ]
 
     dry_top_expr = f'"$SIM/{top_name}"'
+    charged = _grompp_maxwarn(net_charge, before_neutralisation=True)
     lines = [
         "#!/usr/bin/env bash",
         "set -euo pipefail",
@@ -929,6 +1084,7 @@ def _render_slurm_chain_script(
         'SIM="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"',
         'cd "$SIM"',
         "",
+        *( [_NET_CHARGE_WARNING, ""] if charged else [] ),
         "# ---- [1/8] Dry Energy Minimization ----",
     ]
     lines += gmx_stage("dry_em.mdp", f'"$SIM/{gro_name}"', dry_top_expr, "em", "dry_em", None)
@@ -977,6 +1133,9 @@ def setup_one_structure(
     output_dir: str | Path,
     label: str = "structure",
     config: Optional[MDSetupConfig] = None,
+    pyrolysis_temperature_c: Optional[float] = None,
+    status: Optional[str] = None,
+    include_paths: Optional[list] = None,
 ) -> Path:
     """Write .mdp templates + run_pipeline.sh + copies of gro/top/itp into `output_dir`.
 
@@ -999,11 +1158,40 @@ def setup_one_structure(
 
     shutil.copy(gro_path, out / gro_path.name)
     shutil.copy(top_path, out / top_path.name)
-    itp_path = top_path.with_suffix(".itp")
-    if itp_path.exists():
-        shutil.copy(itp_path, out / itp_path.name)
 
-    _write_mdp_templates(out)
+    # Include files come from the caller, which resolved them from the manifest.
+    # Deriving the name from the topology's stem only holds for a single
+    # molecule: a surface's topology is <base>.top while its include is
+    # <base>_sheet.itp, and guessing silently omits it.
+    resolved_includes = [Path(p) for p in (include_paths or [])]
+    if not resolved_includes:
+        guessed = top_path.with_suffix(".itp")
+        if guessed.exists():
+            resolved_includes = [guessed]
+    for inc in resolved_includes:
+        if not inc.exists():
+            raise MDSetupError(f"include file not found: {inc}")
+        shutil.copy(inc, out / inc.name)
+
+    spec = anneal_spec_for_htt(
+        pyrolysis_temperature_c
+        if pyrolysis_temperature_c is not None
+        else _DEFAULT_HTT_C
+    )
+    _write_mdp_templates(out, anneal_spec=spec)
+
+    net_charge = _net_charge_from_top(top_path)
+    _write_run_provenance(
+        out,
+        label=label,
+        status=status,
+        gro_path=gro_path,
+        top_path=top_path,
+        includes=resolved_includes,
+        htt_c=pyrolysis_temperature_c,
+        anneal_spec=spec,
+        net_charge=net_charge,
+    )
 
     stage = cfg.pre_solvation_stage
     if stage:
@@ -1017,7 +1205,7 @@ def setup_one_structure(
 
     ion = get_ion_profile(cfg.ion_profile)
     script = _render_pipeline_script(
-        out, label, gro_path.name, top_path.name, cfg, ion,
+        out, label, gro_path.name, top_path.name, cfg, ion, net_charge=net_charge,
         pre_solvation_stage=stage,
     )
     script_path = out / "run_pipeline.sh"
@@ -1037,13 +1225,14 @@ def setup_one_structure(
                 "cluster='slurm' requires these site-specific MDSetupConfig fields "
                 f"to be set for your cluster: {', '.join(missing)}."
             )
-        solvate_ions_script = _render_solvate_ions_slurm(cfg, ion, pre_solvation_stage=stage)
+        solvate_ions_script = _render_solvate_ions_slurm(cfg, ion, pre_solvation_stage=stage, net_charge=net_charge)
         solvate_path = out / "solvate_ions.slurm"
         solvate_path.write_text(solvate_ions_script)
         solvate_path.chmod(solvate_path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
 
         chain_script = _render_slurm_chain_script(
             out, label, gro_path.name, top_path.name, cfg, pre_solvation_stage=stage,
+            net_charge=net_charge,
         )
         chain_path = out / "submit_chain.sh"
         chain_path.write_text(chain_script)
@@ -1119,8 +1308,25 @@ def setup_md_from_manifest(
                 )
                 continue
 
+            # The sweep records every file it wrote; the include is read from
+            # there rather than guessed from the topology's stem.
+            itp_abs = _resolve(row.get("itp_path", ""))
+
+            # Pyrolysis temperature is a sweep axis, so it is only present when
+            # the sweep varied it. Absent, the run states that it used the default.
+            raw_temp = row.get("axis_temperature", "")
+            try:
+                htt_c = float(raw_temp) if raw_temp not in ("", None) else None
+            except ValueError:
+                htt_c = None
+
             run_dir = out_root / label
-            setup_one_structure(gro_abs, top_abs, run_dir, label=label, config=cfg)
+            setup_one_structure(
+                gro_abs, top_abs, run_dir, label=label, config=cfg,
+                pyrolysis_temperature_c=htt_c,
+                status=status,
+                include_paths=[itp_abs] if itp_abs else None,
+            )
             results.append(
                 {"label": label, "status": status, "run_dir": str(run_dir),
                  "gro_path": str(gro_abs), "top_path": str(top_abs), "skipped_reason": None}
