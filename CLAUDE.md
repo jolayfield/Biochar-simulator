@@ -76,9 +76,12 @@ class — a class-level marker exiles its fast siblings from the pre-commit tier
 secrets, ruff, the fast tier, and `rq index`. Bypass with `git commit --no-verify`; CI still runs
 everything.
 
-The old `PreToolUse` hook in `.claude/settings.json` is kept as a convenience but is **not** the gate: it
-only fires for commits made through Claude Code, and its 600s timeout could never cover the full suite.
-Do not rely on it.
+`.claude/settings.json` carries permissions only. It used to hold a `PreToolUse` hook that ran the
+full suite before commits; it was removed because it did not do that. Its `matcher` was `"Bash"` —
+every command — and the `"if": "Bash(git commit*)"` that was meant to narrow it is not part of the
+hook schema, so it was ignored. The result was the whole suite, unfiltered by the `slow` marker,
+in front of arbitrary shell commands, against a 600s timeout it could not meet. If you want a
+gate, `tools/hooks/pre-commit` above is it.
 
 ## Architecture
 

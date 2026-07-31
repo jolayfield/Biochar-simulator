@@ -7,8 +7,8 @@ Changelog
    is not a full mirror of it: releases 0.3.0 and 0.4.0 are recorded there and
    are not reproduced here.
 
-Unreleased
-----------
+0.5.0 (2026-07-31)
+------------------
 
 .. warning::
 
