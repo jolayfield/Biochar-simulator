@@ -155,6 +155,10 @@ a successful build — a request for 40 ether bridges answered with 6 is not a s
 asked for, and returning it as a success makes the shortfall invisible at exactly the point a
 sweep records the run as passing.
 
+This covers groups the caller named explicitly. When counts are derived from `O_C_ratio` instead,
+the ratio is the target and the count is an implementation detail of reaching it — that case is
+judged by composition validation against `O_C_tolerance`, the tolerance the caller actually set.
+
 Requests that are attempted and merely approximate remain the normal case: composition ratios are
 targets measured against a tolerance, and `CompositionResult` reports what was achieved.
 
@@ -163,10 +167,16 @@ Feature: Fail strictly on a request that was not met
 
   @rq-4fc714fe
   Scenario: A partially placed functional group does not satisfy strict validation
-    Given a strict config requesting more functional groups than the skeleton can host
+    Given a strict config explicitly requesting more functional groups than the skeleton can host
     When the structure is generated
     Then generation raises
     And the message states how many of each group were requested and placed
+
+  @rq-ab986122
+  Scenario: A ratio-derived shortfall is judged by the ratio, not the count
+    Given a strict config with an O/C ratio and no explicit functional groups
+    When the structure is generated
+    Then a group count below the ratio-derived estimate does not raise on its own
 ```
 
 ## An Extrapolated Temperature Is Reported <!-- rq-32dc1242 -->

@@ -2,6 +2,26 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- **Strict mode now fails on a shortfall, not only on total failure.** A request
+  for explicit `functional_groups` that the skeleton cannot host was previously
+  accepted as long as at least one group of each kind was placed — a request for
+  40 ether bridges answered with 6 returned successfully. `strict=True` now
+  raises `ValidationError` naming each group as `placed/requested`.
+
+  This is scoped to groups the caller named explicitly. Counts derived from
+  `O_C_ratio` are unaffected: there the ratio is the target and the count is an
+  implementation detail of reaching it, judged by `O_C_tolerance` as before.
+
+  **Sweeps will report more `fallback` and fewer `strict_pass` rows.** A point
+  whose group request was only partly met now exhausts its seed retries and
+  falls back, which is what those statuses were always meant to mean. Nothing
+  crashes and no structure is lost — only the label changes, and it changes to
+  the honest one. Manifest counts are not comparable with earlier runs.
+
 ## [0.5.0] — July 31, 2026
 
 > **Exported topologies changed. Re-run anything whose results matter.**

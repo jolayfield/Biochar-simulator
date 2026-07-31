@@ -742,15 +742,31 @@ class BiocharGenerator:
             allow_aliphatic_oxygen=self.config.allow_aliphatic_oxygen,
         )
 
-        if self.config.strict and comp.requested_counts:
-            zero_placed = [
-                g for g, n in comp.requested_counts.items()
-                if n > 0 and comp.placed_counts.get(g, 0) == 0
+        # Strict mode fails on a shortfall, not only on total failure. Placing 6
+        # of 40 requested ether bridges is not the structure the caller asked
+        # for, and returning it as a success hides the gap exactly where a sweep
+        # records the row as strict_pass.
+        #
+        # Scoped to *explicitly requested* groups. When functional_groups is None
+        # the counts in requested_counts were derived from O_C_ratio, and there
+        # the ratio is the target while the count is an implementation detail of
+        # reaching it -- that case is judged by composition validation against
+        # O_C_tolerance, which is the tolerance the caller actually set.
+        if self.config.strict and self.config.functional_groups and comp.requested_counts:
+            shortfall = [
+                (g, n, comp.placed_counts.get(g, 0))
+                for g, n in comp.requested_counts.items()
+                if n > 0 and comp.placed_counts.get(g, 0) < n
             ]
-            if zero_placed:
+            if shortfall:
+                detail = ", ".join(
+                    f"{g} {placed}/{requested}" for g, requested, placed in shortfall
+                )
                 raise ValidationError(
-                    f"Strict mode: could not place any '{', '.join(zero_placed)}' "
-                    f"groups — no suitable edge sites available"
+                    f"Strict mode: functional groups were not fully placed "
+                    f"({detail}) — the skeleton has too few suitable sites. "
+                    f"Reduce the requested counts, raise target_num_carbons, or "
+                    f"set strict=False to accept the shortfall."
                 )
 
         return mol, comp

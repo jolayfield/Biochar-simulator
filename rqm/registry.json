@@ -1050,6 +1050,18 @@
     "title": "A pH outside the meaningful range is refused",
     "type": "scenario"
   },
+  "rq-ab986122": {
+    "decl": "Scenario: A ratio-derived shortfall is judged by the ratio, not the count",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A ratio-derived shortfall is judged by the ratio, not the count",
+    "type": "scenario"
+  },
   "rq-acf97ed2": {
     "decl": "Scenario: A structure with no reported clashes is still refined",
     "file": "geometry-embedding",

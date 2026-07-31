@@ -138,14 +138,6 @@ class TestStrictnessCoversShortfall:
         )
 
     # rq-4fc714fe
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "Strict mode raises only when a group places zero "
-            "(biochar_generator.py, `zero_placed`), so 6 of 40 counts as success. "
-            "Retire this marker with the fix."
-        ),
-    )
     def test_partial_placement_does_not_satisfy_strict_validation(self):
         with pytest.raises(ValidationError) as exc:
             BiocharGenerator(self._shortfall_config(strict=True)).generate()
@@ -154,6 +146,25 @@ class TestStrictnessCoversShortfall:
         assert "ether" in message
         assert "40" in message, (
             f"the failure should state what was requested: {message}"
+        )
+
+    # rq-ab986122
+    def test_a_ratio_derived_shortfall_is_judged_by_the_ratio(self):
+        """O/C-driven placement populates requested_counts too.
+
+        The shortfall check must not fire there: the caller asked for a ratio,
+        and the count is an implementation detail of reaching it, judged by
+        O_C_tolerance instead. Without this scoping the fix above would make
+        every ratio-driven strict run fail on a one-group miss.
+        """
+        cfg = GeneratorConfig(
+            target_num_carbons=40, seed=1, strict=True, O_C_ratio=0.15,
+            functional_groups=None,
+        )
+        _, _, comp = BiocharGenerator(cfg).generate()
+
+        assert comp.requested_counts, (
+            "fixture is void: ratio-driven placement recorded no requested counts"
         )
 
 

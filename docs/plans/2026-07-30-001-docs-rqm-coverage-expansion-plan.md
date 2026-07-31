@@ -109,10 +109,19 @@ resolved; Phases 4-5 not started
 > cannot be honoured meets one of three fates — refused at construction, adjusted with a warning,
 > or attempted and measured — and the failure mode is the third quietly doing the second's job.
 >
-> Two open defects. `strict=True` raises only when a group places *zero*, so a request for 40 ether
-> bridges answered with 6 is recorded as a success; the shortfall then reaches a sweep manifest as
-> `strict_pass`. And `TemperatureModel.get_valid_range` takes no property argument, so a
-> temperature inside H/C's support but outside pH's or conductivity's warns about nothing.
+> **The strict-shortfall defect is fixed.** `strict=True` raised only when a group placed *zero*,
+> so 6 of 40 ether bridges counted as success and reached a sweep manifest as `strict_pass`. It now
+> raises on any shortfall, naming each group as `placed/requested`.
+>
+> Writing the fix surfaced a distinction the requirement had missed: `requested_counts` is populated
+> by the `O_C_ratio`-driven path too, where the caller asked for a *ratio* and the count is an
+> implementation detail of reaching it. Applying the shortfall check there would fail a strict run
+> on a one-group miss already inside `O_C_tolerance`. The check is scoped to explicitly requested
+> groups, and the requirement now says so with its own scenario.
+>
+> Still open: `TemperatureModel.get_valid_range` takes no property argument, so a temperature inside
+> H/C's support but outside pH's or conductivity's warns about nothing. That one belongs to the
+> temperature model rather than the config, and is a candidate for its own phase.
 >
 > One scenario was corrected against the code: the crossed-doping warning fires at generation, not
 > construction, because it describes the structure about to be built rather than a request that
