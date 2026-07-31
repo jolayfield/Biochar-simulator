@@ -119,6 +119,18 @@
     "title": "Nearest-Analog Values Are Chosen, Not Validated",
     "type": "section"
   },
+  "rq-1762f896": {
+    "decl": "Scenario: A temperature-derived aromatic fraction below the floor is raised to the floor",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A temperature-derived aromatic fraction below the floor is raised to the floor",
+    "type": "scenario"
+  },
   "rq-18307b81": {
     "decl": "## Layering",
     "file": "ARCHITECTURE",
@@ -273,12 +285,28 @@
     "title": "GROFileWriter",
     "type": "api-item"
   },
+  "rq-31553668": {
+    "decl": "## Impossible Requests Are Refused at Construction",
+    "file": "generation-config",
+    "level": 2,
+    "refs": [],
+    "title": "Impossible Requests Are Refused at Construction",
+    "type": "section"
+  },
   "rq-317d0c21": {
     "decl": "## The Annealing Schedule Follows the Pyrolysis Temperature",
     "file": "md-setup",
     "level": 2,
     "refs": [],
     "title": "The Annealing Schedule Follows the Pyrolysis Temperature",
+    "type": "section"
+  },
+  "rq-32dc1242": {
+    "decl": "## An Extrapolated Temperature Is Reported",
+    "file": "generation-config",
+    "level": 2,
+    "refs": [],
+    "title": "An Extrapolated Temperature Is Reported",
     "type": "section"
   },
   "rq-330a61eb": {
@@ -412,6 +440,18 @@
     "title": "Shortfall spills onto sp3 carbons",
     "type": "scenario"
   },
+  "rq-4fc714fe": {
+    "decl": "Scenario: A partially placed functional group does not satisfy strict validation",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A partially placed functional group does not satisfy strict validation",
+    "type": "scenario"
+  },
   "rq-50c742cf": {
     "decl": "## Supported Functional Groups",
     "file": "heteroatom-assignment",
@@ -494,6 +534,14 @@
     "level": 3,
     "refs": [],
     "title": "A clash needs to be deeper than embedding noise",
+    "type": "section"
+  },
+  "rq-56ed9407": {
+    "decl": "## Strictness Covers Shortfall, Not Only Failure",
+    "file": "generation-config",
+    "level": 2,
+    "refs": [],
+    "title": "Strictness Covers Shortfall, Not Only Failure",
     "type": "section"
   },
   "rq-5b7a5ab8": {
@@ -710,6 +758,18 @@
     "title": "Embedding Path Selection",
     "type": "section"
   },
+  "rq-8155aecf": {
+    "decl": "Scenario: Crossed nitrogen doping and an unverified functional group warns",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Crossed nitrogen doping and an unverified functional group warns",
+    "type": "scenario"
+  },
   "rq-8176d084": {
     "decl": "Scenario: Small molecules are bounded by their perimeter",
     "file": "heteroatom-assignment",
@@ -795,6 +855,18 @@
     "title": "Clash Resolution Is Skipped on the Hex-Lattice Path",
     "type": "section"
   },
+  "rq-90382d04": {
+    "decl": "Scenario: An explicitly requested ratio wins over the temperature-derived one",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An explicitly requested ratio wins over the temperature-derived one",
+    "type": "scenario"
+  },
   "rq-915e673b": {
     "decl": "## The Supplementary Angle Table Is Narrowly Scoped",
     "file": "opls-typing",
@@ -843,6 +915,14 @@
     "title": "The timestep drops with the schedule it belongs to",
     "type": "scenario"
   },
+  "rq-9a108035": {
+    "decl": "## Cross-references",
+    "file": "generation-config",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
   "rq-9a9488ab": {
     "decl": "Scenario: An aromatic C-C is measured against the aromatic expectation",
     "file": "geometry-embedding",
@@ -855,6 +935,30 @@
     "title": "An aromatic C-C is measured against the aromatic expectation",
     "type": "scenario"
   },
+  "rq-9aa547f6": {
+    "decl": "Scenario: An unattainable H/C is refused at construction, not at generation",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An unattainable H/C is refused at construction, not at generation",
+    "type": "scenario"
+  },
+  "rq-9bace66f": {
+    "decl": "Scenario: pH combined with the ML charge backend is refused",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "pH combined with the ML charge backend is refused",
+    "type": "scenario"
+  },
   "rq-9e4f2d8e": {
     "decl": "Scenario: A structure that only passed as a fallback is marked as such in its run directory",
     "file": "md-setup",
@@ -865,6 +969,25 @@
       }
     ],
     "title": "A structure that only passed as a fallback is marked as such in its run directory",
+    "type": "scenario"
+  },
+  "rq-9f0d6f46": {
+    "decl": "# Feature: Generation Configuration and Strictness",
+    "file": "generation-config",
+    "refs": [],
+    "title": "Feature: Generation Configuration and Strictness",
+    "type": "file"
+  },
+  "rq-a1da340c": {
+    "decl": "Scenario: A temperature beyond a property's support is reported",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A temperature beyond a property's support is reported",
     "type": "scenario"
   },
   "rq-a22b8e8d": {
@@ -899,6 +1022,14 @@
     "title": "Carboxyl and Phenolic Oxygens Are Different Types",
     "type": "section"
   },
+  "rq-a8498d8f": {
+    "decl": "## Feature API",
+    "file": "generation-config",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-a9492b86": {
     "decl": "## Groups That Fall Back to Phenolic",
     "file": "heteroatom-assignment",
@@ -906,6 +1037,30 @@
     "refs": [],
     "title": "Groups That Fall Back to Phenolic",
     "type": "section"
+  },
+  "rq-a9c68e17": {
+    "decl": "Scenario: A pH outside the meaningful range is refused",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A pH outside the meaningful range is refused",
+    "type": "scenario"
+  },
+  "rq-ab986122": {
+    "decl": "Scenario: A ratio-derived shortfall is judged by the ratio, not the count",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A ratio-derived shortfall is judged by the ratio, not the count",
+    "type": "scenario"
   },
   "rq-acf97ed2": {
     "decl": "Scenario: A structure with no reported clashes is still refined",
@@ -1011,6 +1166,14 @@
     "title": "The repair runs after every sanitising stage",
     "type": "scenario"
   },
+  "rq-bae6e6ca": {
+    "decl": "## The Aromatic Floor Is a Floor, Not a Prediction",
+    "file": "generation-config",
+    "level": 2,
+    "refs": [],
+    "title": "The Aromatic Floor Is a Floor, Not a Prediction",
+    "type": "section"
+  },
   "rq-bb1fbb12": {
     "decl": "Scenario: A small molecule uses the distance-geometry embedder",
     "file": "geometry-embedding",
@@ -1094,6 +1257,26 @@
     "title": "Embedding retries a bounded number of times",
     "type": "scenario"
   },
+  "rq-c58a2ebe": {
+    "decl": "Scenario: A config with no temperature falls back to the fixed defaults",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A config with no temperature falls back to the fixed defaults",
+    "type": "scenario"
+  },
+  "rq-c5bc6e18": {
+    "decl": "## A Charge Backend That Would Erase the Charge Is Refused",
+    "file": "generation-config",
+    "level": 2,
+    "refs": [],
+    "title": "A Charge Backend That Would Erase the Charge Is Refused",
+    "type": "section"
+  },
   "rq-c7715c26": {
     "decl": "Scenario: An amino nitrogen types as aniline N on a large sheet",
     "file": "opls-typing",
@@ -1126,6 +1309,14 @@
     "title": "A carbonyl request places a phenolic group",
     "type": "scenario"
   },
+  "rq-d6aaeb81": {
+    "decl": "## Questionable Combinations Warn",
+    "file": "generation-config",
+    "level": 2,
+    "refs": [],
+    "title": "Questionable Combinations Warn",
+    "type": "section"
+  },
   "rq-da9561c4": {
     "decl": "Scenario: A row that produced no structure files gets no run directory",
     "file": "md-setup",
@@ -1137,6 +1328,13 @@
     ],
     "title": "A row that produced no structure files gets no run directory",
     "type": "scenario"
+  },
+  "rq-db4a65a9": {
+    "decl": "- `BiocharGenerator(config: GeneratorConfig)`",
+    "file": "generation-config",
+    "refs": [],
+    "title": "BiocharGenerator",
+    "type": "api-item"
   },
   "rq-dd80065b": {
     "decl": "Scenario: A stage with no expected warning suppresses nothing",
@@ -1173,12 +1371,27 @@
     "title": "GromacsExporter",
     "type": "api-item"
   },
+  "rq-e199dc57": {
+    "decl": "- `GeneratorConfig(target_num_carbons: int = 50, H_C_ratio: Optional[float] = None, O_C_ratio: Optional[float] = None, aromaticity_percent: Optional[float] = None, temperature: Optional[float] = None, feedstock: Optional[str] = None, functional_groups: Optional[Dict[str, int]] = None, pH: Optional[float] = None, charge_method: str = \"opls\", strict: bool = True, seed: Optional[int] = None, molecule_name: str = \"BC\", ...)`",
+    "file": "generation-config",
+    "refs": [],
+    "title": "GeneratorConfig",
+    "type": "api-item"
+  },
   "rq-e9a1bf8b": {
     "decl": "## Aliphatic Oxygen Spill",
     "file": "heteroatom-assignment",
     "level": 2,
     "refs": [],
     "title": "Aliphatic Oxygen Spill",
+    "type": "section"
+  },
+  "rq-eac36cf7": {
+    "decl": "## Composition Resolution Has Three Levels",
+    "file": "generation-config",
+    "level": 2,
+    "refs": [],
+    "title": "Composition Resolution Has Three Levels",
     "type": "section"
   },
   "rq-ef429ed9": {
@@ -1252,6 +1465,13 @@
     "refs": [],
     "title": "Hydrogen Saturation",
     "type": "section"
+  },
+  "rq-fda6981b": {
+    "decl": "- `ValidationError`",
+    "file": "generation-config",
+    "refs": [],
+    "title": "ValidationError",
+    "type": "api-item"
   },
   "rq-ff2c049b": {
     "decl": "## Bond-Length Validation",

@@ -102,6 +102,31 @@ resolved; Phases 4-5 not started
 > the data-layer cap was redundant as well as lossy. Full suite including the slow regressions:
 > 921 passed, 1 skipped, zero xfails.
 >
+> **Phase 4 landed `rqm/generation-config.md`** — nine scenarios, three `api-item` entries. Seven
+> pass; two carry `xfail(strict=True)`.
+>
+> The document's organising idea came out of reading the code rather than the plan: a request that
+> cannot be honoured meets one of three fates — refused at construction, adjusted with a warning,
+> or attempted and measured — and the failure mode is the third quietly doing the second's job.
+>
+> **The strict-shortfall defect is fixed.** `strict=True` raised only when a group placed *zero*,
+> so 6 of 40 ether bridges counted as success and reached a sweep manifest as `strict_pass`. It now
+> raises on any shortfall, naming each group as `placed/requested`.
+>
+> Writing the fix surfaced a distinction the requirement had missed: `requested_counts` is populated
+> by the `O_C_ratio`-driven path too, where the caller asked for a *ratio* and the count is an
+> implementation detail of reaching it. Applying the shortfall check there would fail a strict run
+> on a one-group miss already inside `O_C_tolerance`. The check is scoped to explicitly requested
+> groups, and the requirement now says so with its own scenario.
+>
+> Still open: `TemperatureModel.get_valid_range` takes no property argument, so a temperature inside
+> H/C's support but outside pH's or conductivity's warns about nothing. That one belongs to the
+> temperature model rather than the config, and is a candidate for its own phase.
+>
+> One scenario was corrected against the code: the crossed-doping warning fires at generation, not
+> construction, because it describes the structure about to be built rather than a request that
+> cannot be honoured. The requirement now says so.
+>
 > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that
 > disagreement becomes a scenario plus a failing test rather than an open question.
