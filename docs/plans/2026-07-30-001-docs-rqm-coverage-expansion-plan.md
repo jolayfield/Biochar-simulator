@@ -1,7 +1,7 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phases 0-3 complete, the export and md-setup defects fixed; D1 and D3 resolved;
-Phases 4-5 not started
+**Status:** Phases 0-3 complete, every specified defect fixed, no open xfails; D1 and D3
+resolved; Phases 4-5 not started
 **Type:** docs / traceability
 **Date:** 2026-07-30
 **Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
@@ -93,6 +93,14 @@ Phases 4-5 not started
 > Two tests of my own needed tightening rather than the code: both matched bare substrings, so a
 > comment mentioning `solvate` or a grompp line building `genion.tpr` read as the command itself.
 > They now match invocations.
+>
+> **The last open xfail is closed.** `StructureValidator.validate` no longer truncates geometry
+> errors to the first three, so a 200-carbon hex-lattice structure now reports all 20 rather than
+> a sample. The truncation never changed a pass/fail decision — `is_valid` is `len(errors) == 0`,
+> and one error is one error — so this is purely a diagnostics fix, which is why it was safe to
+> take last. `print_summary` already truncated *display* to three while stating the full count, so
+> the data-layer cap was redundant as well as lossy. Full suite including the slow regressions:
+> 921 passed, 1 skipped, zero xfails.
 >
 > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that

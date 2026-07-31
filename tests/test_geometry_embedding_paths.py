@@ -302,13 +302,6 @@ class TestEveryGeometryErrorIsReported:
         return mol, coords
 
     # rq-1f2ce9fc
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "StructureValidator.validate truncates with geom_errors[:3] "
-            "(src/biochar/pipeline/validation.py). Retire this marker with the fix."
-        ),
-    )
     def test_report_contains_every_geometry_error(self):
         from biochar.pipeline.validation import StructureValidator
 
