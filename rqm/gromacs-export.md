@@ -27,7 +27,9 @@ interaction never announces itself. The requirements here therefore pin what the
   - Wraps residue and atom numbers modulo 100000, the width of their fields.
 
 - `ITPFileWriter.write(filepath: str, mol: Chem.Mol, atom_types: Dict[int, str], charges: Dict[int, float], molecule_name: str = "BIOCHAR", include_dihedrals: bool = True) -> None` <!-- rq-8340860d -->
-  - Writes `[ moleculetype ]`, `[ atoms ]`, `[ bonds ]`, `[ angles ]`, and proper `[ dihedrals ]`.
+  - Writes `[ moleculetype ]`, `[ atoms ]`, `[ bonds ]`, `[ pairs ]`, `[ angles ]`, and both the
+    proper and improper `[ dihedrals ]` blocks, in that order.
+  - `include_dihedrals` suppresses both torsion blocks together.
   - Emits no `[ atomtypes ]`. The including `.top` resolves types from the forcefield, and a
     local definition would shadow it.
   - Emits bonded terms as connectivity plus a function number, with no parameters, so every
@@ -35,8 +37,8 @@ interaction never announces itself. The requirements here therefore pin what the
   - States the molecule's running and total charge as comments after `[ atoms ]`.
 
 - `TOPFileWriter.write(filepath: str, mol: Chem.Mol, atom_types: Dict[int, str], charges: Dict[int, float], molecule_name: str = "BIOCHAR", forcefield_path: str = "oplsaa.ff/forcefield.itp", include_dihedrals: bool = True) -> None` <!-- rq-330a61eb -->
-  - Writes a self-contained topology: the forcefield `#include`, the molecule definition,
-    `[ system ]`, and `[ molecules ]`.
+  - Writes a self-contained topology: the forcefield `#include`, the molecule definition with
+    the same sections and ordering as the `.itp`, `[ system ]`, and `[ molecules ]`.
   - Names a non-zero total charge and the step that neutralises it.
 
 - `GromacsExporter(output_directory: str = ".")` <!-- rq-e17f705d -->
@@ -137,9 +139,23 @@ the job of improper dihedrals. Proper dihedrals constrain rotation about a bond;
 a substituted ring carbon from pyramidalising out of the ring plane.
 
 A topology whose only torsional terms are proper dihedrals is free to buckle at every sp2 centre
-during dynamics. The structure this package generates is planar when written and has no term
-requiring it to stay that way. The stock forcefield's own residue templates carry an
-`[ impropers ]` block for exactly this reason.
+during dynamics. The stock forcefield's own residue templates carry an `[ impropers ]` block for
+exactly this reason.
+
+Two details of the OPLS-AA convention are counter-intuitive and load-bearing. The improper uses
+**function type 1**, the periodic *proper* form, not the 2 or 4 that "improper" suggests —
+`aminoacids.rtp`'s `[ bondedtypes ]` row declares it, and `ffbonded.itp` explains that these are
+"implemented as proper dihedrals [1+cos(2*x+180)] ... to keep things compatible". Its constants
+come from a `#define` macro, `improper_Z_CA_X_Y`, rather than a `[ dihedraltypes ]` lookup, so the
+macro name is written where parameters would otherwise go. And the **central atom sits third** in
+the quadruple, its three neighbours taking the other positions with any non-ring substituent last
+— the order used throughout `oplsaa.ff`'s own templates, such as `CG CE2 CD2 HD2` for a
+phenylalanine ring CH.
+
+An improper is emitted for every aromatic ring carbon with three connections. A carbon with fewer
+has no out-of-plane freedom to remove. `include_dihedrals` governs both torsion kinds together —
+a caller asking for a topology without torsional terms gets neither, rather than silently keeping
+one of the two.
 
 ```gherkin
 Feature: Constrain aromatic centres out of plane

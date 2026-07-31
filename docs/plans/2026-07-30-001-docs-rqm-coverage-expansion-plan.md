@@ -1,6 +1,7 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phases 0-2 complete; D1 and D3 resolved; Phases 3-5 not started
+**Status:** Phases 0-2 complete and their export defects fixed; D1 and D3 resolved; Phases 3-5
+not started
 **Type:** docs / traceability
 **Date:** 2026-07-30
 
@@ -51,6 +52,26 @@
 > The atom-name defect is also worse than the review described: truncation to five characters does
 > not merely disagree with the `.itp`, it makes `C10000` and `C1000` the same atom name inside one
 > `.gro`.
+>
+> **Phase 2's four export defects are fixed**, out of the plan's stated order and ahead of Phase
+> 3, because three of them corrupt shipped topologies rather than merely lacking a specification.
+> `[ pairs ]` is now emitted, aromatic ring carbons carry impropers, and both `.gro` writers share
+> the `.itp`'s atom-name helper so the files agree by construction. All three markers retired by
+> XPASS exactly as the tripwire convention intends — the fix could not have left a stale exemption
+> behind.
+>
+> Writing the fix corrected the specification twice. OPLS impropers use **function type 1** with a
+> `#define` macro, not the funct 2 or 4 that "improper" implies; `aminoacids.rtp`'s
+> `[ bondedtypes ]` row is the authority, and the test asserting 2-or-4 could never have passed
+> however correct the topology was. And `include_dihedrals` governs both torsion blocks together —
+> a regression in an existing test caught that impropers are dihedrals too, which the requirement
+> now states.
+>
+> One self-inflicted lesson: the first `[ pairs ]` implementation read `Chem.GetDistanceMatrix`,
+> which is N×N. On the 10,050-atom naming fixture that is 100M entries and a 50M-iteration scan,
+> and the suite hung. Replaced by a walk over torsion paths with 1-2/1-3 pairs subtracted, which
+> is linear in the number of torsions and provably the same set. The test computes the same list
+> the slow way on a small molecule, so the two methods cross-check.
 >
 > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that

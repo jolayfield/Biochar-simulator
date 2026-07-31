@@ -5,8 +5,9 @@ section presence.
 
 The .itp carries no parameters: every physical constant is resolved by grompp
 from the opls_XXX names and the bonded terms written here. These tests therefore
-check what the topology *contains*, not only that it parses. Several assert terms
-that are currently absent and carry xfail(strict=True) naming the gap.
+check what the topology *contains*, not only that it parses -- an omitted
+interaction produces a topology grompp accepts and a run that reports plausible
+numbers while integrating different physics.
 
 .gro is fixed-width. Columns, per the format definition:
     [0:5] residue number, [5:10] residue name, [10:15] atom name,
@@ -129,14 +130,6 @@ class TestAtomNames:
     SIZE = 10050
 
     # rq-07b27c79
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "GROFileWriter truncates the atom name to [:5] "
-            "(src/biochar/export/gromacs_export.py); ITPFileWriter does not. "
-            "Retire this marker with the fix."
-        ),
-    )
     def test_atom_names_agree_between_structure_and_topology(self):
         mol, coords = _big_carbon_mol(self.SIZE)
         out = Path(tempfile.mkdtemp())
@@ -161,13 +154,6 @@ class TestAtomNames:
         )
 
     # rq-b2e50e9d
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "Truncating to five characters collapses C10000 and C1000 onto the "
-            "same .gro name. Retire this marker with the fix."
-        ),
-    )
     def test_no_two_atoms_share_a_name(self):
         mol, coords = _big_carbon_mol(self.SIZE)
         path = Path(tempfile.mkdtemp()) / "big.gro"
@@ -191,13 +177,6 @@ class TestExclusionsAndPairs:
         )
 
     # rq-fb164878
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "No [ pairs ] section is written, so nrexcl=3 excludes every 1-4 "
-            "interaction and nothing restores it. Retire this marker with the fix."
-        ),
-    )
     def test_every_1_4_pair_is_listed(self):
         mol, _, _, text = _export(O_C_ratio=0.15)
         expected = _pairs_1_4(mol)
@@ -215,33 +194,43 @@ class TestExclusionsAndPairs:
 
 
 class TestImpropers:
+    """OPLS-AA impropers are funct 1 carrying the improper_Z_CA_X_Y macro.
+
+    Not funct 2 or 4, which is the natural guess. aminoacids.rtp's
+    [ bondedtypes ] row declares improper dihedral type 1, and ffbonded.itp
+    supplies the constants as a #define rather than a [ dihedraltypes ] entry --
+    "implemented as proper dihedrals [1+cos(2*x+180)] ... to keep things
+    compatible". A check for funct 2 or 4 would therefore never pass, however
+    correct the topology was.
+    """
+
     # rq-2f3c2379
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "Only proper dihedrals (funct 3) are written; nothing holds an sp2 "
-            "ring carbon planar. Retire this marker with the fix."
-        ),
-    )
     def test_aromatic_ring_carbons_carry_an_improper(self):
         mol, _, _, text = _export(O_C_ratio=0.15)
-        aromatic_carbons = [
+        substituted = [
             a.GetIdx()
             for a in mol.GetAtoms()
-            if a.GetSymbol() == "C" and a.GetIsAromatic() and a.IsInRing()
+            if a.GetSymbol() == "C"
+            and a.GetIsAromatic()
+            and a.IsInRing()
+            and a.GetDegree() == 3
         ]
-        assert aromatic_carbons, "fixture should contain aromatic ring carbons"
+        assert substituted, "fixture should contain three-connected aromatic carbons"
 
-        # GROMACS improper dihedrals are funct 2 (harmonic) or 4 (periodic);
-        # funct 3 is the Ryckaert-Bellemans proper torsion.
         impropers = [
             p
             for p in (ln.split() for ln in _itp_section(text["itp"], "[ dihedrals "))
-            if len(p) >= 5 and p[4] in {"2", "4"}
+            if len(p) >= 6 and p[4] == "1" and p[5].startswith("improper_")
         ]
-        assert impropers, (
-            f"{len(aromatic_carbons)} aromatic ring carbons and no improper "
-            f"dihedral terms -- the rings are free to pyramidalise"
+        assert len(impropers) == len(substituted), (
+            f"{len(substituted)} three-connected aromatic carbons but "
+            f"{len(impropers)} improper terms -- rings can pyramidalise"
+        )
+
+        # The central atom sits third, per oplsaa.ff's own residue templates.
+        centres = {int(p[2]) - 1 for p in impropers}
+        assert centres == set(substituted), (
+            "improper central atoms do not match the aromatic carbons"
         )
 
 
