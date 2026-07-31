@@ -15,8 +15,15 @@ sys.path.insert(0, os.path.abspath("../src"))
 project = "Biochar Simulator"
 copyright = "2026, jolayfield"
 author = "jolayfield"
-release = "0.1.4"
-version = "0.1"
+# Derived, not restated. These sat at 0.1.4/0.1 through three releases because
+# a hand-copied version only drifts in one direction.
+try:
+    from importlib.metadata import version as _pkg_version
+
+    release = _pkg_version("biochar")
+except Exception:  # package not installed (e.g. a docs-only checkout)
+    release = "unknown"
+version = ".".join(release.split(".")[:2]) if release != "unknown" else release
 
 # ---------------------------------------------------------------------------
 # Extensions

@@ -2,7 +2,7 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
-## [Unreleased]
+## [0.5.0] — July 31, 2026
 
 > **Exported topologies changed. Re-run anything whose results matter.**
 > Structures exported before this release were missing every 1–4 non-bonded
@@ -372,5 +372,5 @@ The implementation reuses the existing `BiocharGenerator` pipeline for each shee
 
 ---
 
-**Released version**: 0.4.0 (see `pyproject.toml`, which is authoritative)  
+**Released version**: 0.5.0 (see `pyproject.toml`, which is authoritative)  
 **Status**: Production Ready
