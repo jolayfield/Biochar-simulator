@@ -582,7 +582,7 @@ class TestForcefieldAbsentSkipIsVisible:
     skipif mechanism (already covered by pytest itself) was wired up right."""
 
     # rq-b40b353d
-    def test_a_forcefield_backed_test_skips_by_name_when_ff_is_absent(self):
+    def test_a_forcefield_backed_test_skips_by_name_when_ff_is_absent(self, tmp_path):
         import subprocess
         import sys
 
@@ -590,9 +590,19 @@ class TestForcefieldAbsentSkipIsVisible:
             k: v for k, v in os.environ.items()
             if k not in ("BIOCHAR_OPLSAA_FF", "GMXDATA", "GMXLIB")
         }
-        # A PATH with no gmx/gmx_mpi on it, so shutil.which() genuinely fails
-        # rather than happening to find a real GROMACS install on this host.
-        env["PATH"] = "/usr/bin:/bin"
+        # An empty directory, so shutil.which() genuinely fails rather than
+        # happening to find a real GROMACS on this host. A hardcoded minimal
+        # PATH is not enough: this read "/usr/bin:/bin" until CI began
+        # installing the gromacs apt package, which puts gmx in /usr/bin --
+        # the forcefield was then discoverable, the subprocess passed instead
+        # of skipping, and this test failed for the right reason.
+        empty = tmp_path / "no-gmx"
+        empty.mkdir()
+        env["PATH"] = str(empty)
+        assert shutil.which("gmx", path=env["PATH"]) is None, (
+            "fixture is void: gmx is reachable from the PATH this test claims is empty"
+        )
+        # sys.executable is absolute, so an empty PATH still starts the subprocess.
 
         result = subprocess.run(
             [

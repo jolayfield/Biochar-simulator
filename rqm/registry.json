@@ -198,6 +198,18 @@
     "title": "IonProfile",
     "type": "api-item"
   },
+  "rq-256e31b8": {
+    "decl": "Scenario: A charged structure is refused until its warning is accounted for",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_grompp_smoke.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A charged structure is refused until its warning is accounted for",
+    "type": "scenario"
+  },
   "rq-25d4feed": {
     "decl": "## The Topology Carries Every Non-Bonded Interaction It Excludes",
     "file": "gromacs-export",
@@ -789,6 +801,18 @@
     "title": "ITPFileWriter",
     "type": "api-item"
   },
+  "rq-85bcfa59": {
+    "decl": "Scenario: Every emitted term reaches the binary topology",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_grompp_smoke.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every emitted term reaches the binary topology",
+    "type": "scenario"
+  },
   "rq-85c279ce": {
     "decl": "Scenario: No free valence remains after assignment",
     "file": "heteroatom-assignment",
@@ -1193,6 +1217,18 @@
     "refs": [],
     "title": "What this project is",
     "type": "section"
+  },
+  "rq-be5907a0": {
+    "decl": "Scenario: The exported topology is accepted by grompp",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_grompp_smoke.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The exported topology is accepted by grompp",
+    "type": "scenario"
   },
   "rq-be69350a": {
     "decl": "## Two Placement Modes",

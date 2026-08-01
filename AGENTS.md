@@ -40,19 +40,26 @@ Always `-n auto`. 15 of 842 tests are ~98% of the runtime; they are marked
 
 **A green run is not automatically evidence.** Two silent-skip traps here:
 
-- Forcefield-backed tests skip without a discoverable `oplsaa.ff`. **Check the
-  skip count: 1 is normal (MOPAC), 21 means the forcefield was missing and those
-  20 tests verified nothing.** The conda env already ships GROMACS, but nothing
-  points the tests at it, so the default is the bad case:
+- Forcefield-backed tests skip without a discoverable `oplsaa.ff`, and the
+  `grompp` tests skip without the `gmx` binary. **Check the skip count: 1 is
+  normal (MOPAC), 24 means 23 tests verified nothing.** The conda env ships a
+  full GROMACS — binary included — but nothing points the tests at it, so the
+  default is the bad case. One line fixes both:
 
   ```bash
-  export GMXDATA="$CONDA_PREFIX/share/gromacs"   # note: parent of top/, not top/ itself
+  export PATH="$CONDA_PREFIX/bin:$PATH"
   ```
 
-  `BIOCHAR_OPLSAA_FF` also works but points straight at the `oplsaa.ff`
-  directory, and `tests/test_constants_ff.py` does not honour it — that file
-  reads only `GMXDATA` and `gmx` on `PATH`. Prefer `GMXDATA`, which un-skips
-  both files.
+  Prefer that over the alternatives. `GMXDATA` (which must be the *parent* of
+  `top/`, not `top/` itself) un-skips the forcefield tests but not the `grompp`
+  ones, since those need the binary. `BIOCHAR_OPLSAA_FF` is narrower still:
+  `tests/test_constants_ff.py` does not read it at all.
+
+  With `gmx` present, `tests/test_grompp_smoke.py` runs the depth-4 check —
+  grompp actually accepting an exported topology, and every emitted term
+  arriving in the `.tpr`. CI installs the full `gromacs` package and fails the
+  job if the binary is missing, so that check runs on every PR; a skip locally
+  means your PATH, not the design.
 - `python3` without rdkit silently is not the project environment.
 
 **Measure the structure, do not assume it.** A requested composition is a
