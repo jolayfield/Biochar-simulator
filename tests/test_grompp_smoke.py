@@ -9,8 +9,9 @@ shows up only as a count of zero in the .tpr. Both of those were real: exported
 topologies carried no [ pairs ] section and no improper terms, and every depth-3
 check passed throughout.
 
-These need the `gmx` binary, not just the forcefield files. CI installs
-gromacs-data only, so they skip there and run locally.
+These need the `gmx` binary, not just the forcefield files. CI installs the full
+gromacs package and asserts the binary is present, so a skip here is a local
+environment gap rather than the normal state.
 """
 
 import re
@@ -25,8 +26,8 @@ from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 GMX = shutil.which("gmx") or shutil.which("gmx_mpi")
 requires_gmx = pytest.mark.skipif(
     GMX is None,
-    reason="no gmx binary on PATH (CI installs gromacs-data only); "
-           "locally: export PATH=\"$CONDA_PREFIX/bin:$PATH\"",
+    reason="no gmx binary on PATH; the conda env ships one -- "
+           "export PATH=\"$CONDA_PREFIX/bin:$PATH\"",
 )
 
 MINIMAL_MDP = """integrator    = steep

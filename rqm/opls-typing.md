@@ -110,8 +110,9 @@ or a preprocessor macro that does not expand. A **fourth depth** closes that gap
 missing rather than wrong shows up there as a count of zero, and nowhere else.
 
 That check needs the `gmx` binary, not just the forcefield files, so it is skipped wherever only
-`oplsaa.ff` is available. The skip is visible for the same reason the depth-3 skips are: a
-verification that quietly did not run is worse than one that was never claimed.
+`oplsaa.ff` is available. Where it is expected to run — continuous integration — the absence of the
+binary fails the job rather than skipping the check, because a verification that quietly did not
+run is worse than one that was never claimed.
 
 Dihedrals resolve under the same rule as bonds and angles, with one difference in how a match is
 found: `[ dihedraltypes ]` entries may carry `X` in any position as a wildcard, and an entry

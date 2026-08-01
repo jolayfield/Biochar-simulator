@@ -171,19 +171,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev,ml]"
 
-      # The forcefield-backed tests only parse oplsaa.ff (atomtypes.atp,
-      # ffnonbonded.itp, ffbonded.itp) -- they never invoke gmx. gromacs-data
-      # ships exactly those files without the binaries.
-      - name: Install GROMACS forcefield data
+      # The full gromacs package, not just gromacs-data. Most forcefield-backed
+      # tests only parse oplsaa.ff and would be satisfied by the data package,
+      # but tests/test_grompp_smoke.py runs `gmx grompp` on an exported topology
+      # and reads the .tpr back. That is the only check that sees a term the
+      # topology fails to emit at all -- the missing [ pairs ] section and the
+      # missing impropers both passed every table-based check for as long as
+      # they existed. gromacs pulls gromacs-data in as a dependency.
+      - name: Install GROMACS
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends gromacs-data
+          sudo apt-get install -y --no-install-recommends gromacs
 
-      # Without this the suite still passes -- it just skips every
-      # forcefield-backed test and reports green having verified nothing. That
-      # silent skip is the exact failure mode these tests exist to catch, so
-      # assert the forcefield is really discoverable rather than trusting apt.
-      - name: Verify the forcefield is discoverable
+      # Without this the suite still passes -- it just skips the forcefield and
+      # grompp tests and reports green having verified nothing. That silent skip
+      # is the exact failure mode these tests exist to catch, so assert both the
+      # data and the binary are really there rather than trusting apt.
+      - name: Verify the forcefield and gmx are discoverable
         run: |
           if [ ! -f "$GMXDATA/top/oplsaa.ff/atomtypes.atp" ]; then
             echo "::error::oplsaa.ff not found under $GMXDATA — the forcefield tests would silently skip"
@@ -191,6 +195,11 @@ jobs:
             exit 1
           fi
           echo "forcefield OK: $(ls "$GMXDATA/top/oplsaa.ff" | wc -l) files"
+          if ! command -v gmx > /dev/null; then
+            echo "::error::gmx not on PATH — tests/test_grompp_smoke.py would silently skip"
+            exit 1
+          fi
+          gmx --version | grep -E "GROMACS version"
 
       # -n auto: the suite is CPU-bound and the legs were taking ~40 min each.
       # Coverage needs --cov-context or it under-reports under xdist, so

@@ -57,8 +57,9 @@ Always `-n auto`. 15 of 842 tests are ~98% of the runtime; they are marked
 
   With `gmx` present, `tests/test_grompp_smoke.py` runs the depth-4 check —
   grompp actually accepting an exported topology, and every emitted term
-  arriving in the `.tpr`. CI installs `gromacs-data` only, so that file always
-  skips there; it is a local gate, and a green CI run is not evidence for it.
+  arriving in the `.tpr`. CI installs the full `gromacs` package and fails the
+  job if the binary is missing, so that check runs on every PR; a skip locally
+  means your PATH, not the design.
 - `python3` without rdkit silently is not the project environment.
 
 **Measure the structure, do not assume it.** A requested composition is a
