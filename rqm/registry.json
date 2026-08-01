@@ -230,6 +230,18 @@
     "title": "A large flat sheet uses the 2D-first path",
     "type": "scenario"
   },
+  "rq-27f04167": {
+    "decl": "Scenario: An H/C beyond the fit range is reported rather than silently clamped",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An H/C beyond the fit range is reported rather than silently clamped",
+    "type": "scenario"
+  },
   "rq-29741bdc": {
     "decl": "## Ether Bond Types Must Be Repaired After Sanitisation",
     "file": "heteroatom-assignment",
@@ -237,6 +249,18 @@
     "refs": [],
     "title": "Ether Bond Types Must Be Repaired After Sanitisation",
     "type": "section"
+  },
+  "rq-2bf0ee76": {
+    "decl": "Scenario: An H/C inside the fit range is answered normally",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An H/C inside the fit range is answered normally",
+    "type": "scenario"
   },
   "rq-2ceb3ae6": {
     "decl": "## Every Geometry Error Is Reported",
@@ -288,6 +312,14 @@
     "level": 2,
     "refs": [],
     "title": "Ion Placement Accumulates",
+    "type": "section"
+  },
+  "rq-304bf22a": {
+    "decl": "## Provenance Is Recorded",
+    "file": "temperature-model",
+    "level": 2,
+    "refs": [],
+    "title": "Provenance Is Recorded",
     "type": "section"
   },
   "rq-312047ff": {
@@ -352,6 +384,18 @@
     "title": "An amino nitrogen types as aniline N on a small flake",
     "type": "scenario"
   },
+  "rq-39bd2478": {
+    "decl": "Scenario: Only H/C and O/C vary by feedstock",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Only H/C and O/C vary by feedstock",
+    "type": "scenario"
+  },
   "rq-39ce3988": {
     "decl": "Scenario: Every ion species is placed against the coordinates the previous species produced",
     "file": "md-setup",
@@ -362,6 +406,18 @@
       }
     ],
     "title": "Every ion species is placed against the coordinates the previous species produced",
+    "type": "scenario"
+  },
+  "rq-3b2ef55d": {
+    "decl": "Scenario: A feedstock without sufficient data has no curve of its own",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A feedstock without sufficient data has no curve of its own",
     "type": "scenario"
   },
   "rq-3c400653": {
@@ -568,6 +624,21 @@
     "title": "The annealing peak temperature follows the pyrolysis temperature",
     "type": "scenario"
   },
+  "rq-5d9abc46": {
+    "decl": "## An Estimate Carries the Evidence Behind It",
+    "file": "temperature-model",
+    "level": 2,
+    "refs": [],
+    "title": "An Estimate Carries the Evidence Behind It",
+    "type": "section"
+  },
+  "rq-5f4e2e68": {
+    "decl": "- `VALID_FEEDSTOCKS: Tuple[str, ...]`",
+    "file": "temperature-model",
+    "refs": [],
+    "title": "VALID_FEEDSTOCKS",
+    "type": "api-item"
+  },
   "rq-6024903d": {
     "decl": "Scenario: Every interatomic distance scales by exactly one tenth",
     "file": "gromacs-export",
@@ -672,6 +743,14 @@
     "title": "An overlap too short even for a hydrogen bond is still a clash",
     "type": "scenario"
   },
+  "rq-6deffbcf": {
+    "decl": "## Cross-references",
+    "file": "temperature-model",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
   "rq-6f1c55c5": {
     "decl": "- `setup_one_structure(gro_path: str | Path, top_path: str | Path, output_dir: str | Path, label: str = \"structure\", config: Optional[MDSetupConfig] = None, pyrolysis_temperature_c: Optional[float] = None, status: Optional[str] = None, include_paths: Optional[list] = None) -> Path`",
     "file": "md-setup",
@@ -702,6 +781,14 @@
     ],
     "title": "An unreachable nitrogen environment is flagged, not guessed",
     "type": "scenario"
+  },
+  "rq-766e9c83": {
+    "decl": "## Feature API",
+    "file": "temperature-model",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
   },
   "rq-7709e5f5": {
     "decl": "## Typing Must Not Depend on Molecule Size",
@@ -743,6 +830,13 @@
     "title": "Three Depths of Force-Field Verification",
     "type": "section"
   },
+  "rq-7ad3970f": {
+    "decl": "- `TemperatureModel(model_path: Optional[Path] = None)`",
+    "file": "temperature-model",
+    "refs": [],
+    "title": "TemperatureModel",
+    "type": "api-item"
+  },
   "rq-7d3e9432": {
     "decl": "Scenario: A quinone request places a phenolic group",
     "file": "heteroatom-assignment",
@@ -754,6 +848,21 @@
     ],
     "title": "A quinone request places a phenolic group",
     "type": "scenario"
+  },
+  "rq-7e4059d9": {
+    "decl": "# Feature: Temperature × Feedstock Composition Model",
+    "file": "temperature-model",
+    "refs": [],
+    "title": "Feature: Temperature × Feedstock Composition Model",
+    "type": "file"
+  },
+  "rq-7ef42231": {
+    "decl": "## Aromaticity Is Extrapolated Beyond Its Fit",
+    "file": "temperature-model",
+    "level": 2,
+    "refs": [],
+    "title": "Aromaticity Is Extrapolated Beyond Its Fit",
+    "type": "section"
   },
   "rq-7efb46e4": {
     "decl": "# Architecture",
@@ -851,6 +960,18 @@
     "refs": [],
     "title": "The Residue Name Fits the Format",
     "type": "section"
+  },
+  "rq-876c3bc5": {
+    "decl": "Scenario: The reported range is the one belonging to the property",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The reported range is the one belonging to the property",
+    "type": "scenario"
   },
   "rq-8d689517": {
     "decl": "- `get_ion_profile(name_or_profile) -> IonProfile`",
@@ -1026,6 +1147,18 @@
     "title": "The exclusion count matches what OPLS-AA expects",
     "type": "scenario"
   },
+  "rq-a234cdbe": {
+    "decl": "Scenario: A temperature inside one property's support but outside another's is distinguishable",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A temperature inside one property's support but outside another's is distinguishable",
+    "type": "scenario"
+  },
   "rq-a63f775d": {
     "decl": "Scenario: A non-polar contact does not get the hydrogen-bond floor",
     "file": "geometry-embedding",
@@ -1036,6 +1169,18 @@
       }
     ],
     "title": "A non-polar contact does not get the hydrogen-bond floor",
+    "type": "scenario"
+  },
+  "rq-a687f7a1": {
+    "decl": "Scenario: A grid point with no observations is reported as absent, not fitted",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A grid point with no observations is reported as absent, not fitted",
     "type": "scenario"
   },
   "rq-a7480504": {
@@ -1166,6 +1311,18 @@
     "title": "Forcefield-backed tests fail loudly when the forcefield is absent",
     "type": "scenario"
   },
+  "rq-b6522656": {
+    "decl": "Scenario: A temperature outside a feedstock's support falls back visibly",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A temperature outside a feedstock's support falls back visibly",
+    "type": "scenario"
+  },
   "rq-b6b192ce": {
     "decl": "Scenario: A genuine overlap is still reported",
     "file": "geometry-embedding",
@@ -1254,6 +1411,25 @@
     "title": "A Run Directory Records What It Was Made From",
     "type": "section"
   },
+  "rq-c0b934a0": {
+    "decl": "Scenario: A prediction reports the observations behind it",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A prediction reports the observations behind it",
+    "type": "scenario"
+  },
+  "rq-c145dabd": {
+    "decl": "- `build_model(output_path: Optional[Path] = None) -> Path`",
+    "file": "temperature-model",
+    "refs": [],
+    "title": "build_model",
+    "type": "api-item"
+  },
   "rq-c2463a78": {
     "decl": "## Clash Detection",
     "file": "geometry-embedding",
@@ -1280,6 +1456,14 @@
     "refs": [],
     "title": "Feature: OPLS-AA Atom Typing and Force-Field Mapping",
     "type": "file"
+  },
+  "rq-c2dd4be4": {
+    "decl": "## The Support Range Is Per Property",
+    "file": "temperature-model",
+    "level": 2,
+    "refs": [],
+    "title": "The Support Range Is Per Property",
+    "type": "section"
   },
   "rq-c4e683c4": {
     "decl": "Scenario: Embedding retries a bounded number of times",
@@ -1311,6 +1495,14 @@
     "level": 2,
     "refs": [],
     "title": "A Charge Backend That Would Erase the Charge Is Refused",
+    "type": "section"
+  },
+  "rq-c5d8e160": {
+    "decl": "## A Prediction Says Which Curve Answered It",
+    "file": "temperature-model",
+    "level": 2,
+    "refs": [],
+    "title": "A Prediction Says Which Curve Answered It",
     "type": "section"
   },
   "rq-c7715c26": {
@@ -1438,6 +1630,26 @@
     "title": "Cross-references",
     "type": "section"
   },
+  "rq-f01d97ff": {
+    "decl": "## Feedstock-Specific Curves Are Narrow and Gated",
+    "file": "temperature-model",
+    "level": 2,
+    "refs": [],
+    "title": "Feedstock-Specific Curves Are Narrow and Gated",
+    "type": "section"
+  },
+  "rq-f08462b9": {
+    "decl": "Scenario: The model reports its source dataset",
+    "file": "temperature-model",
+    "refs": [
+      {
+        "file": "tests/test_temperature_model_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The model reports its source dataset",
+    "type": "scenario"
+  },
   "rq-f16a145c": {
     "decl": "Scenario: A high oxygen target is reachable at low aromaticity",
     "file": "heteroatom-assignment",
@@ -1449,6 +1661,13 @@
     ],
     "title": "A high oxygen target is reachable at low aromaticity",
     "type": "scenario"
+  },
+  "rq-f1f301e0": {
+    "decl": "- `properties(temperature: float, feedstock: Optional[str] = None) -> Dict[str, float]`",
+    "file": "temperature-model",
+    "refs": [],
+    "title": "properties",
+    "type": "api-item"
   },
   "rq-f256712c": {
     "decl": "Scenario: Partial charges sum to the formal charge",
