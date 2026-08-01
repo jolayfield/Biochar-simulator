@@ -102,6 +102,17 @@ each of which has caught a real bug that the previous depth missed:
 
 Depth 3 is the one that is easy to skip and expensive to skip.
 
+Depth 3 is still an approximation of the question that matters, which is whether `grompp` accepts
+the topology. It checks that every term the topology emits can be resolved by reading the
+forcefield the same way `grompp` would; it cannot catch a term the topology fails to emit at all,
+or a preprocessor macro that does not expand. A **fourth depth** closes that gap by running
+`grompp` on an exported structure and reading the binary topology it produces — a term that is
+missing rather than wrong shows up there as a count of zero, and nowhere else.
+
+That check needs the `gmx` binary, not just the forcefield files, so it is skipped wherever only
+`oplsaa.ff` is available. The skip is visible for the same reason the depth-3 skips are: a
+verification that quietly did not run is worse than one that was never claimed.
+
 Dihedrals resolve under the same rule as bonds and angles, with one difference in how a match is
 found: `[ dihedraltypes ]` entries may carry `X` in any position as a wildcard, and an entry
 matches a quadruple read in either direction. Most proper torsions in a fused aromatic system
@@ -129,6 +140,25 @@ Feature: Verify types against a real forcefield, not against a table
     When the topology is written
     Then every emitted proper dihedral matches a dihedraltype in ffbonded.itp
     And wildcard entries count as a match
+
+  @rq-be5907a0
+  Scenario: The exported topology is accepted by grompp
+    Given a structure exported to .gro and .top
+    When grompp is run on it with a minimal .mdp
+    Then it succeeds without warnings
+
+  @rq-85bcfa59
+  Scenario: Every emitted term reaches the binary topology
+    Given a topology grompp has accepted
+    When the binary topology is read back
+    Then the 1-4 pair, proper torsion, and improper terms each have a non-zero count
+
+  @rq-256e31b8
+  Scenario: A charged structure is refused until its warning is accounted for
+    Given a structure carrying a non-zero formal charge
+    When grompp is run on it under particle-mesh Ewald
+    Then it refuses with exactly one warning about net charge
+    And allowing that single warning is enough for it to succeed
 
   @rq-b40b353d
   Scenario: Forcefield-backed tests fail loudly when the forcefield is absent
