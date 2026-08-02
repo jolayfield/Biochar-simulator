@@ -49,6 +49,27 @@ All significant changes to the Biochar Simulator project are documented here.
   crashes and no structure is lost — only the label changes, and it changes to
   the honest one. Manifest counts are not comparable with earlier runs.
 
+- **Sheets copied by the identical-sheet optimisation no longer share a
+  composition record.** The copy duplicated the molecule, coordinates, atom
+  types and charges but passed `composition` through by reference, so annotating
+  one sheet's composition changed every other sheet on the surface. Latent
+  rather than observed — nothing in the package mutated it — but it made the
+  copies not copies.
+
+- **A surface that fell back from amorphous to slit geometry is no longer
+  labelled amorphous.** `amorphous_fallback="slit"` degrades gracefully when
+  packing cannot converge, but `pore_type` was never updated and the `.gro`
+  title was chosen from it — so a slit stack was written to disk titled
+  `"Amorphous surface"`. The title now states the geometry actually built and
+  notes the substitution.
+
+- **`generate_surface` exposes the options that decide the geometry it returns**
+  — `amorphous_fallback`, `aromaticity_percent`, `box_padding_xy` and
+  `box_padding_z`. `amorphous_fallback` matters most: without it, an amorphous
+  request that cannot be packed raised instead of degrading, and the graceful
+  path was unreachable from the entry point the documentation points at.
+  Defaults preserve the previous behaviour.
+
 ### Added
 
 

@@ -1,7 +1,7 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phases 0-4 complete plus the temperature model, and every specified defect fixed.
-No open xfails. D1 and D3 resolved.
+**Status:** Phases 0-4 complete plus the temperature model and surface stacking, and every
+specified defect fixed. No open xfails. D1 and D3 resolved.
 **Type:** docs / traceability
 **Date:** 2026-07-30
 **Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
@@ -163,7 +163,28 @@ No open xfails. D1 and D3 resolved.
 > Two existing tests asserted the old silent clamp. They now expect the warning, which took the
 > suite's warning count back to its baseline rather than leaving two unacknowledged.
 >
-> **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
+> **`rqm/surface-stacking.md` landed** — eleven scenarios, four `api-item` entries. Eight pass,
+> three carry `xfail(strict=True)`.
+>
+> The headline defect is confirmed and worse for being invisible: when amorphous packing fails and
+> `amorphous_fallback="slit"` degrades gracefully, `config.pore_type` is never updated and the
+> `.gro` title is chosen from it. A slit stack is written to disk titled `"Amorphous surface,
+> 4 sheets"`. The title is the only human-readable record of the geometry, and it is read weeks
+> later by someone deciding whether a trajectory answers their question.
+>
+> Two smaller ones: the identical-sheet copy duplicates `mol`, `coords`, `atom_types` and
+> `charges` but passes `composition` through by reference, so copied sheets share one mutable
+> record; and `generate_surface`, the entry point the docs point at, does not expose
+> `amorphous_fallback`, which makes the graceful-degradation path unreachable without building a
+> `SurfaceConfig` by hand.
+>
+> One test of mine measured the wrong thing and was rewritten rather than the code. The seed-range
+> scenario compared coordinates across surfaces seeded S and S+1, which can never match because
+> sheets are z-offset by stack position after generation. The real signal is positional and exact:
+> sheet i+1 of the surface seeded S is sheet i of the surface seeded S+1, both being the sheet
+> seeded S+1.
+>
+> > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that
 > disagreement becomes a scenario plus a failing test rather than an open question.
 

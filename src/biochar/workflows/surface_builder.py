@@ -11,6 +11,7 @@ boundary conditions, and exports GROMACS-ready files.
 from __future__ import annotations
 
 import logging
+import copy
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -326,6 +327,12 @@ class SurfaceBuilder:
         self.config = config
         self.sheets: List[SheetResult] = []
         self._box_vectors: Optional[np.ndarray] = None  # nm
+        # config.pore_type is the request; this is what was actually built. They
+        # differ when amorphous packing fails and amorphous_fallback substitutes
+        # a slit stack, and everything describing the surface -- the .gro title
+        # above all -- must read the second, not the first.
+        self._realised_pore_type: str = config.pore_type
+        self._packing_fell_back: bool = False
 
     # ------------------------------------------------------------------
     # Public API
@@ -368,6 +375,8 @@ class SurfaceBuilder:
                     self._position_sheets()
                     self._box_vectors = self._compute_box_vectors()
                     self._centre_in_box(self._box_vectors)
+                    self._realised_pore_type = "slit"
+                    self._packing_fell_back = True
                 else:
                     raise
         else:
@@ -428,15 +437,7 @@ class SurfaceBuilder:
             str(gro_path),
             sheets=self.sheets,
             box_vectors=self._box_vectors,
-            title=(
-                f"Amorphous surface, {self.config.num_sheets} sheets"
-                if self.config.pore_type == "amorphous"
-                else (
-                    f"Slit pore surface, pore_diameter="
-                    f"{self.config.pore_diameter:.1f} A, "
-                    f"{self.config.num_sheets} sheets"
-                )
-            ),
+            title=self._structure_title(),
         )
 
         # --- Write .top -----------------------------------------------------
@@ -454,6 +455,40 @@ class SurfaceBuilder:
     # ------------------------------------------------------------------
     # Sheet generation
     # ------------------------------------------------------------------
+
+    def _structure_title(self) -> str:
+        """The .gro title line: the geometry built, and why if it was substituted.
+
+        This is the only human-readable record of what the geometry is, and it is
+        read weeks later by someone deciding whether a trajectory answers their
+        question.
+        """
+        if self.realised_pore_type == "amorphous":
+            return f"Amorphous surface, {self.config.num_sheets} sheets"
+        suffix = (
+            " (amorphous packing failed; slit fallback)"
+            if self._packing_fell_back
+            else ""
+        )
+        return (
+            f"Slit pore surface, pore_diameter={self.config.pore_diameter:.1f} A, "
+            f"{self.config.num_sheets} sheets{suffix}"
+        )
+
+    @property
+    def realised_pore_type(self) -> str:
+        """The pore geometry this surface actually has.
+
+        Equal to ``config.pore_type`` unless amorphous packing failed and
+        ``amorphous_fallback`` substituted another geometry. Reading the request
+        instead of this is how a slit stack ends up labelled amorphous.
+        """
+        return self._realised_pore_type
+
+    @property
+    def packing_fell_back(self) -> bool:
+        """True when the geometry built is not the geometry requested."""
+        return self._packing_fell_back
 
     @property
     def _sheets_identical(self) -> bool:
@@ -479,7 +514,11 @@ class SurfaceBuilder:
             return SheetResult(
                 mol=Chem.Mol(base.mol),
                 coords=base.coords.copy(),
-                composition=base.composition,
+                # deepcopy, not the dataclass itself and not a shallow copy:
+                # CompositionResult carries functional_groups, placed_counts and
+                # requested_counts as dicts, so anything less leaves copied
+                # sheets sharing mutable state and one annotation changes them all.
+                composition=copy.deepcopy(base.composition),
                 atom_types=dict(base.atom_types),
                 charges=dict(base.charges),
                 molecule_name=base.molecule_name,
@@ -745,6 +784,10 @@ def generate_surface(
     pore_type: str = "slit",
     max_attempts: int = 500,
     min_separation: float = 3.0,
+    amorphous_fallback: Optional[str] = None,
+    aromaticity_percent: float = 95.0,
+    box_padding_xy: float = 1.0,
+    box_padding_z: float = 1.0,
     sheet_overrides: Optional[List[Dict]] = None,
     output_directory: str = ".",
     basename: str = "surface",
@@ -818,13 +861,16 @@ def generate_surface(
         O_C_ratio=O_C_ratio,
         functional_groups=functional_groups,
         pH=pH,
-        aromaticity_percent=95.0,
+        aromaticity_percent=aromaticity_percent,
         defect_fraction=defect_fraction,
         pore_type=pore_type,
         num_sheets=num_sheets,
         pore_diameter=pore_diameter,
         max_attempts=max_attempts,
         min_separation=min_separation,
+        amorphous_fallback=amorphous_fallback,
+        box_padding_xy=box_padding_xy,
+        box_padding_z=box_padding_z,
         sheet_overrides=sheet_overrides,
         system_name=system_name,
         seed=seed,
