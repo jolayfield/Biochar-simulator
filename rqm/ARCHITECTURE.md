@@ -143,10 +143,10 @@ These hold across the whole system and are easy to violate locally.
 | `gromacs-export.md` | Coordinate units, atom naming, exclusions and 1–4 pairs, impropers, charge reporting |
 | `md-setup.md` | Stage ordering, ion placement, warning suppression, annealing schedule, run provenance |
 | `generation-config.md` | Composition resolution, the aromatic floor, refused requests, strictness |
+| `temperature-model.md` | Feedstock curves, per-property support, evidence behind an estimate |
 
 Not yet specified, in rough priority order: surface stacking, carbon skeleton growth, parameter
-sweep, temperature/feedstock model, pH protonation, valence validation, condensation annealing,
-QM and ML charge backends.
+sweep, pH protonation, valence validation, condensation annealing, QM and ML charge backends.
 
 An absent document is not an absent requirement — it means the behaviour is currently defended
 by tests that no specification points at. `tools/rqm/rq check` reports the converse: specified

@@ -1,7 +1,7 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phases 0-3 complete, every specified defect fixed, no open xfails; D1 and D3
-resolved; Phases 4-5 not started
+**Status:** Phases 0-4 complete plus the temperature model, and every specified defect fixed.
+No open xfails. D1 and D3 resolved.
 **Type:** docs / traceability
 **Date:** 2026-07-30
 **Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
@@ -126,6 +126,42 @@ resolved; Phases 4-5 not started
 > One scenario was corrected against the code: the crossed-doping warning fires at generation, not
 > construction, because it describes the structure about to be built rather than a request that
 > cannot be honoured. The requirement now says so.
+>
+> **`rqm/temperature-model.md` landed**, taking the phase the plan had listed further down because
+> Phase 4 left one of its defects already specified and failing. Ten scenarios, four `api-item`
+> entries; five pass, six carry `xfail(strict=True)`.
+>
+> Probing turned four apparently separate defects into one. The model records, for every property
+> at every grid point, the observation count, the spread, the per-property temperature support, and
+> the H/C range the aromaticity fit was taken over — and surfaces none of it. So a value carried in
+> from a neighbouring grid point returns in the same shape as one fitted from hundreds of
+> observations. Measured: electrical conductivity has **zero** observations at 100 °C and predicts
+> 1.0 there; `corn_stover` at 900 °C returns *exactly* the pooled value with the feedstock silently
+> dropped; `aromaticity_from_hc(5.0)` returns 0.0 against a fit taken over H/C 0.03–1.64. The
+> document is organised around that one idea rather than as a list of four faults.
+>
+> `get_valid_range`'s property-agnostic range — carried as an open `xfail` since Phase 4 — is now
+> specified at the API level here, with the config-level symptom cross-referenced rather than
+> duplicated.
+>
+> **The temperature model's six reporting gaps are fixed.** All six markers retired by XPASS.
+> `get_valid_range` takes the property it is being asked about; `predict_with_evidence` returns the
+> value together with the observation count, spread, whether the point was carried in from a
+> neighbour, whether the temperature is extrapolated, and which curve answered; a feedstock that
+> drops out past its own support says so; and an aromaticity extrapolated beyond the fit warns
+> instead of returning a clamped 0.0 as though it were confident.
+>
+> **One scenario turned out to be mis-specified rather than unmet, and was corrected.**
+> `rq-a1da340c` asked for a temperature inside H/C's range but outside "another derived property's".
+> No such temperature exists: H/C and O/C are both fitted over the whole 100-1000 °C grid, and the
+> narrower properties — pH at 200-900, conductivity at 220-900 — are ones the generator never
+> derives. The generator was already warning correctly for the properties it does derive, silent at
+> 1000 °C and warning at 1500 °C and 50 °C. The scenario now says that, and a second scenario pins
+> the converse: a property this config never derives is not judged. Third time this has happened
+> across the plan, after the dihedral-dedup fiction and the pressure-coupling non-conflict.
+>
+> Two existing tests asserted the old silent clamp. They now expect the warning, which took the
+> suite's warning count back to its baseline rather than leaving two unacknowledged.
 >
 > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that

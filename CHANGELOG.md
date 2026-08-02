@@ -6,6 +6,33 @@ All significant changes to the Biochar Simulator project are documented here.
 
 ### Changed
 
+
+- **`TemperatureModel.get_valid_range` now takes the property it is being asked
+  about.** *Breaking, for direct callers of the model.* The signature is
+  `get_valid_range(prop, feedstock=None)`; `prop` is required and comes first.
+
+  It previously ignored its argument in effect — it looped over H/C and O/C and
+  returned the first range it found — so pH (fitted 200–900 °C) and electrical
+  conductivity (220–900 °C) were both reported as spanning 100–1000 °C. Code
+  that called `get_valid_range("softwood")` will now raise `KeyError` for an
+  unknown property rather than silently returning the wrong range. It is not
+  part of the public API declared in `biochar.__all__`.
+
+- **A prediction that falls back from a feedstock curve to the pooled curve says
+  so.** A feedstock's own curve covers only the temperature range its data
+  spans; outside that the pooled curve answers, which was previously
+  indistinguishable from a feedstock-backed answer. Reported at `INFO`, so a
+  feedstock sweep can tell the two apart.
+
+- **An aromaticity derived from an H/C outside the fitted range warns.**
+  `aromaticity_from_hc` clamps into 0–100%, which kept the output physical and
+  hid how far outside the fit the input was — an H/C of 5.0 against a relation
+  fitted over 0.03–1.64 returned exactly 0.0%, reading as a confident prediction
+  rather than a refusal. The clamp is unchanged; it is now accompanied by a
+  `UserWarning`. Reachable through ordinary configuration, since H/C up to 2.0
+  is allowed.
+
+
 - **Strict mode now fails on a shortfall, not only on total failure.** A request
   for explicit `functional_groups` that the skeleton cannot host was previously
   accepted as long as at least one group of each kind was placed — a request for
@@ -21,6 +48,17 @@ All significant changes to the Biochar Simulator project are documented here.
   falls back, which is what those statuses were always meant to mean. Nothing
   crashes and no structure is lost — only the label changes, and it changes to
   the honest one. Manifest counts are not comparable with earlier runs.
+
+### Added
+
+
+- **`TemperatureModel.predict_with_evidence(temperature, prop, feedstock=None)`**
+  returns a prediction together with what it rests on: the observation count and
+  spread at the nearest grid point, whether that point had no observations and
+  the value was carried in from a neighbour, whether the temperature is outside
+  the curve's support, and which curve answered. The model already recorded all
+  of it; nothing surfaced it. Electrical conductivity, for instance, has zero
+  observations at 100 °C and predicts 1.0 there.
 
 ## [0.5.0] — July 31, 2026
 

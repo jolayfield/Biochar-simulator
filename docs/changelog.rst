@@ -7,6 +7,21 @@ Changelog
    is not a full mirror of it: releases 0.3.0 and 0.4.0 are recorded there and
    are not reproduced here.
 
+Unreleased
+----------
+
+- **Strict mode fails on a functional-group shortfall**, not only when a group
+  places zero. Sweeps will report more ``fallback`` and fewer ``strict_pass``
+  rows; manifest status counts are not comparable with earlier runs.
+- **Breaking for direct model callers:**
+  ``TemperatureModel.get_valid_range`` now takes the property as its first
+  argument. It previously returned H/C's range for every property.
+- **New:** ``TemperatureModel.predict_with_evidence`` returns a prediction with
+  the observation count, spread, and whether the value was carried in from a
+  neighbouring grid point or extrapolated.
+- A fallback from a feedstock curve to the pooled curve is reported, and an
+  aromaticity extrapolated beyond the fitted H/C range warns.
+
 0.5.0 (2026-07-31)
 ------------------
 

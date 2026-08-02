@@ -26,6 +26,7 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import warnings
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -358,6 +359,17 @@ class TemperatureModel:
             return None, None, None
         return np.array(s["mean"], dtype=float), s.get("t_min"), s.get("t_max")
 
+    def _effective_feedstock(
+        self, temperature: float, prop: str, feedstock: Optional[str]
+    ) -> Optional[str]:
+        """The feedstock whose curve actually answers, or None for the pooled one."""
+        if not feedstock or prop not in _OVERRIDE_PROPS:
+            return None
+        ov = self._m["feedstock_overrides"].get(feedstock, {}).get(prop)
+        if ov is None or not _in_range(temperature, ov.get("t_min"), ov.get("t_max")):
+            return None
+        return feedstock
+
     def predict(self, temperature: float, prop: str,
                 feedstock: Optional[str] = None) -> float:
         """
@@ -365,19 +377,39 @@ class TemperatureModel:
         only for H/C and O/C when that group has one and *temperature* is within
         its support; otherwise the pooled curve. Clamped to the grid ends.
         """
-        use_fs = feedstock
-        # Fall back to pooled if the override doesn't cover this temperature.
-        if feedstock and prop in _OVERRIDE_PROPS:
-            ov = self._m["feedstock_overrides"].get(feedstock, {}).get(prop)
-            if ov is None or not (_in_range(temperature, ov.get("t_min"), ov.get("t_max"))):
-                use_fs = None
+        use_fs = self._effective_feedstock(temperature, prop, feedstock)
+        if feedstock and not use_fs:
+            # Silent here would make a feedstock sweep meaningless: the caller
+            # cannot tell points where the feedstock shaped the answer from
+            # points where it was dropped and the pooled curve replied.
+            logger.info(
+                "%s has no %s curve covering %.0f C; answering from the pooled "
+                "curve instead.", feedstock, prop, temperature,
+            )
         mean, _, _ = self._series(prop, use_fs)
         if mean is None:
             raise KeyError(f"Unknown property: {prop!r}")
         return float(np.interp(temperature, self._grid, mean))
 
     def aromaticity_from_hc(self, hc: float) -> float:
+        """Aromaticity (%) from H/C, via the linear fit, clamped to 0-100.
+
+        The clamp keeps the output physical and hides how far outside the fit the
+        input was: an H/C of 5.0 against a fit taken over 0.03-1.64 produces a
+        negative number that the clamp turns into exactly 0.0 %, which reads as a
+        confident prediction of a fully aromatic char rather than as a refusal.
+        Extrapolation is therefore warned about, not silently absorbed.
+        """
         f = self._m["aromaticity_fit"]
+        lo, hi = f.get("hc_min"), f.get("hc_max")
+        if lo is not None and hi is not None and not (lo <= hc <= hi):
+            warnings.warn(
+                f"H/C {hc:g} is outside the range the aromaticity relation was "
+                f"fitted over ({lo:g}-{hi:g}); the result is extrapolated and is "
+                f"clamped into 0-100%.",
+                UserWarning,
+                stacklevel=2,
+            )
         return float(min(100.0, max(0.0, f["a"] + f["b"] * hc)))
 
     def composition(self, temperature: float,
@@ -401,26 +433,74 @@ class TemperatureModel:
         return out
 
     def get_valid_range(
-        self, feedstock: Optional[str] = None
+        self, prop: str, feedstock: Optional[str] = None
     ) -> Optional[Tuple[float, float]]:
         """
-        Return ``(T_min, T_max)`` (°C) of the data used to fit the model curves.
+        Return ``(T_min, T_max)`` (°C) supporting the curve a ``predict`` call for
+        *prop* would use.
 
-        Uses the feedstock-specific override range when one exists for H/C or O/C;
-        otherwise returns the pooled range.  Returns ``None`` if the model artifact
-        contains no range information (older schema).
+        Properties are fitted over different ranges -- H/C spans 100-1000 °C while
+        pH spans 200-900 and conductivity 220-900 -- so a temperature can be well
+        inside one property's support and outside another's. Answering without
+        knowing which property was asked about describes H/C and mislabels
+        everything else, which is how an out-of-support request reaches pH with
+        nothing said.
+
+        Returns ``None`` if the artifact records no range for *prop* (older schema).
+        Raises ``KeyError`` for a property the model does not carry, matching
+        ``predict``.
         """
-        for prop in _OVERRIDE_PROPS:
-            if (feedstock and feedstock in self._m["feedstock_overrides"]
-                    and prop in self._m["feedstock_overrides"][feedstock]):
-                s = self._m["feedstock_overrides"][feedstock][prop]
-            else:
-                s = self._m["properties"].get(prop, {})
-            t_min = s.get("t_min")
-            t_max = s.get("t_max")
-            if t_min is not None and t_max is not None:
-                return float(t_min), float(t_max)
-        return None
+        if prop not in self._m["properties"]:
+            raise KeyError(f"Unknown property: {prop!r}")
+        s = self._series_spec(prop, feedstock)
+        t_min, t_max = s.get("t_min"), s.get("t_max")
+        if t_min is None or t_max is None:
+            return None
+        return float(t_min), float(t_max)
+
+    def _series_spec(self, prop: str, feedstock: Optional[str]) -> dict:
+        """The stored series a ``predict`` for (prop, feedstock) would read."""
+        if (feedstock and prop in _OVERRIDE_PROPS
+                and feedstock in self._m["feedstock_overrides"]
+                and prop in self._m["feedstock_overrides"][feedstock]):
+            return self._m["feedstock_overrides"][feedstock][prop]
+        return self._m["properties"].get(prop, {})
+
+    def predict_with_evidence(
+        self, temperature: float, prop: str, feedstock: Optional[str] = None
+    ) -> dict:
+        """A prediction together with what it rests on.
+
+        ``predict`` returns a bare float, so a value fitted from hundreds of
+        observations and one carried in from a neighbouring grid point because
+        this one had none are indistinguishable. The artifact records the counts
+        and spreads already; this surfaces them.
+
+        Keys: ``value``, ``n`` and ``spread`` at the nearest grid point, ``filled``
+        (that grid point had no observations, so the value was carried in),
+        ``extrapolated`` (the temperature lies outside the curve's support), and
+        ``curve`` -- ``"feedstock"`` or ``"pooled"``, which differ once a
+        feedstock's own data stops covering the temperature.
+        """
+        value = self.predict(temperature, prop, feedstock)
+        spec = self._series_spec(prop, self._effective_feedstock(temperature, prop, feedstock))
+        idx = int(np.argmin(np.abs(self._grid - float(temperature))))
+        counts = spec.get("n") or []
+        spreads = spec.get("spread") or []
+        n = int(counts[idx]) if idx < len(counts) else 0
+        t_min, t_max = spec.get("t_min"), spec.get("t_max")
+        return {
+            "value": value,
+            "n": n,
+            "spread": float(spreads[idx]) if idx < len(spreads) else None,
+            "filled": n == 0,
+            "extrapolated": not _in_range(float(temperature), t_min, t_max),
+            "curve": (
+                "feedstock"
+                if self._effective_feedstock(temperature, prop, feedstock)
+                else "pooled"
+            ),
+        }
 
     @property
     def feedstocks(self) -> Tuple[str, ...]:
@@ -447,20 +527,23 @@ def get_default_model() -> TemperatureModel:
     return _DEFAULT_MODEL
 
 
-def get_valid_range(feedstock: Optional[str] = None) -> Optional[Tuple[float, float]]:
+def get_valid_range(
+    prop: str, feedstock: Optional[str] = None
+) -> Optional[Tuple[float, float]]:
     """
-    Return ``(T_min, T_max)`` data range for the given *feedstock* (or pooled).
+    Return the ``(T_min, T_max)`` support of *prop* for the given *feedstock*.
 
     Example::
 
         from biochar.models.temperature_model import get_valid_range
-        lo, hi = get_valid_range("softwood")  # e.g. (200.0, 900.0)
+        lo, hi = get_valid_range("pH")                 # (200.0, 900.0)
+        lo, hi = get_valid_range("H_C_ratio", "softwood")
     """
     if feedstock is not None and feedstock not in VALID_FEEDSTOCKS:
         raise ValueError(
             f"feedstock must be one of {VALID_FEEDSTOCKS} or None, got {feedstock!r}"
         )
-    return get_default_model().get_valid_range(feedstock)
+    return get_default_model().get_valid_range(prop, feedstock)
 
 
 def properties(temperature: float, feedstock: Optional[str] = None) -> Dict[str, float]:
