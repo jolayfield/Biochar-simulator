@@ -38,6 +38,18 @@
     "title": "Atom names agree between the structure and the topology at any size",
     "type": "scenario"
   },
+  "rq-0d326d5b": {
+    "decl": "Scenario: A temperature is not judged against a property this config never derives",
+    "file": "generation-config",
+    "refs": [
+      {
+        "file": "tests/test_generation_config.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A temperature is not judged against a property this config never derives",
+    "type": "scenario"
+  },
   "rq-0e187d3e": {
     "decl": "## Feature API",
     "file": "gromacs-export",
@@ -234,6 +246,10 @@
     "decl": "Scenario: An H/C beyond the fit range is reported rather than silently clamped",
     "file": "temperature-model",
     "refs": [
+      {
+        "file": "tests/test_temperature_model.py",
+        "kind": "code"
+      },
       {
         "file": "tests/test_temperature_model_contract.py",
         "kind": "code"
@@ -1124,7 +1140,7 @@
     "type": "file"
   },
   "rq-a1da340c": {
-    "decl": "Scenario: A temperature beyond a property's support is reported",
+    "decl": "Scenario: A temperature beyond a derived property's support is reported",
     "file": "generation-config",
     "refs": [
       {
@@ -1132,7 +1148,7 @@
         "kind": "code"
       }
     ],
-    "title": "A temperature beyond a property's support is reported",
+    "title": "A temperature beyond a derived property's support is reported",
     "type": "scenario"
   },
   "rq-a22b8e8d": {

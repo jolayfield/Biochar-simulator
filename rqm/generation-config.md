@@ -182,19 +182,31 @@ Feature: Fail strictly on a request that was not met
 ## An Extrapolated Temperature Is Reported <!-- rq-32dc1242 -->
 
 The temperature model is fitted over a finite temperature range, and that range differs by
-property — a temperature inside the range for H/C can be outside it for pH or conductivity.
+property. A temperature outside the support of a property this config **derives** is
+extrapolation, and the caller is told which property and which range rather than receiving a
+silently extrapolated number.
 
-A temperature outside the support of a property being derived is extrapolation, and the caller is
-told which property and which range, rather than receiving a silently extrapolated number.
+The check is per property and scoped to what is derived here — `H_C_ratio` and `O_C_ratio`.
+Properties this config never touches, such as pH and electrical conductivity, are fitted over
+narrower ranges; warning about them while building a structure would attach noise to a request
+that never consulted them. A caller who wants the full reference table asks the model directly,
+and the model reports each property's own support.
 
 ```gherkin
 Feature: Say when a derived property is being extrapolated
 
   @rq-a1da340c
-  Scenario: A temperature beyond a property's support is reported
-    Given a temperature inside the range for H/C but outside the range for another derived property
+  Scenario: A temperature beyond a derived property's support is reported
+    Given a temperature outside the fitted range of a property this config derives
     When the config is constructed
     Then a warning names that property and its range
+
+  @rq-0d326d5b
+  Scenario: A temperature is not judged against a property this config never derives
+    Given a temperature within the range of every derived property
+    And outside the narrower range of a property this config does not derive
+    When the config is constructed
+    Then no extrapolation warning is emitted
 ```
 
 ## Questionable Combinations Warn <!-- rq-d6aaeb81 -->

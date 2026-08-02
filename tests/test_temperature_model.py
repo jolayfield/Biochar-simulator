@@ -131,12 +131,17 @@ class TestPropertiesQuery:
                 != properties(450, "grass")["H_C_ratio"])
 
     def test_aromaticity_from_hc_clamped_high(self):
-        # very high H/C -> negative raw -> clamp to 0
-        assert M.aromaticity_from_hc(5.0) == 0.0
+        # Very high H/C -> negative raw -> clamp to 0. Both of these sit outside
+        # the H/C range the relation was fitted over, so the clamp is reported as
+        # extrapolation rather than returned as a confident value
+        # (rqm/temperature-model.md rq-27f04167).
+        with pytest.warns(UserWarning, match="extrapolat"):
+            assert M.aromaticity_from_hc(5.0) == 0.0
 
     def test_aromaticity_from_hc_clamped_low(self):
         # near-zero H/C -> >100 raw -> clamp to 100
-        assert M.aromaticity_from_hc(0.0) == 100.0
+        with pytest.warns(UserWarning, match="extrapolat"):
+            assert M.aromaticity_from_hc(0.0) == 100.0
 
     def test_aromaticity_monotonic_in_hc(self):
         assert M.aromaticity_from_hc(0.3) > M.aromaticity_from_hc(1.0)

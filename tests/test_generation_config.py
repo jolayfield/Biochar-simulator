@@ -169,36 +169,64 @@ class TestStrictnessCoversShortfall:
 
 
 class TestExtrapolationIsReported:
+    """Scoped to the properties this config derives -- H/C and O/C.
+
+    An earlier version of this scenario asked for a temperature inside H/C's
+    range but outside "another derived property's". No such temperature exists:
+    H/C and O/C are both fitted over the whole 100-1000 C grid. The properties
+    with narrower support -- pH, conductivity -- are ones the generator never
+    derives, and warning about them here would attach noise to a structure
+    request that never consulted them.
+    """
+
+    @staticmethod
+    def _derived_range(prop="H_C_ratio"):
+        from biochar.models.temperature_model import get_default_model
+
+        return get_default_model().get_valid_range(prop)
+
     # rq-a1da340c
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "TemperatureModel.get_valid_range takes no property argument and "
-            "always returns H/C's range, so a temperature outside a narrower "
-            "property's support warns about nothing. Retire this marker with the fix."
-        ),
-    )
-    def test_temperature_beyond_a_narrower_property_is_reported(self, caplog):
+    def test_a_temperature_beyond_a_derived_property_is_reported(self, caplog):
+        _, t_max = self._derived_range()
+        beyond = t_max + 500
+
+        with caplog.at_level(logging.WARNING, logger="biochar"):
+            GeneratorConfig(target_num_carbons=20, temperature=beyond)
+
+        messages = [r.getMessage() for r in caplog.records]
+        assert any("outside the data range" in m for m in messages), (
+            f"T={beyond} is beyond H/C's support of {self._derived_range()} and "
+            f"nothing warned; records: {[m[:60] for m in messages]}"
+        )
+        assert any("H_C_ratio" in m for m in messages), (
+            f"the warning does not name the property: {messages}"
+        )
+
+    # rq-0d326d5b
+    def test_a_property_this_config_never_derives_is_not_judged(self, caplog):
         from biochar.models.temperature_model import get_default_model
 
         model = get_default_model()
-        props = model._m["properties"]
-        hc = props["H_C_ratio"]
-        narrower = {
-            name: spec for name, spec in props.items()
-            if spec.get("t_max") is not None and spec["t_max"] < hc["t_max"]
-        }
-        assert narrower, "no property has a narrower range than H/C; scenario is void"
+        derived_max = min(
+            model.get_valid_range(p)[1] for p in ("H_C_ratio", "O_C_ratio")
+        )
+        narrower = [
+            name for name, spec in model._m["properties"].items()
+            if name not in ("H_C_ratio", "O_C_ratio")
+            and spec.get("t_max") is not None
+            and spec["t_max"] < derived_max
+        ]
+        assert narrower, "no property has narrower support than the derived ones"
 
-        # Inside H/C's range, outside the others'.
-        temperature = hc["t_max"]
-
+        # In range for everything derived; out of range for pH and conductivity.
         with caplog.at_level(logging.WARNING, logger="biochar"):
-            GeneratorConfig(target_num_carbons=20, temperature=temperature)
+            GeneratorConfig(target_num_carbons=20, temperature=derived_max)
 
-        assert any("outside the data range" in r.message for r in caplog.records), (
-            f"T={temperature} is beyond the support of "
-            f"{sorted(narrower)[:3]} and no warning was emitted"
+        assert not [
+            r for r in caplog.records if "outside the data range" in r.getMessage()
+        ], (
+            f"warned at {derived_max} C about a property this config never derives; "
+            f"narrower properties are {sorted(narrower)}"
         )
 
 

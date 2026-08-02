@@ -11,6 +11,9 @@ in the same shape as one fitted from two hundred observations.
 
 Fixtures read the ranges and counts out of the artifact rather than hard-coding
 them, so a refit moves the tests with the data instead of breaking them.
+
+Every scenario here passes. The six that carried xfail(strict=True) were retired
+by XPASS when the reporting gaps were closed.
 """
 
 import pytest
@@ -74,14 +77,6 @@ class TestFeedstockCurvesAreNarrow:
 
 class TestFallbackIsVisible:
     # rq-b6522656
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "predict() drops to the pooled curve outside a feedstock's support and "
-            "returns a bare float, identical to an override-backed answer. Retire "
-            "this marker with the fix."
-        ),
-    )
     def test_a_fallback_to_the_pooled_curve_is_reported(self, model, caplog):
         import logging
 
@@ -118,13 +113,6 @@ class TestSupportRangeIsPerProperty:
         return (wide, ranges[wide]), (narrow, ranges[narrow])
 
     # rq-876c3bc5
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "get_valid_range takes no property argument and returns H/C's range "
-            "for everything. Retire this marker with the fix."
-        ),
-    )
     def test_the_reported_range_belongs_to_the_property(self, model):
         (wide, wide_range), (narrow, narrow_range) = (
             self._two_properties_with_different_ranges(model)
@@ -134,14 +122,6 @@ class TestSupportRangeIsPerProperty:
         assert model.get_valid_range(narrow) == narrow_range
 
     # rq-a234cdbe
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "Same root cause: one range is reported for every property, so a "
-            "temperature cannot be in range for one and out for another. Retire "
-            "this marker with the fix."
-        ),
-    )
     def test_a_temperature_can_be_in_range_for_one_property_and_not_another(self, model):
         (wide, wide_range), (narrow, narrow_range) = (
             self._two_properties_with_different_ranges(model)
@@ -168,13 +148,6 @@ class TestEvidenceTravelsWithTheEstimate:
         pytest.skip("no property has an empty grid point in this artifact")
 
     # rq-c0b934a0
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "n and spread are recorded per grid point but no query surfaces them. "
-            "Retire this marker with the fix."
-        ),
-    )
     def test_a_prediction_reports_the_observations_behind_it(self, model):
         evidence = model.predict_with_evidence(600, "H_C_ratio")
 
@@ -183,14 +156,6 @@ class TestEvidenceTravelsWithTheEstimate:
         assert "spread" in evidence
 
     # rq-a687f7a1
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "A grid point with zero observations is filled from its nearest finite "
-            "neighbour and returned indistinguishably from a fitted value. Retire "
-            "this marker with the fix."
-        ),
-    )
     def test_an_empty_grid_point_is_reported_as_carried_in(self, model):
         prop, temperature = self._property_with_an_empty_grid_point(model)
 
@@ -204,14 +169,6 @@ class TestEvidenceTravelsWithTheEstimate:
 
 class TestAromaticityExtrapolation:
     # rq-27f04167
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "aromaticity_from_hc clamps into 0-100 and never consults the fit's "
-            "hc_min/hc_max, so an H/C far outside the fit returns exactly 0.0 as "
-            "though it were a confident prediction. Retire this marker with the fix."
-        ),
-    )
     def test_an_hc_beyond_the_fit_is_reported_as_extrapolated(self, model):
         fit = model._m["aromaticity_fit"]
         beyond = float(fit["hc_max"]) * 3

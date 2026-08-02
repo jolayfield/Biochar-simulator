@@ -28,8 +28,14 @@ cannot tell a measurement from a guess.
     `H_C_ratio`, `O_C_ratio`, and `aromaticity_percent` derived from the predicted H/C.
   - `predict_all(temperature, feedstock=None) -> Dict[str, float]` — every modelled property.
   - `aromaticity_from_hc(hc: float) -> float` — the linear aromaticity fit, clamped to 0–100.
+  - `predict_with_evidence(temperature, prop, feedstock=None) -> dict` — the prediction together
+    with what it rests on: `value`, the `n` and `spread` at the nearest grid point, `filled` when
+    that point had no observations and the value was carried in from a neighbour, `extrapolated`
+    when the temperature lies outside the curve's support, and `curve` naming whether the
+    feedstock's own curve or the pooled one answered.
   - `get_valid_range(prop: str, feedstock: Optional[str] = None) -> Optional[Tuple[float, float]]`
-    — the temperature support of the curve that a `predict` call for `prop` would use.
+    — the temperature support of the curve that a `predict` call for `prop` would use. Raises
+    `KeyError` for an unknown property, matching `predict`.
   - `feedstocks -> Tuple[str, ...]` and `provenance -> dict` — what the artifact was built from.
 
 - `properties(temperature: float, feedstock: Optional[str] = None) -> Dict[str, float]` <!-- rq-f1f301e0 -->

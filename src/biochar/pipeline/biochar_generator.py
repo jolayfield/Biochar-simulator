@@ -272,15 +272,22 @@ class GeneratorConfig:
         if self.temperature is not None:
             from ..models.temperature_model import get_default_model
             model = get_default_model()
-            valid_range = model.get_valid_range(self.feedstock)
-            if valid_range is not None:
+            # Checked per property, and only for the properties actually derived
+            # here. Properties are fitted over different ranges, so one answer
+            # cannot describe them all; and warning about pH or conductivity --
+            # which this config never derives -- would be noise attached to a
+            # structure request.
+            for prop in ("H_C_ratio", "O_C_ratio"):
+                valid_range = model.get_valid_range(prop, self.feedstock)
+                if valid_range is None:
+                    continue
                 t_min, t_max = valid_range
                 if not (t_min <= self.temperature <= t_max):
                     logger.warning(
                         "temperature=%.0f°C is outside the data range [%.0f–%.0f°C] "
-                        "for feedstock=%r. Predictions are extrapolated and may be "
-                        "unreliable.",
-                        self.temperature, t_min, t_max, self.feedstock,
+                        "for %s (feedstock=%r). Predictions are extrapolated and "
+                        "may be unreliable.",
+                        self.temperature, t_min, t_max, prop, self.feedstock,
                     )
             comp = model.composition(self.temperature, self.feedstock)
             if self.H_C_ratio is None:
