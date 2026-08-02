@@ -65,9 +65,13 @@ minimum separation, and with enough sheets in too small a box it does not conver
 `amorphous_fallback="slit"` asks for a slit stack instead of an exception — a reasonable request,
 because a slit surface is still useful and losing the whole run is worse.
 
-What the caller must not receive is a slit stack that describes itself as amorphous. The `.gro`
-title is the only human-readable record of what the geometry is, and it is read weeks later by
-someone deciding whether a trajectory answers their question.
+What the caller must not receive is a slit stack that describes itself as amorphous. The
+configuration records the geometry that was *requested*; the builder records the one that was
+*built*, and everything describing the surface reads the second. The `.gro` title states the
+realised geometry and notes the substitution, because it is the only human-readable record of what
+the geometry is and it is read weeks later by someone deciding whether a trajectory answers their
+question. A caller who wants the answer programmatically reads it off the builder rather than
+parsing a title string.
 
 ```gherkin
 Feature: Describe the geometry actually produced
@@ -78,6 +82,14 @@ Feature: Describe the geometry actually produced
     And a fallback to slit geometry
     When the surface is exported
     Then the structure file describes a slit pore
+    And it records that the amorphous request was substituted
+
+  @rq-6e562ff0
+  Scenario: The geometry actually built is readable without parsing a file
+    Given an amorphous request that cannot be packed
+    And a fallback to slit geometry
+    When the surface is built
+    Then the builder reports the realised geometry as slit
 
   @rq-4e6abc16
   Scenario: The fallback is reported to the caller

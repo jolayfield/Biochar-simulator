@@ -896,6 +896,18 @@
     "title": "Cross-references",
     "type": "section"
   },
+  "rq-6e562ff0": {
+    "decl": "Scenario: The geometry actually built is readable without parsing a file",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The geometry actually built is readable without parsing a file",
+    "type": "scenario"
+  },
   "rq-6f1c55c5": {
     "decl": "- `setup_one_structure(gro_path: str | Path, top_path: str | Path, output_dir: str | Path, label: str = \"structure\", config: Optional[MDSetupConfig] = None, pyrolysis_temperature_c: Optional[float] = None, status: Optional[str] = None, include_paths: Optional[list] = None) -> Path`",
     "file": "md-setup",

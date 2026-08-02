@@ -49,6 +49,13 @@ All significant changes to the Biochar Simulator project are documented here.
   crashes and no structure is lost — only the label changes, and it changes to
   the honest one. Manifest counts are not comparable with earlier runs.
 
+- **A surface that fell back from amorphous to slit geometry is no longer
+  labelled amorphous.** `amorphous_fallback="slit"` degrades gracefully when
+  packing cannot converge, but `pore_type` was never updated and the `.gro`
+  title was chosen from it — so a slit stack was written to disk titled
+  `"Amorphous surface"`. The title now states the geometry actually built and
+  notes the substitution.
+
 ### Added
 
 

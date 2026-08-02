@@ -88,27 +88,29 @@ class TestExportedFilesDescribeTheGeometry:
             SurfaceBuilder(_unpackable(amorphous_fallback=None)).build()
 
     # rq-0a48ccd8
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "The fallback positions a slit stack but never updates "
-            "config.pore_type, and export_gromacs picks the .gro title from it, "
-            "so a slit surface is written titled 'Amorphous surface'. "
-            "Retire this marker with the fix."
-        ),
-    )
     def test_a_fallen_back_surface_is_not_labelled_amorphous(self):
         builder, _ = self._build_with_fallback()
         out = Path(tempfile.mkdtemp())
         builder.export_gromacs(str(out), basename="s")
 
         title = (out / "s.gro").read_text().splitlines()[0]
-        assert "amorphous" not in title.lower(), (
-            f"a slit stack was written describing itself as amorphous: {title!r}"
+        # The claim the title leads with is the geometry it asserts; the word
+        # "amorphous" may still appear afterwards as provenance.
+        assert title.strip().lower().startswith("slit"), (
+            f"a slit stack was written asserting a different geometry: {title!r}"
         )
-        assert "slit" in title.lower(), (
-            f"the title does not describe the geometry that was built: {title!r}"
+        assert "fallback" in title.lower() or "failed" in title.lower(), (
+            f"the title does not record that the requested geometry was "
+            f"substituted: {title!r}"
         )
+
+    # rq-6e562ff0
+    def test_the_realised_geometry_is_readable_from_the_builder(self):
+        builder, _ = self._build_with_fallback()
+
+        assert builder.config.pore_type == "amorphous", "the request is unchanged"
+        assert builder.realised_pore_type == "slit"
+        assert builder.packing_fell_back is True
 
 
 class TestCopiedSheetsShareNothing:

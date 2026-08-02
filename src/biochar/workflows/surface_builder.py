@@ -326,6 +326,12 @@ class SurfaceBuilder:
         self.config = config
         self.sheets: List[SheetResult] = []
         self._box_vectors: Optional[np.ndarray] = None  # nm
+        # config.pore_type is the request; this is what was actually built. They
+        # differ when amorphous packing fails and amorphous_fallback substitutes
+        # a slit stack, and everything describing the surface -- the .gro title
+        # above all -- must read the second, not the first.
+        self._realised_pore_type: str = config.pore_type
+        self._packing_fell_back: bool = False
 
     # ------------------------------------------------------------------
     # Public API
@@ -368,6 +374,8 @@ class SurfaceBuilder:
                     self._position_sheets()
                     self._box_vectors = self._compute_box_vectors()
                     self._centre_in_box(self._box_vectors)
+                    self._realised_pore_type = "slit"
+                    self._packing_fell_back = True
                 else:
                     raise
         else:
@@ -428,15 +436,7 @@ class SurfaceBuilder:
             str(gro_path),
             sheets=self.sheets,
             box_vectors=self._box_vectors,
-            title=(
-                f"Amorphous surface, {self.config.num_sheets} sheets"
-                if self.config.pore_type == "amorphous"
-                else (
-                    f"Slit pore surface, pore_diameter="
-                    f"{self.config.pore_diameter:.1f} A, "
-                    f"{self.config.num_sheets} sheets"
-                )
-            ),
+            title=self._structure_title(),
         )
 
         # --- Write .top -----------------------------------------------------
@@ -454,6 +454,40 @@ class SurfaceBuilder:
     # ------------------------------------------------------------------
     # Sheet generation
     # ------------------------------------------------------------------
+
+    def _structure_title(self) -> str:
+        """The .gro title line: the geometry built, and why if it was substituted.
+
+        This is the only human-readable record of what the geometry is, and it is
+        read weeks later by someone deciding whether a trajectory answers their
+        question.
+        """
+        if self.realised_pore_type == "amorphous":
+            return f"Amorphous surface, {self.config.num_sheets} sheets"
+        suffix = (
+            " (amorphous packing failed; slit fallback)"
+            if self._packing_fell_back
+            else ""
+        )
+        return (
+            f"Slit pore surface, pore_diameter={self.config.pore_diameter:.1f} A, "
+            f"{self.config.num_sheets} sheets{suffix}"
+        )
+
+    @property
+    def realised_pore_type(self) -> str:
+        """The pore geometry this surface actually has.
+
+        Equal to ``config.pore_type`` unless amorphous packing failed and
+        ``amorphous_fallback`` substituted another geometry. Reading the request
+        instead of this is how a slit stack ends up labelled amorphous.
+        """
+        return self._realised_pore_type
+
+    @property
+    def packing_fell_back(self) -> bool:
+        """True when the geometry built is not the geometry requested."""
+        return self._packing_fell_back
 
     @property
     def _sheets_identical(self) -> bool:
