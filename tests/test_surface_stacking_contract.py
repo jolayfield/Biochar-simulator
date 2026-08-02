@@ -9,6 +9,9 @@ the agreement between the topology and the include files beside it.
 
 Surfaces are expensive to build, so the fixtures are module-scoped and kept
 small (16 carbons, 2-4 sheets).
+
+Every scenario here passes. The three that carried xfail(strict=True) were
+retired by XPASS when their fixes landed.
 """
 
 import tempfile
@@ -125,13 +128,6 @@ class TestCopiedSheetsShareNothing:
             sheets[0].coords[0, 2] -= 999.0
 
     # rq-9cdd2239
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "The identical-sheet copy duplicates mol/coords/atom_types/charges but "
-            "passes composition through by reference. Retire this marker with the fix."
-        ),
-    )
     def test_copied_sheets_do_not_share_a_composition_record(self, slit_surface):
         _, sheets, _ = slit_surface
         shared = [
@@ -248,14 +244,6 @@ class TestTopologyMatchesIncludes:
 
 class TestConvenienceWrapper:
     # rq-bfb7e848
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "generate_surface does not expose amorphous_fallback, so the graceful "
-            "degradation path is unreachable from the entry point the docs point "
-            "at. Retire this marker with the fix."
-        ),
-    )
     def test_the_fallback_is_reachable_from_the_convenience_function(self):
         out = Path(tempfile.mkdtemp())
         with warnings.catch_warnings():

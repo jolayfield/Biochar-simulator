@@ -24,6 +24,10 @@ Unreleased
 - **A surface that fell back from amorphous to slit geometry** is no longer
   written with an ``Amorphous surface`` title. ``SurfaceBuilder`` reports the
   realised geometry via ``realised_pore_type`` and ``packing_fell_back``.
+- Sheets copied by the identical-sheet optimisation no longer share a
+  ``composition`` record.
+- ``generate_surface`` exposes ``amorphous_fallback``, ``aromaticity_percent``
+  and the box paddings.
 
 0.5.0 (2026-07-31)
 ------------------

@@ -11,6 +11,7 @@ boundary conditions, and exports GROMACS-ready files.
 from __future__ import annotations
 
 import logging
+import copy
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -513,7 +514,11 @@ class SurfaceBuilder:
             return SheetResult(
                 mol=Chem.Mol(base.mol),
                 coords=base.coords.copy(),
-                composition=base.composition,
+                # deepcopy, not the dataclass itself and not a shallow copy:
+                # CompositionResult carries functional_groups, placed_counts and
+                # requested_counts as dicts, so anything less leaves copied
+                # sheets sharing mutable state and one annotation changes them all.
+                composition=copy.deepcopy(base.composition),
                 atom_types=dict(base.atom_types),
                 charges=dict(base.charges),
                 molecule_name=base.molecule_name,
@@ -779,6 +784,10 @@ def generate_surface(
     pore_type: str = "slit",
     max_attempts: int = 500,
     min_separation: float = 3.0,
+    amorphous_fallback: Optional[str] = None,
+    aromaticity_percent: float = 95.0,
+    box_padding_xy: float = 1.0,
+    box_padding_z: float = 1.0,
     sheet_overrides: Optional[List[Dict]] = None,
     output_directory: str = ".",
     basename: str = "surface",
@@ -852,13 +861,16 @@ def generate_surface(
         O_C_ratio=O_C_ratio,
         functional_groups=functional_groups,
         pH=pH,
-        aromaticity_percent=95.0,
+        aromaticity_percent=aromaticity_percent,
         defect_fraction=defect_fraction,
         pore_type=pore_type,
         num_sheets=num_sheets,
         pore_diameter=pore_diameter,
         max_attempts=max_attempts,
         min_separation=min_separation,
+        amorphous_fallback=amorphous_fallback,
+        box_padding_xy=box_padding_xy,
+        box_padding_z=box_padding_z,
         sheet_overrides=sheet_overrides,
         system_name=system_name,
         seed=seed,
