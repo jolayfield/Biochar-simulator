@@ -66,6 +66,18 @@
     "title": "A surface that fell back to slit geometry is not labelled amorphous",
     "type": "scenario"
   },
+  "rq-0c91f5d5": {
+    "decl": "Scenario: A positive defect fraction produces pentagons",
+    "file": "carbon-skeleton",
+    "refs": [
+      {
+        "file": "tests/test_carbon_skeleton_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A positive defect fraction produces pentagons",
+    "type": "scenario"
+  },
   "rq-0d326d5b": {
     "decl": "Scenario: A temperature is not judged against a property this config never derives",
     "file": "generation-config",
@@ -531,6 +543,14 @@
     "title": "The map holds no entries for types that do not exist",
     "type": "scenario"
   },
+  "rq-3f012547": {
+    "decl": "## A Larger Target Is Reached From Above, Never From Below",
+    "file": "carbon-skeleton",
+    "level": 2,
+    "refs": [],
+    "title": "A Larger Target Is Reached From Above, Never From Below",
+    "type": "section"
+  },
   "rq-4063a024": {
     "decl": "Scenario: Kekulization failure does not change any atom type",
     "file": "opls-typing",
@@ -542,6 +562,13 @@
     ],
     "title": "Kekulization failure does not change any atom type",
     "type": "scenario"
+  },
+  "rq-419ffa85": {
+    "decl": "- `CarbonSkeleton`",
+    "file": "carbon-skeleton",
+    "refs": [],
+    "title": "CarbonSkeleton",
+    "type": "api-item"
   },
   "rq-44655f38": {
     "decl": "Scenario: An ether C-O bond survives sanitisation as a single bond",
@@ -572,6 +599,30 @@
       }
     ],
     "title": "Hex-lattice structures keep their coordinates",
+    "type": "scenario"
+  },
+  "rq-4af71330": {
+    "decl": "Scenario: A target matching a library size is met exactly",
+    "file": "carbon-skeleton",
+    "refs": [
+      {
+        "file": "tests/test_carbon_skeleton_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A target matching a library size is met exactly",
+    "type": "scenario"
+  },
+  "rq-4dc5ce35": {
+    "decl": "Scenario: An unparseable library entry is reported",
+    "file": "carbon-skeleton",
+    "refs": [
+      {
+        "file": "tests/test_carbon_skeleton_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An unparseable library entry is reported",
     "type": "scenario"
   },
   "rq-4e6abc16": {
@@ -690,6 +741,18 @@
     "title": "A residue name longer than five characters is truncated",
     "type": "scenario"
   },
+  "rq-5435c9d8": {
+    "decl": "Scenario: The overshoot stays within a ring or two",
+    "file": "carbon-skeleton",
+    "refs": [
+      {
+        "file": "tests/test_carbon_skeleton_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The overshoot stays within a ring or two",
+    "type": "scenario"
+  },
   "rq-5658c4b6": {
     "decl": "Scenario: Clash resolution does not run when there is nothing to resolve",
     "file": "geometry-embedding",
@@ -717,6 +780,25 @@
     "refs": [],
     "title": "Strictness Covers Shortfall, Not Only Failure",
     "type": "section"
+  },
+  "rq-5840d1b3": {
+    "decl": "- `PAHAssembler(seed: int = None)`",
+    "file": "carbon-skeleton",
+    "refs": [],
+    "title": "PAHAssembler",
+    "type": "api-item"
+  },
+  "rq-59e23c2e": {
+    "decl": "Scenario: A target above the library is met or exceeded",
+    "file": "carbon-skeleton",
+    "refs": [
+      {
+        "file": "tests/test_carbon_skeleton_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A target above the library is met or exceeded",
+    "type": "scenario"
   },
   "rq-5b7a5ab8": {
     "decl": "Scenario: The annealing peak temperature follows the pyrolysis temperature",
@@ -1067,6 +1149,13 @@
     "title": "ITPFileWriter",
     "type": "api-item"
   },
+  "rq-83521d1c": {
+    "decl": "- `SkeletonValidator.validate(skeleton) -> Tuple[bool, List[str]]`",
+    "file": "carbon-skeleton",
+    "refs": [],
+    "title": "SkeletonValidator",
+    "type": "api-item"
+  },
   "rq-85bcfa59": {
     "decl": "Scenario: Every emitted term reaches the binary topology",
     "file": "opls-typing",
@@ -1273,6 +1362,14 @@
     "title": "pH combined with the ML charge backend is refused",
     "type": "scenario"
   },
+  "rq-9c8fe79c": {
+    "decl": "## Defect Fractions Are Per-Ring Probabilities",
+    "file": "carbon-skeleton",
+    "level": 2,
+    "refs": [],
+    "title": "Defect Fractions Are Per-Ring Probabilities",
+    "type": "section"
+  },
   "rq-9caef4cc": {
     "decl": "## Copied Sheets Share Nothing Mutable",
     "file": "surface-stacking",
@@ -1347,6 +1444,14 @@
     ],
     "title": "A temperature inside one property's support but outside another's is distinguishable",
     "type": "scenario"
+  },
+  "rq-a60c7e3b": {
+    "decl": "## Cross-references",
+    "file": "carbon-skeleton",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
   },
   "rq-a63f775d": {
     "decl": "Scenario: A non-polar contact does not get the hydrogen-bond floor",
@@ -1530,6 +1635,18 @@
       }
     ],
     "title": "A genuine overlap is still reported",
+    "type": "scenario"
+  },
+  "rq-b6eec273": {
+    "decl": "Scenario: The assembler takes no aromaticity argument",
+    "file": "carbon-skeleton",
+    "refs": [
+      {
+        "file": "tests/test_carbon_skeleton_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The assembler takes no aromaticity argument",
     "type": "scenario"
   },
   "rq-b8fce9a6": {
@@ -1722,6 +1839,18 @@
     "title": "A Prediction Says Which Curve Answered It",
     "type": "section"
   },
+  "rq-c6b675bb": {
+    "decl": "Scenario: A zero defect fraction produces a pure hexagonal skeleton",
+    "file": "carbon-skeleton",
+    "refs": [
+      {
+        "file": "tests/test_carbon_skeleton_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A zero defect fraction produces a pure hexagonal skeleton",
+    "type": "scenario"
+  },
   "rq-c7715c26": {
     "decl": "Scenario: An amino nitrogen types as aniline N on a large sheet",
     "file": "opls-typing",
@@ -1747,6 +1876,14 @@
     "level": 2,
     "refs": [],
     "title": "Atom Names Identify One Atom Each",
+    "type": "section"
+  },
+  "rq-cf3d7a56": {
+    "decl": "## Aromaticity Is an Outcome, Not a Request",
+    "file": "carbon-skeleton",
+    "level": 2,
+    "refs": [],
+    "title": "Aromaticity Is an Outcome, Not a Request",
     "type": "section"
   },
   "rq-d0631f70": {
@@ -1849,6 +1986,14 @@
     "title": "GeneratorConfig",
     "type": "api-item"
   },
+  "rq-e7260a44": {
+    "decl": "## A Library Entry That Cannot Be Loaded Is Reported",
+    "file": "carbon-skeleton",
+    "level": 2,
+    "refs": [],
+    "title": "A Library Entry That Cannot Be Loaded Is Reported",
+    "type": "section"
+  },
   "rq-e9a1bf8b": {
     "decl": "## Aliphatic Oxygen Spill",
     "file": "heteroatom-assignment",
@@ -1924,6 +2069,41 @@
     "title": "Partial charges sum to the formal charge",
     "type": "scenario"
   },
+  "rq-f2d55972": {
+    "decl": "# Feature: Carbon Skeleton Growth",
+    "file": "carbon-skeleton",
+    "refs": [],
+    "title": "Feature: Carbon Skeleton Growth",
+    "type": "file"
+  },
+  "rq-f61f4d50": {
+    "decl": "## Feature API",
+    "file": "carbon-skeleton",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
+  "rq-f7dda304": {
+    "decl": "## A Target Within the Library Is Met Exactly",
+    "file": "carbon-skeleton",
+    "level": 2,
+    "refs": [],
+    "title": "A Target Within the Library Is Met Exactly",
+    "type": "section"
+  },
+  "rq-f953b9b0": {
+    "decl": "Scenario: A skeleton that cannot be grown raises",
+    "file": "carbon-skeleton",
+    "refs": [
+      {
+        "file": "tests/test_carbon_skeleton_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A skeleton that cannot be grown raises",
+    "type": "scenario"
+  },
   "rq-faf5d18d": {
     "decl": "## Standing constraints",
     "file": "ARCHITECTURE",
@@ -1943,6 +2123,14 @@
     ],
     "title": "Every excluded 1-4 pair is listed for rescaled treatment",
     "type": "scenario"
+  },
+  "rq-fb1a5f14": {
+    "decl": "## A Skeleton Is Never Returned at an Unrelated Size",
+    "file": "carbon-skeleton",
+    "level": 2,
+    "refs": [],
+    "title": "A Skeleton Is Never Returned at an Unrelated Size",
+    "type": "section"
   },
   "rq-fbb6a9c0": {
     "decl": "Scenario: The oxygen count still matches the request",

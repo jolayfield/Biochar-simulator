@@ -738,8 +738,13 @@ class PAHAssembler:
     Build aromatic carbon skeletons from validated PAH building blocks.
 
     Strategy:
-      <= 24C  : use a pre-validated PAH from the library (exact or nearest).
-      > 24C   : build a hex-lattice seed, then grow via ring fusion.
+      within PAH_LIBRARY's range (6-40C): use a pre-validated PAH, exactly when
+        the target matches a library size and the nearest otherwise.
+      beyond it: take the closest library structure as a seed, then grow by ring
+        fusion until the count is reached or passed.
+
+    Growth proceeds in whole rings, so only certain carbon counts are reachable
+    and the realised count is >= the request, never below (rqm/carbon-skeleton.md).
     """
 
     # Sorted list of (num_carbons, pah_name) for quick lookup
