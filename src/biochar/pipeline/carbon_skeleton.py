@@ -30,6 +30,16 @@ _AROMATIC_CC_BOND = 1.42
 _POSITION_MERGE_TOLERANCE = 0.05  # Å
 
 
+class SkeletonError(RuntimeError):
+    """Raised when a carbon skeleton cannot be built for the request.
+
+    Subclasses RuntimeError so callers already catching that keep working. The
+    failure is deterministic -- the compact hex build does not use the RNG -- so
+    a seed retry cannot help, and `workflows.sweep` is right to record the point
+    as failed rather than retrying it.
+    """
+
+
 @dataclass
 class CarbonSkeleton:
     """Represents a carbon skeleton/framework."""
@@ -875,17 +885,22 @@ class PAHAssembler:
                 target_num_carbons, defect_fraction, target_h_c, heptagon_fraction
             )
 
-        # --- Fallback: pyrene (no pentagons) ---
+        # No fallback structure. Growth failing is a failure of the request, and
+        # answering a 200-carbon request with the library's 16-carbon pyrene
+        # produces a molecule every later stage decorates, embeds, types and
+        # exports as though it were what was asked for -- nothing downstream
+        # re-checks the count. A caller can recover from an exception; it cannot
+        # recover from a plausible molecule of the wrong size.
         if mol is None:
-            mol = Chem.Mol(self.pahs["pyrene"]["mol"])
-            seed_positions = self._compute_seed_positions(mol)
-            if seed_positions:
-                for atom in mol.GetAtoms():
-                    idx = atom.GetIdx()
-                    if idx in seed_positions:
-                        x, y = seed_positions[idx]
-                        atom.SetDoubleProp("init_x", x)
-                        atom.SetDoubleProp("init_y", y)
+            raise SkeletonError(
+                f"could not build a carbon skeleton for "
+                f"target_num_carbons={target_num_carbons} "
+                f"(defect_fraction={defect_fraction}, "
+                f"heptagon_fraction={heptagon_fraction}). The compact hex build "
+                f"returned nothing, which does not depend on the seed, so "
+                f"retrying will not help; reduce the target or relax the ring "
+                f"fractions."
+            )
 
         Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
         return self._make_skeleton(mol)

@@ -49,6 +49,15 @@ All significant changes to the Biochar Simulator project are documented here.
   crashes and no structure is lost — only the label changes, and it changes to
   the honest one. Manifest counts are not comparable with earlier runs.
 
+- **A carbon skeleton that cannot be built now raises instead of substituting
+  pyrene.** When graph growth returned nothing, the assembler answered with the
+  library's 16-carbon pyrene regardless of the request — so a 200-carbon request
+  could be decorated, embedded, typed and exported at an eighth of the size,
+  because nothing downstream re-checks the count. It now raises `SkeletonError`,
+  which subclasses `RuntimeError` so existing handlers keep working. The failure
+  is deterministic, so a sweep records the point as failed rather than retrying
+  seeds against it.
+
 - **Sheets copied by the identical-sheet optimisation no longer share a
   composition record.** The copy duplicated the molecule, coordinates, atom
   types and charges but passed `composition` through by reference, so annotating

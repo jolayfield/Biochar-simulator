@@ -109,20 +109,34 @@ class TestAromaticityIsNotARequest:
 
 class TestNoUnrelatedFallback:
     # rq-f953b9b0
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "When _build_from_seed returns None the assembler substitutes pyrene "
-            "(16 carbons) regardless of the request. Retire this marker with the fix."
-        ),
-    )
     def test_a_skeleton_that_cannot_be_grown_raises(self, monkeypatch):
-        monkeypatch.setattr(
-            PAHAssembler, "_build_from_seed", lambda *a, **k: None
-        )
-        with pytest.raises(Exception) as exc:
+        from biochar.pipeline.carbon_skeleton import SkeletonError
+
+        monkeypatch.setattr(PAHAssembler, "_build_from_seed", lambda *a, **k: None)
+
+        with pytest.raises(SkeletonError) as exc:
             _generate(200)
-        assert not isinstance(exc.value, AssertionError)
+
+        message = str(exc.value)
+        assert "200" in message, f"the failure does not state the request: {message}"
+        assert "retry" in message.lower(), (
+            f"the failure should say a seed retry will not help, since the "
+            f"compact hex build is deterministic: {message}"
+        )
+
+    def test_the_failure_is_catchable_as_a_runtime_error(self, monkeypatch):
+        """Subclassing RuntimeError keeps existing handlers working.
+
+        workflows.sweep catches bare Exception for non-validation failures and
+        records the point as failed without retrying, which is the right
+        handling for a deterministic one.
+        """
+        from biochar.pipeline.carbon_skeleton import SkeletonError
+
+        assert issubclass(SkeletonError, RuntimeError)
+        monkeypatch.setattr(PAHAssembler, "_build_from_seed", lambda *a, **k: None)
+        with pytest.raises(RuntimeError):
+            _generate(200)
 
 
 class TestLibraryLoadIsReported:
