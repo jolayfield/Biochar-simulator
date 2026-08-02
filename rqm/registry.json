@@ -14,6 +14,14 @@
     "title": "MDSetupConfig",
     "type": "api-item"
   },
+  "rq-028b78d5": {
+    "decl": "## The Exported Files Describe the Geometry That Was Built",
+    "file": "surface-stacking",
+    "level": 2,
+    "refs": [],
+    "title": "The Exported Files Describe the Geometry That Was Built",
+    "type": "section"
+  },
   "rq-03a40f15": {
     "decl": "Scenario: Every mapped type names the right element",
     "file": "opls-typing",
@@ -26,6 +34,14 @@
     "title": "Every mapped type names the right element",
     "type": "scenario"
   },
+  "rq-0569cb45": {
+    "decl": "## Per-Sheet Protonation Consumes a Seed Range",
+    "file": "surface-stacking",
+    "level": 2,
+    "refs": [],
+    "title": "Per-Sheet Protonation Consumes a Seed Range",
+    "type": "section"
+  },
   "rq-07b27c79": {
     "decl": "Scenario: Atom names agree between the structure and the topology at any size",
     "file": "gromacs-export",
@@ -36,6 +52,18 @@
       }
     ],
     "title": "Atom names agree between the structure and the topology at any size",
+    "type": "scenario"
+  },
+  "rq-0a48ccd8": {
+    "decl": "Scenario: A surface that fell back to slit geometry is not labelled amorphous",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A surface that fell back to slit geometry is not labelled amorphous",
     "type": "scenario"
   },
   "rq-0d326d5b": {
@@ -123,6 +151,13 @@
     "title": "Feature API",
     "type": "section"
   },
+  "rq-169cc55e": {
+    "decl": "- `SurfaceBuilder(config: SurfaceConfig)`",
+    "file": "surface-stacking",
+    "refs": [],
+    "title": "SurfaceBuilder",
+    "type": "api-item"
+  },
   "rq-1729edcb": {
     "decl": "## Nearest-Analog Values Are Chosen, Not Validated",
     "file": "opls-typing",
@@ -141,6 +176,18 @@
       }
     ],
     "title": "A temperature-derived aromatic fraction below the floor is raised to the floor",
+    "type": "scenario"
+  },
+  "rq-17ffc86b": {
+    "decl": "Scenario: Identical sheets are written once and referenced many times",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Identical sheets are written once and referenced many times",
     "type": "scenario"
   },
   "rq-18307b81": {
@@ -181,6 +228,18 @@
       }
     ],
     "title": "A structure with more than three geometry errors reports all of them",
+    "type": "scenario"
+  },
+  "rq-1f914136": {
+    "decl": "Scenario: Copied sheets do not share coordinates",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Copied sheets do not share coordinates",
     "type": "scenario"
   },
   "rq-212c17a8": {
@@ -276,6 +335,18 @@
       }
     ],
     "title": "An H/C inside the fit range is answered normally",
+    "type": "scenario"
+  },
+  "rq-2c190d16": {
+    "decl": "Scenario: Without a fallback an unpackable request raises",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Without a fallback an unpackable request raises",
     "type": "scenario"
   },
   "rq-2ceb3ae6": {
@@ -484,6 +555,13 @@
     "title": "An ether C-O bond survives sanitisation as a single bond",
     "type": "scenario"
   },
+  "rq-464bbae1": {
+    "decl": "- `SheetResult`",
+    "file": "surface-stacking",
+    "refs": [],
+    "title": "SheetResult",
+    "type": "api-item"
+  },
   "rq-49e2ed82": {
     "decl": "Scenario: Hex-lattice structures keep their coordinates",
     "file": "geometry-embedding",
@@ -494,6 +572,18 @@
       }
     ],
     "title": "Hex-lattice structures keep their coordinates",
+    "type": "scenario"
+  },
+  "rq-4e6abc16": {
+    "decl": "Scenario: The fallback is reported to the caller",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The fallback is reported to the caller",
     "type": "scenario"
   },
   "rq-4f5a5569": {
@@ -691,6 +781,13 @@
     "title": "The topology the solvation step updates exists before that step runs",
     "type": "scenario"
   },
+  "rq-63c93813": {
+    "decl": "# Feature: Surface Stacking",
+    "file": "surface-stacking",
+    "refs": [],
+    "title": "Feature: Surface Stacking",
+    "type": "file"
+  },
   "rq-64623ade": {
     "decl": "Scenario: A carbonyl is measured against the double-bond expectation",
     "file": "geometry-embedding",
@@ -718,6 +815,18 @@
     "refs": [],
     "title": "Cross-references",
     "type": "section"
+  },
+  "rq-682a21cd": {
+    "decl": "Scenario: The seeds a surface consumes are documented for the caller",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The seeds a surface consumes are documented for the caller",
+    "type": "scenario"
   },
   "rq-68fe810a": {
     "decl": "## Cross-references",
@@ -747,6 +856,18 @@
     "title": "An intramolecular hydrogen bond is not reported as a clash",
     "type": "scenario"
   },
+  "rq-6ba78ac5": {
+    "decl": "Scenario: A protonated surface is reproducible from its seed",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A protonated surface is reproducible from its seed",
+    "type": "scenario"
+  },
   "rq-6c0f608d": {
     "decl": "Scenario: An overlap too short even for a hydrogen bond is still a clash",
     "file": "geometry-embedding",
@@ -758,6 +879,14 @@
     ],
     "title": "An overlap too short even for a hydrogen bond is still a clash",
     "type": "scenario"
+  },
+  "rq-6dd192a1": {
+    "decl": "## Cross-references",
+    "file": "surface-stacking",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
   },
   "rq-6deffbcf": {
     "decl": "## Cross-references",
@@ -989,6 +1118,18 @@
     "title": "The reported range is the one belonging to the property",
     "type": "scenario"
   },
+  "rq-884c2220": {
+    "decl": "Scenario: Distinct sheets each get their own include file",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Distinct sheets each get their own include file",
+    "type": "scenario"
+  },
   "rq-8d689517": {
     "decl": "- `get_ion_profile(name_or_profile) -> IonProfile`",
     "file": "md-setup",
@@ -1118,6 +1259,26 @@
       }
     ],
     "title": "pH combined with the ML charge backend is refused",
+    "type": "scenario"
+  },
+  "rq-9caef4cc": {
+    "decl": "## Copied Sheets Share Nothing Mutable",
+    "file": "surface-stacking",
+    "level": 2,
+    "refs": [],
+    "title": "Copied Sheets Share Nothing Mutable",
+    "type": "section"
+  },
+  "rq-9cdd2239": {
+    "decl": "Scenario: Copied sheets do not share their composition record",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Copied sheets do not share their composition record",
     "type": "scenario"
   },
   "rq-9e4f2d8e": {
@@ -1258,6 +1419,14 @@
     ],
     "title": "A structure with no reported clashes is still refined",
     "type": "scenario"
+  },
+  "rq-ad61986f": {
+    "decl": "## Sheet Separation Is Measured Between Surfaces, Not Centres",
+    "file": "surface-stacking",
+    "level": 2,
+    "refs": [],
+    "title": "Sheet Separation Is Measured Between Surfaces, Not Centres",
+    "type": "section"
   },
   "rq-ad6d4b29": {
     "decl": "Scenario: Exact-count mode does not spill",
@@ -1419,6 +1588,18 @@
     "title": "Every Assignable Type Must Be Mapped",
     "type": "section"
   },
+  "rq-bfb7e848": {
+    "decl": "Scenario: The fallback behaviour is reachable without building a config",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The fallback behaviour is reachable without building a config",
+    "type": "scenario"
+  },
   "rq-c039505d": {
     "decl": "## A Run Directory Records What It Was Made From",
     "file": "md-setup",
@@ -1481,6 +1662,14 @@
     "title": "The Support Range Is Per Property",
     "type": "section"
   },
+  "rq-c39502d1": {
+    "decl": "## Feature API",
+    "file": "surface-stacking",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-c4e683c4": {
     "decl": "Scenario: Embedding retries a bounded number of times",
     "file": "geometry-embedding",
@@ -1533,6 +1722,13 @@
     "title": "An amino nitrogen types as aniline N on a large sheet",
     "type": "scenario"
   },
+  "rq-c7ad2878": {
+    "decl": "- `generate_surface(...) -> Tuple[Path, Path, List[Path]]`",
+    "file": "surface-stacking",
+    "refs": [],
+    "title": "generate_surface",
+    "type": "api-item"
+  },
   "rq-c817effd": {
     "decl": "## Atom Names Identify One Atom Each",
     "file": "gromacs-export",
@@ -1540,6 +1736,13 @@
     "refs": [],
     "title": "Atom Names Identify One Atom Each",
     "type": "section"
+  },
+  "rq-d0631f70": {
+    "decl": "- `SurfaceConfig(target_num_carbons: int = ..., num_sheets: int = 2, pore_type: str = \"slit\", pore_diameter: float = 10.0, min_separation: float = 3.0, max_attempts: int = 500, amorphous_fallback: Optional[str] = None, box_padding_xy: float = 1.0, box_padding_z: float = 1.0, sheet_overrides: Optional[List[Dict]] = None, sheet_base_name: str = \"SHT\", seed: Optional[int] = None, ...)`",
+    "file": "surface-stacking",
+    "refs": [],
+    "title": "SurfaceConfig",
+    "type": "api-item"
   },
   "rq-d3ef932d": {
     "decl": "Scenario: A carbonyl request places a phenolic group",
@@ -1579,6 +1782,18 @@
     "refs": [],
     "title": "BiocharGenerator",
     "type": "api-item"
+  },
+  "rq-dbd8829a": {
+    "decl": "Scenario: Adjacent sheets are separated by the pore diameter plus the sheet thickness",
+    "file": "surface-stacking",
+    "refs": [
+      {
+        "file": "tests/test_surface_stacking_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Adjacent sheets are separated by the pore diameter plus the sheet thickness",
+    "type": "scenario"
   },
   "rq-dd80065b": {
     "decl": "Scenario: A stage with no expected warning suppresses nothing",
@@ -1729,6 +1944,14 @@
     "title": "The oxygen count still matches the request",
     "type": "scenario"
   },
+  "rq-fc302462": {
+    "decl": "## The Topology and the Include Files Agree on the Sheet Count",
+    "file": "surface-stacking",
+    "level": 2,
+    "refs": [],
+    "title": "The Topology and the Include Files Agree on the Sheet Count",
+    "type": "section"
+  },
   "rq-fc4fac56": {
     "decl": "## Hydrogen Saturation",
     "file": "heteroatom-assignment",
@@ -1750,6 +1973,14 @@
     "level": 2,
     "refs": [],
     "title": "Bond-Length Validation",
+    "type": "section"
+  },
+  "rq-ff5fd763": {
+    "decl": "## The Convenience Wrapper Reaches the Options That Change the Geometry",
+    "file": "surface-stacking",
+    "level": 2,
+    "refs": [],
+    "title": "The Convenience Wrapper Reaches the Options That Change the Geometry",
     "type": "section"
   },
   "rq-ffb45a6e": {

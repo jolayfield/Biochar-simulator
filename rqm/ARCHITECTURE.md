@@ -144,9 +144,10 @@ These hold across the whole system and are easy to violate locally.
 | `md-setup.md` | Stage ordering, ion placement, warning suppression, annealing schedule, run provenance |
 | `generation-config.md` | Composition resolution, the aromatic floor, refused requests, strictness |
 | `temperature-model.md` | Feedstock curves, per-property support, evidence behind an estimate |
+| `surface-stacking.md` | Sheet separation, geometry labelling, copied-sheet state, topology agreement |
 
-Not yet specified, in rough priority order: surface stacking, carbon skeleton growth, parameter
-sweep, pH protonation, valence validation, condensation annealing, QM and ML charge backends.
+Not yet specified, in rough priority order: carbon skeleton growth, parameter sweep, pH
+protonation, valence validation, condensation annealing, QM and ML charge backends.
 
 An absent document is not an absent requirement — it means the behaviour is currently defended
 by tests that no specification points at. `tools/rqm/rq check` reports the converse: specified
