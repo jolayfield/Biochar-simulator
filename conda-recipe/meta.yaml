@@ -1,4 +1,13 @@
-{% set version = "0.1.4" %}
+# Tracks the newest version published to PyPI, which is not the same thing as
+# the version in pyproject.toml. `version` and `sha256` must move together and
+# only after an upload exists: the hash is of the published sdist, so bumping
+# the version alone produces a recipe that cannot build.
+#
+# To bump after a release:
+#   curl -s https://pypi.org/pypi/biochar/<version>/json \
+#     | python -c "import json,sys; [print(f['digests']['sha256']) \
+#         for f in json.load(sys.stdin)['urls'] if f['packagetype']=='sdist']"
+{% set version = "0.4.0" %}
 
 package:
   name: biochar
@@ -6,7 +15,7 @@ package:
 
 source:
   url: https://pypi.org/packages/source/b/biochar/biochar-{{ version }}.tar.gz
-  sha256: e018be77584762136c7a9e47fc21e7f4458d06e72fec49d547e110698365ec7e
+  sha256: 5b863b4284ce977b3c7557d83b0ae1c174a78d89f46d5cfd5a5a4a59f5d07898
 
 build:
   noarch: python
@@ -31,12 +40,24 @@ requirements:
     #   conda install -c conda-forge mopac
     # If present, it must be a recent OpenMOPAC.
     - mopac >=23
+    # Optional ML charge refinement (charge_method="ml"), the [ml] extra in
+    # pyproject.toml. Same arrangement: not required, but constrained if present.
+    - scikit-learn >=1.3
 
 test:
   imports:
     - biochar
   commands:
     - pip check
+    # A console script that does not resolve is a packaging failure the import
+    # test cannot see, so each one is exercised here as CI does.
+    #
+    # This list must match the scripts declared by the version above, NOT by the
+    # working tree: 0.4.0 ships three, and biochar-condense was added later.
+    # Testing a script the packaged version does not declare fails the build.
+    - biochar-gen --help
+    - biochar-sweep --help
+    - biochar-md-setup --help
   requires:
     - pip
 
