@@ -10,6 +10,8 @@ from typing import List, Tuple, Set, Optional, Dict
 from dataclasses import dataclass
 
 import networkx as nx
+import logging
+
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem, RWMol
@@ -28,6 +30,18 @@ _AROMATIC_CC_BOND = 1.42
 # both growth fronts independently predict the same Cartesian coordinate for
 # what is physically one carbon atom.
 _POSITION_MERGE_TOLERANCE = 0.05  # Å
+
+logger = logging.getLogger(__name__)
+
+
+class SkeletonError(RuntimeError):
+    """Raised when a carbon skeleton cannot be built for the request.
+
+    Subclasses RuntimeError so callers already catching that keep working. The
+    failure is deterministic -- the compact hex build does not use the RNG -- so
+    a seed retry cannot help, and `workflows.sweep` is right to record the point
+    as failed rather than retrying it.
+    """
 
 
 @dataclass
@@ -738,8 +752,13 @@ class PAHAssembler:
     Build aromatic carbon skeletons from validated PAH building blocks.
 
     Strategy:
-      <= 24C  : use a pre-validated PAH from the library (exact or nearest).
-      > 24C   : build a hex-lattice seed, then grow via ring fusion.
+      within PAH_LIBRARY's range (6-40C): use a pre-validated PAH, exactly when
+        the target matches a library size and the nearest otherwise.
+      beyond it: take the closest library structure as a seed, then grow by ring
+        fusion until the count is reached or passed.
+
+    Growth proceeds in whole rings, so only certain carbon counts are reachable
+    and the realised count is >= the request, never below (rqm/carbon-skeleton.md).
     """
 
     # Sorted list of (num_carbons, pah_name) for quick lookup
@@ -754,15 +773,33 @@ class PAHAssembler:
 
         # Preload PAH library
         self.pahs = {}
+        # A dropped entry shrinks the working library without changing anything a
+        # caller can see: a target that was met exactly from a pre-validated
+        # structure starts being grown instead. PAH_LIBRARY states that every
+        # entry is validated, so a drop means that claim is no longer true and is
+        # worth saying out loud rather than absorbing.
         for name, data in PAH_LIBRARY.items():
             mol = Chem.MolFromSmiles(data["smiles"])
-            if mol is not None:
-                try:
-                    Chem.SanitizeMol(mol)
-                    nC = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 6)
-                    self.pahs[name] = {"mol": mol, "num_carbons": nC, "data": data}
-                except Exception:
-                    pass
+            if mol is None:
+                logger.warning(
+                    "PAH_LIBRARY entry %r has a SMILES RDKit cannot parse; it is "
+                    "unavailable, so targets near %s carbons will be grown rather "
+                    "than taken from the library.",
+                    name, data.get("num_atoms", "?"),
+                )
+                continue
+            try:
+                Chem.SanitizeMol(mol)
+            except Exception as exc:
+                logger.warning(
+                    "PAH_LIBRARY entry %r failed sanitisation (%s: %s); it is "
+                    "unavailable, so targets near %s carbons will be grown rather "
+                    "than taken from the library.",
+                    name, type(exc).__name__, exc, data.get("num_atoms", "?"),
+                )
+                continue
+            nC = sum(1 for a in mol.GetAtoms() if a.GetAtomicNum() == 6)
+            self.pahs[name] = {"mol": mol, "num_carbons": nC, "data": data}
 
         # Build size index (sorted ascending by carbon count)
         if PAHAssembler._SIZE_INDEX is None:
@@ -819,7 +856,6 @@ class PAHAssembler:
     def generate(
         self,
         target_num_carbons: int,
-        target_aromaticity: float = 100.0,
         prefer_larger_pahs: bool = True,
         defect_fraction: float = 0.0,
         target_h_c: Optional[float] = None,
@@ -829,9 +865,16 @@ class PAHAssembler:
         Generate a carbon skeleton of approximately *target_num_carbons*.
 
         Args:
-            target_num_carbons: Desired carbon count.
-            target_aromaticity: Unused (kept for backward compatibility).
-                Aromaticity is an output determined by the ring topology.
+            target_num_carbons: Desired carbon count. Reachable only in the
+                increments ring fusion allows, so the realised count is >= this
+                and never below it. Measure the returned molecule for the exact
+                figure.
+
+            There is deliberately no aromaticity argument. Aromaticity is decided
+            by the ring topology this builds, and a parameter that cannot be
+            honoured reads at the call site as a request being made. The
+            composition-level target lives on GeneratorConfig, which clamps it to
+            what this builder can realise (rqm/generation-config.md).
             defect_fraction: Probability [0, 1) that any ring addition
                 during graph growth is a 5-membered (pentagon) ring.
                 0.0 = pure hexagonal PAH (default).
@@ -870,17 +913,22 @@ class PAHAssembler:
                 target_num_carbons, defect_fraction, target_h_c, heptagon_fraction
             )
 
-        # --- Fallback: pyrene (no pentagons) ---
+        # No fallback structure. Growth failing is a failure of the request, and
+        # answering a 200-carbon request with the library's 16-carbon pyrene
+        # produces a molecule every later stage decorates, embeds, types and
+        # exports as though it were what was asked for -- nothing downstream
+        # re-checks the count. A caller can recover from an exception; it cannot
+        # recover from a plausible molecule of the wrong size.
         if mol is None:
-            mol = Chem.Mol(self.pahs["pyrene"]["mol"])
-            seed_positions = self._compute_seed_positions(mol)
-            if seed_positions:
-                for atom in mol.GetAtoms():
-                    idx = atom.GetIdx()
-                    if idx in seed_positions:
-                        x, y = seed_positions[idx]
-                        atom.SetDoubleProp("init_x", x)
-                        atom.SetDoubleProp("init_y", y)
+            raise SkeletonError(
+                f"could not build a carbon skeleton for "
+                f"target_num_carbons={target_num_carbons} "
+                f"(defect_fraction={defect_fraction}, "
+                f"heptagon_fraction={heptagon_fraction}). The compact hex build "
+                f"returned nothing, which does not depend on the seed, so "
+                f"retrying will not help; reduce the target or relax the ring "
+                f"fractions."
+            )
 
         Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
         return self._make_skeleton(mol)

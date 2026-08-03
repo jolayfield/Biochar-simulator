@@ -24,6 +24,13 @@ Unreleased
 - **A surface that fell back from amorphous to slit geometry** is no longer
   written with an ``Amorphous surface`` title. ``SurfaceBuilder`` reports the
   realised geometry via ``realised_pore_type`` and ``packing_fell_back``.
+- **A carbon skeleton that cannot be built raises** ``SkeletonError`` instead of
+  substituting the library's 16-carbon pyrene regardless of the request.
+- **Breaking for direct assembler callers:** ``PAHAssembler.generate`` no longer
+  accepts ``target_aromaticity``, which was inert. Aromaticity is decided by
+  ring topology.
+- A ``PAH_LIBRARY`` entry that cannot be parsed or sanitised is reported rather
+  than silently dropped.
 - Sheets copied by the identical-sheet optimisation no longer share a
   ``composition`` record.
 - ``generate_surface`` exposes ``amorphous_fallback``, ``aromaticity_percent``

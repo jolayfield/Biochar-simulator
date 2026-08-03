@@ -1,7 +1,7 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phases 0-4 complete plus the temperature model and surface stacking, and every
-specified defect fixed. No open xfails. D1 and D3 resolved.
+**Status:** Phases 0-4 complete plus the temperature model, surface stacking and carbon
+skeleton, and every specified defect fixed. No open xfails. D1 and D3 resolved.
 **Type:** docs / traceability
 **Date:** 2026-07-30
 **Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
@@ -183,6 +183,27 @@ specified defect fixed. No open xfails. D1 and D3 resolved.
 > sheets are z-offset by stack position after generation. The real signal is positional and exact:
 > sheet i+1 of the surface seeded S is sheet i of the surface seeded S+1, both being the sheet
 > seeded S+1.
+>
+> > **`rqm/carbon-skeleton.md` landed** — eight scenarios, three `api-item` entries. Five pass,
+> three carry `xfail(strict=True)`.
+>
+> The organising fact is that a skeleton is assembled from **whole rings**, so most of what a
+> caller passes can only be approximated. Measured rather than assumed: every one of the twelve
+> library sizes is met exactly; above the library the realised count is always ≥ the request, never
+> below, overshooting by up to 5 carbons at awkward targets; and `defect_fraction` is a per-ring
+> probability whose realised share sits below it (0.3 requested → 0.22 realised), because the seed
+> is all hexagons and only added rings are subject to the draw.
+>
+> Three gaps, all forms of a request quietly not honoured. `generate()` still accepts
+> `target_aromaticity`, documented in its own docstring as "Unused (kept for backward
+> compatibility)" — verified inert: 100 and 50 produce the identical molecule. When growth returns
+> nothing the assembler substitutes **pyrene, 16 carbons**, regardless of the request. And a
+> library entry whose SMILES will not parse is dropped into a bare `except Exception: pass`, so
+> the working library shrinks while `PAH_LIBRARY`'s own header still claims every entry is
+> validated.
+>
+> Also corrected a stale class docstring claiming the library covers ≤24 C. It covers 6–40 C
+> across 18 entries, and has since well before this plan.
 >
 > > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that
