@@ -1538,6 +1538,14 @@
     "title": "The Wet Stage Holds the Sheet and Relaxes the Solvent",
     "type": "section"
   },
+  "rq-6ae779c4": {
+    "decl": "## Typing Answers for Any Molecule the Pipeline Produces",
+    "file": "opls-typing",
+    "level": 2,
+    "refs": [],
+    "title": "Typing Answers for Any Molecule the Pipeline Produces",
+    "type": "section"
+  },
   "rq-6b61adce": {
     "decl": "Scenario: A missing MOPAC binary is reported",
     "file": "charge-backends",
@@ -3021,6 +3029,18 @@
     "refs": [],
     "title": "A Prediction Says Which Curve Answered It",
     "type": "section"
+  },
+  "rq-c6ab7cbe": {
+    "decl": "Scenario: A molecule with no ring information is typed rather than refused",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule with no ring information is typed rather than refused",
+    "type": "scenario"
   },
   "rq-c6b675bb": {
     "decl": "Scenario: A zero defect fraction produces a pure hexagonal skeleton",

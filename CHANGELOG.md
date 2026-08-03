@@ -60,6 +60,11 @@ writing them found fifteen defects, listed below by what they affect.
   carbon, including one already carrying a functional-group oxygen, and added
   the N–H on top. Partly fixed: a pentagon that loses aromaticity downstream can
   still leave a four-bonded nitrogen, tracked by `rq-ee235774`.
+- **Typing a molecule whose rings have not been perceived no longer aborts the
+  generation.** RDKit raises rather than answering "is this atom in a ring?"
+  when nothing has run ring perception, and some nitrogen-doping paths hand the
+  typer a molecule straight out of an `RWMol` edit. Structure generation crashed
+  outright on those seeds.
 
 ### Fixed — condensation setup
 

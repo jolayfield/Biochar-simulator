@@ -122,7 +122,9 @@ class TestPyrrolicDopingPicksASiteItCanUse:
         strict=True,
         reason="two of the three causes are fixed -- the site is no longer a "
                "decorated carbon, and no longer a second nitrogen in the same "
-               "ring. The third remains: on some skeletons the pentagon loses "
+               "ring, and the RingInfo crash that used to abort some seeds "
+               "outright is fixed. The last cause remains: on some skeletons "
+               "the pentagon loses "
                "aromaticity downstream and kekulises, leaving the N-H on a C=N "
                "and the nitrogen at four bonds. Chasing that means working "
                "through the H/C-shaping and sanitisation interaction",
@@ -258,3 +260,28 @@ class TestEveryViolationIsNamed:
         is_valid, errors = ValenceValidator.validate_molecule(mol)
         assert not is_valid
         assert "Atom 0" in errors[0] and "below minimum 4" in errors[0], errors
+
+
+# --------------------------------------------------------------------------- #
+# Typing a molecule that has not been sanitised
+# --------------------------------------------------------------------------- #
+class TestTypingAnUnperceivedMolecule:
+    # rq-c6ab7cbe
+    def test_a_molecule_with_no_ring_information_is_typed(self):
+        """RDKit raises rather than answering "is this in a ring?" when nothing
+        has perceived the rings. Molecules arrive here that way from the
+        nitrogen-doping paths, and the whole generation used to abort on it.
+        """
+        from biochar.pipeline.opls_typing import AtomTyper
+
+        rw = Chem.RWMol()
+        idx = [rw.AddAtom(Chem.Atom(6)) for _ in range(6)]
+        for a, b in zip(idx, idx[1:] + idx[:1]):
+            rw.AddBond(a, b, Chem.BondType.SINGLE)
+        mol = rw.GetMol()
+        mol.UpdatePropertyCache(strict=False)
+        with pytest.raises(RuntimeError):
+            mol.GetRingInfo().NumRings()
+
+        types = AtomTyper().assign_atom_types(mol)
+        assert set(types) == set(idx)
