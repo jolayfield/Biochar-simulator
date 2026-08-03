@@ -2,10 +2,18 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
-## [Unreleased]
+## [0.5.0] — August 3, 2026
 
-### Changed
+> **Exported topologies changed. Re-run anything whose results matter.**
+> Structures exported before this release were missing every 1–4 non-bonded
+> interaction and had no term holding aromatic rings planar. Trajectories from
+> those topologies are not comparable with trajectories from new ones. The
+> structures themselves are unaffected — only the force field applied to them.
+>
+> **Three changes break existing code or existing outcomes.** They are listed
+> first below; the rest of the release is additive or corrective.
 
+### Breaking changes
 
 - **`TemperatureModel.get_valid_range` now takes the property it is being asked
   about.** *Breaking, for direct callers of the model.* The signature is
@@ -18,20 +26,14 @@ All significant changes to the Biochar Simulator project are documented here.
   unknown property rather than silently returning the wrong range. It is not
   part of the public API declared in `biochar.__all__`.
 
-- **A prediction that falls back from a feedstock curve to the pooled curve says
-  so.** A feedstock's own curve covers only the temperature range its data
-  spans; outside that the pooled curve answers, which was previously
-  indistinguishable from a feedstock-backed answer. Reported at `INFO`, so a
-  feedstock sweep can tell the two apart.
-
-- **An aromaticity derived from an H/C outside the fitted range warns.**
-  `aromaticity_from_hc` clamps into 0–100%, which kept the output physical and
-  hid how far outside the fit the input was — an H/C of 5.0 against a relation
-  fitted over 0.03–1.64 returned exactly 0.0%, reading as a confident prediction
-  rather than a refusal. The clamp is unchanged; it is now accompanied by a
-  `UserWarning`. Reachable through ordinary configuration, since H/C up to 2.0
-  is allowed.
-
+- **`PAHAssembler.generate` no longer accepts `target_aromaticity`.**
+  *Breaking for direct callers of the assembler.* The parameter was documented
+  in its own docstring as "Unused (kept for backward compatibility)" and was
+  genuinely inert — 100 and 50 produced the identical molecule. It sat second
+  positionally, and `BiocharGenerator` was passing `config.aromaticity_percent`
+  into it, so the caller's aromaticity target was threaded down and discarded.
+  Aromaticity is decided by ring topology; the composition-level target on
+  `GeneratorConfig` is unchanged and still honoured.
 
 - **Strict mode now fails on a shortfall, not only on total failure.** A request
   for explicit `functional_groups` that the skeleton cannot host was previously
@@ -48,69 +50,6 @@ All significant changes to the Biochar Simulator project are documented here.
   falls back, which is what those statuses were always meant to mean. Nothing
   crashes and no structure is lost — only the label changes, and it changes to
   the honest one. Manifest counts are not comparable with earlier runs.
-
-- **`PAHAssembler.generate` no longer accepts `target_aromaticity`.**
-  *Breaking for direct callers of the assembler.* The parameter was documented
-  in its own docstring as "Unused (kept for backward compatibility)" and was
-  genuinely inert — 100 and 50 produced the identical molecule. It sat second
-  positionally, and `BiocharGenerator` was passing `config.aromaticity_percent`
-  into it, so the caller's aromaticity target was threaded down and discarded.
-  Aromaticity is decided by ring topology; the composition-level target on
-  `GeneratorConfig` is unchanged and still honoured.
-
-- **A `PAH_LIBRARY` entry that cannot be parsed or sanitised is now reported.**
-  It was dropped into a bare `except Exception: pass`, so the working library
-  shrank silently and targets that had been met exactly from a pre-validated
-  structure began to be grown instead. All 18 entries load today.
-
-- **A carbon skeleton that cannot be built now raises instead of substituting
-  pyrene.** When graph growth returned nothing, the assembler answered with the
-  library's 16-carbon pyrene regardless of the request — so a 200-carbon request
-  could be decorated, embedded, typed and exported at an eighth of the size,
-  because nothing downstream re-checks the count. It now raises `SkeletonError`,
-  which subclasses `RuntimeError` so existing handlers keep working. The failure
-  is deterministic, so a sweep records the point as failed rather than retrying
-  seeds against it.
-
-- **Sheets copied by the identical-sheet optimisation no longer share a
-  composition record.** The copy duplicated the molecule, coordinates, atom
-  types and charges but passed `composition` through by reference, so annotating
-  one sheet's composition changed every other sheet on the surface. Latent
-  rather than observed — nothing in the package mutated it — but it made the
-  copies not copies.
-
-- **A surface that fell back from amorphous to slit geometry is no longer
-  labelled amorphous.** `amorphous_fallback="slit"` degrades gracefully when
-  packing cannot converge, but `pore_type` was never updated and the `.gro`
-  title was chosen from it — so a slit stack was written to disk titled
-  `"Amorphous surface"`. The title now states the geometry actually built and
-  notes the substitution.
-
-- **`generate_surface` exposes the options that decide the geometry it returns**
-  — `amorphous_fallback`, `aromaticity_percent`, `box_padding_xy` and
-  `box_padding_z`. `amorphous_fallback` matters most: without it, an amorphous
-  request that cannot be packed raised instead of degrading, and the graceful
-  path was unreachable from the entry point the documentation points at.
-  Defaults preserve the previous behaviour.
-
-### Added
-
-
-- **`TemperatureModel.predict_with_evidence(temperature, prop, feedstock=None)`**
-  returns a prediction together with what it rests on: the observation count and
-  spread at the nearest grid point, whether that point had no observations and
-  the value was carried in from a neighbour, whether the temperature is outside
-  the curve's support, and which curve answered. The model already recorded all
-  of it; nothing surfaced it. Electrical conductivity, for instance, has zero
-  observations at 100 °C and predicts 1.0 there.
-
-## [0.5.0] — July 31, 2026
-
-> **Exported topologies changed. Re-run anything whose results matter.**
-> Structures exported before this release were missing every 1–4 non-bonded
-> interaction and had no term holding aromatic rings planar. Trajectories from
-> those topologies are not comparable with trajectories from new ones. The
-> structures themselves are unaffected — only the force field applied to them.
 
 ### Fixed — force field
 
@@ -161,6 +100,36 @@ All significant changes to the Biochar Simulator project are documented here.
   non-zero charge and only before `genion -neutral`; a neutral structure
   suppresses nothing.
 
+### Fixed — structure generation
+
+- **A carbon skeleton that cannot be built now raises instead of substituting
+  pyrene.** When graph growth returned nothing, the assembler answered with the
+  library's 16-carbon pyrene regardless of the request — so a 200-carbon request
+  could be decorated, embedded, typed and exported at an eighth of the size,
+  because nothing downstream re-checks the count. It now raises `SkeletonError`,
+  which subclasses `RuntimeError` so existing handlers keep working. The failure
+  is deterministic, so a sweep records the point as failed rather than retrying
+  seeds against it.
+
+- **A `PAH_LIBRARY` entry that cannot be parsed or sanitised is now reported.**
+  It was dropped into a bare `except Exception: pass`, so the working library
+  shrank silently and targets that had been met exactly from a pre-validated
+  structure began to be grown instead. All 18 entries load today.
+
+- **A surface that fell back from amorphous to slit geometry is no longer
+  labelled amorphous.** `amorphous_fallback="slit"` degrades gracefully when
+  packing cannot converge, but `pore_type` was never updated and the `.gro`
+  title was chosen from it — so a slit stack was written to disk titled
+  `"Amorphous surface"`. The title now states the geometry actually built and
+  notes the substitution.
+
+- **Sheets copied by the identical-sheet optimisation no longer share a
+  composition record.** The copy duplicated the molecule, coordinates, atom
+  types and charges but passed `composition` through by reference, so annotating
+  one sheet's composition changed every other sheet on the surface. Latent
+  rather than observed — nothing in the package mutated it — but it made the
+  copies not copies.
+
 ### Changed
 
 - **Validation reports every geometry error, not the first three.** This does
@@ -169,10 +138,42 @@ All significant changes to the Biochar Simulator project are documented here.
   than one capped at 3, so numbers will not match manifests generated earlier.
   Console output is unchanged: `print_summary` still shows three and states the
   total.
+
 - **Run directories carry `run_provenance.json`** recording label, status,
   source files, net charge, and the annealing schedule used. A `fallback`
   structure is no longer indistinguishable from a `strict_pass` one at the point
   results are collected.
+
+- **A prediction that falls back from a feedstock curve to the pooled curve says
+  so.** A feedstock's own curve covers only the temperature range its data
+  spans; outside that the pooled curve answers, which was previously
+  indistinguishable from a feedstock-backed answer. Reported at `INFO`, so a
+  feedstock sweep can tell the two apart.
+
+- **An aromaticity derived from an H/C outside the fitted range warns.**
+  `aromaticity_from_hc` clamps into 0–100%, which kept the output physical and
+  hid how far outside the fit the input was — an H/C of 5.0 against a relation
+  fitted over 0.03–1.64 returned exactly 0.0%, reading as a confident prediction
+  rather than a refusal. The clamp is unchanged; it is now accompanied by a
+  `UserWarning`. Reachable through ordinary configuration, since H/C up to 2.0
+  is allowed.
+
+### Added
+
+- **`TemperatureModel.predict_with_evidence(temperature, prop, feedstock=None)`**
+  returns a prediction together with what it rests on: the observation count and
+  spread at the nearest grid point, whether that point had no observations and
+  the value was carried in from a neighbour, whether the temperature is outside
+  the curve's support, and which curve answered. The model already recorded all
+  of it; nothing surfaced it. Electrical conductivity, for instance, has zero
+  observations at 100 °C and predicts 1.0 there.
+
+- **`generate_surface` exposes the options that decide the geometry it returns**
+  — `amorphous_fallback`, `aromaticity_percent`, `box_padding_xy` and
+  `box_padding_z`. `amorphous_fallback` matters most: without it, an amorphous
+  request that cannot be packed raised instead of degrading, and the graceful
+  path was unreachable from the entry point the documentation points at.
+  Defaults preserve the previous behaviour.
 
 ### Added — project
 
