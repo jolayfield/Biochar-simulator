@@ -6,15 +6,16 @@ calculation through an external MOPAC binary and maps it to LigParGen's 1.14×CM
 table in `pipeline/opls_typing.py` is what happens when neither is asked for.
 
 They are not interchangeable, and the differences are the point. One needs a compiled Fortran
-program that is not pip-installable. One needs a pickle trained by a particular scikit-learn on
-particular reference data. One is a lookup table. A caller picking between them is picking a
-provenance, and the failure mode throughout is a structure whose charges came from somewhere other
-than where the caller believes.
+program that is not pip-installable. One is a model fitted to particular reference data, shipped as
+a pinned artifact. One is a lookup table. A caller picking between them is picking a provenance,
+and the failure mode throughout is a structure whose charges came from somewhere other than where
+the caller believes.
 
 So the requirements here are about **saying which backend answered, and under what conditions**:
 that an absent binary is a refusal rather than a fallback, that a substituted model announces
-itself, that a model trained under a different library says so, and that an empirical factor
-derived for neutral molecules says so when it is applied to an ion.
+itself, that a model the running library does not reproduce says so, that the artifact is checked
+against the reference data it claims to be fitted to, and that an empirical factor derived for
+neutral molecules says so when it is applied to an ion.
 
 ## Feature API <!-- rq-f03c2518 -->
 
@@ -35,7 +36,7 @@ derived for neutral molecules says so when it is applied to an ion.
 
 - `MLChargeRefinement(model_path=None)` <!-- rq-1594d21a -->
   - `refine(mol, atom_types) -> Dict[int, float]` predicts a charge per atom.
-  - Reports which model answered, and whether the library loading it is the one that wrote it.
+  - Reports which model answered, and whether the library rebuilding it reproduces its charges.
 
 - `MLChargeRefinement.train_and_save(...)`, `build_and_save_bundled_model(...)` <!-- rq-0c2933ce -->
   - Retraining on DFT-derived references, and rebuilding the bundled artifact.
@@ -124,9 +125,12 @@ Feature: Say when the factor is being extrapolated
 
 ## The Refiner Says Which Model Answered <!-- rq-b1e463e8 -->
 
-The ML backend has two models: the bundled artifact trained on OPLS reference charges, and a
-fallback built at run time when that artifact cannot be found. They are not the same model and do
-not give the same charges.
+The ML backend has two models: the bundled artifact fitted to OPLS reference charges, and a
+fallback fitted at run time when that artifact cannot be found. They are the same recipe but not
+the same model. The bundled one is pinned data — the reference charges as they stood when it was
+built. The fallback is whatever the current typer and charge table say today. They agree on the day
+the artifact is built and drift apart afterwards, silently, because nothing about a predicted charge
+shows which of the two produced it.
 
 The substitution is currently a log line, which is to say invisible: a caller who asked for the
 bundled model and got the fallback has nothing in their hands that differs. The refiner reports
@@ -148,35 +152,81 @@ Feature: Name the model behind the charges
     Then it reports the fallback and warns that the charges are not the bundled model's
 ```
 
-## A Model Written by a Different Library Says So <!-- rq-39798517 -->
+## A Model the Running Library Does Not Reproduce Says So <!-- rq-39798517 -->
 
-The bundled model is a pickled scikit-learn pipeline, and a pickle is only as portable as the
-library that wrote it. Loading one under a different scikit-learn produces that library's own
-`InconsistentVersionWarning` — which says, correctly, that it "might lead to breaking code or
-invalid results" — and then the charges are used anyway.
+The bundled model used to be a pickled scikit-learn pipeline, and a pickle is only as portable as
+the library that wrote it. Loading one under a different scikit-learn produced that library's own
+`InconsistentVersionWarning` — which said, correctly, that it "might lead to breaking code or
+invalid results" — and then the charges were used anyway.
 
-That warning is the wrong shape for this. It names two version strings and a class, not the model
-file, not what the model is for, and not what a reader should do about it; and it arrives from a
-dependency, so it reads as library noise rather than as a statement about these charges. The
-package constraint is a floor with no ceiling, so the mismatch is expected rather than exceptional.
+That warning was the wrong shape for this, and re-stating it was only half a fix. It named two
+version strings and a class, not the model file, not what the model is for, and not what a reader
+should do about it; and the package constraint on scikit-learn is a floor with no ceiling, so the
+mismatch was the expected case rather than the exceptional one. A warning that fires for most of
+the user base, on every install, is not a check — it is a permanent disclaimer, and the honest
+reading of one is that nobody knows whether the charges are right.
 
-The version that wrote the artifact is recorded beside it and checked on load, and a mismatch is
-reported in terms of the charges it affects.
+So the artifact stopped being a pickle. It records the fitted kernel hyperparameters, the training
+set, and the charges the fitting library predicted from them; the pipeline is rebuilt from those on
+load with the hyperparameters held fixed, which is one deterministic solve rather than a
+deserialisation. That makes the question answerable instead of guessable: the rebuilt model predicts
+the recorded reference charges, and either it reproduces them or it does not. Silence is earned
+rather than assumed, and a report is evidence rather than a version string.
+
+The library that fitted the hyperparameters is still recorded and still reported when it differs,
+because a reader comparing two runs needs to know — but it is reported as provenance, alongside what
+the reproduction check found, not as a claim the charges are suspect. A pickle still loads, and for
+one the strong warning remains correct: there is nothing recorded to check it against.
 
 ```gherkin
 Feature: Check the library against the artifact
 
   @rq-1e274fe6
-  Scenario: A model written by a different scikit-learn is reported
-    Given a bundled model recorded as written by a different scikit-learn version
+  Scenario: A model fitted by a different scikit-learn is reported
+    Given a bundled model recorded as fitted by a different scikit-learn version
     When a refiner is constructed
-    Then a warning names the model, both versions, and that the charges may be invalid
+    Then a warning names the model, both versions, and what the check found about the charges
 
   @rq-75d3624b
   Scenario: A matching version is not reported
-    Given a bundled model recorded as written by the running scikit-learn version
+    Given a bundled model recorded as fitted by the running scikit-learn version
     When a refiner is constructed
     Then no version warning is issued
+
+  @rq-712dd0d8
+  Scenario: A model that does not rebuild to its recorded charges is reported
+    Given a bundled model whose recorded reference charges the rebuild does not reproduce
+    When a refiner is constructed
+    Then a warning names the deviation, the tolerance, and that the charges may be invalid
+
+  @rq-fa93a423
+  Scenario: A model that rebuilds exactly is not reported
+    Given a bundled model whose recorded reference charges the rebuild reproduces
+    When a refiner is constructed
+    Then no reproduction warning is issued
+```
+
+## The Artifact Is Checked Against the Data It Claims <!-- rq-1912d725 -->
+
+The bundled artifact is pinned data, and the reference charges it was fitted to are generated by
+this package's own typer and charge table. Those move. When they moved before, the artifact did not:
+it went on predicting from a benzoic acid whose carboxyl had been typed as a ketone and a phenol,
+for every release after the typing was corrected, and nothing said so. A prediction carries no
+provenance, so the drift was invisible from the outside and invisible from the inside.
+
+The reference data recorded in the artifact is therefore checked against what the package generates
+now. This is not a claim that the artifact must be rebuilt on every change — it is a claim that
+letting it fall behind has to be a decision somebody makes, in a commit, rather than something that
+happens to a release.
+
+```gherkin
+Feature: Notice when the artifact falls behind its reference data
+
+  @rq-da875aee
+  Scenario: The bundled artifact's training data is the current reference data
+    Given the bundled model artifact
+    When its recorded training features and target charges are compared with the ones generated now
+    Then they are the same
 ```
 
 ## Every Atom Gets a Charge <!-- rq-b7d22b5f -->

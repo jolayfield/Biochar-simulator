@@ -2,6 +2,9 @@
 Tests for ML-based partial charge refinement (issue #4).
 """
 
+import pickle
+import warnings
+
 import pytest
 
 # The ML charge backend is an optional extra (``biochar[ml]``). When
@@ -200,6 +203,86 @@ class TestTrainAndSave:
         refiner = MLChargeRefinement(model_path=out)
         charges = refiner.refine(mol, types)
         assert abs(sum(charges.values())) < 1e-6
+
+    def test_a_saved_model_round_trips_its_predictions(self, tmp_path):
+        """Saving is lossless: the reloaded model is the one that was fitted.
+
+        The artifact stores hyperparameters and training data rather than the
+        fitted object, so this is the property that makes that substitution
+        legitimate rather than an approximation.
+        """
+        X, y = _generate_training_data()
+        out = tmp_path / "roundtrip.json"
+        fitted = MLChargeRefinement.train_and_save(X, y, output_path=out)
+        reloaded = MLChargeRefinement(model_path=out)
+        assert np.allclose(
+            fitted._model.predict(X), reloaded._model.predict(X), atol=1e-9
+        )
+
+
+class TestLegacyPickleModels:
+    """Pickles written by earlier versions of ``train_and_save`` still load.
+
+    The format is decided by content, not by suffix, because ``train_and_save``
+    has always written wherever the caller pointed it -- and callers point it at
+    ``.pkl``.
+    """
+
+    @staticmethod
+    def _write_pickle(path):
+        from sklearn.gaussian_process import GaussianProcessRegressor
+        from sklearn.gaussian_process.kernels import RBF, WhiteKernel
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        X, y = _generate_training_data()
+        pipe = Pipeline([
+            ("scaler", StandardScaler()),
+            ("gpr", GaussianProcessRegressor(
+                kernel=RBF(length_scale=1.0) + WhiteKernel(noise_level=1e-3),
+                normalize_y=True,
+            )),
+        ]).fit(X, y)
+        path.write_bytes(pickle.dumps(pipe))
+        return pipe, X
+
+    def test_a_pickled_pipeline_still_loads_and_predicts(self, tmp_path):
+        out = tmp_path / "legacy.pkl"
+        pipe, X = self._write_pickle(out)
+        refiner = MLChargeRefinement(model_path=out)
+        assert np.allclose(refiner._model.predict(X), pipe.predict(X), atol=1e-9)
+
+    def test_a_pickle_written_by_this_sklearn_loads_without_warning(self, tmp_path):
+        """No version stamp mismatch, so nothing to say."""
+        out = tmp_path / "legacy.pkl"
+        self._write_pickle(out)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            MLChargeRefinement(model_path=out)
+        assert not [w for w in caught if "scikit-learn" in str(w.message)], [
+            str(w.message) for w in caught
+        ]
+
+    def test_a_pickle_from_another_sklearn_keeps_the_strong_warning(
+        self, tmp_path, monkeypatch
+    ):
+        """A pickle records nothing to check against, so 'may be invalid' stands.
+
+        This is the one case where the version string is all there is: the JSON
+        format is reported against measured reproduction, a pickle cannot be.
+        """
+        out = tmp_path / "legacy.pkl"
+        self._write_pickle(out)
+        monkeypatch.setattr(
+            MLChargeRefinement, "_recorded_sklearn_version",
+            staticmethod(lambda source: "0.0.1-not-a-real-version"),
+        )
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            MLChargeRefinement(model_path=out)
+        messages = [str(w.message) for w in caught]
+        assert any("may be invalid" in m for m in messages), messages
+        assert any("pickle" in m for m in messages), messages
 
 
 # ---------------------------------------------------------------------------

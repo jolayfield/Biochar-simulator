@@ -80,7 +80,7 @@ include = ["biochar*"]
 [tool.setuptools.package-data]
 # py.typed marks the package as carrying inline type information (PEP 561);
 # without it type checkers ignore the annotations entirely for consumers.
-biochar = ["py.typed", "data/*.pkl", "data/*.json", "data/*.csv"]
+biochar = ["py.typed", "data/*.json", "data/*.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
