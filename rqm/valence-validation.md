@@ -132,8 +132,14 @@ Heteroatom placement runs before nitrogen substitution, so decorated carbons are
 substituter is choosing from.
 
 The candidate must therefore be an unsubstituted five-ring carbon, in the same way that a graphitic
-site must be an interior junction with no hydrogen. A request that cannot find enough such carbons
-places fewer and says so, rather than taking a carbon that does not qualify.
+site must be an interior junction with no hydrogen — and only one per ring, since two nitrogens in
+one pentagon is a pyrazole or an imidazole, where only one of them carries the hydrogen. A request
+that cannot find enough qualifying carbons places fewer and says so, rather than taking a carbon
+that does not qualify.
+
+The requirement is about the nitrogen in the finished structure, not only about the site it was
+placed on. A pentagon that loses its aromaticity later kekulises to single and double bonds, and
+the N–H the substitution attached then sits on a nitrogen that already has a double bond.
 
 ```gherkin
 Feature: Dope only carbons that can become the nitrogen requested

@@ -8,7 +8,9 @@ actually builds: a furan-type bridge, a pyrrolic nitrogen, a phenolate. Those
 are where summing aromatic bond orders and where an anion's traded lone pair
 both stop agreeing with the chemistry.
 
-Seven scenarios carry xfail(strict=True); each names the defect it defers.
+Six of the seven scenarios that carried xfail(strict=True) were retired by
+XPASS when their fixes landed. The seventh -- pyrrolic doping -- had three
+causes; two are fixed and the marker stays, naming the one that is not.
 """
 
 import io
@@ -43,32 +45,15 @@ def _violations(mol, symbol=None):
 # --------------------------------------------------------------------------- #
 class TestAnAromaticRingMemberIsCountedByItsBonds:
     # rq-c70dd417
-    @pytest.mark.xfail(
-        strict=True,
-        reason="aromatic bond orders are summed at 1.5 each, so a ring oxygen "
-               "donating its lone pair reports three bonds and is refused for "
-               "exceeding two -- the furan bridge is a core structure here",
-    )
     def test_a_furan_type_ring_oxygen_is_valid(self):
         # Dibenzofuran: the oxygen is an aromatic ring member with two sigma bonds.
         assert not _violations(_mol("c1ccc2c(c1)Oc1ccccc1-2"), "O")
 
     # rq-302b177e
-    @pytest.mark.xfail(
-        strict=True,
-        reason="same cause: a pyrrolic nitrogen holds two aromatic bonds and an "
-               "N-H, which sums to four against a maximum of three",
-    )
     def test_a_pyrrolic_ring_nitrogen_is_valid(self):
         assert not _violations(_mol("c1cc[nH]c1"), "N")
 
     # rq-e9202195
-    @pytest.mark.xfail(
-        strict=True,
-        reason="same cause again: sulfur's extended range is consulted only "
-               "for a positive formal charge, so a neutral aromatic ring "
-               "sulfur is judged against a maximum of two",
-    )
     def test_a_thiophene_ring_sulfur_is_valid(self):
         assert not _violations(_mol("c1ccsc1"), "S")
 
@@ -128,30 +113,49 @@ def _generate(**kw):
 
 
 class TestPyrrolicDopingPicksASiteItCanUse:
+    # Several seeds, because the outcome depends on which carbons the shuffle
+    # offers. A single seed here passes or fails by luck and says nothing.
+    SEEDS = [0, 1, 2, 3, 4, 6, 8]
+
     # rq-ee235774
     @pytest.mark.xfail(
         strict=True,
-        reason="pyrrolic substitution takes any five-ring carbon, including one "
-               "already carrying a functional-group oxygen, and then adds the "
-               "N-H on top -- four bonds on a neutral nitrogen",
+        reason="two of the three causes are fixed -- the site is no longer a "
+               "decorated carbon, and no longer a second nitrogen in the same "
+               "ring. The third remains: on some skeletons the pentagon loses "
+               "aromaticity downstream and kekulises, leaving the N-H on a C=N "
+               "and the nitrogen at four bonds. Chasing that means working "
+               "through the H/C-shaping and sanitisation interaction",
     )
     def test_a_doped_structure_has_no_over_bonded_nitrogen(self):
-        _, mol = _generate(num_pyrrolic=2, O_C_ratio=0.15)
+        offenders = {}
+        for seed in self.SEEDS:
+            _, mol = _generate(seed=seed, num_pyrrolic=2, O_C_ratio=0.15)
+            violations = _violations(mol, "N")
+            if violations:
+                offenders[seed] = violations[0]
 
-        nitrogens = [a for a in mol.GetAtoms() if a.GetSymbol() == "N"]
-        assert nitrogens, "fixture is void: no nitrogen was placed"
-        assert not _violations(mol, "N"), (
-            "a doped nitrogen carries more bonds than nitrogen can: "
-            + "; ".join(_violations(mol, "N"))
+        assert not offenders, (
+            f"{len(offenders)} of {len(self.SEEDS)} seeds produced a nitrogen "
+            f"carrying more bonds than nitrogen can: {offenders}"
         )
 
     # rq-070a2c21
     def test_pyrrolic_nitrogen_is_still_placed(self):
-        """The site check must not answer the above by placing nothing."""
-        gen, mol = _generate(num_pyrrolic=2, O_C_ratio=0.15)
-        assert sum(1 for a in mol.GetAtoms() if a.GetSymbol() == "N") >= 1, (
-            "no nitrogen was placed at all; a stricter site rule that finds no "
-            "site is not a fix"
+        """The site check must not answer the above by placing nothing.
+
+        A stricter rule that finds no qualifying site would make every seed
+        pass the scenario above while making the feature useless, so the
+        placement rate is pinned across the same seeds.
+        """
+        placed = 0
+        for seed in self.SEEDS:
+            _, mol = _generate(seed=seed, num_pyrrolic=2, O_C_ratio=0.15)
+            placed += sum(1 for a in mol.GetAtoms() if a.GetSymbol() == "N")
+
+        assert placed >= len(self.SEEDS), (
+            f"only {placed} nitrogens placed across {len(self.SEEDS)} seeds "
+            f"asking for two each; the site rule has become too strict to use"
         )
 
 
@@ -171,12 +175,6 @@ def _carbon_with_two_free_valences():
 
 class TestABondIsJudgedAgainstTheMoleculeBeingEdited:
     # rq-e0d6b415
-    @pytest.mark.xfail(
-        strict=True,
-        reason="add_bond_safe validates against the snapshot it was handed, so "
-               "an atom appended to the editor does not exist there and the "
-               "lookup raises -- which is the workflow VALENCE_SYSTEM.md shows",
-    )
     def test_a_newly_added_atom_can_be_bonded(self):
         mol = _carbon_with_two_free_valences()
         emol = Chem.EditableMol(mol)
@@ -186,11 +184,6 @@ class TestABondIsJudgedAgainstTheMoleculeBeingEdited:
         assert added, message
 
     # rq-998f84fb
-    @pytest.mark.xfail(
-        strict=True,
-        reason="each addition is weighed against the state before any of them, "
-               "so a carbon with room for two accepts four",
-    )
     def test_a_sequence_of_bonds_is_bounded_by_the_atom_s_valence(self):
         mol = _carbon_with_two_free_valences()
         emol = Chem.EditableMol(mol)
@@ -205,29 +198,40 @@ class TestABondIsJudgedAgainstTheMoleculeBeingEdited:
         assert emol.GetMol().GetAtomWithIdx(0).GetDegree() == 4
 
     # rq-95aaba31
-    @pytest.mark.xfail(
-        strict=True,
-        reason="Chem.BondType.AROMATIC is the enumeration value 12, so an "
-               "aromatic bond asked for by name demands twelve free valences "
-               "and is refused on every atom of every molecule",
-    )
     def test_an_aromatic_bond_is_weighed_as_one_bond(self):
-        # Two biphenyl-like carbons, each with a free valence after removing an H.
-        mol = _mol("c1ccccc1")
-        rw = Chem.RWMol(mol)
-        hydrogens = sorted(
-            (a.GetIdx() for a in rw.GetAtoms() if a.GetAtomicNum() == 1),
-            reverse=True,
-        )[:2]
+        """Two ring carbons stripped to a genuine free valence.
+
+        Removing the hydrogen is not enough on its own -- RDKit puts an
+        implicit one back -- so each is pinned with SetNoImplicit.
+        """
+        rw = Chem.RWMol(_mol("c1ccccc1"))
+        # Two carbons on opposite sides of the ring, so they are not already
+        # bonded -- an existing bond is refused for a different reason.
+        hydrogens = [
+            h.GetIdx()
+            for h in rw.GetAtoms()
+            if h.GetAtomicNum() == 1
+            and h.GetNeighbors()[0].GetIdx() in (0, 3)
+        ]
+        parents = [rw.GetAtomWithIdx(h).GetNeighbors()[0].GetIdx() for h in hydrogens]
+        hydrogens = sorted(hydrogens, reverse=True)
         for h in hydrogens:
             rw.RemoveAtom(h)
+        for c in parents:
+            atom = rw.GetAtomWithIdx(c)
+            atom.SetNoImplicit(True)
+            atom.SetNumExplicitHs(0)
         stripped = rw.GetMol()
+
         free = [
-            a.GetIdx()
-            for a in stripped.GetAtoms()
-            if ValenceValidator.get_valence_info(stripped, a.GetIdx()).available_valence
+            c
+            for c in parents
+            if ValenceValidator.get_valence_info(stripped, c).available_valence >= 1
         ]
-        assert len(free) >= 2, "fixture is void: no carbon has a free valence"
+        assert len(free) == 2, (
+            f"fixture is void: {len(free)} of 2 stripped carbons have a free "
+            f"valence"
+        )
 
         can_add, reason = SafeBondAdder.can_add_bond(
             stripped, free[0], free[1], bond_type=Chem.BondType.AROMATIC

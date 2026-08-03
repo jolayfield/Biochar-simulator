@@ -70,6 +70,58 @@ ANIONIC_VALENCES = {
 }
 
 
+def _bond_count(atom: Chem.Atom) -> int:
+    """How many bonds this atom holds, as chemistry counts them.
+
+    Summing bond orders works everywhere except an aromatic ring, where each
+    bond is 1.5 and the total is only right for a member that *accepts* into
+    the pi system. An aromatic carbon holds two ring bonds and an H: 1.5 + 1.5
+    + 1 = 4, correct. A furan oxygen holds two ring bonds and donates its lone
+    pair: 1.5 + 1.5 = 3, and its valence is 2. A pyrrolic nitrogen with its N-H
+    sums to 4 against a maximum of 3.
+
+    So an aromatic atom is counted as its sigma bonds plus one for the pi
+    system, and only if it is an acceptor:
+
+        carbon    always accepts                          -> +1
+        nitrogen  accepts unless it carries a hydrogen,
+                  which is what makes it pyrrolic         -> +1 or +0
+        oxygen,
+        sulfur    donate the lone pair that aromatises
+                  a five-ring                             -> +0
+
+    Derived from the local graph rather than from RDKit's cached valence.
+    Site selection reads this on molecules mid-edit, where a cached value is
+    whatever the last sanitisation computed -- a carbon whose hydrogen has just
+    been removed still reports the valence it had with it.
+    """
+    if not atom.GetIsAromatic():
+        return int(sum(bond.GetBondTypeAsDouble() for bond in atom.GetBonds()))
+
+    # Bonds only. An implicit hydrogen is deliberately not counted: an aromatic
+    # edge CH is how a substitution site is recognised -- one free valence
+    # standing for the hydrogen a functional group will replace -- and counting
+    # it would leave every edge carbon looking saturated. It still decides
+    # whether a nitrogen is pyrrolic, which is a question about chemistry
+    # rather than about free valence.
+    # GetNumExplicitHs and the neighbour scan both read stored state.
+    # GetTotalNumHs would raise on a molecule whose implicit valence has not
+    # been calculated, which is most of what this is called on.
+    hydrogens = atom.GetNumExplicitHs() + sum(
+        1 for n in atom.GetNeighbors() if n.GetAtomicNum() == 1
+    )
+    sigma = atom.GetDegree()
+
+    atomic_num = atom.GetAtomicNum()
+    if atomic_num == 6:
+        pi = 1
+    elif atomic_num == 7:
+        pi = 0 if hydrogens else 1
+    else:
+        pi = 0
+    return sigma + pi
+
+
 def get_valence_range(atomic_num: int, formal_charge: int = 0) -> Tuple[int, int]:
     """
     Get valence range (min, max) for an atom.
@@ -150,11 +202,7 @@ class ValenceValidator:
         formal_charge = atom.GetFormalCharge()
 
         # Count current bonds
-        current_bonds = sum(
-            bond.GetBondTypeAsDouble()
-            for bond in atom.GetBonds()
-        )
-        current_bonds = int(current_bonds)
+        current_bonds = _bond_count(atom)
 
         # Get valence range
         min_val, max_val = get_valence_range(atomic_num, formal_charge)
@@ -267,6 +315,25 @@ class SafeBondAdder:
     """Safely adds bonds while respecting valence constraints."""
 
     @staticmethod
+    def _bond_order(bond_type) -> int:
+        """The order a bond contributes, from either an int or a BondType.
+
+        ``int(Chem.BondType.AROMATIC)`` is 12 -- the enumeration's position, not
+        a bond order -- so an aromatic bond named by its type would demand
+        twelve free valences and be refused on every atom of every molecule. An
+        aromatic bond contributes one sigma bond, which is what a valence budget
+        is counting.
+        """
+        if isinstance(bond_type, Chem.BondType):
+            return {
+                Chem.BondType.SINGLE: 1,
+                Chem.BondType.DOUBLE: 2,
+                Chem.BondType.TRIPLE: 3,
+                Chem.BondType.AROMATIC: 1,
+            }.get(bond_type, 1)
+        return int(bond_type)
+
+    @staticmethod
     def can_add_bond(
         mol: Chem.Mol,
         atom_idx1: int,
@@ -280,11 +347,13 @@ class SafeBondAdder:
             mol: RDKit molecule
             atom_idx1: First atom index
             atom_idx2: Second atom index
-            bond_type: Bond type (1=single, 2=double, 3=triple)
+            bond_type: Bond order (1=single, 2=double, 3=triple), or a
+                ``Chem.BondType``.
 
         Returns:
             (can_add, reason)
         """
+        bond_type = SafeBondAdder._bond_order(bond_type)
         val1 = ValenceValidator.get_valence_info(mol, atom_idx1)
         val2 = ValenceValidator.get_valence_info(mol, atom_idx2)
 
@@ -325,21 +394,37 @@ class SafeBondAdder:
         """
         Safely add a bond if valence allows.
 
+        The check runs against the molecule *the editor currently holds*, not
+        against ``mol``. Judging against a snapshot taken before the editing
+        began fails in two ways, and the add-an-atom-then-bond-it workflow in
+        ``docs/guides/VALENCE_SYSTEM.md`` hits both: an atom appended to the
+        editor does not exist in the snapshot, so the lookup raises; and a
+        sequence of bonds to one atom is each weighed against the same original
+        free valence, so a carbon with room for two accepts four.
+
+        ``mol`` is kept for callers that pass it, and is used only when the
+        editor cannot produce a molecule to read.
+
         Args:
-            emol: RDKit EditableMol
-            mol: Original RDKit molecule (for validation)
+            emol: RDKit EditableMol or RWMol, edited in place
+            mol: Molecule to fall back on if the editor cannot be read
             atom_idx1: First atom index
             atom_idx2: Second atom index
-            bond_type: Bond type (SINGLE, DOUBLE, TRIPLE)
+            bond_type: Bond type (SINGLE, DOUBLE, TRIPLE, AROMATIC)
             verbose: Print debug info
 
         Returns:
             (success, message)
         """
-        bond_order = int(bond_type)
+        bond_order = SafeBondAdder._bond_order(bond_type)
+
+        try:
+            current = emol.GetMol()
+        except Exception:  # pragma: no cover - editor without a readable state
+            current = mol
 
         can_add, reason = SafeBondAdder.can_add_bond(
-            mol, atom_idx1, atom_idx2, bond_order
+            current, atom_idx1, atom_idx2, bond_order
         )
 
         if not can_add:
