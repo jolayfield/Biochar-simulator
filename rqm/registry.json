@@ -22,6 +22,13 @@
     "title": "The Exported Files Describe the Geometry That Was Built",
     "type": "section"
   },
+  "rq-039cc5bf": {
+    "decl": "- `render_mdp_set(spec) -> Dict[str, str]`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "render_mdp_set",
+    "type": "api-item"
+  },
   "rq-03a40f15": {
     "decl": "Scenario: Every mapped type names the right element",
     "file": "opls-typing",
@@ -40,6 +47,14 @@
     "level": 2,
     "refs": [],
     "title": "Per-Sheet Protonation Consumes a Seed Range",
+    "type": "section"
+  },
+  "rq-05ee02a8": {
+    "decl": "## The Module Writes Files and Nothing Else",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Module Writes Files and Nothing Else",
     "type": "section"
   },
   "rq-070a2c21": {
@@ -120,6 +135,18 @@
       }
     ],
     "title": "A surface that fell back to slit geometry is not labelled amorphous",
+    "type": "scenario"
+  },
+  "rq-0a4c0f30": {
+    "decl": "Scenario: The timestep halves above the lowest anchor",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The timestep halves above the lowest anchor",
     "type": "scenario"
   },
   "rq-0bf15b93": {
@@ -203,6 +230,13 @@
     "refs": [],
     "title": "Cross-references",
     "type": "section"
+  },
+  "rq-142d216f": {
+    "decl": "- `generate_and_condense(output_dir, n_copies, generator_config=None, ...) -> Path`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "generate_and_condense",
+    "type": "api-item"
   },
   "rq-1433518c": {
     "decl": "# Feature: GROMACS Run Directory Setup",
@@ -387,6 +421,14 @@
     ],
     "title": "A contact marginally inside the floor is not a clash",
     "type": "scenario"
+  },
+  "rq-23755c47": {
+    "decl": "## Feature API",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
   },
   "rq-2533ac5e": {
     "decl": "- `IonProfile(name: str, ca_mM: float = 0.0, mg_mM: float = 0.0, na_mM: float = 0.0, k_mM: float = 0.0, counter_ion: str = \"CL\", description: str = \"\")`",
@@ -586,6 +628,18 @@
     "title": "Provenance Is Recorded",
     "type": "section"
   },
+  "rq-30534b7a": {
+    "decl": "Scenario: A stage with no expected warning suppresses nothing",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A stage with no expected warning suppresses nothing",
+    "type": "scenario"
+  },
   "rq-30fef9a1": {
     "decl": "## A Bond Is Judged Against the Molecule Being Edited",
     "file": "valence-validation",
@@ -688,6 +742,18 @@
     "title": "Every ion species is placed against the coordinates the previous species produced",
     "type": "scenario"
   },
+  "rq-3a97bd4a": {
+    "decl": "Scenario: The final equilibration is always two femtoseconds",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The final equilibration is always two femtoseconds",
+    "type": "scenario"
+  },
   "rq-3b2ef55d": {
     "decl": "Scenario: A feedstock without sufficient data has no curve of its own",
     "file": "temperature-model",
@@ -719,6 +785,18 @@
     "refs": [],
     "title": "Every Point in the Grid Is Distinguishable From Every Other",
     "type": "section"
+  },
+  "rq-3d4eeaf7": {
+    "decl": "Scenario: The annealing schedule holds, cools, then holds",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The annealing schedule holds, cools, then holds",
+    "type": "scenario"
   },
   "rq-3e169a31": {
     "decl": "Scenario: The map holds no entries for types that do not exist",
@@ -820,6 +898,13 @@
     "file": "surface-stacking",
     "refs": [],
     "title": "SheetResult",
+    "type": "api-item"
+  },
+  "rq-475641a0": {
+    "decl": "- `estimate_box_nm(gro_text, n_copies, loose_factor=1.6) -> float`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "estimate_box_nm",
     "type": "api-item"
   },
   "rq-479efbdd": {
@@ -945,6 +1030,18 @@
     "title": "A partially placed functional group does not satisfy strict validation",
     "type": "scenario"
   },
+  "rq-5084d61d": {
+    "decl": "Scenario: Each repeat runs the four stages in order",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Each repeat runs the four stages in order",
+    "type": "scenario"
+  },
   "rq-50c742cf": {
     "decl": "## Supported Functional Groups",
     "file": "heteroatom-assignment",
@@ -969,12 +1066,36 @@
     "title": "A compressed bond is still rejected after order scaling",
     "type": "scenario"
   },
+  "rq-50d5f27c": {
+    "decl": "Scenario: A temperature between anchors is interpolated",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A temperature between anchors is interpolated",
+    "type": "scenario"
+  },
   "rq-50e10082": {
     "decl": "- `run_sweep(config, output_directory=None, progress_callback=None, quiet=True) -> Dict`",
     "file": "parameter-sweep",
     "refs": [],
     "title": "run_sweep",
     "type": "api-item"
+  },
+  "rq-516fd1c6": {
+    "decl": "Scenario: Repeats are seeded differently",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Repeats are seeded differently",
+    "type": "scenario"
   },
   "rq-51c8f769": {
     "decl": "Scenario: The wet stage holds the lateral lattice and lets the box relax along z",
@@ -1003,6 +1124,14 @@
     ],
     "title": "A high-oxygen structure validates without falling back",
     "type": "scenario"
+  },
+  "rq-53200bd1": {
+    "decl": "## Every Repeat Runs the Full Chain",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "Every Repeat Runs the Full Chain",
+    "type": "section"
   },
   "rq-5340daab": {
     "decl": "Scenario: A residue name longer than five characters is truncated",
@@ -1041,6 +1170,13 @@
     "file": "parameter-sweep",
     "refs": [],
     "title": "load_sweep_config",
+    "type": "api-item"
+  },
+  "rq-55893f23": {
+    "decl": "- `AnnealSpec`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "AnnealSpec",
     "type": "api-item"
   },
   "rq-5658c4b6": {
@@ -1411,6 +1547,18 @@
     "title": "Titration does not disturb the caller's random stream",
     "type": "scenario"
   },
+  "rq-75419e1a": {
+    "decl": "Scenario: A condensation run directory records its provenance",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A condensation run directory records its provenance",
+    "type": "scenario"
+  },
   "rq-766e9c83": {
     "decl": "## Feature API",
     "file": "temperature-model",
@@ -1473,6 +1621,14 @@
     "title": "TemperatureModel",
     "type": "api-item"
   },
+  "rq-7b79f60e": {
+    "decl": "## The Annealing Schedule Is the Published One",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Annealing Schedule Is the Published One",
+    "type": "section"
+  },
   "rq-7d3e9432": {
     "decl": "Scenario: A quinone request places a phenolic group",
     "file": "heteroatom-assignment",
@@ -1484,6 +1640,14 @@
     ],
     "title": "A quinone request places a phenolic group",
     "type": "scenario"
+  },
+  "rq-7dee31f6": {
+    "decl": "## The Published Anchors Are Reproduced Exactly",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Published Anchors Are Reproduced Exactly",
+    "type": "section"
   },
   "rq-7e4059d9": {
     "decl": "# Feature: Temperature × Feedstock Composition Model",
@@ -1630,6 +1794,18 @@
     "title": "SkeletonValidator",
     "type": "api-item"
   },
+  "rq-8410a38d": {
+    "decl": "Scenario: A suppressed warning is named where it is allowed",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A suppressed warning is named where it is allowed",
+    "type": "scenario"
+  },
   "rq-85bcfa59": {
     "decl": "Scenario: Every emitted term reaches the binary topology",
     "file": "opls-typing",
@@ -1692,6 +1868,13 @@
     ],
     "title": "The reported range is the one belonging to the property",
     "type": "scenario"
+  },
+  "rq-881e08bd": {
+    "decl": "# Feature: Condensation Annealing",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "Feature: Condensation Annealing",
+    "type": "file"
   },
   "rq-884c2220": {
     "decl": "Scenario: Distinct sheets each get their own include file",
@@ -1788,6 +1971,14 @@
     "title": "A Suppressed Warning Is Named",
     "type": "section"
   },
+  "rq-94d2e77f": {
+    "decl": "## Cross-references",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
   "rq-952d1150": {
     "decl": "Scenario: An acidic group ionizes as pH rises",
     "file": "ph-protonation",
@@ -1844,6 +2035,18 @@
     "title": "Only Groups in the Table Are Titrated",
     "type": "section"
   },
+  "rq-9a027a37": {
+    "decl": "Scenario: The script verifies the packed count against the topology",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The script verifies the packed count against the topology",
+    "type": "scenario"
+  },
   "rq-9a108035": {
     "decl": "## Cross-references",
     "file": "generation-config",
@@ -1881,6 +2084,18 @@
       }
     ],
     "title": "An unattainable H/C is refused at construction, not at generation",
+    "type": "scenario"
+  },
+  "rq-9ba33460": {
+    "decl": "Scenario: Each anchored heat-treatment temperature returns its published pair",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Each anchored heat-treatment temperature returns its published pair",
     "type": "scenario"
   },
   "rq-9bace66f": {
@@ -1998,6 +2213,18 @@
       }
     ],
     "title": "The name a point reports is the name its generator is configured with",
+    "type": "scenario"
+  },
+  "rq-a16e0b49": {
+    "decl": "Scenario: Step counts follow from the duration and the timestep",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Step counts follow from the duration and the timestep",
     "type": "scenario"
   },
   "rq-a1da340c": {
@@ -2357,6 +2584,13 @@
     "title": "What this project is",
     "type": "section"
   },
+  "rq-bb992384": {
+    "decl": "- `setup_condensation(output_dir, molecule_gro, molecule_itp, n_copies, ...) -> Path`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "setup_condensation",
+    "type": "api-item"
+  },
   "rq-bba3fc5f": {
     "decl": "## Applying a Decision Leaves the Rest of the Molecule Intact",
     "file": "ph-protonation",
@@ -2383,6 +2617,13 @@
     ],
     "title": "The exported topology is accepted by grompp",
     "type": "scenario"
+  },
+  "rq-be66ed17": {
+    "decl": "- `setup_surface(...)`, `add_surface_and_validation(...)`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "setup_surface",
+    "type": "api-item"
   },
   "rq-be69350a": {
     "decl": "## Two Placement Modes",
@@ -2444,6 +2685,14 @@
     "title": "A prediction reports the observations behind it",
     "type": "scenario"
   },
+  "rq-c0d9fdf2": {
+    "decl": "## A Run Directory Records What Set It Up",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "A Run Directory Records What Set It Up",
+    "type": "section"
+  },
   "rq-c145dabd": {
     "decl": "- `build_model(output_path: Optional[Path] = None) -> Path`",
     "file": "temperature-model",
@@ -2462,6 +2711,14 @@
     ],
     "title": "A genuinely over-bonded atom is still reported",
     "type": "scenario"
+  },
+  "rq-c1dbabdb": {
+    "decl": "## The Timestep Is Chosen by the Anchor, and Says So",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Timestep Is Chosen by the Anchor, and Says So",
+    "type": "section"
   },
   "rq-c2463a78": {
     "decl": "## Clash Detection",
@@ -2612,6 +2869,14 @@
     "title": "SurfaceConfig",
     "type": "api-item"
   },
+  "rq-d32ee60c": {
+    "decl": "## A Suppressed grompp Warning Is Named",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "A Suppressed grompp Warning Is Named",
+    "type": "section"
+  },
   "rq-d3ef932d": {
     "decl": "Scenario: A carbonyl request places a phenolic group",
     "file": "heteroatom-assignment",
@@ -2675,6 +2940,13 @@
     "title": "Adjacent sheets are separated by the pore diameter plus the sheet thickness",
     "type": "scenario"
   },
+  "rq-dd22e354": {
+    "decl": "- `render_condensation_script(gro_name, top_name, spec, n_repeats=3, ...) -> str`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "render_condensation_script",
+    "type": "api-item"
+  },
   "rq-dd80065b": {
     "decl": "Scenario: A stage with no expected warning suppresses nothing",
     "file": "md-setup",
@@ -2693,6 +2965,18 @@
     "refs": [],
     "title": "ValenceInfo",
     "type": "api-item"
+  },
+  "rq-df4cf342": {
+    "decl": "Scenario: A temperature outside the anchors is clamped",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A temperature outside the anchors is clamped",
+    "type": "scenario"
   },
   "rq-dfa9c5ea": {
     "decl": "- `ValenceValidator.validate_molecule(mol) -> Tuple[bool, List[str]]`",
@@ -2747,6 +3031,14 @@
     "level": 2,
     "refs": [],
     "title": "Surface pipeline",
+    "type": "section"
+  },
+  "rq-e151b7e1": {
+    "decl": "## The Packed Box Contains What the Topology Declares",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Packed Box Contains What the Topology Declares",
     "type": "section"
   },
   "rq-e17f705d": {
@@ -2823,6 +3115,18 @@
     "title": "A deprotonated oxygen needs no further bond",
     "type": "scenario"
   },
+  "rq-ec21c31b": {
+    "decl": "Scenario: Setting up a condensation run invokes no external program",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Setting up a condensation run invokes no external program",
+    "type": "scenario"
+  },
   "rq-ee235774": {
     "decl": "Scenario: A doped structure's nitrogen carries no more bonds than nitrogen can",
     "file": "valence-validation",
@@ -2834,6 +3138,13 @@
     ],
     "title": "A doped structure's nitrogen carries no more bonds than nitrogen can",
     "type": "scenario"
+  },
+  "rq-ee864495": {
+    "decl": "- `CondensationError`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "CondensationError",
+    "type": "api-item"
   },
   "rq-ef429ed9": {
     "decl": "## Cross-references",
@@ -2908,6 +3219,13 @@
     "title": "Feature: Carbon Skeleton Growth",
     "type": "file"
   },
+  "rq-f32774a4": {
+    "decl": "- `anneal_spec_for_htt(htt_c: float) -> AnnealSpec`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "anneal_spec_for_htt",
+    "type": "api-item"
+  },
   "rq-f61f4d50": {
     "decl": "## Feature API",
     "file": "carbon-skeleton",
@@ -2942,6 +3260,18 @@
       }
     ],
     "title": "A skeleton that cannot be grown raises",
+    "type": "scenario"
+  },
+  "rq-fa9763e9": {
+    "decl": "Scenario: The recorded rationale is the rule the code follows",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The recorded rationale is the rule the code follows",
     "type": "scenario"
   },
   "rq-faf5d18d": {
