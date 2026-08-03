@@ -146,9 +146,16 @@ These hold across the whole system and are easy to violate locally.
 | `temperature-model.md` | Feedstock curves, per-property support, evidence behind an estimate |
 | `surface-stacking.md` | Sheet separation, geometry labelling, copied-sheet state, topology agreement |
 | `carbon-skeleton.md` | Library targets, growth from above, defect probabilities, honest parameters |
+| `parameter-sweep.md` | Grid expansion, point naming, seed retry, failure modes, the manifest |
+| `ph-protonation.md` | Henderson-Hasselbalch direction, sampling, the census, recorded provenance |
+| `valence-validation.md` | Aromatic ring members, anion ranges, doping sites, safe bond addition |
+| `condensation-annealing.md` | Wood anchors, the schedule, packing verification, run provenance |
+| `charge-backends.md` | Backend refusal, charge conservation, the 1.14 factor, model provenance |
 
-Not yet specified, in rough priority order: parameter sweep, pH protonation, valence validation,
-condensation annealing, QM and ML charge backends.
+Every module the 2026-07-30 review listed is now specified. What remains unspecified is the CLI
+argument parsing, which holds no logic of its own, and `constants.py`, whose tables are checked
+by `tests/test_constants_ff.py` against the forcefield rather than against a promise this
+repository makes.
 
 An absent document is not an absent requirement — it means the behaviour is currently defended
 by tests that no specification points at. `tools/rqm/rq check` reports the converse: specified
