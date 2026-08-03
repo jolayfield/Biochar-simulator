@@ -33,9 +33,75 @@ PY="${BIOCHAR_PYTHON:-/opt/miniconda3/envs/biochar/bin/python}"
 if [ ! -x "$PY" ]; then
   PY="$(command -v python3 || command -v python || true)"
 fi
-if [ -z "$PY" ] || ! "$PY" -c "import biochar" >/dev/null 2>&1; then
+if [ -z "$PY" ]; then
+  printf '\033[33mpre-commit: no python found; skipping tests.\033[0m\n'
+  printf '\033[33m  Set BIOCHAR_PYTHON to your env interpreter to enable this gate.\033[0m\n'
+  exit 0
+fi
+
+# Gate the tree being committed, which is not always the tree that is installed.
+#
+# The src layout normally keeps a run honest: `biochar` imports only when
+# installed, so a test run cannot quietly pick up the working tree. A git
+# worktree breaks that guarantee in the other direction. `pip install -e` points
+# the interpreter at whichever tree ran it, and every worktree shares one
+# interpreter, so committing from the second worktree runs its tests against the
+# first worktree's source. Observed 2026-08-03: a commit was blocked by a test
+# that passes, because the gate was reading another checkout's data file.
+#
+# The failure that matters is the mirror image of that one -- the same mismatch
+# with the trees the other way round reports a pass, and a pass about code that
+# is not being committed is worse than no gate at all.
+#
+# So the resolution is checked rather than assumed. If the interpreter already
+# lands inside this tree, nothing changes and the installed-package discipline
+# is untouched. If it lands anywhere else, this tree's src/ goes in front of it
+# and the redirection is announced, because a gate quietly changing what it
+# gates is the whole problem being fixed.
+REPO_REAL="$(cd "$REPO_ROOT" && pwd -P)"
+biochar_home() {
+  "$PY" -c 'import biochar, os; print(os.path.realpath(biochar.__file__))' 2>/dev/null
+}
+
+RESOLVED="$(biochar_home)"
+case "$RESOLVED" in
+  "$REPO_REAL"/*) ;;
+  *)
+    export PYTHONPATH="$REPO_ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+    RESOLVED="$(biochar_home)"
+    case "$RESOLVED" in
+      "$REPO_REAL"/*)
+        printf '\033[33mpre-commit: gating this worktree via PYTHONPATH.\033[0m\n'
+        printf '\033[33m  The installed biochar is elsewhere; %s is what gets tested.\033[0m\n' \
+          "$REPO_ROOT/src"
+        ;;
+    esac
+    ;;
+esac
+
+if [ -z "$RESOLVED" ]; then
   printf '\033[33mpre-commit: no python with biochar importable; skipping tests.\033[0m\n'
   printf '\033[33m  Set BIOCHAR_PYTHON to your env interpreter to enable this gate.\033[0m\n'
+  exit 0
+fi
+
+# The gate needs more than an importable package: it runs ruff and pytest
+# through this interpreter. `import biochar` used to double as a check that this
+# was the project env, and stopped being one the moment PYTHONPATH could supply
+# the package -- a system python now sails past it and fails `-m ruff`, which
+# this script cannot tell from a real finding and reports as a blocked commit.
+# That confusion predates the PYTHONPATH change (any env with biochar but
+# without the dev extras hit it); it is just newly reachable. Ask for the tools
+# by name instead, and skip rather than block when they are absent, which is
+# what the guard above was already for.
+MISSING=""
+for mod in ruff pytest; do
+  "$PY" -c "import $mod" >/dev/null 2>&1 || MISSING="$MISSING $mod"
+done
+if [ -n "$MISSING" ]; then
+  printf '\033[33mpre-commit: %s cannot run this gate (no:%s); skipping tests.\033[0m\n' \
+    "$PY" "$MISSING"
+  printf '\033[33m  Set BIOCHAR_PYTHON to an env with the dev extras: pip install -e ".[dev]"\033[0m\n'
   exit 0
 fi
 

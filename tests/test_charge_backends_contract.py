@@ -16,11 +16,17 @@ Every scenario here passes. The five that carried xfail(strict=True) were
 retired by XPASS when their fixes landed.
 """
 
+import json
 import warnings
 
+import numpy as np
 import pytest
 
-from biochar.charges.ml_charges import MLChargeRefinement, _DEFAULT_MODEL_PATH
+from biochar.charges.ml_charges import (
+    MLChargeRefinement,
+    _DEFAULT_MODEL_PATH,
+    _generate_training_data,
+)
 from biochar.charges.qm_charges import scale_and_neutralize
 
 sklearn = pytest.importorskip("sklearn")
@@ -115,6 +121,93 @@ class TestTheLibraryIsCheckedAgainstTheArtifact:
         )
         _, messages = _caught(MLChargeRefinement)
         assert not [m for m in messages if "scikit-learn" in m], messages
+
+    # rq-712dd0d8
+    def test_a_model_that_does_not_rebuild_to_its_charges_is_reported(
+        self, tmp_path
+    ):
+        """The version string is provenance; this is the question it stood in for.
+
+        A recorded version tells you which library fitted the numbers. It does
+        not tell you whether the library in hand computes the same charges from
+        them -- and that is the only thing a reader of those charges needs.
+        """
+        payload = json.loads(_DEFAULT_MODEL_PATH.read_text())
+        payload["reference_charges"] = [
+            q + 0.01 for q in payload["reference_charges"]
+        ]
+        tampered = tmp_path / "drifted.json"
+        tampered.write_text(json.dumps(payload))
+
+        _, messages = _caught(MLChargeRefinement, model_path=tampered)
+
+        ours = [m for m in messages if "invalid" in m.lower()]
+        assert ours, (
+            f"a model that does not reproduce its own recorded charges was "
+            f"loaded without saying so; messages were {messages}"
+        )
+        assert any("1e-06" in m for m in ours), (
+            f"the warning does not name the tolerance it failed: {ours}"
+        )
+        assert any("1.00e-02" in m for m in ours), (
+            f"the warning does not name the deviation it measured: {ours}"
+        )
+
+    # rq-fa93a423
+    def test_a_model_that_rebuilds_exactly_is_not_reported(self):
+        """The complement: silence has to be earned on the shipped artifact."""
+        _, messages = _caught(MLChargeRefinement)
+        assert not [m for m in messages if "invalid" in m.lower()], messages
+
+
+# --------------------------------------------------------------------------- #
+# The artifact against the reference data it claims
+# --------------------------------------------------------------------------- #
+class TestTheArtifactIsCheckedAgainstItsReferenceData:
+    # rq-da875aee
+    def test_the_bundled_training_data_is_the_current_reference_data(self):
+        """The artifact is pinned data; the data it was pinned from is not.
+
+        This has already happened once. The typer stopped calling benzoic
+        acid's carboxyl a ketone plus a phenol, and the bundled model went on
+        predicting from targets that said it was -- through every release after
+        the fix, because a predicted charge carries no provenance and nothing
+        compared the two.
+
+        A failure here is not necessarily a bug. It is a decision to make in a
+        commit: rebuild the artifact and take the force-field change, or record
+        why it stays behind.
+        """
+        payload = json.loads(_DEFAULT_MODEL_PATH.read_text())
+        X_now, y_now = _generate_training_data()
+
+        stored_X = np.asarray(payload["X"], dtype=float)
+        stored_y = np.asarray(payload["y"], dtype=float)
+
+        assert stored_X.shape == X_now.shape, (
+            f"the bundled artifact was fitted to {stored_X.shape[0]} reference "
+            f"atoms; the package now generates {X_now.shape[0]}"
+        )
+        assert np.array_equal(stored_X, X_now), (
+            "the bundled artifact's training features are not the ones the "
+            "package generates now -- the featuriser or the reference "
+            "structures moved without the artifact"
+        )
+
+        # Exact equality is the wrong test. The equilibration step sums the raw
+        # table charges, and the summation order differs enough between RDKit
+        # releases to move a target by one ULP -- 1e-16 e, on a third of the
+        # reference atoms, meaning nothing. The drift worth catching is the
+        # kind that has already happened: a retyped functional group, tenths of
+        # an electron. Anything above 1e-12 e is a change somebody made.
+        drifted = np.flatnonzero(np.abs(stored_y - y_now) > 1e-12)
+        assert drifted.size == 0, (
+            f"the bundled artifact's target charges disagree with the OPLS "
+            f"table at {drifted.size} of {y_now.size} reference atoms "
+            f"(max {np.abs(stored_y - y_now).max():.4f} e). Rebuild it with "
+            f"biochar.charges.ml_charges.build_and_save_bundled_model() and "
+            f"record the force-field change, or say here why it stays behind."
+        )
 
 
 # --------------------------------------------------------------------------- #
