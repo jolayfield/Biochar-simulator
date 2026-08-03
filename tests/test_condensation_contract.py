@@ -10,7 +10,8 @@ fewer molecules than the topology declares, whether a grompp warning it absorbs
 was one anybody foresaw, and whether the directory says what it is a simulation
 of.
 
-Four scenarios carry xfail(strict=True); each names the defect it defers.
+Every scenario here passes. The five that carried xfail(strict=True) were
+retired by XPASS when their fixes landed.
 """
 
 import inspect
@@ -58,13 +59,6 @@ class TestTheTimestepRule:
         assert anneal_spec_for_htt(_ANCHOR_HTT + 1).timestep_fs == 0.5
 
     # rq-fa9763e9
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the recorded rationale says the timestep drops once the peak "
-               "exceeds ~1500 K, but the code compares the heat-treatment "
-               "temperature with the 400 C anchor -- at 401 C the peak is about "
-               "1005 K and the timestep has already halved",
-    )
     def test_the_recorded_rationale_is_the_rule_the_code_follows(self):
         source = inspect.getsource(cond)
         explanation = source.split("@dataclass(frozen=True)", 1)[0]
@@ -105,24 +99,22 @@ class TestRepeats:
 # --------------------------------------------------------------------------- #
 class TestThePackedBoxMatchesTheTopology:
     # rq-9a027a37
-    @pytest.mark.xfail(
-        strict=True,
-        reason="gmx insert-molecules places what it can and exits successfully, "
-               "so a box too tight silently yields fewer molecules than the .top "
-               "declares; the first thing to notice is grompp, several commands "
-               "later, reporting a coordinate count that does not match",
-    )
     def test_the_script_verifies_the_packed_count(self):
+        # atoms_per_molecule is what turns the packed .gro's atom total back
+        # into a molecule count; setup_condensation always supplies it.
         script = _script(
-            pack=cond.PackSpec(molecule_gro="m.gro", n_copies=64, box_nm=6.0)
+            pack=cond.PackSpec(
+                molecule_gro="m.gro", n_copies=64, box_nm=6.0,
+                atoms_per_molecule=30,
+            )
         )
         lines = script.splitlines()
         pack_at = next(i for i, ln in enumerate(lines) if "insert-molecules" in ln)
         following = "\n".join(lines[pack_at : pack_at + 12])
 
-        assert "64" in following, (
-            "nothing after the packing stage refers to the number of molecules "
-            f"the topology declares:\n{following}"
+        assert "1920" in following, (  # 64 molecules x 30 atoms
+            "nothing after the packing stage refers to the atom count the "
+            f"topology implies:\n{following}"
         )
         assert re.search(r"\bexit\b|\breturn\b|\bdie\b", following), (
             f"the packing stage does not stop on a shortfall:\n{following}"
@@ -134,12 +126,6 @@ class TestThePackedBoxMatchesTheTopology:
 # --------------------------------------------------------------------------- #
 class TestASuppressedWarningIsNamed:
     # rq-30534b7a
-    @pytest.mark.xfail(
-        strict=True,
-        reason="every one of the four stages passes -maxwarn 2 though none of "
-               "them expects a warning, so the allowance excuses nothing "
-               "foreseen and absorbs anything that turns up",
-    )
     def test_a_stage_with_no_expected_warning_suppresses_nothing(self):
         offenders = [
             (comment, stage)
@@ -152,11 +138,6 @@ class TestASuppressedWarningIsNamed:
         )
 
     # rq-8410a38d
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the same defect from the other side: no stage names a warning, "
-               "so no count can equal the number named",
-    )
     def test_a_suppressed_warning_is_named_where_it_is_allowed(self):
         for comment, stage in _grompp_stages(_script()):
             match = re.search(r"-maxwarn\s+(\d+)", stage)
@@ -196,13 +177,6 @@ def run_dir(tmp_path_factory):
 
 class TestARunDirectoryRecordsItsSetup:
     # rq-75419e1a
-    @pytest.mark.xfail(
-        strict=True,
-        reason="nothing records the heat-treatment temperature that produced "
-               "the schedule; the .mdp carries the peak but not where it came "
-               "from, and the .top a copy count but not the box it was packed "
-               "into",
-    )
     def test_the_run_directory_records_its_provenance(self, run_dir):
         record = Path(run_dir) / "condensation_provenance.json"
         assert record.exists(), (
