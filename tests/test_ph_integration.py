@@ -82,6 +82,10 @@ class TestPhDrivesNetCharge:
         _, _, comp = gen(functional_groups={"phenolic": 4}, pH=7.0)
         assert comp.net_charge == 0
 
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_titration_series_is_monotonic(self):
         charges = [
             gen(functional_groups={"carboxyl": 3}, pH=p)[2].net_charge
@@ -369,6 +373,10 @@ class TestSurfacePh:
         for s in sheets:
             assert len(s.molecule_name) <= 5, s.molecule_name
 
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_sheets_titrate_independently_rather_than_being_copied(self):
         """
         Near a pKa each sheet is its own draw. Over a stack, identical
@@ -381,6 +389,10 @@ class TestSurfacePh:
             f"independent samples: {charges}"
         )
 
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_surface_ph_is_reproducible_under_seed(self):
         a = [self._charge(s) for s in self._surface(pH=4.2, seed=9)[1]]
         b = [self._charge(s) for s in self._surface(pH=4.2, seed=9)[1]]

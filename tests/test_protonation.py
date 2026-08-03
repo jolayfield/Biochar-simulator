@@ -267,6 +267,10 @@ class TestSignInversion:
         base_high, _ = ProtonationAssigner(seed=2).assign(_mol("Nc1ccccc1"), pH=12.0)
         assert net_formal(base_high) < net_formal(base_low)
 
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_titration_curve_is_monotonically_decreasing(self):
         charges = [
             net_formal(ProtonationAssigner(seed=7).assign(_mol(TRIACID), pH=p)[0])
@@ -286,12 +290,20 @@ class TestSignInversion:
 
 class TestDeterminism:
     # rq-e9369729
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_same_seed_and_ph_is_reproducible(self):
         a, _ = ProtonationAssigner(seed=42).assign(_mol(TRIACID), pH=4.2)
         b, _ = ProtonationAssigner(seed=42).assign(_mol(TRIACID), pH=4.2)
         assert net_formal(a) == net_formal(b)
         assert Chem.MolToSmiles(a) == Chem.MolToSmiles(b)
 
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_different_seeds_sample_differently_near_the_pka(self):
         """Proves it samples rather than thresholding."""
         results = {
@@ -301,6 +313,10 @@ class TestDeterminism:
         assert len(results) > 1, "every seed gave the same answer at pH == pKa"
 
     # rq-7286d3d9
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_does_not_disturb_global_random_state(self):
         import random
 
@@ -312,6 +328,10 @@ class TestDeterminism:
 
 
 class TestStatistics:
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_about_half_ionized_at_the_pka(self):
         """Aggregate over seeds: the mean must track Henderson-Hasselbalch."""
         total, ionized = 0, 0

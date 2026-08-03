@@ -13,8 +13,10 @@ ensemble, so a structure is only interpretable next to the pH and the seed that
 produced it -- and a draw taken inside a transition band is the one most likely
 to be mistaken for the ensemble mean.
 
-Three scenarios carry xfail(strict=True); each names the defect it defers.
-The other two are their complements, and pass both before and after.
+Every scenario here passes. The three that carried xfail(strict=True) were
+retired by XPASS when their fixes landed; the other two are their
+complements, pinned so a fix could not answer them by warning everywhere or
+stamping a pH on every structure.
 """
 
 import warnings
@@ -46,12 +48,6 @@ def _titrate(pH, smiles=BENZOIC, seed=1):
 
 class TestATransitionBandIsReported:
     # rq-7e778b79
-    @pytest.mark.xfail(
-        strict=True,
-        reason="nothing tells a caller their pH sits on a pKa, though the "
-               "module's own docstring says one structure is then a coin flip "
-               "per site and needs replicates",
-    )
     def test_a_ph_on_a_pka_is_reported(self):
         pKa = PROTONATION_STATES["carboxyl"].pKa
         messages = _titrate(pKa + 0.3)
@@ -118,11 +114,6 @@ def untitrated(tmp_path_factory):
 
 class TestTheFilesRecordTheirPH:
     # rq-7ed1460a
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the .gro title is a bare timestamp, so a pH 3 and a pH 11 "
-               "structure are indistinguishable to a reader opening either",
-    )
     def test_the_coordinate_file_names_its_ph_and_charge(self, titrated):
         gen, gro, _ = titrated
         title = gro.splitlines()[0]
@@ -137,11 +128,6 @@ class TestTheFilesRecordTheirPH:
         )
 
     # rq-4189fd49
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the .itp header records only a timestamp, so the sample a "
-               "topology represents cannot be reproduced from it",
-    )
     def test_the_topology_names_its_ph_and_seed(self, titrated):
         _, _, itp = titrated
         header = itp.split("[ moleculetype ]", 1)[0]
