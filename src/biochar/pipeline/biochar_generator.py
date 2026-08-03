@@ -658,7 +658,6 @@ class BiocharGenerator:
         # First pass: aromatic skeleton at full size (with H/C-aware elongation).
         skeleton = assembler.generate(
             N,
-            self.config.aromaticity_percent,
             defect_fraction=self.config.defect_fraction,
             heptagon_fraction=self.config.heptagon_fraction,
             target_h_c=r,
@@ -681,7 +680,6 @@ class BiocharGenerator:
             # driven negative by an already-elongated (overshooting) core.
             core = assembler.generate(
                 N - n_est,
-                self.config.aromaticity_percent,
                 defect_fraction=self.config.defect_fraction,
                 heptagon_fraction=self.config.heptagon_fraction,
                 target_h_c=None,

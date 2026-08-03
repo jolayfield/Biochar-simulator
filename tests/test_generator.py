@@ -53,10 +53,7 @@ class TestCarbonSkeleton:
     def test_pah_assembler_benzene(self):
         """Test PAH assembler with small target."""
         assembler = PAHAssembler(seed=42)
-        skeleton = assembler.generate(
-            target_num_carbons=6,
-            target_aromaticity=100.0,
-        )
+        skeleton = assembler.generate(target_num_carbons=6)
 
         assert skeleton.mol is not None
         assert skeleton.num_carbons > 0
@@ -65,10 +62,7 @@ class TestCarbonSkeleton:
     def test_pah_assembler_naphthalene(self):
         """Test PAH assembler with naphthalene size."""
         assembler = PAHAssembler(seed=42)
-        skeleton = assembler.generate(
-            target_num_carbons=10,
-            target_aromaticity=100.0,
-        )
+        skeleton = assembler.generate(target_num_carbons=10)
 
         assert skeleton.mol is not None
         assert skeleton.num_carbons >= 8  # Allow tolerance

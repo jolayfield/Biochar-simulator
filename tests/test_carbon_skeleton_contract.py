@@ -10,6 +10,9 @@ a fixed 16-carbon structure are all the same failure wearing different clothes.
 
 Sizes are read from PAH_LIBRARY rather than hard-coded, so extending the library
 moves the tests with it.
+
+Every scenario here passes. The three that carried xfail(strict=True) were
+retired by XPASS when their fixes landed.
 """
 
 import inspect
@@ -90,14 +93,6 @@ class TestDefectFractions:
 
 class TestAromaticityIsNotARequest:
     # rq-b6eec273
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "generate() still accepts target_aromaticity, documented as 'Unused "
-            "(kept for backward compatibility)'. It reads at the call site as a "
-            "request being made. Retire this marker with the fix."
-        ),
-    )
     def test_the_assembler_takes_no_aromaticity_argument(self):
         params = inspect.signature(PAHAssembler.generate).parameters
         aromatic = [p for p in params if "aromatic" in p.lower()]
@@ -141,14 +136,6 @@ class TestNoUnrelatedFallback:
 
 class TestLibraryLoadIsReported:
     # rq-4dc5ce35
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "A library entry whose SMILES will not parse or sanitise is dropped "
-            "into a bare `except Exception: pass`, so the working library shrinks "
-            "with nothing said. Retire this marker with the fix."
-        ),
-    )
     def test_an_unparseable_library_entry_is_reported(self, monkeypatch, caplog):
         import logging
 

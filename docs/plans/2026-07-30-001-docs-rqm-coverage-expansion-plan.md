@@ -1,8 +1,7 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
 **Status:** Phases 0-4 complete plus the temperature model, surface stacking and carbon
-skeleton. Two open xfails, both specified: the inert target_aromaticity parameter and the
-silently dropped library entry. D1 and D3 resolved.
+skeleton, and every specified defect fixed. No open xfails. D1 and D3 resolved.
 **Type:** docs / traceability
 **Date:** 2026-07-30
 **Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`

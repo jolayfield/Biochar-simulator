@@ -49,6 +49,20 @@ All significant changes to the Biochar Simulator project are documented here.
   crashes and no structure is lost — only the label changes, and it changes to
   the honest one. Manifest counts are not comparable with earlier runs.
 
+- **`PAHAssembler.generate` no longer accepts `target_aromaticity`.**
+  *Breaking for direct callers of the assembler.* The parameter was documented
+  in its own docstring as "Unused (kept for backward compatibility)" and was
+  genuinely inert — 100 and 50 produced the identical molecule. It sat second
+  positionally, and `BiocharGenerator` was passing `config.aromaticity_percent`
+  into it, so the caller's aromaticity target was threaded down and discarded.
+  Aromaticity is decided by ring topology; the composition-level target on
+  `GeneratorConfig` is unchanged and still honoured.
+
+- **A `PAH_LIBRARY` entry that cannot be parsed or sanitised is now reported.**
+  It was dropped into a bare `except Exception: pass`, so the working library
+  shrank silently and targets that had been met exactly from a pre-validated
+  structure began to be grown instead. All 18 entries load today.
+
 - **A carbon skeleton that cannot be built now raises instead of substituting
   pyrene.** When graph growth returned nothing, the assembler answered with the
   library's 16-carbon pyrene regardless of the request — so a 200-carbon request
