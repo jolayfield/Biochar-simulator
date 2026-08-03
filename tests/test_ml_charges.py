@@ -58,6 +58,7 @@ class TestMLChargeRefinementInterface:
         assert isinstance(charges, dict)
         assert set(charges.keys()) == set(range(mol.GetNumAtoms()))
 
+    # rq-d3ccbbe3
     def test_refine_all_atoms_present(self):
         mol, types = _naphthalene_with_types()
         refiner = MLChargeRefinement()

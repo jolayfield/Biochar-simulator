@@ -149,11 +149,25 @@
     "title": "The timestep halves above the lowest anchor",
     "type": "scenario"
   },
+  "rq-0be99a80": {
+    "decl": "- `QMChargeError`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "QMChargeError",
+    "type": "api-item"
+  },
   "rq-0bf15b93": {
     "decl": "- `GridPoint`",
     "file": "parameter-sweep",
     "refs": [],
     "title": "GridPoint",
+    "type": "api-item"
+  },
+  "rq-0c2933ce": {
+    "decl": "- `MLChargeRefinement.train_and_save(...)`, `build_and_save_bundled_model(...)`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "MLChargeRefinement",
     "type": "api-item"
   },
   "rq-0c391221": {
@@ -272,6 +286,13 @@
     "title": "Cross-references",
     "type": "section"
   },
+  "rq-1594d21a": {
+    "decl": "- `MLChargeRefinement(model_path=None)`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "MLChargeRefinement",
+    "type": "api-item"
+  },
   "rq-15d0c9f2": {
     "decl": "## Feature API",
     "file": "md-setup",
@@ -293,6 +314,14 @@
     "refs": [],
     "title": "PROTONATION_STATES",
     "type": "api-item"
+  },
+  "rq-17279822": {
+    "decl": "## QM Charges Belong to the Exported Geometry",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "QM Charges Belong to the Exported Geometry",
+    "type": "section"
   },
   "rq-1729edcb": {
     "decl": "## Nearest-Analog Values Are Chosen, Not Validated",
@@ -378,6 +407,30 @@
     "title": "A Seed Retry Is a Variance Remedy, Not a Repair",
     "type": "section"
   },
+  "rq-1e274fe6": {
+    "decl": "Scenario: A model written by a different scikit-learn is reported",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A model written by a different scikit-learn is reported",
+    "type": "scenario"
+  },
+  "rq-1e6d149c": {
+    "decl": "Scenario: Charges are computed on the given coordinates by default",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Charges are computed on the given coordinates by default",
+    "type": "scenario"
+  },
   "rq-1f2ce9fc": {
     "decl": "Scenario: A structure with more than three geometry errors reports all of them",
     "file": "geometry-embedding",
@@ -421,6 +474,14 @@
     ],
     "title": "A contact marginally inside the floor is not a clash",
     "type": "scenario"
+  },
+  "rq-22fa0ea0": {
+    "decl": "## The 1.14 Factor Was Derived for Neutral Molecules",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "The 1.14 Factor Was Derived for Neutral Molecules",
+    "type": "section"
   },
   "rq-23755c47": {
     "decl": "## Feature API",
@@ -543,6 +604,18 @@
     "refs": [],
     "title": "Every Geometry Error Is Reported",
     "type": "section"
+  },
+  "rq-2d0042a6": {
+    "decl": "Scenario: Scaling a neutral molecule reports nothing",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Scaling a neutral molecule reports nothing",
+    "type": "scenario"
   },
   "rq-2da595b7": {
     "decl": "Scenario: Every status a build can return is one the documented set names",
@@ -718,6 +791,14 @@
     "title": "An amino nitrogen types as aniline N on a small flake",
     "type": "scenario"
   },
+  "rq-39798517": {
+    "decl": "## A Model Written by a Different Library Says So",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "A Model Written by a Different Library Says So",
+    "type": "section"
+  },
   "rq-39bd2478": {
     "decl": "Scenario: Only H/C and O/C vary by feedstock",
     "file": "temperature-model",
@@ -785,6 +866,18 @@
     "refs": [],
     "title": "Every Point in the Grid Is Distinguishable From Every Other",
     "type": "section"
+  },
+  "rq-3cf63133": {
+    "decl": "Scenario: A substituted fallback model announces itself",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A substituted fallback model announces itself",
+    "type": "scenario"
   },
   "rq-3d4eeaf7": {
     "decl": "Scenario: The annealing schedule holds, cools, then holds",
@@ -881,6 +974,18 @@
     "title": "The manifest names the package version that wrote it",
     "type": "scenario"
   },
+  "rq-44546ffc": {
+    "decl": "Scenario: An unrecognised charge method is refused at construction",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_qm_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An unrecognised charge method is refused at construction",
+    "type": "scenario"
+  },
   "rq-44655f38": {
     "decl": "Scenario: An ether C-O bond survives sanitisation as a single bond",
     "file": "heteroatom-assignment",
@@ -899,6 +1004,14 @@
     "refs": [],
     "title": "SheetResult",
     "type": "api-item"
+  },
+  "rq-47323ea3": {
+    "decl": "## Cross-references",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
   },
   "rq-475641a0": {
     "decl": "- `estimate_box_nm(gro_text, n_copies, loose_factor=1.6) -> float`",
@@ -977,6 +1090,13 @@
     ],
     "title": "An unparseable library entry is reported",
     "type": "scenario"
+  },
+  "rq-4e3bf53e": {
+    "decl": "- `QMChargeAssigner.assign(mol, coords, ...) -> Dict[int, float]`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "QMChargeAssigner",
+    "type": "api-item"
   },
   "rq-4e6abc16": {
     "decl": "Scenario: The fallback is reported to the caller",
@@ -1418,6 +1538,18 @@
     "title": "The Wet Stage Holds the Sheet and Relaxes the Solvent",
     "type": "section"
   },
+  "rq-6b61adce": {
+    "decl": "Scenario: A missing MOPAC binary is reported",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_qm_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A missing MOPAC binary is reported",
+    "type": "scenario"
+  },
   "rq-6b70c04c": {
     "decl": "Scenario: An intramolecular hydrogen bond is not reported as a clash",
     "file": "geometry-embedding",
@@ -1557,6 +1689,18 @@
       }
     ],
     "title": "A condensation run directory records its provenance",
+    "type": "scenario"
+  },
+  "rq-75d3624b": {
+    "decl": "Scenario: A matching version is not reported",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A matching version is not reported",
     "type": "scenario"
   },
   "rq-766e9c83": {
@@ -1759,6 +1903,18 @@
     "refs": [],
     "title": "SafeBondAdder",
     "type": "api-item"
+  },
+  "rq-817541fc": {
+    "decl": "Scenario: Scaling a charged molecule reports the extrapolation",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Scaling a charged molecule reports the extrapolation",
+    "type": "scenario"
   },
   "rq-8176d084": {
     "decl": "Scenario: Small molecules are bounded by their perimeter",
@@ -2263,6 +2419,13 @@
     "title": "A temperature inside one property's support but outside another's is distinguishable",
     "type": "scenario"
   },
+  "rq-a27a7e8c": {
+    "decl": "- `cm1a_from_am1(charges, bond_orders, atomic_numbers) -> List[float]`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "cm1a_from_am1",
+    "type": "api-item"
+  },
   "rq-a467c647": {
     "decl": "Scenario: A deprotonated oxygen has no free valence",
     "file": "valence-validation",
@@ -2453,6 +2616,14 @@
     "title": "Coordinates Convert to Nanometres",
     "type": "section"
   },
+  "rq-b1e463e8": {
+    "decl": "## The Refiner Says Which Model Answered",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "The Refiner Says Which Model Answered",
+    "type": "section"
+  },
   "rq-b2e50e9d": {
     "decl": "Scenario: No two atoms share a name in the structure file",
     "file": "gromacs-export",
@@ -2532,6 +2703,14 @@
     "title": "The assembler takes no aromaticity argument",
     "type": "scenario"
   },
+  "rq-b7d22b5f": {
+    "decl": "## Every Atom Gets a Charge",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "Every Atom Gets a Charge",
+    "type": "section"
+  },
   "rq-b8611a4d": {
     "decl": "Scenario: Each violating atom is named",
     "file": "valence-validation",
@@ -2543,6 +2722,14 @@
     ],
     "title": "Each violating atom is named",
     "type": "scenario"
+  },
+  "rq-b8eee7a8": {
+    "decl": "## A Backend That Cannot Run Refuses",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "A Backend That Cannot Run Refuses",
+    "type": "section"
   },
   "rq-b8fce9a6": {
     "decl": "Scenario: The repair runs after every sanitising stage",
@@ -2720,6 +2907,18 @@
     "title": "The Timestep Is Chosen by the Anchor, and Says So",
     "type": "section"
   },
+  "rq-c202e1dc": {
+    "decl": "Scenario: The refiner reports the bundled model when it loaded",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The refiner reports the bundled model when it loaded",
+    "type": "scenario"
+  },
   "rq-c2463a78": {
     "decl": "## Clash Detection",
     "file": "geometry-embedding",
@@ -2755,6 +2954,14 @@
     "title": "The Support Range Is Per Property",
     "type": "section"
   },
+  "rq-c2f9b1a9": {
+    "decl": "## The Charges Sum to the Formal Charge",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "The Charges Sum to the Formal Charge",
+    "type": "section"
+  },
   "rq-c39502d1": {
     "decl": "## Feature API",
     "file": "surface-stacking",
@@ -2762,6 +2969,18 @@
     "refs": [],
     "title": "Feature API",
     "type": "section"
+  },
+  "rq-c49c52b0": {
+    "decl": "Scenario: Scaling ends at the formal charge",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_qm_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Scaling ends at the formal charge",
+    "type": "scenario"
   },
   "rq-c4e683c4": {
     "decl": "Scenario: Embedding retries a bounded number of times",
@@ -2877,6 +3096,18 @@
     "title": "A Suppressed grompp Warning Is Named",
     "type": "section"
   },
+  "rq-d3ccbbe3": {
+    "decl": "Scenario: Refinement returns a charge for every atom",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_ml_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Refinement returns a charge for every atom",
+    "type": "scenario"
+  },
   "rq-d3ef932d": {
     "decl": "Scenario: A carbonyl request places a phenolic group",
     "file": "heteroatom-assignment",
@@ -2939,6 +3170,13 @@
     ],
     "title": "Adjacent sheets are separated by the pore diameter plus the sheet thickness",
     "type": "scenario"
+  },
+  "rq-dc7908c7": {
+    "decl": "- `parse_net_atomic_charges(out_text)`, `parse_bond_orders(out_text)`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "parse_net_atomic_charges",
+    "type": "api-item"
   },
   "rq-dd22e354": {
     "decl": "- `render_condensation_script(gro_name, top_name, spec, n_repeats=3, ...) -> str`",
@@ -3162,6 +3400,14 @@
     "title": "Feedstock-Specific Curves Are Narrow and Gated",
     "type": "section"
   },
+  "rq-f03c2518": {
+    "decl": "## Feature API",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-f08462b9": {
     "decl": "Scenario: The model reports its source dataset",
     "file": "temperature-model",
@@ -3250,6 +3496,13 @@
     "title": "A Target Within the Library Is Met Exactly",
     "type": "section"
   },
+  "rq-f88930c4": {
+    "decl": "- `scale_and_neutralize(cm1a_charges, total_charge=0.0, scale=1.14) -> List[float]`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "scale_and_neutralize",
+    "type": "api-item"
+  },
   "rq-f953b9b0": {
     "decl": "Scenario: A skeleton that cannot be grown raises",
     "file": "carbon-skeleton",
@@ -3302,6 +3555,13 @@
     "title": "A Skeleton Is Never Returned at an Unrelated Size",
     "type": "section"
   },
+  "rq-fb7f157f": {
+    "decl": "# Feature: Charge Backends",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "Feature: Charge Backends",
+    "type": "file"
+  },
   "rq-fbb6a9c0": {
     "decl": "Scenario: The oxygen count still matches the request",
     "file": "heteroatom-assignment",
@@ -3352,6 +3612,18 @@
     "refs": [],
     "title": "The Convenience Wrapper Reaches the Options That Change the Geometry",
     "type": "section"
+  },
+  "rq-ff6dbfa6": {
+    "decl": "Scenario: The CM1A mapping conserves the total charge",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_qm_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The CM1A mapping conserves the total charge",
+    "type": "scenario"
   },
   "rq-ffb45a6e": {
     "decl": "# Feature: Heteroatom and Functional Group Assignment",
