@@ -662,7 +662,7 @@ The PAH quality suite reports:
 | H/C has a lower floor for small structures | A maximally condensed flake still caps H on every edge carbon, so very small sheets cannot go *below* ~0.44 (50 C) / ~0.36 (100 C). Requests below that floor return the most-condensed structure; use a larger sheet for lower H/C. |
 | Steric clash count increases with size | Large flat aromatics have H···H near-contacts; use GROMACS energy minimisation after generation for production runs |
 | Geometry validation thresholds | The built-in validator uses strict VdW radii; some reported "clashes" are artefacts of the flat starting structure and resolve under MD |
-| Amorphous porous surfaces not yet implemented | Only slit pores (parallel sheets) are supported; `pore_type="amorphous"` is reserved for a future release |
+| Amorphous packing is a search and can fail | `pore_type="amorphous"` places randomly rotated sheets until none violate `min_separation`, which does not always converge for many sheets in a small box. It raises by default; set `amorphous_fallback="slit"` to degrade to a slit stack instead, which is reported and recorded in the `.gro` title. |
 
 ---
 
