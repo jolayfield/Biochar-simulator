@@ -40,6 +40,18 @@ class AtomTyper:
         Returns:
             Dictionary of {atom_idx: opls_type}
         """
+        # Typing asks every atom whether it is in a ring, and RDKit raises
+        # rather than answering when nothing has perceived the rings yet. A
+        # molecule that reaches here straight out of an RWMol edit -- which some
+        # nitrogen-doping paths produce -- has no RingInfo, so the whole
+        # generation crashes on a question that has an answer. Perceiving it
+        # here is cheap and idempotent; it does not sanitise, so it cannot
+        # disturb the bond types the heteroatom stages worked to set.
+        try:
+            mol.GetRingInfo().NumRings()
+        except RuntimeError:
+            Chem.FastFindRings(mol)
+
         atom_types = {}
 
         for atom in mol.GetAtoms():

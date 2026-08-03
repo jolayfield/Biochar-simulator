@@ -253,8 +253,15 @@ decides what happens:
 |---|---|
 | `strict_pass` | Passed strict validation on one of the retry seeds |
 | `fallback` | Strict never passed; built with `strict=False` (files still written) |
-| `skipped` | Strict never passed and `on_validation_fail: skip` |
+| `skipped` | Strict never passed and `on_validation_fail: skip` — no files written |
 | `failed` | A non-validation error occurred (captured in the `error` column) |
+
+`on_validation_fail: strict` writes no row at all: the sweep is refused, naming
+the point and its validation errors. Choose it when the grid is only meaningful
+if every point is in tolerance.
+
+This table is the same set as `biochar.workflows.sweep.POINT_STATUSES`, and a
+test fails if the two drift apart.
 
 The seed-retry → fallback design exists so a sweep completes deterministically
 rather than stalling when a particular grid point cannot pass strict validation

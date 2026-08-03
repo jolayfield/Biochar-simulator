@@ -82,6 +82,10 @@ class TestPhDrivesNetCharge:
         _, _, comp = gen(functional_groups={"phenolic": 4}, pH=7.0)
         assert comp.net_charge == 0
 
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_titration_series_is_monotonic(self):
         charges = [
             gen(functional_groups={"carboxyl": 3}, pH=p)[2].net_charge
@@ -208,10 +212,13 @@ class TestSweepAxis:
                 "name": "ph_titration",
                 "output_directory": str(tmp_path),
                 "axes": {"pH": [2.0, 7.0]},
+                # A residue name is derived per point, not fixed across the
+                # sweep -- two structures under one name are indistinguishable
+                # in the manifest.
+                "name_template": "BCT{i}",
                 "fixed": {
                     "target_num_carbons": 36,
                     "functional_groups": {"carboxyl": 3},
-                    "molecule_name": "BCT",
                     "seed": 5,
                     "strict": False,
                     "H_C_tolerance": 1.0,
@@ -234,10 +241,10 @@ class TestSweepAxis:
                 "name": "ph_manifest",
                 "output_directory": str(tmp_path),
                 "axes": {"pH": [7.0]},
+                "name_template": "BCT{i}",
                 "fixed": {
                     "target_num_carbons": 36,
                     "functional_groups": {"carboxyl": 3},
-                    "molecule_name": "BCT",
                     "seed": 5,
                     "strict": False,
                     "H_C_tolerance": 1.0,
@@ -366,6 +373,10 @@ class TestSurfacePh:
         for s in sheets:
             assert len(s.molecule_name) <= 5, s.molecule_name
 
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_sheets_titrate_independently_rather_than_being_copied(self):
         """
         Near a pKa each sheet is its own draw. Over a stack, identical
@@ -378,6 +389,10 @@ class TestSurfacePh:
             f"independent samples: {charges}"
         )
 
+    # Titrates inside a transition band on purpose -- that is the subject.
+    # The band warning is expected here, and is acknowledged rather than
+    # left as unattributed noise in the suite's warning count.
+    @pytest.mark.filterwarnings("ignore:pH .* is within 1 unit of the pKa")
     def test_surface_ph_is_reproducible_under_seed(self):
         a = [self._charge(s) for s in self._surface(pH=4.2, seed=9)[1]]
         b = [self._charge(s) for s in self._surface(pH=4.2, seed=9)[1]]
@@ -423,6 +438,7 @@ class TestSurfacePh:
 
 
 class TestProtonationBondTypes:
+    # rq-7e9935a1
     def test_ether_bonds_are_not_left_aromatic_after_protonation(self):
         """
         CLAUDE.md: '_fix_heteroatom_bond_types must be called after any RDKit
@@ -445,6 +461,7 @@ class TestProtonationBondTypes:
 
 
 class TestCensusMatchesReality:
+    # rq-633ccda5
     def test_ionized_counts_never_exceed_the_net_charge_they_imply(self):
         from biochar.pipeline.protonation import ProtonationAssigner
 
@@ -456,6 +473,7 @@ class TestCensusMatchesReality:
         )
         assert acidic_ionized == -comp.net_charge
 
+    # rq-09a84056
     def test_duplicate_neutral_types_are_rejected_not_silently_dropped(self):
         from unittest.mock import patch
 

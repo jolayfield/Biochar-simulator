@@ -62,14 +62,17 @@ class TestHTTScaling:
     @pytest.mark.parametrize("htt,peak,dt", [(400, 1000.0, 1.0),
                                              (600, 2000.0, 0.5),
                                              (800, 3000.0, 0.5)])
+    # rq-9ba33460
     def test_wood_anchors_exact(self, htt, peak, dt):
         s = anneal_spec_for_htt(htt)
         assert (s.peak_T_K, s.timestep_fs) == (peak, dt)
 
+    # rq-50d5f27c
     def test_interpolates_between_anchors(self):
         assert anneal_spec_for_htt(500).peak_T_K == 1500.0  # midpoint 400-600
         assert anneal_spec_for_htt(500).timestep_fs == 0.5
 
+    # rq-df4cf342
     def test_clamps_outside_anchors(self):
         assert anneal_spec_for_htt(200).peak_T_K == 1000.0
         assert anneal_spec_for_htt(1200).peak_T_K == 3000.0
@@ -87,12 +90,14 @@ class TestMdpNumbers:
         (600, "20000000", "50000000", "0.0005"),   # 0.5 fs
         (800, "20000000", "50000000", "0.0005"),
     ])
+    # rq-a16e0b49
     def test_durations(self, htt, nvt_steps, anneal_steps, dt):
         m = render_mdp_set(anneal_spec_for_htt(htt))
         assert _val(m["nvt.mdp"], "nsteps") == nvt_steps
         assert _val(m["nvt.mdp"], "dt") == dt
         assert _val(m["npt_anneal.mdp"], "nsteps") == anneal_steps
 
+    # rq-3d4eeaf7
     def test_anneal_schedule(self):
         m = render_mdp_set(anneal_spec_for_htt(600))
         assert _val(m["npt_anneal.mdp"], "annealing-time") == "0 10000 20000 25000"
@@ -100,6 +105,7 @@ class TestMdpNumbers:
         assert _val(m["npt_anneal.mdp"], "ref_p") == "100.0"      # Berendsen 100 bar
         assert _val(m["npt_anneal.mdp"], "pcoupltype") == "isotropic"
 
+    # rq-3a97bd4a
     def test_final_always_2fs_and_1bar(self):
         for htt in (400, 800):
             m = render_mdp_set(anneal_spec_for_htt(htt))
@@ -118,6 +124,7 @@ class TestMdpNumbers:
 
 
 class TestRunScript:
+    # rq-5084d61d
     def test_repeats_and_stage_order(self):
         sc = render_condensation_script("packed.gro", "system.top",
                                         anneal_spec_for_htt(400), n_repeats=3)

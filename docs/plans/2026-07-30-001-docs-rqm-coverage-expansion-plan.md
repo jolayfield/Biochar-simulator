@@ -1,7 +1,9 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Phases 0-4 complete plus the temperature model, surface stacking and carbon
-skeleton, and every specified defect fixed. No open xfails. D1 and D3 resolved.
+**Status:** Complete. Every module the source review named is specified — fourteen documents,
+and the five the plan deferred (parameter sweep, pH protonation, valence validation, condensation
+annealing, charge backends) landed together in one PR. One xfail remains open, `rq-ee235774`,
+naming the third cause of a defect whose other two are fixed.
 **Type:** docs / traceability
 **Date:** 2026-07-30
 **Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
@@ -208,6 +210,43 @@ skeleton, and every specified defect fixed. No open xfails. D1 and D3 resolved.
 > > **D3 resolved: the HTT-scaled temperatures are correct.** `condensation.py`'s 1000/2000/3000 K
 > schedule stands; `md_setup.py`'s flat 1000 K is the defect. Phase 3 is unblocked, and that
 > disagreement becomes a scenario plus a failing test rather than an open question.
+
+> **The five deferred modules landed together.** Sixty-eight scenarios across
+> `parameter-sweep`, `ph-protonation`, `valence-validation`, `condensation-annealing` and
+> `charge-backends`, of which twenty-three are back-annotated onto tests that already defended
+> them. Twenty-one gaps carried `xfail(strict=True)`; twenty were retired by XPASS in the same PR.
+>
+> One theme ran through all five, and it is the same one the earlier phases found from a different
+> angle: **an output that does not say where it came from.** A manifest row naming a residue no
+> topology contains; a structure titrated at pH 3 and one at pH 11 distinguishable only by
+> timestamp; a condensation directory that does not record the temperature it was scaled from; a
+> charge model substituted for a differently-trained fallback with only a log line. Five modules,
+> written months apart, each independently arriving at the same omission.
+>
+> **The sharpest defect was in valence counting**, because everything is built on it. Aromatic
+> bond orders were summed at 1.5 each, which is correct for a ring member that accepts into the pi
+> system and wrong for one that donates a lone pair — so a furan oxygen, a pyrrolic nitrogen and a
+> thiophene sulfur were all reported over-valent, and strict mode refused structures containing the
+> ether bridge this package builds by design. Fixing it took three attempts: RDKit's own valence is
+> correct but stale on a molecule mid-edit, and `GetTotalNumHs` raises outright there. The rule that
+> works is derived from the local graph, and it must *not* count implicit hydrogens — an aromatic
+> edge CH with one free valence is how a substitution site is recognised, and counting it left
+> every edge carbon looking saturated. That mistake failed 71 tests at once, which is the useful
+> kind of failure.
+>
+> **One defect was left open on purpose.** Pyrrolic nitrogen doping had three causes; two are fixed
+> and the third — a pentagon losing aromaticity downstream and kekulising, so the N-H lands on a
+> C=N — needs the H/C-shaping and sanitisation interaction worked through. Its test now measures
+> seven seeds rather than one, because the original passed at seed 2 by luck. A separate
+> pre-existing crash (`RingInfo not initialized` in the typer, reproducible on `main`) is recorded
+> alongside it.
+>
+> **Two findings were environmental rather than in the code.** `conda build conda-recipe/` had
+> never been run; it now has, and produces `biochar-0.5.0-py_0.conda` with all four console scripts
+> exercised. And the bundled ML charge model is a pickle written by scikit-learn 1.6.1 being loaded
+> under 1.9.0 — which scikit-learn warns about, in terms of two version strings and a class rather
+> than in terms of the charges. Restating that warning is in this PR; rebuilding the model changes
+> every ML charge and is left as its own decision.
 
 ## Summary
 

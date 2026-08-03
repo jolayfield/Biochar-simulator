@@ -53,6 +53,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import warnings
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -233,12 +234,39 @@ def scale_and_neutralize(
     """Apply the 1.14 scale factor and force the sum to ``total_charge`` exactly.
 
     CM1A already conserves charge, so after scaling the sum equals
-    ``scale * total_charge``; for neutral molecules that is 0.  The residual
+    ``scale * total_charge``; for neutral molecules that is 0, and the residual
     correction only cleans up MOPAC's finite print precision.
+
+    For an ion it is not 0. LigParGen's 1.14 is an empirical condensed-phase
+    factor fitted against neutral organic liquids, so on a molecule of formal
+    charge q the scaled sum overshoots by ``(scale - 1) * q`` and the correction
+    below removes that by shifting every atom equally. The result sums correctly
+    and its distribution is neither CM1A nor LigParGen, which is worth saying out
+    loud -- the pH path recommends this backend by name, so charged molecules are
+    exactly what it is pointed at.
+
+    The behaviour is left alone rather than "corrected": silently substituting a
+    different treatment for an ion's charges would be a worse answer than an
+    extrapolated one that announces itself.
     """
     scaled = [scale * q for q in cm1a_charges]
     if not scaled:
         return scaled
+
+    if total_charge != 0:
+        smear = (scale - 1.0) * total_charge / len(scaled)
+        warnings.warn(
+            f"The {scale:g} scale factor is a neutral-molecule parameterisation "
+            f"(LigParGen's condensed-phase correction, fitted on neutral organic "
+            f"liquids). This molecule carries a formal charge of "
+            f"{total_charge:+g}, so scaling overshoots by "
+            f"{(scale - 1.0) * total_charge:+.3f} e and the correction removes it "
+            f"by shifting every atom by {-smear:+.4f} e. The total is exact; the "
+            f"distribution is an extrapolation.",
+            UserWarning,
+            stacklevel=2,
+        )
+
     residual = sum(scaled) - total_charge
     if abs(residual) > 1e-12:
         corr = residual / len(scaled)

@@ -2,6 +2,117 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
+## [Unreleased]
+
+Requirements coverage extended to the five modules the 2026-07-30 review left
+unspecified. Every module that review named now has a document in `rqm/`, and
+writing them found fifteen defects, listed below by what they affect.
+
+### Breaking changes
+
+- **A sweep manifest records `skipped` where it recorded `failed`.** The two
+  were the same status: `on_validation_fail: skip` reported `failed`, which the
+  README reserves for a non-validation error. A point the config declined to
+  keep is an expected outcome of a healthy run; a failed one is the row a reader
+  investigates. Code filtering manifest rows on `failed` will now miss skipped
+  points. `biochar.workflows.sweep.POINT_STATUSES` is the declared set.
+
+- **`on_validation_fail: strict` raises instead of completing.** It was a silent
+  synonym for `skip`: both recorded the point and carried on, so the mode a
+  caller picks to be told about a bad grid told them nothing. It now raises
+  `SweepError` naming the point and its validation errors.
+
+- **A sweep refuses `molecule_name` in `fixed` or in an axis.** It overrode the
+  per-point name while each point still reported the templated one, so every
+  manifest row named a residue no topology contained. Use `name_template`.
+
+### Fixed — the parameter sweep
+
+- **A name template whose points collide is refused.** Names are capped at the
+  5-character GROMACS residue limit, so `BC{i:03d}` gave points 100 and 1000 the
+  same name; two manifest rows under one name describe two structures nothing
+  downstream can tell apart.
+- **The seed-retry loop stops when a validation report repeats unchanged.** A
+  request no seed could satisfy spent the whole budget re-deriving one answer
+  and reported `n_attempts=8` for a search it never made.
+- **The manifest records `biochar_version`.** Everything else in its metadata
+  describes the request; nothing said which code answered, though `strict_pass`
+  changed meaning in 0.5.0.
+
+### Fixed — valence
+
+- **An aromatic ring heteroatom is no longer reported over-valent.** Bond orders
+  were summed at 1.5 each, which is right for a ring member that accepts into
+  the π system and wrong for one that donates a lone pair. A furan oxygen, a
+  pyrrolic nitrogen and a thiophene sulfur were all reported as exceeding their
+  maximum, and strict mode refused structures containing the ether bridge this
+  package builds by design.
+- **`SafeBondAdder.add_bond_safe` judges against the molecule being edited.**
+  The add-an-atom-then-bond-it workflow in `docs/guides/VALENCE_SYSTEM.md`
+  raised, because the new atom was not in the snapshot it checked; and a
+  sequence of bonds to one atom was each weighed against the state before any of
+  them, so a carbon with room for two accepted four.
+- **An aromatic bond is weighed as one bond.** `Chem.BondType.AROMATIC` is the
+  enumeration value 12, so an aromatic bond asked for by name demanded twelve
+  free valences and was refused on every atom of every molecule.
+- **Pyrrolic doping picks a site it can use** — an undecorated five-ring carbon
+  with two carbon neighbours, one per ring. It previously took any five-ring
+  carbon, including one already carrying a functional-group oxygen, and added
+  the N–H on top. Partly fixed: a pentagon that loses aromaticity downstream can
+  still leave a four-bonded nitrogen, tracked by `rq-ee235774`.
+- **Typing a molecule whose rings have not been perceived no longer aborts the
+  generation.** RDKit raises rather than answering "is this atom in a ring?"
+  when nothing has run ring perception, and some nitrogen-doping paths hand the
+  typer a molecule straight out of an `RWMol` edit. Structure generation crashed
+  outright on those seeds.
+
+### Fixed — condensation setup
+
+- **The packing stage verifies what it placed.** `gmx insert-molecules` places
+  what it can and exits successfully, so a tight box yielded fewer molecules
+  than `system.top` declared and the first complaint was `grompp`, several
+  commands later, about a coordinate count.
+- **No condensation or surface stage passes `-maxwarn`.** All six carried
+  `-maxwarn 2` though none expects a warning, which excused nothing foreseen and
+  absorbed anything that turned up.
+- **The timestep rationale states the rule the code follows.** It described a
+  ~1500 K peak threshold; the code compares the heat-treatment temperature with
+  the 400 °C anchor.
+
+### Added — provenance
+
+- **A titrated structure says so.** The `.gro` title states the pH and the net
+  charge where it stated a timestamp, and the `.top`/`.itp` headers carry the pH,
+  the seed and what ionized in this sample. A protonation state is one draw from
+  an ensemble, and nothing on disk said which. A structure built with no pH
+  claims none.
+- **Titrating within a unit of a present group's pKa warns.** Each such site is
+  close to a coin flip, which the module's own docstring has always said needs
+  replicates; nothing told the caller.
+- **Condensation run directories carry `condensation_provenance.json`** — the
+  heat-treatment temperature, the peak and timestep it mapped to, the copy
+  count, the packing box, the molecule files, the protocol citation and the
+  package version.
+- **`MLChargeRefinement` reports which model answered** via `model_source`, and
+  the run-time fallback warns rather than only logging.
+- **A charge model pickled by a different scikit-learn is reported** in terms of
+  the charges it affects, naming the file, both versions and how to rebuild.
+  scikit-learn's own `InconsistentVersionWarning` is restated rather than left
+  to read as library noise.
+- **Scaling a charged molecule reports the extrapolation.** LigParGen's 1.14 is
+  fitted on neutral organic liquids; on an ion the scaled sum overshoots and the
+  correction removes it by shifting every atom equally. The charges are
+  unchanged — silently substituting a different treatment would be worse — but
+  the warning names the charge, the overshoot and the shift.
+
+### Added — project
+
+- `rqm/parameter-sweep.md`, `rqm/ph-protonation.md`, `rqm/valence-validation.md`,
+  `rqm/condensation-annealing.md` and `rqm/charge-backends.md`, taking the
+  requirements set to fourteen modules.
+- `conda-recipe/` is verified by building: `conda build conda-recipe/` produces
+  `biochar-0.5.0-py_0.conda` with all four console scripts exercised.
+
 ## [0.5.0] — August 3, 2026
 
 > **Exported topologies changed. Re-run anything whose results matter.**

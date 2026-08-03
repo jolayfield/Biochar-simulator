@@ -7,6 +7,35 @@ Changelog
    is not a full mirror of it: releases 0.3.0 and 0.4.0 are recorded there and
    are not reproduced here.
 
+Unreleased
+----------
+
+Requirements coverage extended to the five modules that were unspecified:
+parameter sweep, pH protonation, valence validation, condensation annealing, and
+the QM and ML charge backends. Fifteen defects found and fixed; see
+``CHANGELOG.md`` for the full list.
+
+.. warning::
+
+   **Three changes break existing code or existing outcomes.** A sweep manifest
+   records ``skipped`` where it recorded ``failed``;
+   ``on_validation_fail: strict`` raises instead of completing; and a sweep
+   refuses ``molecule_name`` in ``fixed`` or in an axis, since it overrode the
+   per-point name while each point still reported the templated one.
+
+- **An aromatic ring heteroatom is no longer reported over-valent.** A furan
+  oxygen, a pyrrolic nitrogen and a thiophene sulfur were all judged by summed
+  bond orders, so strict mode refused structures containing the ether bridge
+  this package builds by design.
+- **A titrated structure records its pH**, net charge and sampling seed in the
+  files it produces. A protonation state is one draw from an ensemble, and
+  nothing on disk said which.
+- **Condensation run directories record their provenance**, and their packing
+  stage verifies what it placed against what the topology declares.
+- **A charge model pickled by a different scikit-learn is reported** in terms of
+  the charges it affects, and ``MLChargeRefinement.model_source`` names which
+  model answered.
+
 0.5.0 (2026-08-03)
 ------------------
 

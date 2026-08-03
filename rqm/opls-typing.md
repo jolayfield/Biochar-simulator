@@ -250,6 +250,27 @@ Feature: Separate carboxyl oxygens from phenolic oxygens
     Then both of its oxygens type as carboxylate rather than one as a neutral carbonyl
 ```
 
+## Typing Answers for Any Molecule the Pipeline Produces <!-- rq-6ae779c4 -->
+
+Typing asks every atom whether it sits in a ring, and RDKit raises rather than answering when
+nothing has perceived the rings on that molecule yet. A molecule arriving straight out of an
+`RWMol` edit has no ring information — some nitrogen-doping paths produce exactly that — so a
+question with a perfectly good answer aborts the whole generation.
+
+Ring perception is cheap and idempotent, and it is not sanitisation: it cannot disturb the bond
+types the heteroatom stages worked to set, which is why it is safe to do here rather than
+requiring every upstream stage to remember.
+
+```gherkin
+Feature: Type a molecule whose rings have not been perceived
+
+  @rq-c6ab7cbe
+  Scenario: A molecule with no ring information is typed rather than refused
+    Given a molecule assembled by editing, with no ring perception run on it
+    When its atoms are typed
+    Then every atom receives a type
+```
+
 ## Cross-references <!-- rq-ef429ed9 -->
 
 - The functional groups typed here are placed by `heteroatom-assignment.md`.

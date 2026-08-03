@@ -9,6 +9,7 @@ import logging
 import random
 from typing import Callable, Optional, Tuple, List, Dict
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 from rdkit import Chem
@@ -562,11 +563,56 @@ class BiocharGenerator:
             basename=basename,
             include_periodic_box=self.config.periodic_box,
             box_size=self.config.box_size,
+            title=self._structure_title(),
+            provenance=self._provenance_lines(),
         )
 
         logger.info("GROMACS files written: %s | %s | %s", gro_path, top_path, itp_path)
 
         return gro_path, top_path, itp_path
+
+    def _structure_title(self) -> str:
+        """The `.gro` title line: what distinguishes this structure.
+
+        Two structures built at pH 3 and pH 11 have the same skeleton, the same
+        functional groups, and differ only in their protonation -- which the
+        title is the only human-readable record of. A timestamp distinguishes
+        them from nothing.
+
+        The pH appears only when one was requested. A structure that was never
+        titrated has no pH to report, and stamping a default would be a claim
+        about chemistry nobody made.
+        """
+        stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        parts = [f"Biochar structure generated on {stamp}"]
+        if self.config.pH is not None:
+            charge = getattr(self.composition, "net_charge", None)
+            charge_note = f", net charge {charge:+d}" if charge is not None else ""
+            parts.append(f"titrated at pH {self.config.pH:g}{charge_note}")
+        return ", ".join(parts)
+
+    def _provenance_lines(self) -> List[str]:
+        """Header comments for the `.top` and `.itp`.
+
+        A protonation state is one sample from an ensemble, so the pH and the
+        seed it was drawn with are what make a topology reproducible. Neither
+        is recoverable from the file: a zero charge is equally consistent with
+        pH 2 and with no pH at all.
+        """
+        if self.config.pH is None:
+            return []
+        lines = [
+            f"Protonation sampled at pH {self.config.pH:g}, seed {self.config.seed}"
+        ]
+        counts = getattr(self.composition, "ionized_counts", None)
+        if counts:
+            placed = ", ".join(f"{g} {n}" for g, n in sorted(counts.items()))
+            lines.append(f"Ionized in this sample: {placed}")
+        lines.append(
+            "One sample of the ensemble at this pH, not the ensemble mean -- "
+            "vary the seed for replicates"
+        )
+        return lines
 
     def print_summary(self):
         """Print summary of generated structure."""

@@ -35,6 +35,7 @@ final stage uses ``constraints = h-bonds``.
 
 from __future__ import annotations
 
+import json
 import math
 import re
 import shutil
@@ -52,8 +53,11 @@ class CondensationError(Exception):
 # HTT → (peak temperature, timestep) scaling
 # --------------------------------------------------------------------------- #
 # Wood anchored three HTTs; peak_T is interpolated linearly between/clamped
-# outside these, and the timestep drops to 0.5 fs once the peak exceeds ~1500 K
-# (i.e. above the 400 °C anchor), matching their Table 6/7 choices.
+# outside these. The timestep is keyed to the *anchor*, not to the peak: 1.0 fs
+# at or below the 400 °C anchor, 0.5 fs above it. Wood gives only these three
+# points, so any rule between them is ours, and this is the conservative one --
+# a request at 450 °C anneals at about 1250 K with a 0.5 fs step because the
+# halving point is unknown and an unstable hot run is worse than a slow one.
 _HTT_ANCHORS = {
     400.0: (1000.0, 1.0),
     600.0: (2000.0, 0.5),
@@ -79,8 +83,13 @@ def anneal_spec_for_htt(htt_c: float) -> AnnealSpec:
     """Map a pyrolysis HTT (°C) to Wood's annealing peak temperature + timestep.
 
     Anchored on 400/600/800 °C; peak_T is linearly interpolated between anchors
-    and clamped outside them. Timestep is 1.0 fs at/below the 400 °C anchor and
-    0.5 fs above it (Wood used 0.5 fs for the hotter 600/800 °C systems).
+    and clamped outside them.
+
+    The timestep is decided by which side of the lowest anchor the request falls
+    on, not by the peak temperature it produces: 1.0 fs at or below the 400 °C
+    anchor, 0.5 fs above it. Wood used 0.5 fs for the hotter 600/800 °C systems
+    and gives no value in between, so this is the conservative reading of a gap
+    in the citation rather than a threshold they stated.
     """
     anchors = sorted(_HTT_ANCHORS.items())
     lo_htt, (lo_T, _) = anchors[0]
@@ -353,6 +362,40 @@ def _gro_extent_nm(gro_text: str) -> float:
     return max(max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs))
 
 
+def _gro_atom_count(gro_text: str) -> int:
+    """Atoms in a `.gro`, from its second line. 0 when it cannot be read."""
+    lines = gro_text.splitlines()
+    if len(lines) < 2:
+        return 0
+    try:
+        return int(lines[1].split()[0])
+    except (ValueError, IndexError):
+        return 0
+
+
+def _write_provenance(out: Path, **fields) -> Path:
+    """Record what this run directory is a simulation of.
+
+    None of it is recoverable from the files beside it. The `.mdp` carries the
+    peak temperature but not the heat-treatment temperature it was mapped from,
+    the `.top` carries a copy count but not the box those copies were packed
+    into, and neither says whether the mapping that produced them has since
+    changed -- which is what the version is for.
+    """
+    from .. import __version__
+
+    record = dict(fields)
+    record["peak_T_K"] = fields["spec"].peak_T_K
+    record["timestep_fs"] = fields["spec"].timestep_fs
+    record.pop("spec")
+    record["protocol"] = "Wood et al. 2024, Cell Reports Physical Science 5, 102037"
+    record["biochar_version"] = __version__
+
+    path = out / "condensation_provenance.json"
+    path.write_text(json.dumps(record, indent=2, default=str) + "\n")
+    return path
+
+
 def estimate_box_nm(gro_text: str, n_copies: int, loose_factor: float = 1.6) -> float:
     """A generous cubic box side (nm) so *n_copies* pack loosely without overlap.
 
@@ -389,6 +432,10 @@ class PackSpec:
     n_copies: int
     box_nm: float        # cubic box side for gmx insert-molecules
     insertion_try: int = 200
+    # Atoms in one molecule. The packed .gro reports only a total, so this is
+    # what turns it back into a molecule count for the shortfall check. Zero
+    # means unknown and the check is skipped rather than guessed at.
+    atoms_per_molecule: int = 0
 
 
 # --------------------------------------------------------------------------- #
@@ -452,21 +499,38 @@ def render_condensation_script(
             f'-box {b:g} {b:g} {b:g} -try {pack.insertion_try} -seed "$rep" -o "$GRO"',
             "",
         ]
+        if pack.atoms_per_molecule > 0:
+            want = pack.n_copies * pack.atoms_per_molecule
+            lines += [
+                "  # insert-molecules places what it can and exits 0, so a box",
+                "  # too tight yields fewer molecules than system.top declares.",
+                "  # Unchecked, the first complaint is grompp several commands",
+                "  # later about a coordinate count -- the symptom, not the cause.",
+                """  PLACED=$(awk 'NR==2 {print $1}' "$GRO")""",
+                f'  if [ "$PLACED" -ne {want} ]; then',
+                f'    echo "packing placed $PLACED atoms; system.top declares '
+                f'{pack.n_copies} molecules ({want} atoms)." >&2',
+                f'    echo "Raise the box (currently {b:g} nm), raise -try '
+                f'(currently {pack.insertion_try}), or lower the copy count." >&2',
+                "    exit 1",
+                "  fi",
+                "",
+            ]
     lines += [
         "  # [1/4] Energy minimization",
-        '  "$GMX" grompp -f "$SIM/em.mdp" -c "$GRO" -p "$TOP" -o "$R/em.tpr" -maxwarn 2',
+        '  "$GMX" grompp -f "$SIM/em.mdp" -c "$GRO" -p "$TOP" -o "$R/em.tpr"',
         '  "$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$R/em.tpr" -deffnm "$R/em"',
         "",
         "  # [2/4] NVT (hot) — fresh velocities per repeat (gen_seed = -1)",
-        '  "$GMX" grompp -f "$SIM/nvt.mdp" -c "$R/em.gro" -p "$TOP" -o "$R/nvt.tpr" -maxwarn 2',
+        '  "$GMX" grompp -f "$SIM/nvt.mdp" -c "$R/em.gro" -p "$TOP" -o "$R/nvt.tpr"',
         '  "$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$R/nvt.tpr" -deffnm "$R/nvt"',
         "",
         "  # [3/4] NPT simulated annealing (heat/cool)",
-        '  "$GMX" grompp -f "$SIM/npt_anneal.mdp" -c "$R/nvt.gro" -t "$R/nvt.cpt" -p "$TOP" -o "$R/anneal.tpr" -maxwarn 2',
+        '  "$GMX" grompp -f "$SIM/npt_anneal.mdp" -c "$R/nvt.gro" -t "$R/nvt.cpt" -p "$TOP" -o "$R/anneal.tpr"',
         '  "$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$R/anneal.tpr" -deffnm "$R/anneal"',
         "",
         "  # [4/4] NPT final equilibration (300 K, 1 bar)",
-        '  "$GMX" grompp -f "$SIM/npt_final.mdp" -c "$R/anneal.gro" -t "$R/anneal.cpt" -p "$TOP" -o "$R/final.tpr" -maxwarn 2',
+        '  "$GMX" grompp -f "$SIM/npt_final.mdp" -c "$R/anneal.gro" -t "$R/anneal.cpt" -p "$TOP" -o "$R/final.tpr"',
         '  "$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$R/final.tpr" -deffnm "$R/final"',
         '  echo "repeat $rep condensed structure: $R/final.gro"',
         "done",
@@ -567,7 +631,12 @@ def setup_condensation(
     for name, content in render_mdp_set(spec).items():
         (out / name).write_text(content)
 
-    pack = PackSpec(molecule_gro=molecule_gro.name, n_copies=n_copies, box_nm=box_nm)
+    pack = PackSpec(
+        molecule_gro=molecule_gro.name,
+        n_copies=n_copies,
+        box_nm=box_nm,
+        atoms_per_molecule=_gro_atom_count(gro_text),
+    )
     script = render_condensation_script(
         "packed.gro", "system.top", spec,
         n_repeats=n_repeats, gmx_bin=gmx_bin, ntomp=ntomp, pack=pack,
@@ -575,6 +644,19 @@ def setup_condensation(
     script_path = out / "run_condensation.sh"
     script_path.write_text(script)
     script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+
+    _write_provenance(
+        out,
+        htt_c=htt_c,
+        spec=spec,
+        n_copies=n_copies,
+        n_repeats=n_repeats,
+        box_nm=box_nm,
+        moleculetype=moltype,
+        molecule_gro=molecule_gro.name,
+        molecule_itp=molecule_itp.name,
+        atoms_per_molecule=pack.atoms_per_molecule,
+    )
     return out
 
 
@@ -717,11 +799,11 @@ def render_surface_script(
         '"$GMX" editconf -f "$BULK" -o "$SIM/expanded.gro" -box "$BX" "$BY" "$NEWZ" -c',
         "",
         "# [2/3] Energy minimization of the expanded system",
-        '"$GMX" grompp -f "$SIM/em.mdp" -c "$SIM/expanded.gro" -p "$TOP" -o "$SIM/surf_em.tpr" -maxwarn 2',
+        '"$GMX" grompp -f "$SIM/em.mdp" -c "$SIM/expanded.gro" -p "$TOP" -o "$SIM/surf_em.tpr"',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/surf_em.tpr" -deffnm "$SIM/surf_em"',
         "",
         "# [3/3] Surface equilibration — 10 ns semi-isotropic NPT",
-        '"$GMX" grompp -f "$SIM/surf_npt.mdp" -c "$SIM/surf_em.gro" -p "$TOP" -o "$SIM/surf_npt.tpr" -maxwarn 2',
+        '"$GMX" grompp -f "$SIM/surf_npt.mdp" -c "$SIM/surf_em.gro" -p "$TOP" -o "$SIM/surf_npt.tpr"',
         '"$GMX" mdrun -v -ntmpi 1 -ntomp "$NTOMP" -s "$SIM/surf_npt.tpr" -deffnm "$SIM/surf_npt"',
         "",
         'echo "Exposed-surface structure: $SIM/surf_npt.gro"',

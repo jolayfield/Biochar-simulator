@@ -13,6 +13,7 @@ rather than a single structure (see :class:`ProtonationAssigner`).
 
 import logging
 import random
+import warnings
 from collections import Counter
 from typing import Dict, List, Optional, Tuple
 
@@ -27,6 +28,11 @@ from .heteroatom_assignment import (
 from .opls_typing import AtomTyper
 
 logger = logging.getLogger(__name__)
+
+# How close to a pKa counts as "on it". At one unit the Henderson-Hasselbalch
+# fraction is 0.09 / 0.91, so the band is where a site's outcome is genuinely
+# uncertain rather than merely not exactly saturated.
+_TRANSITION_BAND = 1.0
 
 
 def fraction_ionized(pKa: float, pH: float, kind: str) -> float:
@@ -140,6 +146,7 @@ class ProtonationAssigner:
             )
 
         sites = self._find_sites(mol)
+        self._warn_on_transition_band(sites, pH)
         decisions = self._decide(sites, pH)
         out, applied = self._apply(mol, decisions)
 
@@ -165,6 +172,42 @@ class ProtonationAssigner:
             if group is not None:
                 sites.append((idx, group))
         return sites
+
+    def _warn_on_transition_band(
+        self, sites: List[Tuple[int, str]], pH: float
+    ) -> None:
+        """Say so when the requested pH sits on a pKa of a group that is present.
+
+        Within about a unit of a pKa each site is close to a coin flip, so one
+        structure is a poor stand-in for the ensemble -- the fraction ionized
+        runs from 0.09 to 0.91 across the band, and a single small flake samples
+        it a handful of times. Away from the band the draw is nearly
+        deterministic (a carboxyl at pH 7 ionizes with probability 0.998) and
+        there is nothing to say.
+
+        Scoped to groups the molecule actually carries. Warning about a pKa no
+        site in this structure has would fire on almost every request and mean
+        nothing.
+        """
+        present = {group for _, group in sites}
+        in_band = sorted(
+            (group, PROTONATION_STATES[group].pKa)
+            for group in present
+            if abs(PROTONATION_STATES[group].pKa - pH) <= _TRANSITION_BAND
+        )
+        if not in_band:
+            return
+
+        named = ", ".join(f"{g} (pKa {pka:g})" for g, pka in in_band)
+        warnings.warn(
+            f"pH {pH:g} is within {_TRANSITION_BAND:g} unit of the pKa of "
+            f"{named}. Each such site is close to a coin flip, so this "
+            f"structure is one sample of the ensemble rather than "
+            f"representative of it. Generate replicates across seeds and "
+            f"average, or read ionized_counts to see what this sample got.",
+            UserWarning,
+            stacklevel=3,
+        )
 
     def _decide(
         self, sites: List[Tuple[int, str]], pH: float

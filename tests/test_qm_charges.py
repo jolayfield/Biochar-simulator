@@ -81,6 +81,7 @@ class TestCM1AMapping:
         cm = cm1a_from_am1(q, b, [6, 1, 1, 1, 1])
         assert cm == pytest.approx(q)
 
+    # rq-ff6dbfa6
     def test_charge_is_conserved(self):
         # Arbitrary inputs: CM1A must conserve total charge exactly.
         qm = [-0.39, 0.20, 0.19]
@@ -97,6 +98,7 @@ class TestCM1AMapping:
         assert cm[0] == pytest.approx(-0.7083, abs=1e-3)
         assert cm[1] == pytest.approx(0.3542, abs=1e-3)
 
+    # rq-c49c52b0
     def test_scale_and_neutralize(self):
         cm = [-0.7083, 0.3542, 0.3542]
         scaled = scale_and_neutralize(cm, total_charge=0.0)
@@ -106,6 +108,7 @@ class TestCM1AMapping:
 
 
 class TestDriver:
+    # rq-6b61adce
     def test_missing_binary_raises(self):
         from rdkit import Chem
         from rdkit.Chem import AllChem
@@ -141,6 +144,7 @@ class TestConfigWiring:
         cfg = GeneratorConfig(charge_method="qm", target_num_carbons=10)
         assert cfg.charge_method == "qm"
 
+    # rq-44546ffc
     def test_invalid_method_rejected(self):
         from biochar.pipeline.biochar_generator import GeneratorConfig
 

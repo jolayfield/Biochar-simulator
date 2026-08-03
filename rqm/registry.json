@@ -22,6 +22,13 @@
     "title": "The Exported Files Describe the Geometry That Was Built",
     "type": "section"
   },
+  "rq-039cc5bf": {
+    "decl": "- `render_mdp_set(spec) -> Dict[str, str]`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "render_mdp_set",
+    "type": "api-item"
+  },
   "rq-03a40f15": {
     "decl": "Scenario: Every mapped type names the right element",
     "file": "opls-typing",
@@ -42,6 +49,34 @@
     "title": "Per-Sheet Protonation Consumes a Seed Range",
     "type": "section"
   },
+  "rq-05ee02a8": {
+    "decl": "## The Module Writes Files and Nothing Else",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Module Writes Files and Nothing Else",
+    "type": "section"
+  },
+  "rq-070a2c21": {
+    "decl": "Scenario: Pyrrolic nitrogen is still placed where the sites qualify",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Pyrrolic nitrogen is still placed where the sites qualify",
+    "type": "scenario"
+  },
+  "rq-072134ee": {
+    "decl": "## A Structure Is One Sample, Not the Ensemble Mean",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "A Structure Is One Sample, Not the Ensemble Mean",
+    "type": "section"
+  },
   "rq-07b27c79": {
     "decl": "Scenario: Atom names agree between the structure and the topology at any size",
     "file": "gromacs-export",
@@ -52,6 +87,42 @@
       }
     ],
     "title": "Atom names agree between the structure and the topology at any size",
+    "type": "scenario"
+  },
+  "rq-08130b9d": {
+    "decl": "Scenario: A molecule with no violations validates",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule with no violations validates",
+    "type": "scenario"
+  },
+  "rq-086427f6": {
+    "decl": "Scenario: Skip records the point as skipped and writes nothing",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Skip records the point as skipped and writes nothing",
+    "type": "scenario"
+  },
+  "rq-09a84056": {
+    "decl": "Scenario: Two groups sharing a neutral type are refused",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_integration.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Two groups sharing a neutral type are refused",
     "type": "scenario"
   },
   "rq-0a48ccd8": {
@@ -66,6 +137,47 @@
     "title": "A surface that fell back to slit geometry is not labelled amorphous",
     "type": "scenario"
   },
+  "rq-0a4c0f30": {
+    "decl": "Scenario: The timestep halves above the lowest anchor",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The timestep halves above the lowest anchor",
+    "type": "scenario"
+  },
+  "rq-0be99a80": {
+    "decl": "- `QMChargeError`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "QMChargeError",
+    "type": "api-item"
+  },
+  "rq-0bf15b93": {
+    "decl": "- `GridPoint`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "GridPoint",
+    "type": "api-item"
+  },
+  "rq-0c2933ce": {
+    "decl": "- `MLChargeRefinement.train_and_save(...)`, `build_and_save_bundled_model(...)`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "MLChargeRefinement",
+    "type": "api-item"
+  },
+  "rq-0c391221": {
+    "decl": "## Cross-references",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
   "rq-0c91f5d5": {
     "decl": "Scenario: A positive defect fraction produces pentagons",
     "file": "carbon-skeleton",
@@ -76,6 +188,18 @@
       }
     ],
     "title": "A positive defect fraction produces pentagons",
+    "type": "scenario"
+  },
+  "rq-0cf2e5d4": {
+    "decl": "Scenario: The default mode keeps a structure that strict validation rejected",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The default mode keeps a structure that strict validation rejected",
     "type": "scenario"
   },
   "rq-0d326d5b": {
@@ -121,6 +245,13 @@
     "title": "Cross-references",
     "type": "section"
   },
+  "rq-142d216f": {
+    "decl": "- `generate_and_condense(output_dir, n_copies, generator_config=None, ...) -> Path`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "generate_and_condense",
+    "type": "api-item"
+  },
   "rq-1433518c": {
     "decl": "# Feature: GROMACS Run Directory Setup",
     "file": "md-setup",
@@ -155,6 +286,13 @@
     "title": "Cross-references",
     "type": "section"
   },
+  "rq-1594d21a": {
+    "decl": "- `MLChargeRefinement(model_path=None)`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "MLChargeRefinement",
+    "type": "api-item"
+  },
   "rq-15d0c9f2": {
     "decl": "## Feature API",
     "file": "md-setup",
@@ -169,6 +307,21 @@
     "refs": [],
     "title": "SurfaceBuilder",
     "type": "api-item"
+  },
+  "rq-1713a8a2": {
+    "decl": "- `PROTONATION_STATES`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "PROTONATION_STATES",
+    "type": "api-item"
+  },
+  "rq-17279822": {
+    "decl": "## QM Charges Belong to the Exported Geometry",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "QM Charges Belong to the Exported Geometry",
+    "type": "section"
   },
   "rq-1729edcb": {
     "decl": "## Nearest-Analog Values Are Chosen, Not Validated",
@@ -218,6 +371,14 @@
     "title": "A Charged Molecule Says So",
     "type": "section"
   },
+  "rq-191c700f": {
+    "decl": "## The Census Counts What Happened, Not What Was Decided",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "The Census Counts What Happened, Not What Was Decided",
+    "type": "section"
+  },
   "rq-1a3046af": {
     "decl": "Scenario: Every emitted dihedral resolves in the forcefield",
     "file": "opls-typing",
@@ -228,6 +389,46 @@
       }
     ],
     "title": "Every emitted dihedral resolves in the forcefield",
+    "type": "scenario"
+  },
+  "rq-1ae3a84a": {
+    "decl": "## A Status Means One Thing",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "A Status Means One Thing",
+    "type": "section"
+  },
+  "rq-1bdc6066": {
+    "decl": "## A Seed Retry Is a Variance Remedy, Not a Repair",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "A Seed Retry Is a Variance Remedy, Not a Repair",
+    "type": "section"
+  },
+  "rq-1e274fe6": {
+    "decl": "Scenario: A model written by a different scikit-learn is reported",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A model written by a different scikit-learn is reported",
+    "type": "scenario"
+  },
+  "rq-1e6d149c": {
+    "decl": "Scenario: Charges are computed on the given coordinates by default",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Charges are computed on the given coordinates by default",
     "type": "scenario"
   },
   "rq-1f2ce9fc": {
@@ -273,6 +474,22 @@
     ],
     "title": "A contact marginally inside the floor is not a clash",
     "type": "scenario"
+  },
+  "rq-22fa0ea0": {
+    "decl": "## The 1.14 Factor Was Derived for Neutral Molecules",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "The 1.14 Factor Was Derived for Neutral Molecules",
+    "type": "section"
+  },
+  "rq-23755c47": {
+    "decl": "## Feature API",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
   },
   "rq-2533ac5e": {
     "decl": "- `IonProfile(name: str, ca_mM: float = 0.0, mg_mM: float = 0.0, na_mM: float = 0.0, k_mM: float = 0.0, counter_ion: str = \"CL\", description: str = \"\")`",
@@ -337,6 +554,25 @@
     "title": "Ether Bond Types Must Be Repaired After Sanitisation",
     "type": "section"
   },
+  "rq-2a033e95": {
+    "decl": "Scenario: No two grid points share a molecule name",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "No two grid points share a molecule name",
+    "type": "scenario"
+  },
+  "rq-2bb117a3": {
+    "decl": "- `PH_MIN`, `PH_MAX`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "PH_MIN",
+    "type": "api-item"
+  },
   "rq-2bf0ee76": {
     "decl": "Scenario: An H/C inside the fit range is answered normally",
     "file": "temperature-model",
@@ -369,6 +605,30 @@
     "title": "Every Geometry Error Is Reported",
     "type": "section"
   },
+  "rq-2d0042a6": {
+    "decl": "Scenario: Scaling a neutral molecule reports nothing",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Scaling a neutral molecule reports nothing",
+    "type": "scenario"
+  },
+  "rq-2da595b7": {
+    "decl": "Scenario: Every status a build can return is one the documented set names",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every status a build can return is one the documented set names",
+    "type": "scenario"
+  },
   "rq-2f3c2379": {
     "decl": "Scenario: A ring carbon carries an improper term",
     "file": "gromacs-export",
@@ -393,6 +653,14 @@
     "title": "A lactone request places a phenolic group",
     "type": "scenario"
   },
+  "rq-2fcb3d7a": {
+    "decl": "## Feature API",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-2fdbb62b": {
     "decl": "Scenario: An include file the topology needs is resolved from the manifest, not a filename guess",
     "file": "md-setup",
@@ -413,12 +681,44 @@
     "title": "Ion Placement Accumulates",
     "type": "section"
   },
+  "rq-302b177e": {
+    "decl": "Scenario: A pyrrolic ring nitrogen carrying a hydrogen is valid",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A pyrrolic ring nitrogen carrying a hydrogen is valid",
+    "type": "scenario"
+  },
   "rq-304bf22a": {
     "decl": "## Provenance Is Recorded",
     "file": "temperature-model",
     "level": 2,
     "refs": [],
     "title": "Provenance Is Recorded",
+    "type": "section"
+  },
+  "rq-30534b7a": {
+    "decl": "Scenario: A stage with no expected warning suppresses nothing",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A stage with no expected warning suppresses nothing",
+    "type": "scenario"
+  },
+  "rq-30fef9a1": {
+    "decl": "## A Bond Is Judged Against the Molecule Being Edited",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "A Bond Is Judged Against the Molecule Being Edited",
     "type": "section"
   },
   "rq-312047ff": {
@@ -459,6 +759,14 @@
     "title": "TOPFileWriter",
     "type": "api-item"
   },
+  "rq-33ac898e": {
+    "decl": "## The Direction of Ionization Follows the Kind of Group",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "The Direction of Ionization Follows the Kind of Group",
+    "type": "section"
+  },
   "rq-35a5407d": {
     "decl": "Scenario: Every emitted angle resolves in the forcefield",
     "file": "opls-typing",
@@ -483,6 +791,14 @@
     "title": "An amino nitrogen types as aniline N on a small flake",
     "type": "scenario"
   },
+  "rq-39798517": {
+    "decl": "## A Model Written by a Different Library Says So",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "A Model Written by a Different Library Says So",
+    "type": "section"
+  },
   "rq-39bd2478": {
     "decl": "Scenario: Only H/C and O/C vary by feedstock",
     "file": "temperature-model",
@@ -505,6 +821,18 @@
       }
     ],
     "title": "Every ion species is placed against the coordinates the previous species produced",
+    "type": "scenario"
+  },
+  "rq-3a97bd4a": {
+    "decl": "Scenario: The final equilibration is always two femtoseconds",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The final equilibration is always two femtoseconds",
     "type": "scenario"
   },
   "rq-3b2ef55d": {
@@ -531,6 +859,38 @@
     "title": "Small-molecule structures still get clash resolution",
     "type": "scenario"
   },
+  "rq-3cf07edf": {
+    "decl": "## Every Point in the Grid Is Distinguishable From Every Other",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "Every Point in the Grid Is Distinguishable From Every Other",
+    "type": "section"
+  },
+  "rq-3cf63133": {
+    "decl": "Scenario: A substituted fallback model announces itself",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A substituted fallback model announces itself",
+    "type": "scenario"
+  },
+  "rq-3d4eeaf7": {
+    "decl": "Scenario: The annealing schedule holds, cools, then holds",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The annealing schedule holds, cools, then holds",
+    "type": "scenario"
+  },
   "rq-3e169a31": {
     "decl": "Scenario: The map holds no entries for types that do not exist",
     "file": "opls-typing",
@@ -551,6 +911,14 @@
     "title": "A Larger Target Is Reached From Above, Never From Below",
     "type": "section"
   },
+  "rq-3fcb12da": {
+    "decl": "## An Aromatic Ring Member Is Counted by Its Bonds, Not Its Bond Orders",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "An Aromatic Ring Member Is Counted by Its Bonds, Not Its Bond Orders",
+    "type": "section"
+  },
   "rq-4063a024": {
     "decl": "Scenario: Kekulization failure does not change any atom type",
     "file": "opls-typing",
@@ -563,12 +931,60 @@
     "title": "Kekulization failure does not change any atom type",
     "type": "scenario"
   },
+  "rq-4156245d": {
+    "decl": "Scenario: A molecule name fixed across the sweep is refused",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule name fixed across the sweep is refused",
+    "type": "scenario"
+  },
+  "rq-4189fd49": {
+    "decl": "Scenario: A titrated structure names its pH and seed in the topology",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A titrated structure names its pH and seed in the topology",
+    "type": "scenario"
+  },
   "rq-419ffa85": {
     "decl": "- `CarbonSkeleton`",
     "file": "carbon-skeleton",
     "refs": [],
     "title": "CarbonSkeleton",
     "type": "api-item"
+  },
+  "rq-43924feb": {
+    "decl": "Scenario: The manifest names the package version that wrote it",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The manifest names the package version that wrote it",
+    "type": "scenario"
+  },
+  "rq-44546ffc": {
+    "decl": "Scenario: An unrecognised charge method is refused at construction",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_qm_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An unrecognised charge method is refused at construction",
+    "type": "scenario"
   },
   "rq-44655f38": {
     "decl": "Scenario: An ether C-O bond survives sanitisation as a single bond",
@@ -589,6 +1005,48 @@
     "title": "SheetResult",
     "type": "api-item"
   },
+  "rq-47323ea3": {
+    "decl": "## Cross-references",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
+  "rq-475641a0": {
+    "decl": "- `estimate_box_nm(gro_text, n_copies, loose_factor=1.6) -> float`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "estimate_box_nm",
+    "type": "api-item"
+  },
+  "rq-479efbdd": {
+    "decl": "## The Files Record the pH They Were Titrated At",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "The Files Record the pH They Were Titrated At",
+    "type": "section"
+  },
+  "rq-48295a76": {
+    "decl": "- `SafeBondAdder.add_atom_safe(emol, atomic_num, formal_charge=0) -> int`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "SafeBondAdder",
+    "type": "api-item"
+  },
+  "rq-4897529c": {
+    "decl": "Scenario: A group with no entry in the table is never titrated",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A group with no entry in the table is never titrated",
+    "type": "scenario"
+  },
   "rq-49e2ed82": {
     "decl": "Scenario: Hex-lattice structures keep their coordinates",
     "file": "geometry-embedding",
@@ -600,6 +1058,14 @@
     ],
     "title": "Hex-lattice structures keep their coordinates",
     "type": "scenario"
+  },
+  "rq-4a9e69bb": {
+    "decl": "## Feature API",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
   },
   "rq-4af71330": {
     "decl": "Scenario: A target matching a library size is met exactly",
@@ -624,6 +1090,13 @@
     ],
     "title": "An unparseable library entry is reported",
     "type": "scenario"
+  },
+  "rq-4e3bf53e": {
+    "decl": "- `QMChargeAssigner.assign(mol, coords, ...) -> Dict[int, float]`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "QMChargeAssigner",
+    "type": "api-item"
   },
   "rq-4e6abc16": {
     "decl": "Scenario: The fallback is reported to the caller",
@@ -677,6 +1150,18 @@
     "title": "A partially placed functional group does not satisfy strict validation",
     "type": "scenario"
   },
+  "rq-5084d61d": {
+    "decl": "Scenario: Each repeat runs the four stages in order",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Each repeat runs the four stages in order",
+    "type": "scenario"
+  },
   "rq-50c742cf": {
     "decl": "## Supported Functional Groups",
     "file": "heteroatom-assignment",
@@ -699,6 +1184,37 @@
       }
     ],
     "title": "A compressed bond is still rejected after order scaling",
+    "type": "scenario"
+  },
+  "rq-50d5f27c": {
+    "decl": "Scenario: A temperature between anchors is interpolated",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A temperature between anchors is interpolated",
+    "type": "scenario"
+  },
+  "rq-50e10082": {
+    "decl": "- `run_sweep(config, output_directory=None, progress_callback=None, quiet=True) -> Dict`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "run_sweep",
+    "type": "api-item"
+  },
+  "rq-516fd1c6": {
+    "decl": "Scenario: Repeats are seeded differently",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Repeats are seeded differently",
     "type": "scenario"
   },
   "rq-51c8f769": {
@@ -729,6 +1245,14 @@
     "title": "A high-oxygen structure validates without falling back",
     "type": "scenario"
   },
+  "rq-53200bd1": {
+    "decl": "## Every Repeat Runs the Full Chain",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "Every Repeat Runs the Full Chain",
+    "type": "section"
+  },
   "rq-5340daab": {
     "decl": "Scenario: A residue name longer than five characters is truncated",
     "file": "gromacs-export",
@@ -740,6 +1264,14 @@
     ],
     "title": "A residue name longer than five characters is truncated",
     "type": "scenario"
+  },
+  "rq-53ec84de": {
+    "decl": "## A Substituted Ring Carbon Is Not a Pyrrolic Nitrogen Site",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "A Substituted Ring Carbon Is Not a Pyrrolic Nitrogen Site",
+    "type": "section"
   },
   "rq-5435c9d8": {
     "decl": "Scenario: The overshoot stays within a ring or two",
@@ -753,6 +1285,20 @@
     "title": "The overshoot stays within a ring or two",
     "type": "scenario"
   },
+  "rq-5450da17": {
+    "decl": "- `load_sweep_config(path) -> Dict`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "load_sweep_config",
+    "type": "api-item"
+  },
+  "rq-55893f23": {
+    "decl": "- `AnnealSpec`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "AnnealSpec",
+    "type": "api-item"
+  },
   "rq-5658c4b6": {
     "decl": "Scenario: Clash resolution does not run when there is nothing to resolve",
     "file": "geometry-embedding",
@@ -764,6 +1310,13 @@
     ],
     "title": "Clash resolution does not run when there is nothing to resolve",
     "type": "scenario"
+  },
+  "rq-56adfdbe": {
+    "decl": "- `expand_grid(axes, fixed=None, name_template=\"BC{i:03d}\") -> List[GridPoint]`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "expand_grid",
+    "type": "api-item"
   },
   "rq-56e62d3f": {
     "decl": "### A clash needs to be deeper than embedding noise",
@@ -812,12 +1365,32 @@
     "title": "The annealing peak temperature follows the pyrolysis temperature",
     "type": "scenario"
   },
+  "rq-5c5a5c84": {
+    "decl": "Scenario: A molecule carrying both is cationic at low pH and anionic at high",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule carrying both is cationic at low pH and anionic at high",
+    "type": "scenario"
+  },
   "rq-5d9abc46": {
     "decl": "## An Estimate Carries the Evidence Behind It",
     "file": "temperature-model",
     "level": 2,
     "refs": [],
     "title": "An Estimate Carries the Evidence Behind It",
+    "type": "section"
+  },
+  "rq-5e6bf91f": {
+    "decl": "## Feature API",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
     "type": "section"
   },
   "rq-5f4e2e68": {
@@ -847,6 +1420,18 @@
     "title": "Single-molecule pipeline",
     "type": "section"
   },
+  "rq-626e9fb8": {
+    "decl": "Scenario: Strict refuses the sweep rather than recording a row",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Strict refuses the sweep rather than recording a row",
+    "type": "scenario"
+  },
   "rq-62e0732a": {
     "decl": "Scenario: The topology the solvation step updates exists before that step runs",
     "file": "md-setup",
@@ -861,6 +1446,18 @@
       }
     ],
     "title": "The topology the solvation step updates exists before that step runs",
+    "type": "scenario"
+  },
+  "rq-633ccda5": {
+    "decl": "Scenario: The census never claims an ionization the molecule does not carry",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_integration.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The census never claims an ionization the molecule does not carry",
     "type": "scenario"
   },
   "rq-63c93813": {
@@ -882,6 +1479,14 @@
     "title": "A carbonyl is measured against the double-bond expectation",
     "type": "scenario"
   },
+  "rq-64a42a92": {
+    "decl": "## The Name a Point Is Recorded Under Is the Name in Its Topology",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "The Name a Point Is Recorded Under Is the Name in Its Topology",
+    "type": "section"
+  },
   "rq-6659180d": {
     "decl": "## Aromatic Rings Carry the Terms That Keep Them Planar",
     "file": "gromacs-export",
@@ -897,6 +1502,13 @@
     "refs": [],
     "title": "Cross-references",
     "type": "section"
+  },
+  "rq-67aceac9": {
+    "decl": "# Feature: pH-Dependent Protonation",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "Feature: pH-Dependent Protonation",
+    "type": "file"
   },
   "rq-682a21cd": {
     "decl": "Scenario: The seeds a surface consumes are documented for the caller",
@@ -926,6 +1538,26 @@
     "title": "The Wet Stage Holds the Sheet and Relaxes the Solvent",
     "type": "section"
   },
+  "rq-6ae779c4": {
+    "decl": "## Typing Answers for Any Molecule the Pipeline Produces",
+    "file": "opls-typing",
+    "level": 2,
+    "refs": [],
+    "title": "Typing Answers for Any Molecule the Pipeline Produces",
+    "type": "section"
+  },
+  "rq-6b61adce": {
+    "decl": "Scenario: A missing MOPAC binary is reported",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_qm_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A missing MOPAC binary is reported",
+    "type": "scenario"
+  },
   "rq-6b70c04c": {
     "decl": "Scenario: An intramolecular hydrogen bond is not reported as a clash",
     "file": "geometry-embedding",
@@ -937,6 +1569,13 @@
     ],
     "title": "An intramolecular hydrogen bond is not reported as a clash",
     "type": "scenario"
+  },
+  "rq-6b827a77": {
+    "decl": "- `ValenceReport.get_summary(mol) -> Dict`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "ValenceReport",
+    "type": "api-item"
   },
   "rq-6ba78ac5": {
     "decl": "Scenario: A protonated surface is reproducible from its seed",
@@ -961,6 +1600,14 @@
     ],
     "title": "An overlap too short even for a hydrogen bond is still a clash",
     "type": "scenario"
+  },
+  "rq-6d766a3c": {
+    "decl": "## Every Violation Is Named",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "Every Violation Is Named",
+    "type": "section"
   },
   "rq-6dd192a1": {
     "decl": "## Cross-references",
@@ -997,6 +1644,13 @@
     "title": "setup_one_structure",
     "type": "api-item"
   },
+  "rq-7081e03f": {
+    "decl": "- `PointResult`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "PointResult",
+    "type": "api-item"
+  },
   "rq-70e5f033": {
     "decl": "Scenario: No assignable type lacks a GROMACS mapping",
     "file": "opls-typing",
@@ -1021,6 +1675,42 @@
     "title": "An unreachable nitrogen environment is flagged, not guessed",
     "type": "scenario"
   },
+  "rq-7286d3d9": {
+    "decl": "Scenario: Titration does not disturb the caller's random stream",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Titration does not disturb the caller's random stream",
+    "type": "scenario"
+  },
+  "rq-75419e1a": {
+    "decl": "Scenario: A condensation run directory records its provenance",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A condensation run directory records its provenance",
+    "type": "scenario"
+  },
+  "rq-75d3624b": {
+    "decl": "Scenario: A matching version is not reported",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A matching version is not reported",
+    "type": "scenario"
+  },
   "rq-766e9c83": {
     "decl": "## Feature API",
     "file": "temperature-model",
@@ -1036,6 +1726,13 @@
     "refs": [],
     "title": "Typing Must Not Depend on Molecule Size",
     "type": "section"
+  },
+  "rq-78db3aec": {
+    "decl": "- `SweepError`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "SweepError",
+    "type": "api-item"
   },
   "rq-78e7477d": {
     "decl": "Scenario: The topology states a non-zero total charge and how to neutralise it",
@@ -1076,6 +1773,14 @@
     "title": "TemperatureModel",
     "type": "api-item"
   },
+  "rq-7b79f60e": {
+    "decl": "## The Annealing Schedule Is the Published One",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Annealing Schedule Is the Published One",
+    "type": "section"
+  },
   "rq-7d3e9432": {
     "decl": "Scenario: A quinone request places a phenolic group",
     "file": "heteroatom-assignment",
@@ -1088,12 +1793,63 @@
     "title": "A quinone request places a phenolic group",
     "type": "scenario"
   },
+  "rq-7dee31f6": {
+    "decl": "## The Published Anchors Are Reproduced Exactly",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Published Anchors Are Reproduced Exactly",
+    "type": "section"
+  },
   "rq-7e4059d9": {
     "decl": "# Feature: Temperature × Feedstock Composition Model",
     "file": "temperature-model",
     "refs": [],
     "title": "Feature: Temperature × Feedstock Composition Model",
     "type": "file"
+  },
+  "rq-7e5c5b4c": {
+    "decl": "- `POINT_STATUSES`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "POINT_STATUSES",
+    "type": "api-item"
+  },
+  "rq-7e778b79": {
+    "decl": "Scenario: A pH inside a group's transition band is reported",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A pH inside a group's transition band is reported",
+    "type": "scenario"
+  },
+  "rq-7e9935a1": {
+    "decl": "Scenario: An ether bond is not left aromatic by the protonation pass",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_integration.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An ether bond is not left aromatic by the protonation pass",
+    "type": "scenario"
+  },
+  "rq-7ed1460a": {
+    "decl": "Scenario: A titrated structure names its pH in the coordinate file",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A titrated structure names its pH in the coordinate file",
+    "type": "scenario"
   },
   "rq-7ef42231": {
     "decl": "## Aromaticity Is Extrapolated Beyond Its Fit",
@@ -1110,6 +1866,18 @@
     "title": "Architecture",
     "type": "file"
   },
+  "rq-7f22837b": {
+    "decl": "Scenario: The documented status table names the statuses the module declares",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The documented status table names the statuses the module declares",
+    "type": "scenario"
+  },
   "rq-80b04b19": {
     "decl": "## Embedding Path Selection",
     "file": "geometry-embedding",
@@ -1117,6 +1885,13 @@
     "refs": [],
     "title": "Embedding Path Selection",
     "type": "section"
+  },
+  "rq-80dfec16": {
+    "decl": "# Feature: Parameter Sweep",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "Feature: Parameter Sweep",
+    "type": "file"
   },
   "rq-8155aecf": {
     "decl": "Scenario: Crossed nitrogen doping and an unverified functional group warns",
@@ -1128,6 +1903,25 @@
       }
     ],
     "title": "Crossed nitrogen doping and an unverified functional group warns",
+    "type": "scenario"
+  },
+  "rq-8156f09f": {
+    "decl": "- `SafeBondAdder.can_add_bond(mol, i, j, bond_type=1) -> Tuple[bool, str]`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "SafeBondAdder",
+    "type": "api-item"
+  },
+  "rq-817541fc": {
+    "decl": "Scenario: Scaling a charged molecule reports the extrapolation",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Scaling a charged molecule reports the extrapolation",
     "type": "scenario"
   },
   "rq-8176d084": {
@@ -1142,6 +1936,14 @@
     "title": "Small molecules are bounded by their perimeter",
     "type": "scenario"
   },
+  "rq-826be977": {
+    "decl": "## The Manifest Records What Produced It",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "The Manifest Records What Produced It",
+    "type": "section"
+  },
   "rq-8340860d": {
     "decl": "- `ITPFileWriter.write(filepath: str, mol: Chem.Mol, atom_types: Dict[int, str], charges: Dict[int, float], molecule_name: str = \"BIOCHAR\", include_dihedrals: bool = True) -> None`",
     "file": "gromacs-export",
@@ -1155,6 +1957,18 @@
     "refs": [],
     "title": "SkeletonValidator",
     "type": "api-item"
+  },
+  "rq-8410a38d": {
+    "decl": "Scenario: A suppressed warning is named where it is allowed",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A suppressed warning is named where it is allowed",
+    "type": "scenario"
   },
   "rq-85bcfa59": {
     "decl": "Scenario: Every emitted term reaches the binary topology",
@@ -1219,6 +2033,13 @@
     "title": "The reported range is the one belonging to the property",
     "type": "scenario"
   },
+  "rq-881e08bd": {
+    "decl": "# Feature: Condensation Annealing",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "Feature: Condensation Annealing",
+    "type": "file"
+  },
   "rq-884c2220": {
     "decl": "Scenario: Distinct sheets each get their own include file",
     "file": "surface-stacking",
@@ -1237,6 +2058,14 @@
     "refs": [],
     "title": "get_ion_profile",
     "type": "api-item"
+  },
+  "rq-8d8ebbfe": {
+    "decl": "## Cross-references",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
   },
   "rq-8e4335b8": {
     "decl": "Scenario: Every supplement entry states where its value came from",
@@ -1306,6 +2135,38 @@
     "title": "A Suppressed Warning Is Named",
     "type": "section"
   },
+  "rq-94d2e77f": {
+    "decl": "## Cross-references",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
+  },
+  "rq-952d1150": {
+    "decl": "Scenario: An acidic group ionizes as pH rises",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An acidic group ionizes as pH rises",
+    "type": "scenario"
+  },
+  "rq-95aaba31": {
+    "decl": "Scenario: An aromatic bond is weighed as one bond",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An aromatic bond is weighed as one bond",
+    "type": "scenario"
+  },
   "rq-997c1640": {
     "decl": "Scenario: The timestep drops with the schedule it belongs to",
     "file": "md-setup",
@@ -1318,6 +2179,38 @@
     "title": "The timestep drops with the schedule it belongs to",
     "type": "scenario"
   },
+  "rq-998f84fb": {
+    "decl": "Scenario: A sequence of bonds to one atom is bounded by its valence",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A sequence of bonds to one atom is bounded by its valence",
+    "type": "scenario"
+  },
+  "rq-99f30fb0": {
+    "decl": "## Only Groups in the Table Are Titrated",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "Only Groups in the Table Are Titrated",
+    "type": "section"
+  },
+  "rq-9a027a37": {
+    "decl": "Scenario: The script verifies the packed count against the topology",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The script verifies the packed count against the topology",
+    "type": "scenario"
+  },
   "rq-9a108035": {
     "decl": "## Cross-references",
     "file": "generation-config",
@@ -1325,6 +2218,13 @@
     "refs": [],
     "title": "Cross-references",
     "type": "section"
+  },
+  "rq-9a268ae7": {
+    "decl": "- `get_valence_range(atomic_num: int, formal_charge: int = 0) -> Tuple[int, int]`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "get_valence_range",
+    "type": "api-item"
   },
   "rq-9a9488ab": {
     "decl": "Scenario: An aromatic C-C is measured against the aromatic expectation",
@@ -1350,6 +2250,18 @@
     "title": "An unattainable H/C is refused at construction, not at generation",
     "type": "scenario"
   },
+  "rq-9ba33460": {
+    "decl": "Scenario: Each anchored heat-treatment temperature returns its published pair",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Each anchored heat-treatment temperature returns its published pair",
+    "type": "scenario"
+  },
   "rq-9bace66f": {
     "decl": "Scenario: pH combined with the ML charge backend is refused",
     "file": "generation-config",
@@ -1362,12 +2274,32 @@
     "title": "pH combined with the ML charge backend is refused",
     "type": "scenario"
   },
+  "rq-9bf47e81": {
+    "decl": "Scenario: A basic group deionizes as pH rises",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A basic group deionizes as pH rises",
+    "type": "scenario"
+  },
   "rq-9c8fe79c": {
     "decl": "## Defect Fractions Are Per-Ring Probabilities",
     "file": "carbon-skeleton",
     "level": 2,
     "refs": [],
     "title": "Defect Fractions Are Per-Ring Probabilities",
+    "type": "section"
+  },
+  "rq-9cac4dad": {
+    "decl": "## An Anion Has One Fewer Bond and No Room for Another",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "An Anion Has One Fewer Bond and No Room for Another",
     "type": "section"
   },
   "rq-9caef4cc": {
@@ -1402,12 +2334,62 @@
     "title": "A structure that only passed as a fallback is marked as such in its run directory",
     "type": "scenario"
   },
+  "rq-9e66167d": {
+    "decl": "- `ProtonationAssigner(seed: Optional[int] = None)`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "ProtonationAssigner",
+    "type": "api-item"
+  },
+  "rq-9ee7e1df": {
+    "decl": "Scenario: A pH far from every pKa is not reported",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A pH far from every pKa is not reported",
+    "type": "scenario"
+  },
   "rq-9f0d6f46": {
     "decl": "# Feature: Generation Configuration and Strictness",
     "file": "generation-config",
     "refs": [],
     "title": "Feature: Generation Configuration and Strictness",
     "type": "file"
+  },
+  "rq-a05b950d": {
+    "decl": "- `SafeBondAdder.add_bond_safe(emol, mol, i, j, bond_type=SINGLE) -> Tuple[bool, str]`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "SafeBondAdder",
+    "type": "api-item"
+  },
+  "rq-a118d6d2": {
+    "decl": "Scenario: The name a point reports is the name its generator is configured with",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The name a point reports is the name its generator is configured with",
+    "type": "scenario"
+  },
+  "rq-a16e0b49": {
+    "decl": "Scenario: Step counts follow from the duration and the timestep",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Step counts follow from the duration and the timestep",
+    "type": "scenario"
   },
   "rq-a1da340c": {
     "decl": "Scenario: A temperature beyond a derived property's support is reported",
@@ -1445,6 +2427,37 @@
     "title": "A temperature inside one property's support but outside another's is distinguishable",
     "type": "scenario"
   },
+  "rq-a27a7e8c": {
+    "decl": "- `cm1a_from_am1(charges, bond_orders, atomic_numbers) -> List[float]`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "cm1a_from_am1",
+    "type": "api-item"
+  },
+  "rq-a467c647": {
+    "decl": "Scenario: A deprotonated oxygen has no free valence",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A deprotonated oxygen has no free valence",
+    "type": "scenario"
+  },
+  "rq-a47e48e0": {
+    "decl": "Scenario: A validation failure that repeats unchanged stops the retry loop",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A validation failure that repeats unchanged stops the retry loop",
+    "type": "scenario"
+  },
   "rq-a60c7e3b": {
     "decl": "## Cross-references",
     "file": "carbon-skeleton",
@@ -1477,6 +2490,13 @@
     "title": "A grid point with no observations is reported as absent, not fitted",
     "type": "scenario"
   },
+  "rq-a6d2743c": {
+    "decl": "# Feature: Valence Validation",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "Feature: Valence Validation",
+    "type": "file"
+  },
   "rq-a7480504": {
     "decl": "## Carboxyl and Phenolic Oxygens Are Different Types",
     "file": "opls-typing",
@@ -1484,6 +2504,13 @@
     "refs": [],
     "title": "Carboxyl and Phenolic Oxygens Are Different Types",
     "type": "section"
+  },
+  "rq-a802935e": {
+    "decl": "- `ValenceValidator.get_valence_info(mol, atom_idx) -> ValenceInfo`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "ValenceValidator",
+    "type": "api-item"
   },
   "rq-a8498d8f": {
     "decl": "## Feature API",
@@ -1557,6 +2584,26 @@
     "title": "Exact-count mode does not spill",
     "type": "scenario"
   },
+  "rq-af2d7d20": {
+    "decl": "Scenario: A pH outside the aqueous range is refused",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A pH outside the aqueous range is refused",
+    "type": "scenario"
+  },
+  "rq-af33646e": {
+    "decl": "## Each Failure Mode Is a Different Answer",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "Each Failure Mode Is a Different Answer",
+    "type": "section"
+  },
   "rq-af56cae9": {
     "decl": "Scenario: A suppressed warning is named where it is allowed",
     "file": "md-setup",
@@ -1575,6 +2622,14 @@
     "level": 2,
     "refs": [],
     "title": "Coordinates Convert to Nanometres",
+    "type": "section"
+  },
+  "rq-b1e463e8": {
+    "decl": "## The Refiner Says Which Model Answered",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "The Refiner Says Which Model Answered",
     "type": "section"
   },
   "rq-b2e50e9d": {
@@ -1613,6 +2668,13 @@
     "title": "Forcefield-backed tests fail loudly when the forcefield is absent",
     "type": "scenario"
   },
+  "rq-b5909c8c": {
+    "decl": "- `CompositionResult.net_charge`, `.ionized_counts`, `.titratable_counts`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "CompositionResult",
+    "type": "api-item"
+  },
   "rq-b6522656": {
     "decl": "Scenario: A temperature outside a feedstock's support falls back visibly",
     "file": "temperature-model",
@@ -1648,6 +2710,34 @@
     ],
     "title": "The assembler takes no aromaticity argument",
     "type": "scenario"
+  },
+  "rq-b7d22b5f": {
+    "decl": "## Every Atom Gets a Charge",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "Every Atom Gets a Charge",
+    "type": "section"
+  },
+  "rq-b8611a4d": {
+    "decl": "Scenario: Each violating atom is named",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Each violating atom is named",
+    "type": "scenario"
+  },
+  "rq-b8eee7a8": {
+    "decl": "## A Backend That Cannot Run Refuses",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "A Backend That Cannot Run Refuses",
+    "type": "section"
   },
   "rq-b8fce9a6": {
     "decl": "Scenario: The repair runs after every sanitising stage",
@@ -1689,6 +2779,28 @@
     "title": "What this project is",
     "type": "section"
   },
+  "rq-bb992384": {
+    "decl": "- `setup_condensation(output_dir, molecule_gro, molecule_itp, n_copies, ...) -> Path`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "setup_condensation",
+    "type": "api-item"
+  },
+  "rq-bba3fc5f": {
+    "decl": "## Applying a Decision Leaves the Rest of the Molecule Intact",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "Applying a Decision Leaves the Rest of the Molecule Intact",
+    "type": "section"
+  },
+  "rq-bbb23eaa": {
+    "decl": "- `build_point(point, output_root, base_seed=0, max_retries=8, on_validation_fail=\"fallback\", ...) -> PointResult`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "build_point",
+    "type": "api-item"
+  },
   "rq-be5907a0": {
     "decl": "Scenario: The exported topology is accepted by grompp",
     "file": "opls-typing",
@@ -1700,6 +2812,13 @@
     ],
     "title": "The exported topology is accepted by grompp",
     "type": "scenario"
+  },
+  "rq-be66ed17": {
+    "decl": "- `setup_surface(...)`, `add_surface_and_validation(...)`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "setup_surface",
+    "type": "api-item"
   },
   "rq-be69350a": {
     "decl": "## Two Placement Modes",
@@ -1716,6 +2835,18 @@
     "refs": [],
     "title": "Every Assignable Type Must Be Mapped",
     "type": "section"
+  },
+  "rq-bedc92d0": {
+    "decl": "Scenario: A validation failure is retried at a new seed",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A validation failure is retried at a new seed",
+    "type": "scenario"
   },
   "rq-bfb7e848": {
     "decl": "Scenario: The fallback behaviour is reachable without building a config",
@@ -1749,12 +2880,52 @@
     "title": "A prediction reports the observations behind it",
     "type": "scenario"
   },
+  "rq-c0d9fdf2": {
+    "decl": "## A Run Directory Records What Set It Up",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "A Run Directory Records What Set It Up",
+    "type": "section"
+  },
   "rq-c145dabd": {
     "decl": "- `build_model(output_path: Optional[Path] = None) -> Path`",
     "file": "temperature-model",
     "refs": [],
     "title": "build_model",
     "type": "api-item"
+  },
+  "rq-c179a6e7": {
+    "decl": "Scenario: A genuinely over-bonded atom is still reported",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A genuinely over-bonded atom is still reported",
+    "type": "scenario"
+  },
+  "rq-c1dbabdb": {
+    "decl": "## The Timestep Is Chosen by the Anchor, and Says So",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Timestep Is Chosen by the Anchor, and Says So",
+    "type": "section"
+  },
+  "rq-c202e1dc": {
+    "decl": "Scenario: The refiner reports the bundled model when it loaded",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The refiner reports the bundled model when it loaded",
+    "type": "scenario"
   },
   "rq-c2463a78": {
     "decl": "## Clash Detection",
@@ -1791,6 +2962,14 @@
     "title": "The Support Range Is Per Property",
     "type": "section"
   },
+  "rq-c2f9b1a9": {
+    "decl": "## The Charges Sum to the Formal Charge",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "The Charges Sum to the Formal Charge",
+    "type": "section"
+  },
   "rq-c39502d1": {
     "decl": "## Feature API",
     "file": "surface-stacking",
@@ -1798,6 +2977,18 @@
     "refs": [],
     "title": "Feature API",
     "type": "section"
+  },
+  "rq-c49c52b0": {
+    "decl": "Scenario: Scaling ends at the formal charge",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_qm_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Scaling ends at the formal charge",
+    "type": "scenario"
   },
   "rq-c4e683c4": {
     "decl": "Scenario: Embedding retries a bounded number of times",
@@ -1839,6 +3030,18 @@
     "title": "A Prediction Says Which Curve Answered It",
     "type": "section"
   },
+  "rq-c6ab7cbe": {
+    "decl": "Scenario: A molecule with no ring information is typed rather than refused",
+    "file": "opls-typing",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule with no ring information is typed rather than refused",
+    "type": "scenario"
+  },
   "rq-c6b675bb": {
     "decl": "Scenario: A zero defect fraction produces a pure hexagonal skeleton",
     "file": "carbon-skeleton",
@@ -1849,6 +3052,18 @@
       }
     ],
     "title": "A zero defect fraction produces a pure hexagonal skeleton",
+    "type": "scenario"
+  },
+  "rq-c70dd417": {
+    "decl": "Scenario: A furan-type ring oxygen is valid",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A furan-type ring oxygen is valid",
     "type": "scenario"
   },
   "rq-c7715c26": {
@@ -1893,6 +3108,26 @@
     "title": "SurfaceConfig",
     "type": "api-item"
   },
+  "rq-d32ee60c": {
+    "decl": "## A Suppressed grompp Warning Is Named",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "A Suppressed grompp Warning Is Named",
+    "type": "section"
+  },
+  "rq-d3ccbbe3": {
+    "decl": "Scenario: Refinement returns a charge for every atom",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_ml_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Refinement returns a charge for every atom",
+    "type": "scenario"
+  },
   "rq-d3ef932d": {
     "decl": "Scenario: A carbonyl request places a phenolic group",
     "file": "heteroatom-assignment",
@@ -1903,6 +3138,18 @@
       }
     ],
     "title": "A carbonyl request places a phenolic group",
+    "type": "scenario"
+  },
+  "rq-d600f3fc": {
+    "decl": "Scenario: A failure that is not a validation failure is not retried",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A failure that is not a validation failure is not retried",
     "type": "scenario"
   },
   "rq-d6aaeb81": {
@@ -1944,6 +3191,20 @@
     "title": "Adjacent sheets are separated by the pore diameter plus the sheet thickness",
     "type": "scenario"
   },
+  "rq-dc7908c7": {
+    "decl": "- `parse_net_atomic_charges(out_text)`, `parse_bond_orders(out_text)`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "parse_net_atomic_charges",
+    "type": "api-item"
+  },
+  "rq-dd22e354": {
+    "decl": "- `render_condensation_script(gro_name, top_name, spec, n_repeats=3, ...) -> str`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "render_condensation_script",
+    "type": "api-item"
+  },
   "rq-dd80065b": {
     "decl": "Scenario: A stage with no expected warning suppresses nothing",
     "file": "md-setup",
@@ -1956,6 +3217,32 @@
     "title": "A stage with no expected warning suppresses nothing",
     "type": "scenario"
   },
+  "rq-de2d882d": {
+    "decl": "- `ValenceInfo`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "ValenceInfo",
+    "type": "api-item"
+  },
+  "rq-df4cf342": {
+    "decl": "Scenario: A temperature outside the anchors is clamped",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A temperature outside the anchors is clamped",
+    "type": "scenario"
+  },
+  "rq-dfa9c5ea": {
+    "decl": "- `ValenceValidator.validate_molecule(mol) -> Tuple[bool, List[str]]`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "ValenceValidator",
+    "type": "api-item"
+  },
   "rq-e05e7026": {
     "decl": "## Force-Field Refinement Is Not Gated on Clashes",
     "file": "geometry-embedding",
@@ -1964,12 +3251,52 @@
     "title": "Force-Field Refinement Is Not Gated on Clashes",
     "type": "section"
   },
+  "rq-e07d2059": {
+    "decl": "## A Request Outside the Aqueous Range Is Refused",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "A Request Outside the Aqueous Range Is Refused",
+    "type": "section"
+  },
+  "rq-e0932c52": {
+    "decl": "Scenario: An untitrated structure claims no pH",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An untitrated structure claims no pH",
+    "type": "scenario"
+  },
+  "rq-e0d6b415": {
+    "decl": "Scenario: A newly added atom can be bonded",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A newly added atom can be bonded",
+    "type": "scenario"
+  },
   "rq-e13b2348": {
     "decl": "## Surface pipeline",
     "file": "ARCHITECTURE",
     "level": 2,
     "refs": [],
     "title": "Surface pipeline",
+    "type": "section"
+  },
+  "rq-e151b7e1": {
+    "decl": "## The Packed Box Contains What the Topology Declares",
+    "file": "condensation-annealing",
+    "level": 2,
+    "refs": [],
+    "title": "The Packed Box Contains What the Topology Declares",
     "type": "section"
   },
   "rq-e17f705d": {
@@ -1994,6 +3321,30 @@
     "title": "A Library Entry That Cannot Be Loaded Is Reported",
     "type": "section"
   },
+  "rq-e9202195": {
+    "decl": "Scenario: A thiophene-type ring sulfur is valid",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A thiophene-type ring sulfur is valid",
+    "type": "scenario"
+  },
+  "rq-e9369729": {
+    "decl": "Scenario: The same seed and pH reproduce the same sample",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The same seed and pH reproduce the same sample",
+    "type": "scenario"
+  },
   "rq-e9a1bf8b": {
     "decl": "## Aliphatic Oxygen Spill",
     "file": "heteroatom-assignment",
@@ -2010,6 +3361,49 @@
     "title": "Composition Resolution Has Three Levels",
     "type": "section"
   },
+  "rq-eb28d0a1": {
+    "decl": "Scenario: A deprotonated oxygen needs no further bond",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A deprotonated oxygen needs no further bond",
+    "type": "scenario"
+  },
+  "rq-ec21c31b": {
+    "decl": "Scenario: Setting up a condensation run invokes no external program",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Setting up a condensation run invokes no external program",
+    "type": "scenario"
+  },
+  "rq-ee235774": {
+    "decl": "Scenario: A doped structure's nitrogen carries no more bonds than nitrogen can",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A doped structure's nitrogen carries no more bonds than nitrogen can",
+    "type": "scenario"
+  },
+  "rq-ee864495": {
+    "decl": "- `CondensationError`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "CondensationError",
+    "type": "api-item"
+  },
   "rq-ef429ed9": {
     "decl": "## Cross-references",
     "file": "opls-typing",
@@ -2024,6 +3418,14 @@
     "level": 2,
     "refs": [],
     "title": "Feedstock-Specific Curves Are Narrow and Gated",
+    "type": "section"
+  },
+  "rq-f03c2518": {
+    "decl": "## Feature API",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
     "type": "section"
   },
   "rq-f08462b9": {
@@ -2049,6 +3451,13 @@
     ],
     "title": "A high oxygen target is reachable at low aromaticity",
     "type": "scenario"
+  },
+  "rq-f1bddaf4": {
+    "decl": "- `fraction_ionized(pKa: float, pH: float, kind: str) -> float`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "fraction_ionized",
+    "type": "api-item"
   },
   "rq-f1f301e0": {
     "decl": "- `properties(temperature: float, feedstock: Optional[str] = None) -> Dict[str, float]`",
@@ -2076,12 +3485,27 @@
     "title": "Feature: Carbon Skeleton Growth",
     "type": "file"
   },
+  "rq-f32774a4": {
+    "decl": "- `anneal_spec_for_htt(htt_c: float) -> AnnealSpec`",
+    "file": "condensation-annealing",
+    "refs": [],
+    "title": "anneal_spec_for_htt",
+    "type": "api-item"
+  },
   "rq-f61f4d50": {
     "decl": "## Feature API",
     "file": "carbon-skeleton",
     "level": 2,
     "refs": [],
     "title": "Feature API",
+    "type": "section"
+  },
+  "rq-f72df2c8": {
+    "decl": "## Cross-references",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
     "type": "section"
   },
   "rq-f7dda304": {
@@ -2091,6 +3515,13 @@
     "refs": [],
     "title": "A Target Within the Library Is Met Exactly",
     "type": "section"
+  },
+  "rq-f88930c4": {
+    "decl": "- `scale_and_neutralize(cm1a_charges, total_charge=0.0, scale=1.14) -> List[float]`",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "scale_and_neutralize",
+    "type": "api-item"
   },
   "rq-f953b9b0": {
     "decl": "Scenario: A skeleton that cannot be grown raises",
@@ -2102,6 +3533,18 @@
       }
     ],
     "title": "A skeleton that cannot be grown raises",
+    "type": "scenario"
+  },
+  "rq-fa9763e9": {
+    "decl": "Scenario: The recorded rationale is the rule the code follows",
+    "file": "condensation-annealing",
+    "refs": [
+      {
+        "file": "tests/test_condensation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The recorded rationale is the rule the code follows",
     "type": "scenario"
   },
   "rq-faf5d18d": {
@@ -2131,6 +3574,13 @@
     "refs": [],
     "title": "A Skeleton Is Never Returned at an Unrelated Size",
     "type": "section"
+  },
+  "rq-fb7f157f": {
+    "decl": "# Feature: Charge Backends",
+    "file": "charge-backends",
+    "refs": [],
+    "title": "Feature: Charge Backends",
+    "type": "file"
   },
   "rq-fbb6a9c0": {
     "decl": "Scenario: The oxygen count still matches the request",
@@ -2182,6 +3632,18 @@
     "refs": [],
     "title": "The Convenience Wrapper Reaches the Options That Change the Geometry",
     "type": "section"
+  },
+  "rq-ff6dbfa6": {
+    "decl": "Scenario: The CM1A mapping conserves the total charge",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_qm_charges.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The CM1A mapping conserves the total charge",
+    "type": "scenario"
   },
   "rq-ffb45a6e": {
     "decl": "# Feature: Heteroatom and Functional Group Assignment",

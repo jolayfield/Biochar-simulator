@@ -814,11 +814,35 @@ class NitrogenSubstitutor:
         valence checker would otherwise consider it saturated, so we attach the
         N-H explicitly here (and pin it with SetNoImplicit) rather than relying
         on HydrogenAssigner.
+
+        Three bonds is the whole budget, and two constraints follow from it.
+
+        Nothing is left for a substituent the carbon was already carrying.
+        Oxygen placement runs before this, so a decorated five-ring carbon is
+        exactly what the candidate list is full of: taking one gives a nitrogen
+        bonded to two ring neighbours, that oxygen, and the N-H added below --
+        four bonds on a neutral nitrogen. The site must have its two ring
+        neighbours and nothing else, in the same way a graphitic site must be
+        an interior junction with no hydrogen.
+
+        And one pyrrolic nitrogen per ring. Two of them in the same pentagon is
+        a pyrazole or an imidazole, where only one nitrogen carries the
+        hydrogen; giving both an N-H leaves the ring unable to aromatise, it
+        kekulises to single and double bonds instead, and the nitrogen on the
+        double bond ends up with four again.
         """
         placed = 0
+        ring_atoms = mol.GetRingInfo().AtomRings()
         for c_idx in self._candidate_carbons(mol, used):
             sizes = self._ring_sizes(mol, c_idx)
             if 5 not in sizes:
+                continue
+            atom = mol.GetAtomWithIdx(c_idx)
+            heavy = [n for n in atom.GetNeighbors() if n.GetAtomicNum() != 1]
+            if len(heavy) != 2 or any(n.GetAtomicNum() != 6 for n in heavy):
+                continue
+            rings_here = [r for r in ring_atoms if c_idx in r]
+            if any(other in used for r in rings_here for other in r):
                 continue
             mol = self._swap_carbon_to_nitrogen(mol, c_idx, remove_h=False)
             # Attach an explicit N-H and forbid implicit Hs on this nitrogen.
