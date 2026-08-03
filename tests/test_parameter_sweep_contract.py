@@ -13,7 +13,8 @@ is the driver's bookkeeping around a build, not the build, and a stub makes the
 failing seeds exact instead of hoped-for -- the alternative is a request chosen
 because it usually fails, which is a slower test that proves less.
 
-Five scenarios carry xfail(strict=True); each names the defect it defers.
+Every scenario here passes. The eight that carried xfail(strict=True) were
+retired by XPASS when their fixes landed.
 """
 
 import json
@@ -90,11 +91,6 @@ def _point(**fixed):
 # --------------------------------------------------------------------------- #
 class TestEveryPointIsDistinguishable:
     # rq-2a033e95
-    @pytest.mark.xfail(
-        strict=True,
-        reason="names are truncated to five characters with no collision check, "
-               "so points 100 and 1000 of a default-named grid are both BC100",
-    )
     def test_a_grid_whose_names_collide_is_refused(self):
         # BC0100 and BC1000 both truncate to BC100.
         axes = {"target_num_carbons": list(range(100, 1101))}
@@ -113,11 +109,6 @@ class TestEveryPointIsDistinguishable:
 
 class TestTheRecordedNameIsTheWrittenName:
     # rq-4156245d
-    @pytest.mark.xfail(
-        strict=True,
-        reason="molecule_name in `fixed` overrides the per-point name silently, "
-               "so every manifest row names a residue no topology contains",
-    )
     def test_a_molecule_name_fixed_across_the_sweep_is_refused(self):
         with pytest.raises(SweepError) as exc:
             expand_grid(axes={"temperature": [400, 500]},
@@ -178,12 +169,6 @@ class TestSeedRetryIsAVarianceRemedy:
         assert "skeleton could not be grown" in (res.error or "")
 
     # rq-a47e48e0
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the retry loop discards the ValidationError text, so it cannot "
-               "tell an unchanging failure from a seed-sensitive one and spends "
-               "the whole budget on both",
-    )
     def test_a_validation_failure_that_repeats_unchanged_stops_the_loop(
         self, monkeypatch, tmp_path
     ):
@@ -215,12 +200,6 @@ class TestEachFailureModeIsADifferentAnswer:
         )
 
     # rq-086427f6
-    @pytest.mark.xfail(
-        strict=True,
-        reason="skip records `failed`, which the README reserves for a "
-               "non-validation error, so a healthy sweep is indistinguishable "
-               "from a broken one",
-    )
     def test_skip_records_the_point_as_skipped(self, monkeypatch, tmp_path):
         _install(monkeypatch, _strict_never_passes)
         res = build_point(_point(), tmp_path, base_seed=0, max_retries=2,
@@ -231,12 +210,6 @@ class TestEachFailureModeIsADifferentAnswer:
         assert any(SHORTFALL in e for e in res.validation_errors)
 
     # rq-626e9fb8
-    @pytest.mark.xfail(
-        strict=True,
-        reason="`strict` is a synonym for `skip`: both record the point and "
-               "continue, so the mode a caller picks to be told about a bad "
-               "grid tells them nothing",
-    )
     def test_strict_refuses_the_sweep(self, monkeypatch, tmp_path):
         _install(monkeypatch, _strict_never_passes)
         point = _point()
@@ -255,12 +228,6 @@ class TestEachFailureModeIsADifferentAnswer:
 # --------------------------------------------------------------------------- #
 class TestTheManifestRecordsWhatProducedIt:
     # rq-43924feb
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the manifest records everything about the request and nothing "
-               "about the code, so a 0.4 and a 0.5 manifest of the same grid "
-               "are indistinguishable despite strict_pass having changed meaning",
-    )
     def test_the_manifest_names_the_package_version(self, monkeypatch, tmp_path):
         _install(monkeypatch, _strict_never_passes)
         summary = run_sweep({
@@ -314,11 +281,6 @@ class TestAStatusMeansOneThing:
         return seen
 
     # rq-2da595b7
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the module declares no status set, so nothing connects the "
-               "statuses written to the ones consumers filter on",
-    )
     def test_every_status_a_build_assigns_is_declared(self, monkeypatch, tmp_path):
         declared = set(sweep_mod.POINT_STATUSES)
         observed = self._observed(monkeypatch, tmp_path)
@@ -327,10 +289,5 @@ class TestAStatusMeansOneThing:
         )
 
     # rq-7f22837b
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the README's table promises a `skipped` status the sweep has "
-               "never written, so a consumer filtering on it matches nothing",
-    )
     def test_the_readme_table_names_the_declared_statuses(self):
         assert _readme_statuses() == set(sweep_mod.POINT_STATUSES)

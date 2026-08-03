@@ -59,11 +59,27 @@ __all__ = [
     "SweepError",
     "GridPoint",
     "PointResult",
+    "POINT_STATUSES",
     "expand_grid",
     "build_point",
     "run_sweep",
     "load_sweep_config",
 ]
+
+# The complete vocabulary of manifest statuses. Consumers branch on these
+# (`export/md_setup.py` writes a run directory only for a row that produced
+# files), so the set is declared once here rather than transcribed into prose
+# that drifts from it -- the README's table is checked against this constant.
+#
+#   strict_pass  passed strict validation on one of the retry seeds
+#   fallback     strict never passed; kept anyway, built with strict=False
+#   skipped      strict never passed and the config said not to keep it
+#   failed       something went wrong that no configuration asked for
+#
+# `skipped` and `failed` are deliberately distinct. A skipped point is an
+# expected outcome of a healthy run; a failed one is the row a reader
+# investigates. Collapsing them makes the two indistinguishable at a glance.
+POINT_STATUSES = frozenset({"strict_pass", "fallback", "skipped", "failed"})
 
 # Fields of GeneratorConfig that may appear in `fixed`, `axes`, or a grid point.
 # Anything outside this set in a sweep config is a typo and is rejected early.
@@ -146,6 +162,17 @@ def _validate_keys(name: str, mapping: Dict[str, Any]) -> None:
             f"{name} contains keys that are not GeneratorConfig fields: "
             f"{sorted(unknown)}. Valid fields: {sorted(_GENCONFIG_FIELDS)}"
         )
+    # molecule_name is a GeneratorConfig field, so it passes the check above --
+    # but a sweep derives it per point from `name_template`. Setting it here
+    # would override every point's name while each point still *reports* the
+    # templated one, so the manifest would name a residue no topology contains.
+    if "molecule_name" in mapping:
+        raise SweepError(
+            f"{name} sets `molecule_name`, which a sweep derives per point. "
+            f"Every point would be written under the same residue name while "
+            f"its manifest row reported a different one. Use `name_template` "
+            f"to control the names (e.g. \"BC{{i:03d}}\" or \"T{{temperature}}\")."
+        )
 
 
 def expand_grid(
@@ -201,7 +228,7 @@ def expand_grid(
         mol_name = mol_name[:5]
 
         label = _make_label(axis_values)
-        cfg.setdefault("molecule_name", mol_name)
+        cfg["molecule_name"] = mol_name
         points.append(
             GridPoint(
                 index=i,
@@ -211,7 +238,34 @@ def expand_grid(
                 config_kwargs=cfg,
             )
         )
+
+    _reject_name_collisions(points, name_template)
     return points
+
+
+def _reject_name_collisions(points: List[GridPoint], name_template: str) -> None:
+    """Refuse a grid whose molecule names are not one-to-one with its points.
+
+    The name is a GROMACS residue name, so it is capped at five characters, and
+    a template plus a cap is a hashing function: `BC{i:03d}` renders `BC0100`
+    and `BC1000`, both of which truncate to `BC100`. Two manifest rows carrying
+    one name describe two structures nothing downstream can tell apart.
+
+    Checked here because expansion happens before anything is built, which is
+    where it costs nothing and where the caller can still change the template.
+    """
+    seen: Dict[str, int] = {}
+    for point in points:
+        first = seen.setdefault(point.molecule_name, point.index)
+        if first != point.index:
+            raise SweepError(
+                f"name_template {name_template!r} gives points {first} and "
+                f"{point.index} the same molecule name {point.molecule_name!r} "
+                f"once truncated to the 5-character GROMACS residue limit. "
+                f"Two structures under one name cannot be told apart in the "
+                f"manifest. Use a template that stays distinct within 5 "
+                f"characters for all {len(points)} points."
+            )
 
 
 # --------------------------------------------------------------------------- #
@@ -282,6 +336,17 @@ class PointResult:
         return row
 
 
+def _package_version() -> str:
+    """The version of the package writing this manifest.
+
+    Imported lazily: ``biochar/__init__.py`` binds ``__version__`` *after*
+    importing this module, so a top-level import would resolve to nothing.
+    """
+    from .. import __version__
+
+    return __version__
+
+
 def _silence_rdkit() -> None:
     """Quiet RDKit's C++ logger (kekulization warnings bypass Python redirect)."""
     try:
@@ -344,13 +409,22 @@ def build_point(
     2. If none pass and ``on_validation_fail == "fallback"`` (default), rebuild
        with ``strict=False`` at ``base_seed`` and keep the structure, recording
        the validation errors (status ``fallback``).
-    3. If ``on_validation_fail == "skip"``, record the failure and write no
-       files (status ``failed``).
-    4. If ``on_validation_fail == "strict"``, the point is left unbuilt and
-       reported as ``failed`` (the sweep continues; nothing is raised).
+    3. If ``on_validation_fail == "skip"``, record the point as ``skipped``
+       with its validation errors and write no files.
+    4. If ``on_validation_fail == "strict"``, raise :class:`SweepError` naming
+       the point and what was wrong with it. A caller who chooses this over
+       ``skip`` is saying the grid is only meaningful if every point is in
+       tolerance, so the answer they need is an error rather than a manifest
+       they must remember to re-check.
 
-    A non-validation crash (e.g. an infeasible composition request) is caught
-    and recorded as ``failed`` with the exception text; the sweep continues.
+    A non-validation crash (e.g. an unbuildable skeleton) is caught and
+    recorded as ``failed`` with the exception text; the sweep continues.
+
+    The seed retry is a variance remedy, not a repair. It exists because
+    generation is stochastic, so a target one seed misses another may reach --
+    and only for that. A validation failure whose report is byte-identical to
+    the previous attempt's does not depend on the seed, so the loop stops there
+    rather than spending the rest of the budget re-deriving it.
     """
     if on_validation_fail not in _VALID_FAIL_MODES:
         raise SweepError(
@@ -365,6 +439,7 @@ def build_point(
     last_crash: Optional[str] = None
 
     # --- Phase 1: strict, seed-retry --------------------------------------- #
+    previous_report: Optional[str] = None
     for k in range(max(1, max_retries)):
         seed = base_seed + k
         attempts += 1
@@ -375,9 +450,20 @@ def build_point(
             # strict success
             return _ok_result(point, gen, comp, paths, "strict_pass", seed,
                               attempts, time.time() - t0)
-        except ValidationError:
+        except ValidationError as exc:
+            report = str(exc)
+            if report == previous_report:
+                # Two seeds, one report, word for word: the failure does not
+                # depend on the seed, so further attempts would re-derive it.
+                logger.info(
+                    "Grid point %d: validation report unchanged across seeds "
+                    "%d and %d, ending the retry loop after %d of %d attempts",
+                    point.index, seed - 1, seed, attempts, max(1, max_retries),
+                )
+                break
+            previous_report = report
             continue
-        except Exception as exc:  # infeasible request, etc. — do not seed-retry
+        except Exception as exc:  # unbuildable request, etc. — do not seed-retry
             last_crash = f"{type(exc).__name__}: {exc}"
             logger.warning("Grid point %d crashed (non-validation): %s",
                            point.index, last_crash)
@@ -410,7 +496,9 @@ def build_point(
                 elapsed_s=time.time() - t0,
             )
 
-    # skip / strict: report failure without files; capture the last report
+    # skip / strict: no files either way. Both need the validation report --
+    # `skip` to record it, `strict` to say what was wrong -- so it is recovered
+    # once from a non-strict build that is thrown away.
     errors: List[str] = []
     try:
         gen, comp, _ = _build_once(
@@ -422,10 +510,20 @@ def build_point(
             errors = list(rep[1])
     except Exception:
         pass
+
+    if on_validation_fail == "strict":
+        detail = "; ".join(errors) if errors else "no validation report available"
+        raise SweepError(
+            f"Grid point {point.index} ({point.label}) did not pass strict "
+            f"validation at any of {attempts} seed(s) from {base_seed}, and "
+            f"on_validation_fail is 'strict': {detail}. Use 'skip' to record "
+            f"the point and continue, or 'fallback' to keep the structure."
+        )
+
     return PointResult(
         index=point.index, label=point.label,
         molecule_name=point.molecule_name, axis_values=point.axis_values,
-        status="failed", seed_used=None, n_attempts=attempts,
+        status="skipped", seed_used=None, n_attempts=attempts,
         validation_errors=errors, elapsed_s=time.time() - t0,
     )
 
@@ -592,11 +690,18 @@ def run_sweep(
 
     n_strict = sum(r.status == "strict_pass" for r in results)
     n_fallback = sum(r.status == "fallback" for r in results)
+    n_skipped = sum(r.status == "skipped" for r in results)
     n_failed = sum(r.status == "failed" for r in results)
     n_built = n_strict + n_fallback
 
     meta = {
         "name": name,
+        # The statuses are not stable across releases of this package --
+        # strict_pass in particular changed meaning when a functional-group
+        # shortfall stopped satisfying strict validation. Everything else in
+        # here describes the request; this is the one field that says which
+        # code answered it, and so makes the rest interpretable.
+        "biochar_version": _package_version(),
         "base_seed": base_seed,
         "max_retries": max_retries,
         "on_validation_fail": on_fail,
@@ -606,6 +711,7 @@ def run_sweep(
         "n_built": n_built,
         "n_strict_pass": n_strict,
         "n_fallback": n_fallback,
+        "n_skipped": n_skipped,
         "n_failed": n_failed,
     }
     csv_path, json_path = _write_manifest(results, output_root, meta)

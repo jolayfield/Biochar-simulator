@@ -208,10 +208,13 @@ class TestSweepAxis:
                 "name": "ph_titration",
                 "output_directory": str(tmp_path),
                 "axes": {"pH": [2.0, 7.0]},
+                # A residue name is derived per point, not fixed across the
+                # sweep -- two structures under one name are indistinguishable
+                # in the manifest.
+                "name_template": "BCT{i}",
                 "fixed": {
                     "target_num_carbons": 36,
                     "functional_groups": {"carboxyl": 3},
-                    "molecule_name": "BCT",
                     "seed": 5,
                     "strict": False,
                     "H_C_tolerance": 1.0,
@@ -234,10 +237,10 @@ class TestSweepAxis:
                 "name": "ph_manifest",
                 "output_directory": str(tmp_path),
                 "axes": {"pH": [7.0]},
+                "name_template": "BCT{i}",
                 "fixed": {
                     "target_num_carbons": 36,
                     "functional_groups": {"carboxyl": 3},
-                    "molecule_name": "BCT",
                     "seed": 5,
                     "strict": False,
                     "H_C_tolerance": 1.0,

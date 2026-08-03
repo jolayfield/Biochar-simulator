@@ -112,7 +112,7 @@ class TestBuildPoint:
         )[0]
         res = build_point(pt, tmp_path, base_seed=0, max_retries=2,
                           on_validation_fail="skip")
-        if res.status == "failed":
+        if res.status == "skipped":
             assert res.gro_path is None
         else:
             # if it happened to pass strict, that's also acceptable
