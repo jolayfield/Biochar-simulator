@@ -42,6 +42,18 @@
     "title": "Per-Sheet Protonation Consumes a Seed Range",
     "type": "section"
   },
+  "rq-070a2c21": {
+    "decl": "Scenario: Pyrrolic nitrogen is still placed where the sites qualify",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Pyrrolic nitrogen is still placed where the sites qualify",
+    "type": "scenario"
+  },
   "rq-072134ee": {
     "decl": "## A Structure Is One Sample, Not the Ensemble Mean",
     "file": "ph-protonation",
@@ -60,6 +72,18 @@
       }
     ],
     "title": "Atom names agree between the structure and the topology at any size",
+    "type": "scenario"
+  },
+  "rq-08130b9d": {
+    "decl": "Scenario: A molecule with no violations validates",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule with no violations validates",
     "type": "scenario"
   },
   "rq-086427f6": {
@@ -104,6 +128,14 @@
     "refs": [],
     "title": "GridPoint",
     "type": "api-item"
+  },
+  "rq-0c391221": {
+    "decl": "## Cross-references",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
   },
   "rq-0c91f5d5": {
     "decl": "Scenario: A positive defect fraction produces pentagons",
@@ -534,12 +566,32 @@
     "title": "Ion Placement Accumulates",
     "type": "section"
   },
+  "rq-302b177e": {
+    "decl": "Scenario: A pyrrolic ring nitrogen carrying a hydrogen is valid",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A pyrrolic ring nitrogen carrying a hydrogen is valid",
+    "type": "scenario"
+  },
   "rq-304bf22a": {
     "decl": "## Provenance Is Recorded",
     "file": "temperature-model",
     "level": 2,
     "refs": [],
     "title": "Provenance Is Recorded",
+    "type": "section"
+  },
+  "rq-30fef9a1": {
+    "decl": "## A Bond Is Judged Against the Molecule Being Edited",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "A Bond Is Judged Against the Molecule Being Edited",
     "type": "section"
   },
   "rq-312047ff": {
@@ -688,6 +740,14 @@
     "title": "A Larger Target Is Reached From Above, Never From Below",
     "type": "section"
   },
+  "rq-3fcb12da": {
+    "decl": "## An Aromatic Ring Member Is Counted by Its Bonds, Not Its Bond Orders",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "An Aromatic Ring Member Is Counted by Its Bonds, Not Its Bond Orders",
+    "type": "section"
+  },
   "rq-4063a024": {
     "decl": "Scenario: Kekulization failure does not change any atom type",
     "file": "opls-typing",
@@ -769,6 +829,13 @@
     "refs": [],
     "title": "The Files Record the pH They Were Titrated At",
     "type": "section"
+  },
+  "rq-48295a76": {
+    "decl": "- `SafeBondAdder.add_atom_safe(emol, atomic_num, formal_charge=0) -> int`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "SafeBondAdder",
+    "type": "api-item"
   },
   "rq-4897529c": {
     "decl": "Scenario: A group with no entry in the table is never titrated",
@@ -949,6 +1016,14 @@
     "title": "A residue name longer than five characters is truncated",
     "type": "scenario"
   },
+  "rq-53ec84de": {
+    "decl": "## A Substituted Ring Carbon Is Not a Pyrrolic Nitrogen Site",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "A Substituted Ring Carbon Is Not a Pyrrolic Nitrogen Site",
+    "type": "section"
+  },
   "rq-5435c9d8": {
     "decl": "Scenario: The overshoot stays within a ring or two",
     "file": "carbon-skeleton",
@@ -1052,6 +1127,14 @@
     "level": 2,
     "refs": [],
     "title": "An Estimate Carries the Evidence Behind It",
+    "type": "section"
+  },
+  "rq-5e6bf91f": {
+    "decl": "## Feature API",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
     "type": "section"
   },
   "rq-5f4e2e68": {
@@ -1211,6 +1294,13 @@
     "title": "An intramolecular hydrogen bond is not reported as a clash",
     "type": "scenario"
   },
+  "rq-6b827a77": {
+    "decl": "- `ValenceReport.get_summary(mol) -> Dict`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "ValenceReport",
+    "type": "api-item"
+  },
   "rq-6ba78ac5": {
     "decl": "Scenario: A protonated surface is reproducible from its seed",
     "file": "surface-stacking",
@@ -1234,6 +1324,14 @@
     ],
     "title": "An overlap too short even for a hydrogen bond is still a clash",
     "type": "scenario"
+  },
+  "rq-6d766a3c": {
+    "decl": "## Every Violation Is Named",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "Every Violation Is Named",
+    "type": "section"
   },
   "rq-6dd192a1": {
     "decl": "## Cross-references",
@@ -1491,6 +1589,13 @@
     "title": "Crossed nitrogen doping and an unverified functional group warns",
     "type": "scenario"
   },
+  "rq-8156f09f": {
+    "decl": "- `SafeBondAdder.can_add_bond(mol, i, j, bond_type=1) -> Tuple[bool, str]`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "SafeBondAdder",
+    "type": "api-item"
+  },
   "rq-8176d084": {
     "decl": "Scenario: Small molecules are bounded by their perimeter",
     "file": "heteroatom-assignment",
@@ -1695,6 +1800,18 @@
     "title": "An acidic group ionizes as pH rises",
     "type": "scenario"
   },
+  "rq-95aaba31": {
+    "decl": "Scenario: An aromatic bond is weighed as one bond",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An aromatic bond is weighed as one bond",
+    "type": "scenario"
+  },
   "rq-997c1640": {
     "decl": "Scenario: The timestep drops with the schedule it belongs to",
     "file": "md-setup",
@@ -1705,6 +1822,18 @@
       }
     ],
     "title": "The timestep drops with the schedule it belongs to",
+    "type": "scenario"
+  },
+  "rq-998f84fb": {
+    "decl": "Scenario: A sequence of bonds to one atom is bounded by its valence",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A sequence of bonds to one atom is bounded by its valence",
     "type": "scenario"
   },
   "rq-99f30fb0": {
@@ -1722,6 +1851,13 @@
     "refs": [],
     "title": "Cross-references",
     "type": "section"
+  },
+  "rq-9a268ae7": {
+    "decl": "- `get_valence_range(atomic_num: int, formal_charge: int = 0) -> Tuple[int, int]`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "get_valence_range",
+    "type": "api-item"
   },
   "rq-9a9488ab": {
     "decl": "Scenario: An aromatic C-C is measured against the aromatic expectation",
@@ -1777,6 +1913,14 @@
     "level": 2,
     "refs": [],
     "title": "Defect Fractions Are Per-Ring Probabilities",
+    "type": "section"
+  },
+  "rq-9cac4dad": {
+    "decl": "## An Anion Has One Fewer Bond and No Room for Another",
+    "file": "valence-validation",
+    "level": 2,
+    "refs": [],
+    "title": "An Anion Has One Fewer Bond and No Room for Another",
     "type": "section"
   },
   "rq-9caef4cc": {
@@ -1837,6 +1981,13 @@
     "title": "Feature: Generation Configuration and Strictness",
     "type": "file"
   },
+  "rq-a05b950d": {
+    "decl": "- `SafeBondAdder.add_bond_safe(emol, mol, i, j, bond_type=SINGLE) -> Tuple[bool, str]`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "SafeBondAdder",
+    "type": "api-item"
+  },
   "rq-a118d6d2": {
     "decl": "Scenario: The name a point reports is the name its generator is configured with",
     "file": "parameter-sweep",
@@ -1885,6 +2036,18 @@
     "title": "A temperature inside one property's support but outside another's is distinguishable",
     "type": "scenario"
   },
+  "rq-a467c647": {
+    "decl": "Scenario: A deprotonated oxygen has no free valence",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A deprotonated oxygen has no free valence",
+    "type": "scenario"
+  },
   "rq-a47e48e0": {
     "decl": "Scenario: A validation failure that repeats unchanged stops the retry loop",
     "file": "parameter-sweep",
@@ -1929,6 +2092,13 @@
     "title": "A grid point with no observations is reported as absent, not fitted",
     "type": "scenario"
   },
+  "rq-a6d2743c": {
+    "decl": "# Feature: Valence Validation",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "Feature: Valence Validation",
+    "type": "file"
+  },
   "rq-a7480504": {
     "decl": "## Carboxyl and Phenolic Oxygens Are Different Types",
     "file": "opls-typing",
@@ -1936,6 +2106,13 @@
     "refs": [],
     "title": "Carboxyl and Phenolic Oxygens Are Different Types",
     "type": "section"
+  },
+  "rq-a802935e": {
+    "decl": "- `ValenceValidator.get_valence_info(mol, atom_idx) -> ValenceInfo`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "ValenceValidator",
+    "type": "api-item"
   },
   "rq-a8498d8f": {
     "decl": "## Feature API",
@@ -2128,6 +2305,18 @@
     "title": "The assembler takes no aromaticity argument",
     "type": "scenario"
   },
+  "rq-b8611a4d": {
+    "decl": "Scenario: Each violating atom is named",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Each violating atom is named",
+    "type": "scenario"
+  },
   "rq-b8fce9a6": {
     "decl": "Scenario: The repair runs after every sanitising stage",
     "file": "heteroatom-assignment",
@@ -2262,6 +2451,18 @@
     "title": "build_model",
     "type": "api-item"
   },
+  "rq-c179a6e7": {
+    "decl": "Scenario: A genuinely over-bonded atom is still reported",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A genuinely over-bonded atom is still reported",
+    "type": "scenario"
+  },
   "rq-c2463a78": {
     "decl": "## Clash Detection",
     "file": "geometry-embedding",
@@ -2355,6 +2556,18 @@
       }
     ],
     "title": "A zero defect fraction produces a pure hexagonal skeleton",
+    "type": "scenario"
+  },
+  "rq-c70dd417": {
+    "decl": "Scenario: A furan-type ring oxygen is valid",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A furan-type ring oxygen is valid",
     "type": "scenario"
   },
   "rq-c7715c26": {
@@ -2474,6 +2687,20 @@
     "title": "A stage with no expected warning suppresses nothing",
     "type": "scenario"
   },
+  "rq-de2d882d": {
+    "decl": "- `ValenceInfo`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "ValenceInfo",
+    "type": "api-item"
+  },
+  "rq-dfa9c5ea": {
+    "decl": "- `ValenceValidator.validate_molecule(mol) -> Tuple[bool, List[str]]`",
+    "file": "valence-validation",
+    "refs": [],
+    "title": "ValenceValidator",
+    "type": "api-item"
+  },
   "rq-e05e7026": {
     "decl": "## Force-Field Refinement Is Not Gated on Clashes",
     "file": "geometry-embedding",
@@ -2500,6 +2727,18 @@
       }
     ],
     "title": "An untitrated structure claims no pH",
+    "type": "scenario"
+  },
+  "rq-e0d6b415": {
+    "decl": "Scenario: A newly added atom can be bonded",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A newly added atom can be bonded",
     "type": "scenario"
   },
   "rq-e13b2348": {
@@ -2532,6 +2771,18 @@
     "title": "A Library Entry That Cannot Be Loaded Is Reported",
     "type": "section"
   },
+  "rq-e9202195": {
+    "decl": "Scenario: A thiophene-type ring sulfur is valid",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A thiophene-type ring sulfur is valid",
+    "type": "scenario"
+  },
   "rq-e9369729": {
     "decl": "Scenario: The same seed and pH reproduce the same sample",
     "file": "ph-protonation",
@@ -2559,6 +2810,30 @@
     "refs": [],
     "title": "Composition Resolution Has Three Levels",
     "type": "section"
+  },
+  "rq-eb28d0a1": {
+    "decl": "Scenario: A deprotonated oxygen needs no further bond",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A deprotonated oxygen needs no further bond",
+    "type": "scenario"
+  },
+  "rq-ee235774": {
+    "decl": "Scenario: A doped structure's nitrogen carries no more bonds than nitrogen can",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A doped structure's nitrogen carries no more bonds than nitrogen can",
+    "type": "scenario"
   },
   "rq-ef429ed9": {
     "decl": "## Cross-references",
