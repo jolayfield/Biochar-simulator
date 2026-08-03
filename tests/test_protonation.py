@@ -132,11 +132,13 @@ class TestFractionIonized:
     def test_basic_group_is_half_ionized_at_its_pka(self):
         assert fraction_ionized(5.2, 5.2, "basic") == pytest.approx(0.5)
 
+    # rq-952d1150
     def test_acidic_group_ionizes_as_ph_rises(self):
         low = fraction_ionized(4.2, 2.0, "acidic")
         high = fraction_ionized(4.2, 10.0, "acidic")
         assert low < 0.01 < 0.99 < high
 
+    # rq-9bf47e81
     def test_basic_group_deionizes_as_ph_rises(self):
         """The inversion: a base is protonated at LOW pH, not high."""
         low = fraction_ionized(5.2, 2.0, "basic")
@@ -273,6 +275,7 @@ class TestSignInversion:
         assert charges == sorted(charges, reverse=True), charges
         assert charges[0] == 0 and charges[-1] == -3
 
+    # rq-5c5a5c84
     def test_amphoteric_molecule_is_cationic_low_and_anionic_high(self):
         smiles = "Nc1ccc(C(=O)O)cc1"  # 4-aminobenzoic acid
         low, _ = ProtonationAssigner(seed=3).assign(_mol(smiles), pH=1.0)
@@ -282,6 +285,7 @@ class TestSignInversion:
 
 
 class TestDeterminism:
+    # rq-e9369729
     def test_same_seed_and_ph_is_reproducible(self):
         a, _ = ProtonationAssigner(seed=42).assign(_mol(TRIACID), pH=4.2)
         b, _ = ProtonationAssigner(seed=42).assign(_mol(TRIACID), pH=4.2)
@@ -296,6 +300,7 @@ class TestDeterminism:
         }
         assert len(results) > 1, "every seed gave the same answer at pH == pKa"
 
+    # rq-7286d3d9
     def test_does_not_disturb_global_random_state(self):
         import random
 
@@ -318,6 +323,7 @@ class TestStatistics:
 
 
 class TestUntouchedGroups:
+    # rq-4897529c
     def test_ether_oxygen_is_never_titrated(self):
         out, comp = ProtonationAssigner(seed=1).assign(
             _mol("c1ccc2c(c1)Oc1ccccc1-2"), pH=14.0
@@ -353,6 +359,7 @@ class TestUntouchedGroups:
 
 class TestPhBounds:
     @pytest.mark.parametrize("pH", [-1.0, 15.0, 100.0])
+    # rq-af2d7d20
     def test_ph_outside_the_aqueous_range_is_rejected(self, pH):
         with pytest.raises(ValueError, match="pH"):
             ProtonationAssigner(seed=1).assign(_mol(TRIACID), pH=pH)

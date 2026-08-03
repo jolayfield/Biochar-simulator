@@ -426,6 +426,7 @@ class TestSurfacePh:
 
 
 class TestProtonationBondTypes:
+    # rq-7e9935a1
     def test_ether_bonds_are_not_left_aromatic_after_protonation(self):
         """
         CLAUDE.md: '_fix_heteroatom_bond_types must be called after any RDKit
@@ -448,6 +449,7 @@ class TestProtonationBondTypes:
 
 
 class TestCensusMatchesReality:
+    # rq-633ccda5
     def test_ionized_counts_never_exceed_the_net_charge_they_imply(self):
         from biochar.pipeline.protonation import ProtonationAssigner
 
@@ -459,6 +461,7 @@ class TestCensusMatchesReality:
         )
         assert acidic_ionized == -comp.net_charge
 
+    # rq-09a84056
     def test_duplicate_neutral_types_are_rejected_not_silently_dropped(self):
         from unittest.mock import patch
 

@@ -42,6 +42,14 @@
     "title": "Per-Sheet Protonation Consumes a Seed Range",
     "type": "section"
   },
+  "rq-072134ee": {
+    "decl": "## A Structure Is One Sample, Not the Ensemble Mean",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "A Structure Is One Sample, Not the Ensemble Mean",
+    "type": "section"
+  },
   "rq-07b27c79": {
     "decl": "Scenario: Atom names agree between the structure and the topology at any size",
     "file": "gromacs-export",
@@ -64,6 +72,18 @@
       }
     ],
     "title": "Skip records the point as skipped and writes nothing",
+    "type": "scenario"
+  },
+  "rq-09a84056": {
+    "decl": "Scenario: Two groups sharing a neutral type are refused",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_integration.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Two groups sharing a neutral type are refused",
     "type": "scenario"
   },
   "rq-0a48ccd8": {
@@ -201,6 +221,13 @@
     "title": "SurfaceBuilder",
     "type": "api-item"
   },
+  "rq-1713a8a2": {
+    "decl": "- `PROTONATION_STATES`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "PROTONATION_STATES",
+    "type": "api-item"
+  },
   "rq-1729edcb": {
     "decl": "## Nearest-Analog Values Are Chosen, Not Validated",
     "file": "opls-typing",
@@ -247,6 +274,14 @@
     "level": 2,
     "refs": [],
     "title": "A Charged Molecule Says So",
+    "type": "section"
+  },
+  "rq-191c700f": {
+    "decl": "## The Census Counts What Happened, Not What Was Decided",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "The Census Counts What Happened, Not What Was Decided",
     "type": "section"
   },
   "rq-1a3046af": {
@@ -396,6 +431,13 @@
     "title": "No two grid points share a molecule name",
     "type": "scenario"
   },
+  "rq-2bb117a3": {
+    "decl": "- `PH_MIN`, `PH_MAX`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "PH_MIN",
+    "type": "api-item"
+  },
   "rq-2bf0ee76": {
     "decl": "Scenario: An H/C inside the fit range is answered normally",
     "file": "temperature-model",
@@ -464,6 +506,14 @@
     "title": "A lactone request places a phenolic group",
     "type": "scenario"
   },
+  "rq-2fcb3d7a": {
+    "decl": "## Feature API",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-2fdbb62b": {
     "decl": "Scenario: An include file the topology needs is resolved from the manifest, not a filename guess",
     "file": "md-setup",
@@ -529,6 +579,14 @@
     "refs": [],
     "title": "TOPFileWriter",
     "type": "api-item"
+  },
+  "rq-33ac898e": {
+    "decl": "## The Direction of Ionization Follows the Kind of Group",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "The Direction of Ionization Follows the Kind of Group",
+    "type": "section"
   },
   "rq-35a5407d": {
     "decl": "Scenario: Every emitted angle resolves in the forcefield",
@@ -654,6 +712,18 @@
     "title": "A molecule name fixed across the sweep is refused",
     "type": "scenario"
   },
+  "rq-4189fd49": {
+    "decl": "Scenario: A titrated structure names its pH and seed in the topology",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A titrated structure names its pH and seed in the topology",
+    "type": "scenario"
+  },
   "rq-419ffa85": {
     "decl": "- `CarbonSkeleton`",
     "file": "carbon-skeleton",
@@ -691,6 +761,26 @@
     "refs": [],
     "title": "SheetResult",
     "type": "api-item"
+  },
+  "rq-479efbdd": {
+    "decl": "## The Files Record the pH They Were Titrated At",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "The Files Record the pH They Were Titrated At",
+    "type": "section"
+  },
+  "rq-4897529c": {
+    "decl": "Scenario: A group with no entry in the table is never titrated",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A group with no entry in the table is never titrated",
+    "type": "scenario"
   },
   "rq-49e2ed82": {
     "decl": "Scenario: Hex-lattice structures keep their coordinates",
@@ -944,6 +1034,18 @@
     "title": "The annealing peak temperature follows the pyrolysis temperature",
     "type": "scenario"
   },
+  "rq-5c5a5c84": {
+    "decl": "Scenario: A molecule carrying both is cationic at low pH and anionic at high",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule carrying both is cationic at low pH and anionic at high",
+    "type": "scenario"
+  },
   "rq-5d9abc46": {
     "decl": "## An Estimate Carries the Evidence Behind It",
     "file": "temperature-model",
@@ -1007,6 +1109,18 @@
     "title": "The topology the solvation step updates exists before that step runs",
     "type": "scenario"
   },
+  "rq-633ccda5": {
+    "decl": "Scenario: The census never claims an ionization the molecule does not carry",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_integration.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The census never claims an ionization the molecule does not carry",
+    "type": "scenario"
+  },
   "rq-63c93813": {
     "decl": "# Feature: Surface Stacking",
     "file": "surface-stacking",
@@ -1049,6 +1163,13 @@
     "refs": [],
     "title": "Cross-references",
     "type": "section"
+  },
+  "rq-67aceac9": {
+    "decl": "# Feature: pH-Dependent Protonation",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "Feature: pH-Dependent Protonation",
+    "type": "file"
   },
   "rq-682a21cd": {
     "decl": "Scenario: The seeds a surface consumes are documented for the caller",
@@ -1180,6 +1301,18 @@
     "title": "An unreachable nitrogen environment is flagged, not guessed",
     "type": "scenario"
   },
+  "rq-7286d3d9": {
+    "decl": "Scenario: Titration does not disturb the caller's random stream",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Titration does not disturb the caller's random stream",
+    "type": "scenario"
+  },
   "rq-766e9c83": {
     "decl": "## Feature API",
     "file": "temperature-model",
@@ -1267,6 +1400,42 @@
     "refs": [],
     "title": "POINT_STATUSES",
     "type": "api-item"
+  },
+  "rq-7e778b79": {
+    "decl": "Scenario: A pH inside a group's transition band is reported",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A pH inside a group's transition band is reported",
+    "type": "scenario"
+  },
+  "rq-7e9935a1": {
+    "decl": "Scenario: An ether bond is not left aromatic by the protonation pass",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_integration.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An ether bond is not left aromatic by the protonation pass",
+    "type": "scenario"
+  },
+  "rq-7ed1460a": {
+    "decl": "Scenario: A titrated structure names its pH in the coordinate file",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A titrated structure names its pH in the coordinate file",
+    "type": "scenario"
   },
   "rq-7ef42231": {
     "decl": "## Aromaticity Is Extrapolated Beyond Its Fit",
@@ -1514,6 +1683,18 @@
     "title": "A Suppressed Warning Is Named",
     "type": "section"
   },
+  "rq-952d1150": {
+    "decl": "Scenario: An acidic group ionizes as pH rises",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An acidic group ionizes as pH rises",
+    "type": "scenario"
+  },
   "rq-997c1640": {
     "decl": "Scenario: The timestep drops with the schedule it belongs to",
     "file": "md-setup",
@@ -1525,6 +1706,14 @@
     ],
     "title": "The timestep drops with the schedule it belongs to",
     "type": "scenario"
+  },
+  "rq-99f30fb0": {
+    "decl": "## Only Groups in the Table Are Titrated",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "Only Groups in the Table Are Titrated",
+    "type": "section"
   },
   "rq-9a108035": {
     "decl": "## Cross-references",
@@ -1570,6 +1759,18 @@
     "title": "pH combined with the ML charge backend is refused",
     "type": "scenario"
   },
+  "rq-9bf47e81": {
+    "decl": "Scenario: A basic group deionizes as pH rises",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A basic group deionizes as pH rises",
+    "type": "scenario"
+  },
   "rq-9c8fe79c": {
     "decl": "## Defect Fractions Are Per-Ring Probabilities",
     "file": "carbon-skeleton",
@@ -1608,6 +1809,25 @@
       }
     ],
     "title": "A structure that only passed as a fallback is marked as such in its run directory",
+    "type": "scenario"
+  },
+  "rq-9e66167d": {
+    "decl": "- `ProtonationAssigner(seed: Optional[int] = None)`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "ProtonationAssigner",
+    "type": "api-item"
+  },
+  "rq-9ee7e1df": {
+    "decl": "Scenario: A pH far from every pKa is not reported",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A pH far from every pKa is not reported",
     "type": "scenario"
   },
   "rq-9f0d6f46": {
@@ -1789,6 +2009,18 @@
     "title": "Exact-count mode does not spill",
     "type": "scenario"
   },
+  "rq-af2d7d20": {
+    "decl": "Scenario: A pH outside the aqueous range is refused",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A pH outside the aqueous range is refused",
+    "type": "scenario"
+  },
   "rq-af33646e": {
     "decl": "## Each Failure Mode Is a Different Answer",
     "file": "parameter-sweep",
@@ -1852,6 +2084,13 @@
     ],
     "title": "Forcefield-backed tests fail loudly when the forcefield is absent",
     "type": "scenario"
+  },
+  "rq-b5909c8c": {
+    "decl": "- `CompositionResult.net_charge`, `.ionized_counts`, `.titratable_counts`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "CompositionResult",
+    "type": "api-item"
   },
   "rq-b6522656": {
     "decl": "Scenario: A temperature outside a feedstock's support falls back visibly",
@@ -1927,6 +2166,14 @@
     "level": 2,
     "refs": [],
     "title": "What this project is",
+    "type": "section"
+  },
+  "rq-bba3fc5f": {
+    "decl": "## Applying a Decision Leaves the Rest of the Molecule Intact",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "Applying a Decision Leaves the Rest of the Molecule Intact",
     "type": "section"
   },
   "rq-bbb23eaa": {
@@ -2235,6 +2482,26 @@
     "title": "Force-Field Refinement Is Not Gated on Clashes",
     "type": "section"
   },
+  "rq-e07d2059": {
+    "decl": "## A Request Outside the Aqueous Range Is Refused",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "A Request Outside the Aqueous Range Is Refused",
+    "type": "section"
+  },
+  "rq-e0932c52": {
+    "decl": "Scenario: An untitrated structure claims no pH",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_ph_protonation_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An untitrated structure claims no pH",
+    "type": "scenario"
+  },
   "rq-e13b2348": {
     "decl": "## Surface pipeline",
     "file": "ARCHITECTURE",
@@ -2264,6 +2531,18 @@
     "refs": [],
     "title": "A Library Entry That Cannot Be Loaded Is Reported",
     "type": "section"
+  },
+  "rq-e9369729": {
+    "decl": "Scenario: The same seed and pH reproduce the same sample",
+    "file": "ph-protonation",
+    "refs": [
+      {
+        "file": "tests/test_protonation.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The same seed and pH reproduce the same sample",
+    "type": "scenario"
   },
   "rq-e9a1bf8b": {
     "decl": "## Aliphatic Oxygen Spill",
@@ -2321,6 +2600,13 @@
     "title": "A high oxygen target is reachable at low aromaticity",
     "type": "scenario"
   },
+  "rq-f1bddaf4": {
+    "decl": "- `fraction_ionized(pKa: float, pH: float, kind: str) -> float`",
+    "file": "ph-protonation",
+    "refs": [],
+    "title": "fraction_ionized",
+    "type": "api-item"
+  },
   "rq-f1f301e0": {
     "decl": "- `properties(temperature: float, feedstock: Optional[str] = None) -> Dict[str, float]`",
     "file": "temperature-model",
@@ -2353,6 +2639,14 @@
     "level": 2,
     "refs": [],
     "title": "Feature API",
+    "type": "section"
+  },
+  "rq-f72df2c8": {
+    "decl": "## Cross-references",
+    "file": "ph-protonation",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
     "type": "section"
   },
   "rq-f7dda304": {
