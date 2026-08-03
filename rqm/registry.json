@@ -54,6 +54,18 @@
     "title": "Atom names agree between the structure and the topology at any size",
     "type": "scenario"
   },
+  "rq-086427f6": {
+    "decl": "Scenario: Skip records the point as skipped and writes nothing",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Skip records the point as skipped and writes nothing",
+    "type": "scenario"
+  },
   "rq-0a48ccd8": {
     "decl": "Scenario: A surface that fell back to slit geometry is not labelled amorphous",
     "file": "surface-stacking",
@@ -66,6 +78,13 @@
     "title": "A surface that fell back to slit geometry is not labelled amorphous",
     "type": "scenario"
   },
+  "rq-0bf15b93": {
+    "decl": "- `GridPoint`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "GridPoint",
+    "type": "api-item"
+  },
   "rq-0c91f5d5": {
     "decl": "Scenario: A positive defect fraction produces pentagons",
     "file": "carbon-skeleton",
@@ -76,6 +95,18 @@
       }
     ],
     "title": "A positive defect fraction produces pentagons",
+    "type": "scenario"
+  },
+  "rq-0cf2e5d4": {
+    "decl": "Scenario: The default mode keeps a structure that strict validation rejected",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The default mode keeps a structure that strict validation rejected",
     "type": "scenario"
   },
   "rq-0d326d5b": {
@@ -230,6 +261,22 @@
     "title": "Every emitted dihedral resolves in the forcefield",
     "type": "scenario"
   },
+  "rq-1ae3a84a": {
+    "decl": "## A Status Means One Thing",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "A Status Means One Thing",
+    "type": "section"
+  },
+  "rq-1bdc6066": {
+    "decl": "## A Seed Retry Is a Variance Remedy, Not a Repair",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "A Seed Retry Is a Variance Remedy, Not a Repair",
+    "type": "section"
+  },
   "rq-1f2ce9fc": {
     "decl": "Scenario: A structure with more than three geometry errors reports all of them",
     "file": "geometry-embedding",
@@ -337,6 +384,18 @@
     "title": "Ether Bond Types Must Be Repaired After Sanitisation",
     "type": "section"
   },
+  "rq-2a033e95": {
+    "decl": "Scenario: No two grid points share a molecule name",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "No two grid points share a molecule name",
+    "type": "scenario"
+  },
   "rq-2bf0ee76": {
     "decl": "Scenario: An H/C inside the fit range is answered normally",
     "file": "temperature-model",
@@ -368,6 +427,18 @@
     "refs": [],
     "title": "Every Geometry Error Is Reported",
     "type": "section"
+  },
+  "rq-2da595b7": {
+    "decl": "Scenario: Every status a build can return is one the documented set names",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every status a build can return is one the documented set names",
+    "type": "scenario"
   },
   "rq-2f3c2379": {
     "decl": "Scenario: A ring carbon carries an improper term",
@@ -531,6 +602,14 @@
     "title": "Small-molecule structures still get clash resolution",
     "type": "scenario"
   },
+  "rq-3cf07edf": {
+    "decl": "## Every Point in the Grid Is Distinguishable From Every Other",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "Every Point in the Grid Is Distinguishable From Every Other",
+    "type": "section"
+  },
   "rq-3e169a31": {
     "decl": "Scenario: The map holds no entries for types that do not exist",
     "file": "opls-typing",
@@ -563,12 +642,36 @@
     "title": "Kekulization failure does not change any atom type",
     "type": "scenario"
   },
+  "rq-4156245d": {
+    "decl": "Scenario: A molecule name fixed across the sweep is refused",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule name fixed across the sweep is refused",
+    "type": "scenario"
+  },
   "rq-419ffa85": {
     "decl": "- `CarbonSkeleton`",
     "file": "carbon-skeleton",
     "refs": [],
     "title": "CarbonSkeleton",
     "type": "api-item"
+  },
+  "rq-43924feb": {
+    "decl": "Scenario: The manifest names the package version that wrote it",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The manifest names the package version that wrote it",
+    "type": "scenario"
   },
   "rq-44655f38": {
     "decl": "Scenario: An ether C-O bond survives sanitisation as a single bond",
@@ -600,6 +703,14 @@
     ],
     "title": "Hex-lattice structures keep their coordinates",
     "type": "scenario"
+  },
+  "rq-4a9e69bb": {
+    "decl": "## Feature API",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
   },
   "rq-4af71330": {
     "decl": "Scenario: A target matching a library size is met exactly",
@@ -701,6 +812,13 @@
     "title": "A compressed bond is still rejected after order scaling",
     "type": "scenario"
   },
+  "rq-50e10082": {
+    "decl": "- `run_sweep(config, output_directory=None, progress_callback=None, quiet=True) -> Dict`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "run_sweep",
+    "type": "api-item"
+  },
   "rq-51c8f769": {
     "decl": "Scenario: The wet stage holds the lateral lattice and lets the box relax along z",
     "file": "md-setup",
@@ -753,6 +871,13 @@
     "title": "The overshoot stays within a ring or two",
     "type": "scenario"
   },
+  "rq-5450da17": {
+    "decl": "- `load_sweep_config(path) -> Dict`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "load_sweep_config",
+    "type": "api-item"
+  },
   "rq-5658c4b6": {
     "decl": "Scenario: Clash resolution does not run when there is nothing to resolve",
     "file": "geometry-embedding",
@@ -764,6 +889,13 @@
     ],
     "title": "Clash resolution does not run when there is nothing to resolve",
     "type": "scenario"
+  },
+  "rq-56adfdbe": {
+    "decl": "- `expand_grid(axes, fixed=None, name_template=\"BC{i:03d}\") -> List[GridPoint]`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "expand_grid",
+    "type": "api-item"
   },
   "rq-56e62d3f": {
     "decl": "### A clash needs to be deeper than embedding noise",
@@ -847,6 +979,18 @@
     "title": "Single-molecule pipeline",
     "type": "section"
   },
+  "rq-626e9fb8": {
+    "decl": "Scenario: Strict refuses the sweep rather than recording a row",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Strict refuses the sweep rather than recording a row",
+    "type": "scenario"
+  },
   "rq-62e0732a": {
     "decl": "Scenario: The topology the solvation step updates exists before that step runs",
     "file": "md-setup",
@@ -881,6 +1025,14 @@
     ],
     "title": "A carbonyl is measured against the double-bond expectation",
     "type": "scenario"
+  },
+  "rq-64a42a92": {
+    "decl": "## The Name a Point Is Recorded Under Is the Name in Its Topology",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "The Name a Point Is Recorded Under Is the Name in Its Topology",
+    "type": "section"
   },
   "rq-6659180d": {
     "decl": "## Aromatic Rings Carry the Terms That Keep Them Planar",
@@ -997,6 +1149,13 @@
     "title": "setup_one_structure",
     "type": "api-item"
   },
+  "rq-7081e03f": {
+    "decl": "- `PointResult`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "PointResult",
+    "type": "api-item"
+  },
   "rq-70e5f033": {
     "decl": "Scenario: No assignable type lacks a GROMACS mapping",
     "file": "opls-typing",
@@ -1036,6 +1195,13 @@
     "refs": [],
     "title": "Typing Must Not Depend on Molecule Size",
     "type": "section"
+  },
+  "rq-78db3aec": {
+    "decl": "- `SweepError`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "SweepError",
+    "type": "api-item"
   },
   "rq-78e7477d": {
     "decl": "Scenario: The topology states a non-zero total charge and how to neutralise it",
@@ -1095,6 +1261,13 @@
     "title": "Feature: Temperature × Feedstock Composition Model",
     "type": "file"
   },
+  "rq-7e5c5b4c": {
+    "decl": "- `POINT_STATUSES`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "POINT_STATUSES",
+    "type": "api-item"
+  },
   "rq-7ef42231": {
     "decl": "## Aromaticity Is Extrapolated Beyond Its Fit",
     "file": "temperature-model",
@@ -1110,6 +1283,18 @@
     "title": "Architecture",
     "type": "file"
   },
+  "rq-7f22837b": {
+    "decl": "Scenario: The documented status table names the statuses the module declares",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The documented status table names the statuses the module declares",
+    "type": "scenario"
+  },
   "rq-80b04b19": {
     "decl": "## Embedding Path Selection",
     "file": "geometry-embedding",
@@ -1117,6 +1302,13 @@
     "refs": [],
     "title": "Embedding Path Selection",
     "type": "section"
+  },
+  "rq-80dfec16": {
+    "decl": "# Feature: Parameter Sweep",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "Feature: Parameter Sweep",
+    "type": "file"
   },
   "rq-8155aecf": {
     "decl": "Scenario: Crossed nitrogen doping and an unverified functional group warns",
@@ -1141,6 +1333,14 @@
     ],
     "title": "Small molecules are bounded by their perimeter",
     "type": "scenario"
+  },
+  "rq-826be977": {
+    "decl": "## The Manifest Records What Produced It",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "The Manifest Records What Produced It",
+    "type": "section"
   },
   "rq-8340860d": {
     "decl": "- `ITPFileWriter.write(filepath: str, mol: Chem.Mol, atom_types: Dict[int, str], charges: Dict[int, float], molecule_name: str = \"BIOCHAR\", include_dihedrals: bool = True) -> None`",
@@ -1237,6 +1437,14 @@
     "refs": [],
     "title": "get_ion_profile",
     "type": "api-item"
+  },
+  "rq-8d8ebbfe": {
+    "decl": "## Cross-references",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "Cross-references",
+    "type": "section"
   },
   "rq-8e4335b8": {
     "decl": "Scenario: Every supplement entry states where its value came from",
@@ -1409,6 +1617,18 @@
     "title": "Feature: Generation Configuration and Strictness",
     "type": "file"
   },
+  "rq-a118d6d2": {
+    "decl": "Scenario: The name a point reports is the name its generator is configured with",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The name a point reports is the name its generator is configured with",
+    "type": "scenario"
+  },
   "rq-a1da340c": {
     "decl": "Scenario: A temperature beyond a derived property's support is reported",
     "file": "generation-config",
@@ -1443,6 +1663,18 @@
       }
     ],
     "title": "A temperature inside one property's support but outside another's is distinguishable",
+    "type": "scenario"
+  },
+  "rq-a47e48e0": {
+    "decl": "Scenario: A validation failure that repeats unchanged stops the retry loop",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A validation failure that repeats unchanged stops the retry loop",
     "type": "scenario"
   },
   "rq-a60c7e3b": {
@@ -1556,6 +1788,14 @@
     ],
     "title": "Exact-count mode does not spill",
     "type": "scenario"
+  },
+  "rq-af33646e": {
+    "decl": "## Each Failure Mode Is a Different Answer",
+    "file": "parameter-sweep",
+    "level": 2,
+    "refs": [],
+    "title": "Each Failure Mode Is a Different Answer",
+    "type": "section"
   },
   "rq-af56cae9": {
     "decl": "Scenario: A suppressed warning is named where it is allowed",
@@ -1689,6 +1929,13 @@
     "title": "What this project is",
     "type": "section"
   },
+  "rq-bbb23eaa": {
+    "decl": "- `build_point(point, output_root, base_seed=0, max_retries=8, on_validation_fail=\"fallback\", ...) -> PointResult`",
+    "file": "parameter-sweep",
+    "refs": [],
+    "title": "build_point",
+    "type": "api-item"
+  },
   "rq-be5907a0": {
     "decl": "Scenario: The exported topology is accepted by grompp",
     "file": "opls-typing",
@@ -1716,6 +1963,18 @@
     "refs": [],
     "title": "Every Assignable Type Must Be Mapped",
     "type": "section"
+  },
+  "rq-bedc92d0": {
+    "decl": "Scenario: A validation failure is retried at a new seed",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A validation failure is retried at a new seed",
+    "type": "scenario"
   },
   "rq-bfb7e848": {
     "decl": "Scenario: The fallback behaviour is reachable without building a config",
@@ -1903,6 +2162,18 @@
       }
     ],
     "title": "A carbonyl request places a phenolic group",
+    "type": "scenario"
+  },
+  "rq-d600f3fc": {
+    "decl": "Scenario: A failure that is not a validation failure is not retried",
+    "file": "parameter-sweep",
+    "refs": [
+      {
+        "file": "tests/test_parameter_sweep_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A failure that is not a validation failure is not retried",
     "type": "scenario"
   },
   "rq-d6aaeb81": {
