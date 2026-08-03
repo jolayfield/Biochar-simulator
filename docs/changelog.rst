@@ -7,36 +7,7 @@ Changelog
    is not a full mirror of it: releases 0.3.0 and 0.4.0 are recorded there and
    are not reproduced here.
 
-Unreleased
-----------
-
-- **Strict mode fails on a functional-group shortfall**, not only when a group
-  places zero. Sweeps will report more ``fallback`` and fewer ``strict_pass``
-  rows; manifest status counts are not comparable with earlier runs.
-- **Breaking for direct model callers:**
-  ``TemperatureModel.get_valid_range`` now takes the property as its first
-  argument. It previously returned H/C's range for every property.
-- **New:** ``TemperatureModel.predict_with_evidence`` returns a prediction with
-  the observation count, spread, and whether the value was carried in from a
-  neighbouring grid point or extrapolated.
-- A fallback from a feedstock curve to the pooled curve is reported, and an
-  aromaticity extrapolated beyond the fitted H/C range warns.
-- **A surface that fell back from amorphous to slit geometry** is no longer
-  written with an ``Amorphous surface`` title. ``SurfaceBuilder`` reports the
-  realised geometry via ``realised_pore_type`` and ``packing_fell_back``.
-- **A carbon skeleton that cannot be built raises** ``SkeletonError`` instead of
-  substituting the library's 16-carbon pyrene regardless of the request.
-- **Breaking for direct assembler callers:** ``PAHAssembler.generate`` no longer
-  accepts ``target_aromaticity``, which was inert. Aromaticity is decided by
-  ring topology.
-- A ``PAH_LIBRARY`` entry that cannot be parsed or sanitised is reported rather
-  than silently dropped.
-- Sheets copied by the identical-sheet optimisation no longer share a
-  ``composition`` record.
-- ``generate_surface`` exposes ``amorphous_fallback``, ``aromaticity_percent``
-  and the box paddings.
-
-0.5.0 (2026-07-31)
+0.5.0 (2026-08-03)
 ------------------
 
 .. warning::
@@ -66,6 +37,31 @@ Unreleased
   count.
 - **Run directories carry** ``run_provenance.json`` recording status, sources,
   net charge, and the annealing schedule used.
+- **Strict mode fails on a functional-group shortfall**, not only when a group
+  places zero. Sweeps will report more ``fallback`` and fewer ``strict_pass``
+  rows; manifest status counts are not comparable with earlier runs.
+- **Breaking for direct model callers:**
+  ``TemperatureModel.get_valid_range`` now takes the property as its first
+  argument. It previously returned H/C's range for every property.
+- **New:** ``TemperatureModel.predict_with_evidence`` returns a prediction with
+  the observation count, spread, and whether the value was carried in from a
+  neighbouring grid point or extrapolated.
+- A fallback from a feedstock curve to the pooled curve is reported, and an
+  aromaticity extrapolated beyond the fitted H/C range warns.
+- **A surface that fell back from amorphous to slit geometry** is no longer
+  written with an ``Amorphous surface`` title. ``SurfaceBuilder`` reports the
+  realised geometry via ``realised_pore_type`` and ``packing_fell_back``.
+- **A carbon skeleton that cannot be built raises** ``SkeletonError`` instead of
+  substituting the library's 16-carbon pyrene regardless of the request.
+- **Breaking for direct assembler callers:** ``PAHAssembler.generate`` no longer
+  accepts ``target_aromaticity``, which was inert. Aromaticity is decided by
+  ring topology.
+- A ``PAH_LIBRARY`` entry that cannot be parsed or sanitised is reported rather
+  than silently dropped.
+- Sheets copied by the identical-sheet optimisation no longer share a
+  ``composition`` record.
+- ``generate_surface`` exposes ``amorphous_fallback``, ``aromaticity_percent``
+  and the box paddings.
 
 0.2.0 (2026-06-01)
 -------------------
