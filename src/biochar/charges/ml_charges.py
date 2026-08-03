@@ -20,10 +20,12 @@ from __future__ import annotations
 
 import logging
 import pickle
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Optional
 
 import numpy as np
+import sklearn
 from rdkit import Chem
 
 if TYPE_CHECKING:
@@ -51,6 +53,15 @@ class MLChargeRefinement:
 
     def __init__(self, model_path: Optional[Path] = None):
         path = Path(model_path) if model_path is not None else _DEFAULT_MODEL_PATH
+        #: Which model answered: ``"bundled"``, ``"custom"`` or ``"fallback"``.
+        #: A caller who asked for one and got another has nothing else to go on
+        #: -- the charges look the same either way.
+        self.model_source: str = (
+            "bundled" if path == _DEFAULT_MODEL_PATH else "custom"
+        )
+        if not path.exists():
+            self.model_source = "fallback"
+        self.model_path: Path = path
         self._model = self._load_model(path)
 
     # ------------------------------------------------------------------
@@ -150,17 +161,71 @@ class MLChargeRefinement:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _recorded_sklearn_version(caught) -> Optional[str]:
+        """The scikit-learn that pickled the model, if it was not this one.
+
+        scikit-learn stamps its version onto every estimator it pickles and
+        raises ``InconsistentVersionWarning`` when unpickling under a different
+        one; the warning carries both versions. It is popped from the object
+        during unpickling, so this is the only place the recorded version can
+        be read.
+        """
+        for warning in caught:
+            recorded = getattr(warning.message, "original_sklearn_version", None)
+            if recorded is not None:
+                return str(recorded)
+        return None
+
+    @staticmethod
     def _load_model(path: Path):
-        """Load a serialised sklearn pipeline from *path*."""
+        """Load a serialised sklearn pipeline from *path*.
+
+        A pickle is only as portable as the library that wrote it, and the
+        package constraint on scikit-learn is a floor with no ceiling, so a
+        mismatch is expected rather than exceptional. scikit-learn's own warning
+        names two version strings and a class -- not the model file, not what it
+        is for, and not what it means for the charges -- so it is re-stated here
+        in terms a reader of those charges can act on.
+        """
         if path.exists():
-            with open(path, "rb") as fh:
-                model = pickle.load(fh)
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always")
+                with open(path, "rb") as fh:
+                    model = pickle.load(fh)
+
+            recorded = MLChargeRefinement._recorded_sklearn_version(caught)
+            if recorded is not None and recorded != sklearn.__version__:
+                warnings.warn(
+                    f"The ML charge model at {path} was written by "
+                    f"scikit-learn {recorded} and is being loaded under "
+                    f"{sklearn.__version__}. The charges it predicts may be "
+                    f"invalid. Rebuild it with "
+                    f"biochar.charges.ml_charges.build_and_save_bundled_model(), "
+                    f"or use charge_method='opls' or 'qm'.",
+                    UserWarning,
+                    stacklevel=3,
+                )
+            for warning in caught:
+                if getattr(warning.message, "original_sklearn_version", None) is None:
+                    warnings.warn_explicit(
+                        warning.message, warning.category,
+                        warning.filename, warning.lineno,
+                    )
+
             logger.debug("Loaded ML charge model from %s", path)
             return model
 
+        warnings.warn(
+            f"No ML charge model at {path}; falling back to a Gaussian process "
+            f"built at run time from OPLS reference data. It is not the bundled "
+            f"model and does not give the same charges. Check "
+            f"MLChargeRefinement.model_source to see which answered.",
+            UserWarning,
+            stacklevel=3,
+        )
         logger.warning(
-            "Bundled ML charge model not found at %s; "
-            "building fallback GPR from OPLS reference data.",
+            "ML charge model not found at %s; building fallback GPR from "
+            "OPLS reference data.",
             path,
         )
         return MLChargeRefinement._build_fallback_model()

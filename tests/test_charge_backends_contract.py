@@ -12,7 +12,8 @@ by scikit-learn rather than in terms of the charges; and an empirical factor
 fitted on neutral liquids is applied to ions without comment, on the path the
 pH-plus-ML refusal explicitly recommends.
 
-Five scenarios carry xfail(strict=True); each names the defect it defers.
+Every scenario here passes. The five that carried xfail(strict=True) were
+retired by XPASS when their fixes landed.
 """
 
 import warnings
@@ -39,13 +40,6 @@ class TestTheNeutralMoleculeFactor:
     CHARGES = [-0.6, -0.6, -0.6, 0.4, 0.4, 0.4, 0.4, 0.2]
 
     # rq-817541fc
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the 1.14 factor is fitted on neutral organic liquids; applied "
-               "to an ion the sum overshoots by 0.14 x q and the correction "
-               "spreads that uniformly over every atom, which is neither CM1A "
-               "nor LigParGen and is said nowhere",
-    )
     def test_scaling_a_charged_molecule_reports_the_extrapolation(self):
         charged = [q - 3.0 / len(self.CHARGES) for q in self.CHARGES]
         _, messages = _caught(scale_and_neutralize, charged, total_charge=-3.0)
@@ -79,24 +73,12 @@ class TestTheNeutralMoleculeFactor:
 # --------------------------------------------------------------------------- #
 class TestTheRefinerSaysWhichModelAnswered:
     # rq-c202e1dc
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the refiner exposes no record of which model it loaded, so a "
-               "caller cannot tell the bundled artifact from the run-time "
-               "fallback",
-    )
     def test_the_refiner_reports_the_bundled_model(self):
         assert _DEFAULT_MODEL_PATH.exists(), "fixture is void: no bundled model"
         refiner = MLChargeRefinement()
         assert refiner.model_source == "bundled"
 
     # rq-3cf63133
-    @pytest.mark.xfail(
-        strict=True,
-        reason="a missing artifact substitutes a differently-trained fallback "
-               "with only a log line, so a caller who asked for the bundled "
-               "model and got the fallback holds nothing that differs",
-    )
     def test_a_substituted_fallback_announces_itself(self, tmp_path):
         refiner, messages = _caught(
             MLChargeRefinement, model_path=tmp_path / "absent.pkl"
@@ -110,13 +92,6 @@ class TestTheRefinerSaysWhichModelAnswered:
 # --------------------------------------------------------------------------- #
 class TestTheLibraryIsCheckedAgainstTheArtifact:
     # rq-1e274fe6
-    @pytest.mark.xfail(
-        strict=True,
-        reason="a version mismatch surfaces only as scikit-learn's own "
-               "InconsistentVersionWarning, which names two version strings "
-               "and a class -- not the model file, not what it is for, and not "
-               "what it means for the charges",
-    )
     def test_a_model_from_a_different_sklearn_is_reported(self, monkeypatch):
         monkeypatch.setattr(
             MLChargeRefinement, "_recorded_sklearn_version",
@@ -133,11 +108,6 @@ class TestTheLibraryIsCheckedAgainstTheArtifact:
         assert any(sklearn.__version__ in m for m in ours), ours
 
     # rq-75d3624b
-    @pytest.mark.xfail(
-        strict=True,
-        reason="cannot be checked until the version check exists; pinned so "
-               "the fix cannot warn on every load",
-    )
     def test_a_matching_version_is_not_reported(self, monkeypatch):
         monkeypatch.setattr(
             MLChargeRefinement, "_recorded_sklearn_version",
