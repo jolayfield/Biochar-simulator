@@ -31,24 +31,33 @@ requirement.
 **Run the fast tier constantly, the full suite at boundaries.**
 
 ```bash
-pytest -m "not slow" -n auto   # ~24s
-pytest -n auto                 # full suite
+pytest -m "not slow" -n auto   # ~32s
+pytest -n auto                 # full suite -- ~2m43s
 ```
 
-Always `-n auto`. 15 of 842 tests are ~98% of the runtime; they are marked
-`slow` so the tier you run constantly stays usable.
+Always `-n auto`; both figures assume it, and serial is roughly eight times
+slower. 15 of 1055 tests are most of the runtime; they are marked `slow` so the
+tier you run constantly stays usable. Measured 2026-08-04 at `fc3f7b9`.
 
 **A green run is not automatically evidence.** Two silent-skip traps here:
 
 - Forcefield-backed tests skip without a discoverable `oplsaa.ff`, and the
   `grompp` tests skip without the `gmx` binary. **Check the skip count: 1 is
-  normal (MOPAC), 24 means 23 tests verified nothing.** The conda env ships a
-  full GROMACS — binary included — but nothing points the tests at it, so the
-  default is the bad case. One line fixes both:
+  normal, 24 means 23 tests verified nothing.** With everything present that one
+  skip is `test_grompp_smoke.py`'s deliberate case, which requires `gmx` to be
+  *absent* — not MOPAC, which does run. The conda env ships a full GROMACS —
+  binary included — but nothing points the tests at it, so the default is the
+  bad case. One line fixes both:
 
   ```bash
-  export PATH="$CONDA_PREFIX/bin:$PATH"
+  export PATH="/opt/miniconda3/envs/biochar/bin:$PATH"
   ```
+
+  **Write that path literally.** `$CONDA_PREFIX` is empty in non-interactive
+  shells — the ones agent tooling and most scripts use — so the tempting
+  `export PATH="$CONDA_PREFIX/bin:$PATH"` expands to `/bin:$PATH` and silently
+  changes nothing. The run then looks configured and still skips 24. Verified
+  2026-08-04.
 
   Prefer that over the alternatives. `GMXDATA` (which must be the *parent* of
   `top/`, not `top/` itself) un-skips the forcefield tests but not the `grompp`
