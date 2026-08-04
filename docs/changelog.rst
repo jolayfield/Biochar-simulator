@@ -7,8 +7,8 @@ Changelog
    is not a full mirror of it: releases 0.3.0 and 0.4.0 are recorded there and
    are not reproduced here.
 
-Unreleased
-----------
+0.6.0 (2026-08-04)
+------------------
 
 Requirements coverage extended to the five modules that were unspecified:
 parameter sweep, pH protonation, valence validation, condensation annealing, and
@@ -18,9 +18,17 @@ fixed and five breaking changes; see ``CHANGELOG.md`` for the full list.
 
 .. warning::
 
-   **``charge_method="ml"`` produces different charges**, because the bundled
-   model was rebuilt against the current reference table. See ``CHANGELOG.md``
-   for the measured deviation.
+   **Two things changed what gets written to disk. Re-run anything whose
+   results matter.**
+
+   Structures whose sheets do not kekulise came back from embedding stripped of
+   every aromatic flag, so the exported topology carried no improper torsions
+   and nothing held those rings planar. A structure that kekulises cleanly is
+   unaffected.
+
+   And ``charge_method="ml"`` produces different charges, because the bundled
+   model was refitted against the current OPLS typing — at most 0.022 e, RMS
+   0.007 e. ``charge_method="opls"`` (the default) and ``"qm"`` are unaffected.
 
 .. warning::
 
