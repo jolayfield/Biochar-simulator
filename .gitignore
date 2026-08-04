@@ -57,6 +57,11 @@ htmlcov/
 
 # Raw source data (CSVs already packaged in biochar/data/; .pptx is large binary)
 data/
+# ...but not the packaged data itself. A bare `data/` matches at any depth, so
+# it swallowed src/biochar/data/ too. The files already there survived only
+# because they were tracked before this rule existed; a new one added to the
+# package would have been ignored silently and shipped in no sdist.
+!src/biochar/data/
 
 # Claude Code local settings (personal overrides, not shared)
 .claude/settings.local.json

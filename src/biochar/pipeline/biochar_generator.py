@@ -174,7 +174,7 @@ class GeneratorConfig:
     # "opls"  — static OPLS-AA lookup table (default, no extra dependencies).
     # "ml"    — environment-aware Gaussian Process model; requires the ``ml``
     #           optional extra (scikit-learn).  Falls back to a model trained on
-    #           OPLS reference charges when the bundled .pkl is absent.
+    #           OPLS reference charges when the bundled artifact is absent.
     # "qm"    — LigParGen-style QM charges: AM1 (via an external MOPAC binary) →
     #           CM1A mapping → ×1.14 scaling.  Requires ``mopac`` on PATH
     #           (``conda install -c conda-forge mopac``).  See

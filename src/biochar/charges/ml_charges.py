@@ -6,7 +6,7 @@ static OPLS-AA table lookups.  An atomic featuriser maps each atom to a
 feature vector; a pre-trained Gaussian Process Regression (GPR) model then
 predicts the partial charge for each atom.
 
-The bundled model (``biochar/data/charges_gpr_cm5.pkl``) is trained on
+The bundled model (``biochar/data/charges_gpr_cm5.json``) is trained on
 OPLS-AA reference charges for representative PAH/biochar fragments and serves
 as a functional baseline.  For higher accuracy, retrain on DFT-derived (CM5,
 RESP, or HLY) charges using :meth:`MLChargeRefinement.train_and_save`.
@@ -18,6 +18,7 @@ Requires the ``ml`` optional extra::
 
 from __future__ import annotations
 
+import json
 import logging
 import pickle
 import warnings
@@ -33,7 +34,19 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_MODEL_PATH = Path(__file__).parent.parent / "data" / "charges_gpr_cm5.pkl"
+_DEFAULT_MODEL_PATH = Path(__file__).parent.parent / "data" / "charges_gpr_cm5.json"
+
+#: The artifact schema this module reads and writes.  A pickle is only as
+#: portable as the library that wrote it; this format is the fitted
+#: hyperparameters and the training set, from which the pipeline is rebuilt on
+#: load.  The rebuild is not an approximation of the pickle -- refitting with the
+#: hyperparameters held fixed reproduces its predictions to ~2e-15 e.
+_ARTIFACT_FORMAT = "biochar-gpr-1"
+
+#: How far the reconstruction may drift from the reference charges recorded in
+#: the artifact before it stops being the same model.  Well below anything a
+#: partial charge means, well above the ~1e-15 e of Cholesky round-off.
+_REPRODUCTION_TOLERANCE = 1e-6
 
 
 class MLChargeRefinement:
@@ -41,9 +54,9 @@ class MLChargeRefinement:
     Refine per-atom partial charges using a trained Gaussian Process model.
 
     Args:
-        model_path: Path to a serialised scikit-learn ``Pipeline`` (.pkl).
-                    Defaults to the bundled model at
-                    ``biochar/data/charges_gpr_cm5.pkl``.
+        model_path: Path to a saved model.  Defaults to the bundled one at
+                    ``biochar/data/charges_gpr_cm5.json``.  Pickles written by
+                    older versions of :meth:`train_and_save` are still read.
 
     Examples::
 
@@ -161,16 +174,23 @@ class MLChargeRefinement:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _recorded_sklearn_version(caught) -> Optional[str]:
-        """The scikit-learn that pickled the model, if it was not this one.
+    def _recorded_sklearn_version(source) -> Optional[str]:
+        """The scikit-learn behind the artifact, if it was not this one.
 
-        scikit-learn stamps its version onto every estimator it pickles and
-        raises ``InconsistentVersionWarning`` when unpickling under a different
-        one; the warning carries both versions. It is popped from the object
-        during unpickling, so this is the only place the recorded version can
-        be read.
+        *source* is whatever reading the artifact yielded, and there are two
+        kinds. For the current format it is the parsed payload, which records
+        the version that fitted the hyperparameters outright. For a legacy
+        pickle it is the list of warnings raised while unpickling: scikit-learn
+        stamps its version onto every estimator it pickles and raises
+        ``InconsistentVersionWarning`` under a different one, and the stamp is
+        popped from the object during unpickling, so the warning is the only
+        place the recorded version can still be read.
         """
-        for warning in caught:
+        if isinstance(source, dict):
+            recorded = source.get("sklearn_version")
+            return str(recorded) if recorded is not None else None
+
+        for warning in source:
             recorded = getattr(warning.message, "original_sklearn_version", None)
             if recorded is not None:
                 return str(recorded)
@@ -178,47 +198,71 @@ class MLChargeRefinement:
 
     @staticmethod
     def _load_model(path: Path):
-        """Load a serialised sklearn pipeline from *path*.
+        """Load a charge model from *path*.
 
-        A pickle is only as portable as the library that wrote it, and the
-        package constraint on scikit-learn is a floor with no ceiling, so a
-        mismatch is expected rather than exceptional. scikit-learn's own warning
-        names two version strings and a class -- not the model file, not what it
-        is for, and not what it means for the charges -- so it is re-stated here
-        in terms a reader of those charges can act on.
+        Two formats are read. The current one is JSON: the fitted kernel
+        hyperparameters, the training set, and the charges the fitting library
+        predicted from them. The pipeline is rebuilt from those with the
+        hyperparameters held fixed, which is a deterministic Cholesky solve
+        rather than a deserialisation, and the rebuilt predictions are checked
+        against the recorded ones -- so what the artifact means is verified
+        rather than assumed. The other is a pickle, written by
+        ``train_and_save`` before this module stopped producing them.
+
+        The two are reported differently, and the difference is the point. A
+        pickle is only as portable as the library that wrote it, it records
+        nothing to check itself against, and the constraint on scikit-learn is a
+        floor with no ceiling -- so for a pickle a version difference is all
+        there is to go on, and the strong warning stands. For the current format
+        the version is provenance and the reproduction check is the evidence,
+        so silence means the charges were verified rather than assumed.
         """
         if path.exists():
-            with warnings.catch_warnings(record=True) as caught:
-                warnings.simplefilter("always")
-                with open(path, "rb") as fh:
-                    model = pickle.load(fh)
+            model, source, deviation = MLChargeRefinement._read_model(path)
 
-            recorded = MLChargeRefinement._recorded_sklearn_version(caught)
-            if recorded is not None and recorded != sklearn.__version__:
+            if deviation is not None and deviation > _REPRODUCTION_TOLERANCE:
                 warnings.warn(
-                    f"The ML charge model at {path} was written by "
-                    f"scikit-learn {recorded} and is being loaded under "
-                    f"{sklearn.__version__}. The charges it predicts may be "
-                    f"invalid. Rebuild it with "
+                    f"The ML charge model at {path} does not reproduce under "
+                    f"scikit-learn {sklearn.__version__}: rebuilding it from "
+                    f"its recorded hyperparameters gives charges differing "
+                    f"from the ones recorded alongside them by up to "
+                    f"{deviation:.2e} e, against a tolerance of "
+                    f"{_REPRODUCTION_TOLERANCE:.0e} e. The charges it predicts "
+                    f"may be invalid. Rebuild it with "
                     f"biochar.charges.ml_charges.build_and_save_bundled_model(), "
                     f"or use charge_method='opls' or 'qm'.",
                     UserWarning,
                     stacklevel=3,
                 )
-            for warning in caught:
-                if getattr(warning.message, "original_sklearn_version", None) is None:
-                    warnings.warn_explicit(
-                        warning.message, warning.category,
-                        warning.filename, warning.lineno,
-                    )
+
+            recorded = MLChargeRefinement._recorded_sklearn_version(source)
+            if recorded is not None and recorded != sklearn.__version__:
+                warnings.warn(
+                    MLChargeRefinement._version_mismatch_message(
+                        path, recorded, deviation
+                    ),
+                    UserWarning,
+                    stacklevel=3,
+                )
+            if not isinstance(source, dict):
+                for warning in source:
+                    if getattr(
+                        warning.message, "original_sklearn_version", None
+                    ) is None:
+                        warnings.warn_explicit(
+                            warning.message, warning.category,
+                            warning.filename, warning.lineno,
+                        )
 
             logger.debug("Loaded ML charge model from %s", path)
             return model
 
         warnings.warn(
             f"No ML charge model at {path}; falling back to a Gaussian process "
-            f"built at run time from OPLS reference data. It is not the bundled "
-            f"model and does not give the same charges. Check "
+            f"fitted at run time from OPLS reference data. It is the same recipe "
+            f"as the bundled model but not the same model: it follows the "
+            f"current reference table, where the bundled one is pinned to the "
+            f"table as it stood when it was built. Check "
             f"MLChargeRefinement.model_source to see which answered.",
             UserWarning,
             stacklevel=3,
@@ -231,11 +275,145 @@ class MLChargeRefinement:
         return MLChargeRefinement._build_fallback_model()
 
     @staticmethod
+    def _version_mismatch_message(
+        path: Path, recorded: str, deviation: Optional[float]
+    ) -> str:
+        """What a version difference means for the charges, per format.
+
+        For a pickle it means the unpickling itself is unverified, which is the
+        strong claim. For the current format the numbers were only *fitted* by
+        the other library -- the model in hand was rebuilt by this one, and the
+        rebuild was checked -- so the message says what the check found rather
+        than repeating a warning the evidence does not support.
+        """
+        if deviation is None:
+            return (
+                f"The ML charge model at {path} was written by scikit-learn "
+                f"{recorded} and is being loaded under {sklearn.__version__}. "
+                f"It is a pickle, so the charges it predicts may be invalid. "
+                f"Rebuild it with "
+                f"biochar.charges.ml_charges.build_and_save_bundled_model() to "
+                f"convert it to the version-independent format, or use "
+                f"charge_method='opls' or 'qm'."
+            )
+        return (
+            f"The ML charge model at {path} records hyperparameters fitted by "
+            f"scikit-learn {recorded}, and scikit-learn {sklearn.__version__} "
+            f"rebuilt the model from them. The rebuilt model reproduces the "
+            f"charges recorded alongside those hyperparameters to "
+            f"{deviation:.1e} e, so the predictions are the artifact's; this "
+            f"is a note on provenance, not a defect."
+        )
+
+    @staticmethod
+    def _read_model(path: Path):
+        """Read *path*, returning ``(model, source, deviation)``.
+
+        *source* is what :meth:`_recorded_sklearn_version` reads the recording
+        library from. *deviation* is how far the rebuilt model's predictions sit
+        from the ones recorded in the artifact, or ``None`` for a pickle, which
+        records nothing to check against.
+
+        The format is decided by content rather than by suffix: ``train_and_save``
+        writes wherever the caller points it, and callers point it at ``.pkl``.
+        """
+        raw = path.read_bytes()
+        if raw.lstrip()[:1] == b"{":
+            payload = json.loads(raw)
+            model = MLChargeRefinement._rebuild_from_payload(payload)
+            reference = np.asarray(payload["reference_charges"], dtype=float)
+            deviation = float(
+                np.abs(model.predict(np.asarray(payload["X"], dtype=float))
+                       - reference).max()
+            )
+            return model, payload, deviation
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            model = pickle.loads(raw)
+        return model, caught, None
+
+    @staticmethod
+    def _rebuild_from_payload(payload: dict):
+        """Rebuild the GPR pipeline from recorded hyperparameters and data.
+
+        ``optimizer=None`` holds the kernel at the recorded hyperparameters, so
+        the fit is the one deterministic linear-algebra step -- no restarts, no
+        random state, no dependence on the optimiser a given scikit-learn ships.
+        """
+        _require_sklearn()
+        from sklearn.gaussian_process import GaussianProcessRegressor
+        from sklearn.gaussian_process.kernels import RBF, WhiteKernel
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        recorded_format = payload.get("format")
+        if recorded_format != _ARTIFACT_FORMAT:
+            raise ValueError(
+                f"Unsupported ML charge model format {recorded_format!r}; this "
+                f"biochar reads {_ARTIFACT_FORMAT!r}."
+            )
+
+        kernel = (
+            RBF(length_scale=payload["kernel"]["rbf_length_scale"])
+            + WhiteKernel(noise_level=payload["kernel"]["white_noise_level"])
+        )
+        gpr = GaussianProcessRegressor(
+            kernel=kernel, optimizer=None, normalize_y=payload["normalize_y"]
+        )
+        pipe = Pipeline([("scaler", StandardScaler()), ("gpr", gpr)])
+        pipe.fit(
+            np.asarray(payload["X"], dtype=float),
+            np.asarray(payload["y"], dtype=float),
+        )
+        return pipe
+
+    @staticmethod
+    def _write_model(pipe, X: np.ndarray, y: np.ndarray, path: Path) -> None:
+        """Write *pipe* to *path* in the version-independent format.
+
+        The reference charges are the fitting library's own predictions, and the
+        rebuild is exercised here rather than left for the reader to discover:
+        an artifact that does not reproduce on the machine that wrote it would
+        not reproduce anywhere.
+        """
+        fitted = pipe.named_steps["gpr"].kernel_.get_params()
+        payload = {
+            "format": _ARTIFACT_FORMAT,
+            "sklearn_version": sklearn.__version__,
+            "normalize_y": bool(pipe.named_steps["gpr"].normalize_y),
+            "kernel": {
+                "rbf_length_scale": float(fitted["k1__length_scale"]),
+                "white_noise_level": float(fitted["k2__noise_level"]),
+            },
+            "X": np.asarray(X, dtype=float).tolist(),
+            "y": np.asarray(y, dtype=float).tolist(),
+            "reference_charges": [float(q) for q in pipe.predict(X)],
+        }
+
+        deviation = float(
+            np.abs(
+                MLChargeRefinement._rebuild_from_payload(payload).predict(X)
+                - np.asarray(payload["reference_charges"], dtype=float)
+            ).max()
+        )
+        if deviation > _REPRODUCTION_TOLERANCE:
+            raise RuntimeError(
+                f"The model just fitted does not survive being written and "
+                f"rebuilt: predictions move by up to {deviation:.2e} e against "
+                f"a tolerance of {_REPRODUCTION_TOLERANCE:.0e} e. Refusing to "
+                f"write {path}."
+            )
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload) + "\n")
+
+    @staticmethod
     def _build_fallback_model():
         """
         Train and return a GPR pipeline on OPLS-AA reference charges.
 
-        Used when the bundled .pkl is absent.  Reproduces OPLS-AA charges
+        Used when the bundled artifact is absent.  Reproduces OPLS-AA charges
         from atomic features — a functional baseline that can be retrained
         with DFT data via :meth:`train_and_save`.
         """
@@ -272,8 +450,8 @@ class MLChargeRefinement:
         Args:
             X: Feature matrix ``(n_samples, 8)`` from :meth:`_featurize`.
             y: Per-atom target charges ``(n_samples,)``.
-            output_path: Where to write the .pkl.  Defaults to
-                ``biochar/data/charges_gpr_cm5.pkl``.
+            output_path: Where to write the model.  Defaults to
+                ``biochar/data/charges_gpr_cm5.json``.
 
         Returns:
             Fitted :class:`MLChargeRefinement` instance.
@@ -291,14 +469,14 @@ class MLChargeRefinement:
         pipe = Pipeline([("scaler", StandardScaler()), ("gpr", gpr)])
         pipe.fit(X, y)
 
-        path = output_path or _DEFAULT_MODEL_PATH
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "wb") as fh:
-            pickle.dump(pipe, fh)
+        path = Path(output_path) if output_path is not None else _DEFAULT_MODEL_PATH
+        cls._write_model(pipe, X, y, path)
         logger.info("ML charge model saved to %s", path)
 
         instance = cls.__new__(cls)
         instance._model = pipe
+        instance.model_path = path
+        instance.model_source = "bundled" if path == _DEFAULT_MODEL_PATH else "custom"
         return instance
 
 
@@ -388,7 +566,7 @@ def build_and_save_bundled_model(output_path: Optional[Path] = None) -> Path:
     Build the bundled GPR model and save it to *output_path*.
 
     Intended to be run once during development to regenerate
-    ``biochar/data/charges_gpr_cm5.pkl``::
+    ``biochar/data/charges_gpr_cm5.json``::
 
         python -c "from biochar.charges.ml_charges import build_and_save_bundled_model; build_and_save_bundled_model()"
 

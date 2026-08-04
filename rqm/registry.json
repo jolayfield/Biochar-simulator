@@ -399,6 +399,14 @@
     "title": "A Charged Molecule Says So",
     "type": "section"
   },
+  "rq-1912d725": {
+    "decl": "## The Artifact Is Checked Against the Data It Claims",
+    "file": "charge-backends",
+    "level": 2,
+    "refs": [],
+    "title": "The Artifact Is Checked Against the Data It Claims",
+    "type": "section"
+  },
   "rq-191c700f": {
     "decl": "## The Census Counts What Happened, Not What Was Decided",
     "file": "ph-protonation",
@@ -436,7 +444,7 @@
     "type": "section"
   },
   "rq-1e274fe6": {
-    "decl": "Scenario: A model written by a different scikit-learn is reported",
+    "decl": "Scenario: A model fitted by a different scikit-learn is reported",
     "file": "charge-backends",
     "refs": [
       {
@@ -444,7 +452,7 @@
         "kind": "code"
       }
     ],
-    "title": "A model written by a different scikit-learn is reported",
+    "title": "A model fitted by a different scikit-learn is reported",
     "type": "scenario"
   },
   "rq-1e6d149c": {
@@ -828,11 +836,11 @@
     "type": "scenario"
   },
   "rq-39798517": {
-    "decl": "## A Model Written by a Different Library Says So",
+    "decl": "## A Model the Running Library Does Not Reproduce Says So",
     "file": "charge-backends",
     "level": 2,
     "refs": [],
-    "title": "A Model Written by a Different Library Says So",
+    "title": "A Model the Running Library Does Not Reproduce Says So",
     "type": "section"
   },
   "rq-39bd2478": {
@@ -1721,6 +1729,18 @@
       }
     ],
     "title": "An unreachable nitrogen environment is flagged, not guessed",
+    "type": "scenario"
+  },
+  "rq-712dd0d8": {
+    "decl": "Scenario: A model that does not rebuild to its recorded charges is reported",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A model that does not rebuild to its recorded charges is reported",
     "type": "scenario"
   },
   "rq-7286d3d9": {
@@ -3296,6 +3316,18 @@
     "title": "Questionable Combinations Warn",
     "type": "section"
   },
+  "rq-da875aee": {
+    "decl": "Scenario: The bundled artifact's training data is the current reference data",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The bundled artifact's training data is the current reference data",
+    "type": "scenario"
+  },
   "rq-da9561c4": {
     "decl": "Scenario: A row that produced no structure files gets no run directory",
     "file": "md-setup",
@@ -3669,6 +3701,18 @@
       }
     ],
     "title": "A skeleton that cannot be grown raises",
+    "type": "scenario"
+  },
+  "rq-fa93a423": {
+    "decl": "Scenario: A model that rebuilds exactly is not reported",
+    "file": "charge-backends",
+    "refs": [
+      {
+        "file": "tests/test_charge_backends_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A model that rebuilds exactly is not reported",
     "type": "scenario"
   },
   "rq-fa9763e9": {
