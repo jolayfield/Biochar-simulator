@@ -2,7 +2,28 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
-## [Unreleased]
+## [0.6.0] — August 4, 2026
+
+> **Two things changed what gets written to disk. Re-run anything whose results
+> matter.**
+>
+> Structures whose sheets do not kekulise came back from embedding stripped of
+> every aromatic flag, because the branch that de-aromatises in order to embed
+> returned its own working copy rather than the molecule it was given. The
+> exported topology then carried **no improper torsions at all** — impropers are
+> emitted per aromatic ring carbon, and there were none — so nothing held those
+> rings planar. Verified directly: a naphthalene with its aromatic flags intact
+> emits 10 impropers; the same molecule with them cleared emits 0.
+>
+> And `charge_method="ml"` produces different charges, because the bundled model
+> was refitted against the current OPLS typing. The move is small — at most
+> 0.022 e, RMS 0.007 e — but it is a force field change, not a rounding one.
+>
+> `charge_method="opls"` (the default) and `"qm"` are unaffected by the second,
+> and a structure that kekulises cleanly is unaffected by the first.
+>
+> **Five changes break existing code or existing outcomes.** They are listed
+> first below; the rest of the release is corrective.
 
 Requirements coverage extended to the five modules the 2026-07-30 review left
 unspecified. Every module that review named now has a document in `rqm/` —
