@@ -7,7 +7,7 @@
 #   curl -s https://pypi.org/pypi/biochar/<version>/json \
 #     | python -c "import json,sys; [print(f['digests']['sha256']) \
 #         for f in json.load(sys.stdin)['urls'] if f['packagetype']=='sdist']"
-{% set version = "0.5.0" %}
+{% set version = "0.6.0" %}
 
 package:
   name: biochar
@@ -15,7 +15,7 @@ package:
 
 source:
   url: https://pypi.org/packages/source/b/biochar/biochar-{{ version }}.tar.gz
-  sha256: c4e41b8d3f83e94b9dd41865db72833a74e2fa4037e4840565b93300ccb6e8bb
+  sha256: e2bdfc5b9bc25f5901c564b0b9339f168760c7e46eeed5b3b85a541d021a0ffd
 
 build:
   noarch: python
@@ -54,7 +54,7 @@ test:
     #
     # This list must match the scripts declared by the version above, NOT by the
     # working tree. Verified against the published sdist's own pyproject.toml:
-    # 0.5.0 declares four, where 0.4.0 declared three.
+    # 0.6.0 declares the same four as 0.5.0, where 0.4.0 declared three.
     - biochar-gen --help
     - biochar-sweep --help
     - biochar-md-setup --help
