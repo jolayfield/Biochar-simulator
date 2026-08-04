@@ -48,10 +48,10 @@ pip install -e ".[dev,viz]"
 # Install the pre-commit gate (once per clone)
 bash tools/hooks/install.sh
 
-# Fast tier -- ~24s. Always pass -n auto; serially this is 5m39s.
+# Fast tier -- ~32s. Always pass -n auto; serially this is minutes.
 python -m pytest -m "not slow" -n auto
 
-# Full suite, including the slow regressions
+# Full suite, including the slow regressions -- ~2m43s under -n auto.
 python -m pytest -n auto
 
 # Run a single test
@@ -64,13 +64,31 @@ python tests/test_pah_quality.py
 cd docs && make html
 ```
 
-The test discovery root is `tests/` (configured in `pyproject.toml`), which holds 25 files.
+The test discovery root is `tests/` (configured in `pyproject.toml`), which holds 40 files.
 
-**The suite has two tiers.** 15 of 842 tests account for roughly 98% of the runtime — end-to-end
-regressions that generate real structures across several seeds. They carry the `slow` marker so the tier
-you run constantly stays fast: 807 tests in ~24s under `-n auto`, versus ~22 minutes for everything.
-When adding a test that takes more than a few seconds, mark the individual case `slow`, not its whole
-class — a class-level marker exiles its fast siblings from the pre-commit tier.
+**The suite has two tiers.** 15 of 1055 tests account for most of the runtime — end-to-end regressions
+that generate real structures across several seeds. They carry the `slow` marker so the tier you run
+constantly stays fast. Measured 2026-08-04 at `fc3f7b9` on 14 workers: the fast tier is **1038 tests in
+~32s**, the full suite **1055 in ~2m43s**. When adding a test that takes more than a few seconds, mark
+the individual case `slow`, not its whole class — a class-level marker exiles its fast siblings from the
+pre-commit tier.
+
+**Both figures assume `-n auto`, and the difference is the whole point.** Serial numbers for this suite
+have been quoted before without saying they were serial — an earlier "~22 minutes for everything" was
+one, and it is roughly eight times the parallel figure. It made the full suite look like something to
+route around when it costs under three minutes. Always pass `-n auto`, and when recording a timing here,
+say which one it is.
+
+**A run that skips more than once verified less than it appears to.** With GROMACS and MOPAC on `PATH`
+the expected result is exactly **1 skip** — `test_grompp_smoke.py`'s deliberate case, which requires
+`gmx` to be *absent*. Anything higher means the forcefield or QM-charge tests opted out silently. The
+usual cause is `export GMXDATA="$CONDA_PREFIX/share/gromacs"` in a non-interactive shell, where
+`CONDA_PREFIX` is empty, so it expands to `/share/gromacs` and does nothing. Write the path literally:
+
+```bash
+export GMXDATA="/opt/miniconda3/envs/biochar/share/gromacs"
+export PATH="/opt/miniconda3/envs/biochar/bin:$PATH"
+```
 
 **The commit gate is `tools/hooks/pre-commit`**, installed by `bash tools/hooks/install.sh`. It runs
 secrets, ruff, the fast tier, and `rq index`. Bypass with `git commit --no-verify`; CI still runs
