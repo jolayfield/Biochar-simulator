@@ -1,4 +1,12 @@
 {
+  "rq-0066e1ac": {
+    "decl": "## Validation Does Not Rewrite What It Validates",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "Validation Does Not Rewrite What It Validates",
+    "type": "section"
+  },
   "rq-00cacb46": {
     "decl": "### Hydrogen bonds are not clashes",
     "file": "geometry-embedding",
@@ -88,6 +96,14 @@
     ],
     "title": "Atom names agree between the structure and the topology at any size",
     "type": "scenario"
+  },
+  "rq-07eab6b8": {
+    "decl": "## A Molecule Leaves Embedding Preparation Knowing Its Rings",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "A Molecule Leaves Embedding Preparation Knowing Its Rings",
+    "type": "section"
   },
   "rq-08130b9d": {
     "decl": "Scenario: A molecule with no violations validates",
@@ -314,6 +330,18 @@
     "refs": [],
     "title": "PROTONATION_STATES",
     "type": "api-item"
+  },
+  "rq-171f79aa": {
+    "decl": "Scenario: A ring that cannot carry the nitrogen is left as it was",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A ring that cannot carry the nitrogen is left as it was",
+    "type": "scenario"
   },
   "rq-17279822": {
     "decl": "## QM Charges Belong to the Exported Geometry",
@@ -565,6 +593,14 @@
     ],
     "title": "No two grid points share a molecule name",
     "type": "scenario"
+  },
+  "rq-2a552a1a": {
+    "decl": "## Embedding Returns the Molecule It Was Given, Carrying the Coordinates It Found",
+    "file": "geometry-embedding",
+    "level": 2,
+    "refs": [],
+    "title": "Embedding Returns the Molecule It Was Given, Carrying the Coordinates It Found",
+    "type": "section"
   },
   "rq-2bb117a3": {
     "decl": "- `PH_MIN`, `PH_MAX`",
@@ -1341,6 +1377,18 @@
     "title": "PAHAssembler",
     "type": "api-item"
   },
+  "rq-592b8c66": {
+    "decl": "Scenario: Refinement relaxes an aromatic molecule rather than declining it",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Refinement relaxes an aromatic molecule rather than declining it",
+    "type": "scenario"
+  },
   "rq-59e23c2e": {
     "decl": "Scenario: A target above the library is met or exceeded",
     "file": "carbon-skeleton",
@@ -1699,6 +1747,18 @@
     "title": "A condensation run directory records its provenance",
     "type": "scenario"
   },
+  "rq-75c9724b": {
+    "decl": "Scenario: Validating a molecule that will not kekulise leaves its bonds alone",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Validating a molecule that will not kekulise leaves its bonds alone",
+    "type": "scenario"
+  },
   "rq-75d3624b": {
     "decl": "Scenario: A matching version is not reported",
     "file": "charge-backends",
@@ -1765,6 +1825,18 @@
     "refs": [],
     "title": "Three Depths of Force-Field Verification",
     "type": "section"
+  },
+  "rq-79908020": {
+    "decl": "Scenario: The returned molecule carries the coordinates that were computed",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The returned molecule carries the coordinates that were computed",
+    "type": "scenario"
   },
   "rq-7ad3970f": {
     "decl": "- `TemperatureModel(model_path: Optional[Path] = None)`",
@@ -2087,6 +2159,18 @@
     "title": "Clash Resolution Is Skipped on the Hex-Lattice Path",
     "type": "section"
   },
+  "rq-8ebaed02": {
+    "decl": "Scenario: A molecule RDKit rejects is still reported",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule RDKit rejects is still reported",
+    "type": "scenario"
+  },
   "rq-90382d04": {
     "decl": "Scenario: An explicitly requested ratio wins over the temperature-derived one",
     "file": "generation-config",
@@ -2379,6 +2463,18 @@
     "title": "The name a point reports is the name its generator is configured with",
     "type": "scenario"
   },
+  "rq-a157df17": {
+    "decl": "Scenario: A molecule whose sanitisation failed still knows its rings",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule whose sanitisation failed still knows its rings",
+    "type": "scenario"
+  },
   "rq-a16e0b49": {
     "decl": "Scenario: Step counts follow from the duration and the timestep",
     "file": "condensation-annealing",
@@ -2550,6 +2646,18 @@
       }
     ],
     "title": "A ratio-derived shortfall is judged by the ratio, not the count",
+    "type": "scenario"
+  },
+  "rq-ac433b55": {
+    "decl": "Scenario: A molecule that kekulises cleanly also knows its rings",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A molecule that kekulises cleanly also knows its rings",
     "type": "scenario"
   },
   "rq-acf97ed2": {
@@ -3035,6 +3143,10 @@
     "file": "opls-typing",
     "refs": [
       {
+        "file": "rqm/geometry-embedding.md",
+        "kind": "code"
+      },
+      {
         "file": "tests/test_valence_contract.py",
         "kind": "code"
       }
@@ -3093,6 +3205,18 @@
     "title": "Atom Names Identify One Atom Each",
     "type": "section"
   },
+  "rq-ca3487ca": {
+    "decl": "Scenario: A non-aromatic pentagon becomes a pyrrole rather than being skipped",
+    "file": "valence-validation",
+    "refs": [
+      {
+        "file": "tests/test_valence_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A non-aromatic pentagon becomes a pyrrole rather than being skipped",
+    "type": "scenario"
+  },
   "rq-cf3d7a56": {
     "decl": "## Aromaticity Is an Outcome, Not a Request",
     "file": "carbon-skeleton",
@@ -3138,6 +3262,18 @@
       }
     ],
     "title": "A carbonyl request places a phenolic group",
+    "type": "scenario"
+  },
+  "rq-d5b18b3a": {
+    "decl": "Scenario: A structure that will not kekulise still comes back aromatic",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A structure that will not kekulise still comes back aromatic",
     "type": "scenario"
   },
   "rq-d600f3fc": {

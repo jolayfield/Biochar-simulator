@@ -267,6 +267,59 @@ def _heavy_atom_flat_layout(mol: Chem.Mol, seed: Optional[int] = None) -> np.nda
     return coords
 
 
+def _with_rings_perceived(mol: Chem.Mol) -> Chem.Mol:
+    """Return *mol* with its ring information available, perceiving it if not.
+
+    `FastFindRings` is a symmetrized-SSSR-free ring perception: it answers ring
+    membership without sanitising, so it cannot disturb the bond types the
+    heteroatom stages set. Idempotent -- a molecule that already knows its
+    rings is returned untouched.
+    """
+    try:
+        mol.GetRingInfo().NumRings()
+    except RuntimeError:
+        Chem.FastFindRings(mol)
+    return mol
+
+
+def _mmff_force_field(mol: Chem.Mol):
+    """An MMFF94 force field for *mol*, or None when MMFF cannot type it.
+
+    `MMFFGetMoleculeForceField` needs the properties object, and asking for a
+    force field without one raises rather than returning None.
+    """
+    props = AllChem.MMFFGetMoleculeProperties(mol)
+    if props is None:
+        return None
+    return AllChem.MMFFGetMoleculeForceField(mol, props)
+
+
+def _adopt_conformer(mol: Chem.Mol, source: Chem.Mol) -> Chem.Mol:
+    """Give *mol* the coordinates *source* carries, and return *mol*.
+
+    The molecule embedding works on is not the molecule embedding was asked
+    about: `_kekulize_or_dearomatize` hands back a copy whose bond orders were
+    rewritten to something RDKit's embedders and force fields accept. Only its
+    coordinates are a result — its chemistry is scaffolding, and on the
+    de-aromatising branch it is a molecule with no aromatic ring in it at all.
+
+    Falls back to *source* if the two have drifted apart in atom count, since
+    then there is no index-for-index mapping to carry coordinates over.
+    """
+    if source.GetNumAtoms() != mol.GetNumAtoms():
+        return source
+    try:
+        embedded = source.GetConformer(0)
+    except (ValueError, RuntimeError):
+        return source
+    conformer = Chem.Conformer(mol.GetNumAtoms())
+    for i in range(mol.GetNumAtoms()):
+        conformer.SetAtomPosition(i, embedded.GetAtomPosition(i))
+    mol.RemoveAllConformers()
+    mol.AddConformer(conformer, assignId=True)
+    return mol
+
+
 def _kekulize_or_dearomatize(mol: Chem.Mol) -> Chem.Mol:
     """
     Ensure the returned mol is safe for FF/embedding by either kekulizing it
@@ -274,14 +327,28 @@ def _kekulize_or_dearomatize(mol: Chem.Mol) -> Chem.Mol:
     with odd-parity subgraphs), converting every aromatic bond to SINGLE and
     clearing all aromatic flags.
 
+    What comes back is a *working copy*, not a result. The de-aromatising
+    branch throws away every aromatic bond and flag in the molecule, so a
+    caller that lets this copy escape hands its own caller a fused-ring sheet
+    that no longer claims a single aromatic ring — see `_adopt_conformer`.
+
     After this call, `AllChem.Compute2DCoords`, `AllChem.EmbedMolecule`,
     `AllChem.UFFGetMoleculeForceField`, and `AllChem.MMFFGetMoleculeProperties`
     all work deterministically.
+
+    The molecule also comes back with its rings perceived, whichever branch it
+    took. `SanitizeMol` clears the computed properties -- ring information
+    among them -- before it does anything else, so a sanitisation that raises
+    partway leaves the molecule knowing less about itself than when it went in:
+    every later "is this atom in a ring?" raises `RingInfo not initialized`
+    rather than answering. Swallowing the sanitisation failure is deliberate
+    (the geometry is still usable), but swallowing it silently is what turned
+    one bad valence into a crash three stages downstream, in atom typing.
     """
     m = Chem.RWMol(mol)
     try:
         Chem.Kekulize(m, clearAromaticFlags=False)
-        return m
+        return _with_rings_perceived(m)
     except Exception:
         pass
 
@@ -303,7 +370,7 @@ def _kekulize_or_dearomatize(mol: Chem.Mol) -> Chem.Mol:
         )
     except Exception:
         pass
-    return m
+    return _with_rings_perceived(m)
 
 
 def _perpendicular_unit(v: np.ndarray) -> np.ndarray:
@@ -786,9 +853,11 @@ class CoordinateGenerator:
                     best_energy = ff_energy
                     best_mol = mol_copy
 
-        # Use best embedding, or fall back to 2D if all attempts failed
+        # Use best embedding, or fall back to 2D if all attempts failed.
+        # The embedding is coordinates; the molecule they belong to is the one
+        # that came in, not the bond-order-rewritten copy they were computed on.
         if best_mol is not None:
-            mol = best_mol
+            mol = _adopt_conformer(mol, best_mol)
         else:
             # Final fallback: use 2D coordinates with z=0
             AllChem.Compute2DCoords(mol)
@@ -877,46 +946,49 @@ class CoordinateGenerator:
 
         Returns:
             (relaxed_coords, converged)
+
+        Only coordinates come back, so the refinement runs on its own
+        force-field-safe copy rather than on *mol*. MMFF and UFF both need
+        integer bond orders, and the molecule reaching here is the caller's own
+        — aromatic bonds included, since embedding no longer hands its
+        kekulised working copy back. Parametrising the caller's molecule
+        directly would fail on exactly the fused-ring sheets this pass exists
+        to relax, and fail quietly: both attempts are guarded, so the
+        coordinates would come back untouched and refined-looking.
         """
-        # Set coordinates in molecule
-        conf = Chem.Conformer(mol.GetNumAtoms())
+        working = _kekulize_or_dearomatize(mol)
+
+        conf = Chem.Conformer(working.GetNumAtoms())
         for i, coord in enumerate(coords):
             conf.SetAtomPosition(i, tuple(coord))
-        mol.RemoveAllConformers()
-        mol.AddConformer(conf)
+        working.RemoveAllConformers()
+        working.AddConformer(conf)
 
-        # Try MMFF94 force field.
-        # NOTE: MMFFGetMoleculeForceField requires MMFFMolProperties.
-        try:
-            mmff_props = AllChem.MMFFGetMoleculeProperties(mol)
-            if mmff_props is not None:
-                ff = AllChem.MMFFGetMoleculeForceField(mol, mmff_props)
-                if ff is not None:
-                    result = ff.Minimize(maxIts=max_iterations)
-                    converged = result == 0
-                    conf = mol.GetConformer(0)
-                    relaxed_coords = np.array([
-                        list(conf.GetAtomPosition(i)) for i in range(mol.GetNumAtoms())
-                    ])
-                    return relaxed_coords, converged
-        except Exception:
-            pass
+        converged = False
+        # MMFF94 first. NOTE: MMFFGetMoleculeForceField requires
+        # MMFFMolProperties; UFF is the fallback when MMFF has no parameters.
+        for build_ff in (_mmff_force_field, AllChem.UFFGetMoleculeForceField):
+            try:
+                ff = build_ff(working)
+            except Exception:
+                ff = None
+            if ff is None:
+                continue
+            try:
+                converged = ff.Minimize(maxIts=max_iterations) == 0
+            except Exception:
+                continue
+            relaxed = working.GetConformer(0)
+            coords = np.array([
+                list(relaxed.GetAtomPosition(i))
+                for i in range(working.GetNumAtoms())
+            ])
+            break
 
-        # Fallback to UFF
-        try:
-            ff = AllChem.UFFGetMoleculeForceField(mol)
-            if ff is not None:
-                result = ff.Minimize(maxIts=max_iterations)
-                converged = result == 0
-                conf = mol.GetConformer(0)
-                relaxed_coords = np.array([
-                    list(conf.GetAtomPosition(i)) for i in range(mol.GetNumAtoms())
-                ])
-                return relaxed_coords, converged
-        except Exception:
-            pass
-
-        return coords, False
+        # The caller's molecule carries the coordinates this pass settled on,
+        # as it did when the refinement ran on the molecule itself.
+        _adopt_conformer(mol, working)
+        return coords, converged
 
 
 class ClashResolver:

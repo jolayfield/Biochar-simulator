@@ -8,9 +8,11 @@ actually builds: a furan-type bridge, a pyrrolic nitrogen, a phenolate. Those
 are where summing aromatic bond orders and where an anion's traded lone pair
 both stop agreeing with the chemistry.
 
-Six of the seven scenarios that carried xfail(strict=True) were retired by
-XPASS when their fixes landed. The seventh -- pyrrolic doping -- had three
-causes; two are fixed and the marker stays, naming the one that is not.
+All seven scenarios that carried xfail(strict=True) have been retired by XPASS
+as their fixes landed. The last of them -- pyrrolic doping -- had three causes:
+a decorated site, a second nitrogen in the same ring, and a pentagon whose bonds
+were kekulé rather than aromatic, which no choice of site could avoid and which
+the substitution now resolves by aromatising the ring the nitrogen joins.
 """
 
 import io
@@ -21,6 +23,7 @@ import pytest
 from rdkit import Chem
 
 from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
+from biochar.pipeline.heteroatom_assignment import NitrogenSubstitutor
 from biochar.pipeline.valence import (
     SafeBondAdder,
     ValenceValidator,
@@ -118,17 +121,6 @@ class TestPyrrolicDopingPicksASiteItCanUse:
     SEEDS = [0, 1, 2, 3, 4, 6, 8]
 
     # rq-ee235774
-    @pytest.mark.xfail(
-        strict=True,
-        reason="two of the three causes are fixed -- the site is no longer a "
-               "decorated carbon, and no longer a second nitrogen in the same "
-               "ring, and the RingInfo crash that used to abort some seeds "
-               "outright is fixed. The last cause remains: on some skeletons "
-               "the pentagon loses "
-               "aromaticity downstream and kekulises, leaving the N-H on a C=N "
-               "and the nitrogen at four bonds. Chasing that means working "
-               "through the H/C-shaping and sanitisation interaction",
-    )
     def test_a_doped_structure_has_no_over_bonded_nitrogen(self):
         offenders = {}
         for seed in self.SEEDS:
@@ -159,6 +151,61 @@ class TestPyrrolicDopingPicksASiteItCanUse:
             f"only {placed} nitrogens placed across {len(self.SEEDS)} seeds "
             f"asking for two each; the site rule has become too strict to use"
         )
+
+    # rq-ca3487ca
+    def test_a_kekule_pentagon_becomes_a_pyrrole(self):
+        """Acenaphthylene's five-ring is a cyclopentadiene, not an aromatic ring.
+
+        Both of its free carbons carry one of the ring's double bonds, so no
+        choice of site avoids the C=N -- the ring has to change, and it may,
+        because the nitrogen's lone pair is what makes the ring a pyrrole.
+        """
+        mol = Chem.MolFromSmiles("C1=Cc2cccc3cccc1c23")
+        Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
+        pentagon = next(r for r in mol.GetRingInfo().AtomRings() if len(r) == 5)
+        assert any(
+            mol.GetBondBetweenAtoms(a, b).GetBondType() == Chem.BondType.DOUBLE
+            for a, b in zip(pentagon, pentagon[1:] + pentagon[:1])
+        ), "the fixture stopped being a kekulised pentagon"
+
+        doped, placed = NitrogenSubstitutor(seed=0)._substitute_pyrrolic(
+            mol, 1, set()
+        )
+        assert placed == 1
+
+        nitrogen = next(a for a in doped.GetAtoms() if a.GetSymbol() == "N")
+        ring = next(
+            r for r in doped.GetRingInfo().AtomRings()
+            if len(r) == 5 and nitrogen.GetIdx() in r
+        )
+        assert all(
+            doped.GetBondBetweenAtoms(a, b).GetBondType() == Chem.BondType.AROMATIC
+            for a, b in zip(ring, ring[1:] + ring[:1])
+        ), "the pentagon the nitrogen joined is still kekulised"
+
+        neighbours = [b.GetOtherAtom(nitrogen) for b in nitrogen.GetBonds()]
+        assert sorted(n.GetSymbol() for n in neighbours) == ["C", "C", "H"]
+        assert not _violations(doped, "N")
+
+    # rq-171f79aa
+    def test_a_ring_that_cannot_carry_the_nitrogen_is_left_alone(self):
+        """Indane's five-ring is saturated: three sp3 CH2 carbons.
+
+        Each has the two carbon neighbours the site rule asks for, so each is
+        offered -- and calling any of them aromatic would put it at five bonds.
+        The ring is read back and the whole substitution dropped.
+        """
+        mol = Chem.AddHs(Chem.MolFromSmiles("C1Cc2ccccc2C1"))
+        Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
+        before = Chem.MolToSmiles(mol)
+
+        out, placed = NitrogenSubstitutor(seed=0)._substitute_pyrrolic(
+            mol, 1, set()
+        )
+
+        assert placed == 0
+        assert not any(a.GetSymbol() == "N" for a in out.GetAtoms())
+        assert Chem.MolToSmiles(out) == before
 
 
 # --------------------------------------------------------------------------- #

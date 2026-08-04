@@ -262,6 +262,118 @@ Feature: Report every geometry error, not a sample
     Then the report contains every one of those errors
 ```
 
+## Validation Does Not Rewrite What It Validates <!-- rq-0066e1ac -->
+
+Structure validation is a read. The molecule that comes out of it is the molecule that went in.
+
+The check that made this worth stating is `ChemicalFeasibilityValidator`'s connectivity test,
+which asks RDKit to sanitise the molecule and records a warning if that raises. Sanitisation is
+not a read: it kekulises, and kekulisation of a fused-ring sheet that has no kekulé structure
+rewrites aromatic bonds to single on its way to raising. Run against the caller's own molecule,
+the question answered itself and destroyed the subject in the same call.
+
+What came back was worse than either state — atoms still flagged aromatic, every bond single —
+and nothing downstream re-perceives the molecule, so that inconsistency is what was written to
+the topology. The valence check in the same validator runs *before* the sanitisation, so the
+report said the structure was fine while handing back one that was not.
+
+Sanitising a copy answers the same question about the same graph.
+
+```gherkin
+Feature: Leave the molecule as it was found
+
+  @rq-75c9724b
+  Scenario: Validating a molecule that will not kekulise leaves its bonds alone
+    Given a fused-ring molecule RDKit cannot kekulise
+    When chemical feasibility validation runs on it
+    Then its bond types and aromatic flags are unchanged
+
+  @rq-8ebaed02
+  Scenario: A molecule RDKit rejects is still reported
+    Given a molecule whose sanitisation raises
+    When chemical feasibility validation runs on it
+    Then the report carries a sanitisation warning
+```
+
+## A Molecule Leaves Embedding Preparation Knowing Its Rings <!-- rq-07eab6b8 -->
+
+The step that kekulises a molecule for embedding — or strips its aromaticity when the graph will
+not kekulise — returns it with its ring information available, on both paths.
+
+The de-aromatising path sanitises, and sanitisation is allowed to fail: a biochar graph carrying
+one bad valence is still a graph the force field can be handed, so the failure is swallowed and
+the geometry goes ahead. But `SanitizeMol` clears the molecule's computed properties, ring
+information among them, before it does any of its work. A sanitisation that raises partway
+therefore hands back a molecule that knows *less* about itself than the one that went in, and
+every later question of the form "is this atom in a ring?" raises `RingInfo not initialized`
+rather than answering.
+
+Nothing near the failure notices. The molecule embeds, coordinates come out, and the generation
+dies three stages downstream in atom typing — which asks that question of every atom — reporting
+a missing-ring-info precondition rather than the valence that actually went wrong. Perceiving the
+rings before returning costs nothing and does not sanitise, so it cannot disturb the bond types the
+heteroatom stages set.
+
+```gherkin
+Feature: Do not hand on a molecule whose rings have been forgotten
+
+  @rq-a157df17
+  Scenario: A molecule whose sanitisation failed still knows its rings
+    Given a molecule that cannot be kekulised and fails sanitisation
+    When it is prepared for embedding
+    Then its ring information is available
+
+  @rq-ac433b55
+  Scenario: A molecule that kekulises cleanly also knows its rings
+    Given a molecule that kekulises
+    When it is prepared for embedding
+    Then its ring information is available
+```
+
+## Embedding Returns the Molecule It Was Given, Carrying the Coordinates It Found <!-- rq-2a552a1a -->
+
+`generate_3d_coordinates` returns the caller's own molecule with a conformer on it. The
+bond-order-rewritten copy that embedding and the force fields worked on does not escape.
+
+The copy exists because RDKit's embedders and force fields need integer bond orders, and a large
+fused-ring biochar sheet frequently will not kekulise. `_kekulize_or_dearomatize` then strips
+**every** aromatic bond to single and clears every aromatic flag — a legitimate scaffold for
+computing coordinates, and a molecule that no longer claims a single aromatic ring.
+
+Returning that copy handed the rest of the pipeline a sheet whose chemistry was gone. Valence
+validation reported `Valence 3 below minimum 4` for every ring carbon in the molecule at once,
+atom typing fell back to its ring-and-degree proxy for aromatic carbon rather than reading the
+flag, and aromatic-planarity enforcement found no aromatic ring to enforce anything on. Only the
+coordinates were a result; the chemistry was scaffolding.
+
+The refinement pass that runs afterwards, `validate_and_relax`, therefore builds its own
+force-field-safe copy instead of parametrising what it is handed. It returns coordinates and
+nothing else, so nothing about the caller's molecule needs to survive into it — and MMFF and UFF
+would both refuse an aromatic sheet, quietly, leaving the coordinates unrefined and
+refined-looking.
+
+```gherkin
+Feature: Do not return the scaffold in place of the molecule
+
+  @rq-d5b18b3a
+  Scenario: A structure that will not kekulise still comes back aromatic
+    Given a fused-ring molecule RDKit cannot kekulise
+    When coordinates are generated for it
+    Then the returned molecule still has its aromatic bonds and flags
+
+  @rq-79908020
+  Scenario: The returned molecule carries the coordinates that were computed
+    Given a molecule that embeds successfully
+    When coordinates are generated for it
+    Then the returned molecule's conformer holds those coordinates
+
+  @rq-592b8c66
+  Scenario: Refinement relaxes an aromatic molecule rather than declining it
+    Given an aromatic molecule and a set of coordinates
+    When force-field refinement runs
+    Then the coordinates are changed by the refinement
+```
+
 ## Cross-references <!-- rq-13a85be1 -->
 
 - Clash warnings on hex-lattice structures interact with strict-mode seed retry in the sweep
@@ -270,3 +382,6 @@ Feature: Report every geometry error, not a sample
   is specified in `heteroatom-assignment.md`.
 - Background and the full reasoning for the clash-threshold changes live in
   `docs/solutions/bugs/physical-features-misread-as-geometry-errors.md`.
+- Atom typing keeps its own ring-perception backstop for molecules arriving unperceived from
+  anywhere else; see `rq-c6ab7cbe` in `opls-typing.md`. The failure that made it necessary is
+  written up in `docs/solutions/bugs/failed-sanitisation-forgets-the-rings.md`.

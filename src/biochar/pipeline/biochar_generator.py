@@ -502,9 +502,10 @@ class BiocharGenerator:
         logger.info("Generating 3D coordinates...")
         mol, coords = self._generate_geometry(mol)
 
-        # Force field computation (inside geometry) internally re-sanitizes the
-        # mol with RDKit's default aromaticity model, which can mark ether C-O
-        # bonds as AROMATIC.  Restore correct single-bond types before typing.
+        # Geometry re-perceives aromaticity on this molecule with RDKit's
+        # default model, which marks ether C-O bonds AROMATIC when the bridge
+        # closes a furan-like ring.  Restore correct single-bond types before
+        # typing.
         mol = _fix_heteroatom_bond_types(mol)
 
         # Step 4: Assign OPLS types and charges
@@ -515,8 +516,11 @@ class BiocharGenerator:
         logger.info("Validating structure...")
         self._validate(mol, comp_result, coords)
 
-        # validation.py calls Chem.SanitizeMol() which can re-mark ether C-O
-        # bonds as AROMATIC using RDKit's default model.  Fix again.
+        # Validation reads the molecule and no longer rewrites it -- its
+        # sanitisation check runs on a copy -- so this is a guard rather than a
+        # repair, kept because the cost is a bond-type pass and the failure it
+        # would catch is silent: an ether C-O marked AROMATIC types as OS or OH
+        # by chance and the wrong parameter reaches the topology.
         mol = _fix_heteroatom_bond_types(mol)
 
         # Store results

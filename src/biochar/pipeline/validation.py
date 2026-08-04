@@ -156,10 +156,19 @@ class ChemicalFeasibilityValidator:
         metrics["num_aromatic_atoms"] = num_aromatic
         metrics["aromaticity_percent"] = num_aromatic / mol.GetNumAtoms() * 100
 
-        # Check connectivity
+        # Check connectivity, on a copy.
+        #
+        # Sanitisation is being used here as a question -- does RDKit accept
+        # this molecule -- and its only output is the warning below. But it is
+        # not a read: it kekulises, and kekulisation of a large fused-ring
+        # sheet fails, having already rewritten aromatic bonds to SINGLE on its
+        # way to raising. Asking the question of the caller's own molecule
+        # therefore answered it and destroyed the subject in the same call,
+        # leaving a sheet whose atoms are still flagged aromatic and whose
+        # bonds are all single. Nothing downstream re-perceives it, so that is
+        # what was written to the topology.
         try:
-            # Try to sanitize to check validity
-            Chem.SanitizeMol(mol)
+            Chem.SanitizeMol(Chem.Mol(mol))
         except Exception as e:
             warnings.append(f"Molecule sanitization raised warning: {str(e)}")
 

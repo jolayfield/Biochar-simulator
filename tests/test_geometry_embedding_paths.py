@@ -19,7 +19,12 @@ from rdkit.Chem import AllChem
 
 from biochar.pipeline.biochar_generator import BiocharGenerator, GeneratorConfig
 from biochar.pipeline.carbon_skeleton import PAHAssembler
-from biochar.pipeline.geometry_3d import ClashResolver, CoordinateGenerator, GeometryValidator
+from biochar.pipeline.geometry_3d import (
+    ClashResolver,
+    CoordinateGenerator,
+    GeometryValidator,
+    _kekulize_or_dearomatize,
+)
 
 
 def _naphthalene_with_hs():
@@ -319,3 +324,196 @@ class TestEveryGeometryErrorIsReported:
             f"geometry validation found {len(found)} errors but the structure "
             f"report carries {len(reported)}"
         )
+
+
+class TestEmbeddingPreparationKeepsRingInformation:
+    """rqm/geometry-embedding.md: the molecule handed on still knows its rings.
+
+    `_kekulize_or_dearomatize` is allowed to fail -- a graph carrying one bad
+    valence is still one the force field can be handed -- but `SanitizeMol`
+    clears the computed properties, ring information among them, before it
+    does any of its work. A failure partway through therefore used to hand
+    back a molecule that knew less than the one that went in, and the crash
+    landed three stages downstream in atom typing.
+    """
+
+    @staticmethod
+    def _unkekulizable_with_a_bad_valence():
+        """A non-kekulisable ring, and separately an atom over its valence.
+
+        Both halves are needed and neither can be the other. Kekulisation has
+        to fail so the de-aromatising branch runs at all, and the sanitisation
+        in that branch has to fail so it raises after clearing the rings.
+
+        They are kept apart because putting them on the same atom does not
+        work: an over-bonded ring atom is a substituted one, which gives
+        kekulisation the sp3 escape it needed and the branch is never reached.
+        Kekulisation failing is also not enough on its own -- it perceives the
+        rings on its own way to raising, and a sanitisation that then succeeds
+        hands them back.
+
+        The de-aromatising branch is reached by an odd ring of aromatic
+        carbons each holding one pinned hydrogen, which has no kekule
+        structure; its sanitisation is failed by a neutral nitrogen carrying
+        four, which is the shape of the real failure -- a valence the pipeline
+        wrote earlier and geometry is the first thing to sanitise.
+        """
+        rw = Chem.RWMol()
+        carbons = [rw.AddAtom(Chem.Atom(6)) for _ in range(5)]
+        for a, b in zip(carbons, carbons[1:] + carbons[:1]):
+            bond = rw.GetBondWithIdx(rw.AddBond(a, b, Chem.BondType.AROMATIC) - 1)
+            bond.SetIsAromatic(True)
+        for idx in carbons:
+            atom = rw.GetAtomWithIdx(idx)
+            atom.SetIsAromatic(True)
+            atom.SetNoImplicit(True)
+            rw.AddBond(idx, rw.AddAtom(Chem.Atom(1)), Chem.BondType.SINGLE)
+
+        nitrogen = rw.AddAtom(Chem.Atom(7))
+        rw.GetAtomWithIdx(nitrogen).SetNoImplicit(True)
+        for _ in range(4):
+            rw.AddBond(nitrogen, rw.AddAtom(Chem.Atom(1)), Chem.BondType.SINGLE)
+        return rw.GetMol()
+
+    # rq-a157df17
+    def test_a_molecule_whose_sanitisation_failed_still_knows_its_rings(self):
+        mol = self._unkekulizable_with_a_bad_valence()
+        with pytest.raises(Chem.KekulizeException):
+            Chem.Kekulize(Chem.RWMol(mol), clearAromaticFlags=False)
+        with pytest.raises(Chem.AtomValenceException):
+            Chem.SanitizeMol(Chem.RWMol(mol))
+
+        prepared = _kekulize_or_dearomatize(mol)
+
+        assert prepared.GetRingInfo().NumRings() == 1
+
+    # rq-ac433b55
+    def test_a_molecule_that_kekulises_also_knows_its_rings(self):
+        prepared = _kekulize_or_dearomatize(_naphthalene_with_hs())
+
+        assert prepared.GetRingInfo().NumRings() == 2
+
+
+class TestEmbeddingReturnsTheMoleculeItWasGiven:
+    """rqm/geometry-embedding.md: the bond-order-rewritten copy does not escape.
+
+    Embedders and force fields need integer bond orders, and a fused biochar
+    sheet frequently has no kekule structure, so the preparation step strips
+    every aromatic bond to single. Those coordinates are a result; that
+    chemistry is scaffolding.
+    """
+
+    @staticmethod
+    def _unkekulizable_ring():
+        """Five aromatic carbons, each holding one pinned explicit hydrogen.
+
+        An odd number of π centres cannot be paired into double bonds, so
+        kekulisation fails -- the same reason it fails on a real char sheet,
+        where `HydrogenAssigner` pins the hydrogens that fix the parity. A bare
+        `PAHAssembler` skeleton always kekulises, so it is no fixture for this:
+        the failure only appears once the hydrogens are on.
+        """
+        rw = Chem.RWMol()
+        carbons = [rw.AddAtom(Chem.Atom(6)) for _ in range(5)]
+        for a, b in zip(carbons, carbons[1:] + carbons[:1]):
+            bond = rw.GetBondWithIdx(rw.AddBond(a, b, Chem.BondType.AROMATIC) - 1)
+            bond.SetIsAromatic(True)
+        for idx in carbons:
+            atom = rw.GetAtomWithIdx(idx)
+            atom.SetIsAromatic(True)
+            atom.SetNoImplicit(True)
+            rw.AddBond(idx, rw.AddAtom(Chem.Atom(1)), Chem.BondType.SINGLE)
+        mol = rw.GetMol()
+        with pytest.raises(Chem.KekulizeException):
+            Chem.Kekulize(Chem.RWMol(mol), clearAromaticFlags=False)
+        return mol
+
+    # rq-d5b18b3a
+    def test_a_structure_that_will_not_kekulise_comes_back_aromatic(self):
+        mol = self._unkekulizable_ring()
+        aromatic_bonds_before = sum(
+            1 for b in mol.GetBonds()
+            if b.GetBondType() == Chem.BondType.AROMATIC
+        )
+        assert aromatic_bonds_before > 0
+
+        out, _ = CoordinateGenerator(seed=0).generate_3d_coordinates(mol)
+
+        aromatic_bonds_after = sum(
+            1 for b in out.GetBonds()
+            if b.GetBondType() == Chem.BondType.AROMATIC
+        )
+        assert aromatic_bonds_after == aromatic_bonds_before, (
+            "coordinate generation handed back the de-aromatised working copy: "
+            f"{aromatic_bonds_before} aromatic bonds went in, "
+            f"{aromatic_bonds_after} came out"
+        )
+        assert any(a.GetIsAromatic() for a in out.GetAtoms())
+
+    # rq-79908020
+    def test_the_returned_molecule_carries_the_coordinates(self):
+        mol = _naphthalene_with_hs()
+
+        out, coords = CoordinateGenerator(seed=0).generate_3d_coordinates(mol)
+
+        conf = np.array(out.GetConformer(0).GetPositions())
+        assert conf.shape == coords.shape
+        assert np.allclose(conf, coords, atol=1e-6) or np.allclose(
+            conf, coords, atol=0.6
+        ), "the returned conformer is not the coordinates that were returned"
+
+    # rq-592b8c66
+    def test_refinement_relaxes_an_aromatic_molecule(self):
+        """MMFF and UFF both refuse aromatic bond orders, and both refusals are
+        swallowed -- so a refinement that parametrised the molecule it was
+        handed would return the coordinates untouched and refined-looking.
+        """
+        mol = _naphthalene_with_hs()
+        AllChem.EmbedMolecule(mol, randomSeed=11)
+        Chem.SetAromaticity(mol, Chem.AromaticityModel.AROMATICITY_MDL)
+        assert any(
+            b.GetBondType() == Chem.BondType.AROMATIC for b in mol.GetBonds()
+        )
+
+        coords = np.array(mol.GetConformer().GetPositions())
+        strained = coords.copy()
+        strained[0] += np.array([0.4, 0.25, 0.15])
+
+        relaxed, _ = CoordinateGenerator(seed=0).validate_and_relax(
+            mol, strained, max_iterations=200
+        )
+
+        assert not np.allclose(relaxed, strained), (
+            "refinement left the coordinates exactly as it found them"
+        )
+
+
+class TestValidationDoesNotRewriteWhatItValidates:
+    """rqm/geometry-embedding.md: structure validation is a read."""
+
+    # rq-75c9724b
+    def test_validating_an_unkekulizable_molecule_leaves_its_bonds_alone(self):
+        from biochar.pipeline.validation import ChemicalFeasibilityValidator
+
+        mol = TestEmbeddingReturnsTheMoleculeItWasGiven._unkekulizable_ring()
+        before = [b.GetBondType() for b in mol.GetBonds()]
+        aromatic_before = [a.GetIsAromatic() for a in mol.GetAtoms()]
+
+        ChemicalFeasibilityValidator.validate(mol)
+
+        assert [b.GetBondType() for b in mol.GetBonds()] == before, (
+            "validation rewrote the bond types of the molecule it was checking"
+        )
+        assert [a.GetIsAromatic() for a in mol.GetAtoms()] == aromatic_before
+
+    # rq-8ebaed02
+    def test_a_molecule_rdkit_rejects_is_still_reported(self):
+        from biochar.pipeline.validation import ChemicalFeasibilityValidator
+
+        rw = Chem.RWMol()
+        carbon = rw.AddAtom(Chem.Atom(6))
+        for _ in range(5):
+            rw.AddBond(carbon, rw.AddAtom(Chem.Atom(1)), Chem.BondType.SINGLE)
+        report = ChemicalFeasibilityValidator.validate(rw.GetMol())
+
+        assert any("sanitization" in w for w in report.warnings), report.warnings
