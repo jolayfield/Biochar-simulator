@@ -48,10 +48,10 @@ pip install -e ".[dev,viz]"
 # Install the pre-commit gate (once per clone)
 bash tools/hooks/install.sh
 
-# Fast tier -- ~32s. Always pass -n auto; serially this is minutes.
+# Fast tier -- ~30s. Always pass -n auto; serially this is minutes.
 python -m pytest -m "not slow" -n auto
 
-# Full suite, including the slow regressions -- ~2m43s under -n auto.
+# Full suite, including the slow regressions -- ~1m25s under -n auto.
 python -m pytest -n auto
 
 # Run a single test
@@ -66,18 +66,26 @@ cd docs && make html
 
 The test discovery root is `tests/` (configured in `pyproject.toml`), which holds 40 files.
 
-**The suite has two tiers.** 15 of 1055 tests account for most of the runtime — end-to-end regressions
+**The suite has two tiers.** 15 of 1064 tests account for most of the runtime — end-to-end regressions
 that generate real structures across several seeds. They carry the `slow` marker so the tier you run
-constantly stays fast. Measured 2026-08-04 at `fc3f7b9` on 14 workers: the fast tier is **1038 tests in
-~32s**, the full suite **1055 in ~2m43s**. When adding a test that takes more than a few seconds, mark
-the individual case `slow`, not its whole class — a class-level marker exiles its fast siblings from the
-pre-commit tier.
+constantly stays fast. Measured 2026-08-04 at `27b8244` on 14 workers, three runs each within 0.5s: the
+fast tier is **1049 tests in ~30s**, the full suite **1064 in ~1m25s**. When adding a test that takes
+more than a few seconds, mark the individual case `slow`, not its whole class — a class-level marker
+exiles its fast siblings from the pre-commit tier.
 
 **Both figures assume `-n auto`, and the difference is the whole point.** Serial numbers for this suite
 have been quoted before without saying they were serial — an earlier "~22 minutes for everything" was
-one, and it is roughly eight times the parallel figure. It made the full suite look like something to
-route around when it costs under three minutes. Always pass `-n auto`, and when recording a timing here,
+one, and it is roughly fifteen times the parallel figure. It made the full suite look like something to
+route around when it costs a minute and a half. Always pass `-n auto`, and when recording a timing here,
 say which one it is.
+
+**The full-suite figure depends on how xdist distributes, not only on how much work there is.**
+`pyproject.toml` sets `addopts = "--dist worksteal"`; without it the same suite takes 3m30s. The default
+`--dist load` hands each worker a chunk up front, so the 43-second regressions bunch onto a few workers
+and serialise there while the rest idle. The arithmetic is the tell: the fast tier alone is ~30s and the
+slow tier alone is ~49s, and any full-suite figure much above their sum is a scheduling artefact rather
+than work. If the full suite ever reads slower than about a minute and a half again, check that the flag
+is still in effect before assuming a test got heavier.
 
 **A run that skips more than once verified less than it appears to.** With GROMACS and MOPAC on `PATH`
 the expected result is exactly **1 skip** — `test_grompp_smoke.py`'s deliberate case, which requires

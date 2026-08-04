@@ -5,8 +5,10 @@ All significant changes to the Biochar Simulator project are documented here.
 ## [Unreleased]
 
 Requirements coverage extended to the five modules the 2026-07-30 review left
-unspecified. Every module that review named now has a document in `rqm/`, and
-writing them found fifteen defects, listed below by what they affect.
+unspecified. Every module that review named now has a document in `rqm/` —
+fourteen documents, 188 scenarios, every one with a defending test — and writing
+them found fourteen defects and five breaking changes, listed below by what they
+affect.
 
 ### Breaking changes
 
@@ -91,8 +93,51 @@ writing them found fifteen defects, listed below by what they affect.
 - **Pyrrolic doping picks a site it can use** — an undecorated five-ring carbon
   with two carbon neighbours, one per ring. It previously took any five-ring
   carbon, including one already carrying a functional-group oxygen, and added
-  the N–H on top. Partly fixed: a pentagon that loses aromaticity downstream can
-  still leave a four-bonded nitrogen, tracked by `rq-ee235774`.
+  the N–H on top.
+
+  Ring membership was the other half of the problem, and it says nothing about
+  whether the carbon is in the π system. A skeleton is not aromatic everywhere —
+  growth and aliphatic decoration leave pockets — and a pentagon in one of them
+  is a cyclopentadiene whose every free carbon holds a double bond, so
+  substituting there gave a nitrogen carrying a C=N and the N–H made four bonds
+  on a neutral nitrogen.
+
+  Refusing those rings would refuse the chemistry: a pentagon with an N–H in it
+  *is* a pyrrole, and the nitrogen's own lone pair is what aromatises it. The
+  substitution now puts the ring into the state the new nitrogen implies, on a
+  copy, and reads the whole pentagon back; a ring that comes out with an atom
+  over its maximum is discarded untouched. Over 40 seeds, structures carrying a
+  valence error go from 27 to 0.
+### Fixed — state a molecule was carrying
+
+Four separate places where a molecule quietly lost something it already had,
+each silent until something far downstream read the wreckage. They are grouped
+because the failures rhyme: a pass that edits a caller's molecule to answer a
+question about it, or that hands back its own scaffolding instead of the
+subject.
+
+- **Embedding returns the molecule it was given.** The de-aromatising branch
+  needs a bond-order-rewritten copy to embed, and it was that copy — with no
+  aromatic bond left in it — that came back to the caller. Valence validation
+  then reported every ring carbon in the structure below its minimum at once,
+  61 errors naming 61 atoms. Coordinates now move onto the molecule that came
+  in, and `validate_and_relax` builds its own working copy in turn, which it
+  must: MMFF and UFF both refuse aromatic bond orders and both refusals are
+  swallowed, so it would have stopped refining and looked like it hadn't.
+- **Validation no longer rewrites what it validates.** It asked whether RDKit
+  accepts a structure by sanitising the caller's own molecule, and kekulisation
+  of a sheet with no kekulé structure rewrites aromatic bonds to single on its
+  way to raising — so the question answered itself and destroyed the subject in
+  one call, while the valence check above it, running first, reported the
+  structure sound. It sanitises a copy now.
+
+  Fixing either of these alone leaves a state that is neither the bug nor
+  correct: atoms still flagged aromatic, every bond single, which passes a
+  flag-reading valence check while being wrong in the topology.
+- **A molecule leaves embedding preparation knowing its rings.** `SanitizeMol`
+  clears the computed properties before it does any of its work, so a pass that
+  raises partway leaves the molecule knowing less than it did going in, and
+  every later "is this atom in a ring?" raised rather than answering.
 - **Typing a molecule whose rings have not been perceived no longer aborts the
   generation.** RDKit raises rather than answering "is this atom in a ring?"
   when nothing has run ring perception, and some nitrogen-doping paths hand the

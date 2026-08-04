@@ -52,6 +52,9 @@ dev = [
     # The suite is CPU-bound, has no shared fixtures or output paths, and runs
     # ~22 min single-process on a 14-core machine. xdist is the difference
     # between a suite people run and one they route around.
+    #
+    # Not optional: [tool.pytest.ini_options] addopts passes an xdist flag, so
+    # pytest without this refuses to start rather than merely running serially.
     "pytest-xdist>=3.0",
     "ruff>=0.6",
     "sphinx>=7.0",
@@ -87,6 +90,24 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+# xdist's default `--dist load` hands each worker a chunk up front, so the 15
+# end-to-end regressions below -- ~43s each -- bunch onto a few workers and
+# serialise there while the rest idle. The arithmetic gives it away: the fast
+# tier alone is ~31s and the slow tier alone is ~49s, but the two together used
+# to take 3m30s. `worksteal` lets an idle worker take work back off a busy one,
+# which costs nothing and returns the full suite to roughly the length of its
+# longest chain.
+#
+#   full suite, --dist load       3m30s
+#   full suite, --dist worksteal  1m25s
+#
+# Inert without `-n`, so a serial run is unaffected -- but it is an xdist
+# option, so pytest refuses to start at all if the plugin is missing. That is
+# safe only because `pytest` and `pytest-xdist` ship in the same `[dev]` extra:
+# anyone who can run the suite has both. Keep them together, or move this flag
+# to the documented commands.
+addopts = "--dist worksteal"
 
 # Measured 2026-07-28: 12 tests consume ~943s of the suite's ~1350s -- 70% of
 # total runtime, averaging ~79s each. They are the end-to-end regression tests
