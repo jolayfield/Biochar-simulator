@@ -1,9 +1,10 @@
 # docs: expand the rqm/ requirements set to the modules the 2026-07-30 review identified
 
-**Status:** Complete. Every module the source review named is specified — fourteen documents,
-and the five the plan deferred (parameter sweep, pH protonation, valence validation, condensation
-annealing, charge backends) landed together in one PR. One xfail remains open, `rq-ee235774`,
-naming the third cause of a defect whose other two are fixed.
+**Status:** Complete. Every module the source review named is specified — fourteen documents, 188
+scenarios, every one with a defending test — and the five the plan deferred (parameter sweep, pH
+protonation, valence validation, condensation annealing, charge backends) landed together in one PR.
+No xfail is open. `rq-ee235774` was the last, and the follow-up that closed it found two further
+defects of the same shape beside it (see the note at the end of the progress log).
 **Type:** docs / traceability
 **Date:** 2026-07-30
 **Source review:** `docs/reviews/2026-07-30-001-riprap-coverage-and-unadopted-capabilities.md`
@@ -247,6 +248,27 @@ naming the third cause of a defect whose other two are fixed.
 > under 1.9.0 — which scikit-learn warns about, in terms of two version strings and a class rather
 > than in terms of the charges. Restating that warning is in this PR; rebuilding the model changes
 > every ML charge and is left as its own decision.
+
+> **Postscript: the deferred xfail, and what was under it.** `rq-ee235774` was left open naming one
+> cause — a pentagon losing aromaticity downstream so the N-H landed on a C=N. The follow-up found
+> the deferral had been reasoning about the wrong layer. Ring membership was never the right test
+> for a doping site, because it says nothing about whether the carbon is in the pi system; and
+> refusing the non-aromatic pentagons would have refused the chemistry, since a pentagon with an
+> N-H in it *is* a pyrrole. The substitution now puts the ring into the state the new nitrogen
+> implies and reads the whole ring back on a copy. Structures carrying a valence error over 40
+> seeds: 27 to 0.
+>
+> Two further defects sat beside it, both invisible while the first was in the way. Embedding
+> handed back the bond-order-rewritten copy it needs internally rather than the caller's molecule,
+> which is why validation once reported *every* ring carbon in a structure below its minimum — the
+> failure naming every atom of a class that this plan's own earlier phase had learned to read as a
+> state problem. And validation answered "does RDKit accept this?" by sanitising the caller's
+> molecule, where a sheet with no kekulé structure has its aromatic bonds rewritten on the way to
+> raising: the question destroyed its subject.
+>
+> Worth recording because it cuts against the tripwire convention's comfort. An `xfail(strict=True)`
+> that names one cause is a good deferral only if the cause named is the real one. This one was a
+> symptom, and the marker made it easy to stop looking.
 
 ## Summary
 

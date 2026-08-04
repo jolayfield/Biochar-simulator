@@ -12,16 +12,24 @@ Unreleased
 
 Requirements coverage extended to the five modules that were unspecified:
 parameter sweep, pH protonation, valence validation, condensation annealing, and
-the QM and ML charge backends. Fifteen defects found and fixed; see
-``CHANGELOG.md`` for the full list.
+the QM and ML charge backends. Every module is now specified — fourteen
+documents, 188 scenarios, every one with a defending test. Fourteen defects
+fixed and five breaking changes; see ``CHANGELOG.md`` for the full list.
 
 .. warning::
 
-   **Three changes break existing code or existing outcomes.** A sweep manifest
-   records ``skipped`` where it recorded ``failed``;
-   ``on_validation_fail: strict`` raises instead of completing; and a sweep
-   refuses ``molecule_name`` in ``fixed`` or in an axis, since it overrode the
-   per-point name while each point still reported the templated one.
+   **``charge_method="ml"`` produces different charges**, because the bundled
+   model was rebuilt against the current reference table. See ``CHANGELOG.md``
+   for the measured deviation.
+
+.. warning::
+
+   **Three further changes break existing code or existing outcomes**, all in
+   the parameter sweep. A manifest records ``skipped`` where it recorded
+   ``failed``; ``on_validation_fail: strict`` raises instead of completing
+   silently; and a sweep refuses ``molecule_name`` in ``fixed`` or in an axis,
+   since it overrode the per-point name while each point still reported the
+   templated one.
 
 - **An aromatic ring heteroatom is no longer reported over-valent.** A furan
   oxygen, a pyrrolic nitrogen and a thiophene sulfur were all judged by summed
@@ -32,9 +40,16 @@ the QM and ML charge backends. Fifteen defects found and fixed; see
   nothing on disk said which.
 - **Condensation run directories record their provenance**, and their packing
   stage verifies what it placed against what the topology declares.
-- **A charge model pickled by a different scikit-learn is reported** in terms of
-  the charges it affects, and ``MLChargeRefinement.model_source`` names which
-  model answered.
+- **A molecule no longer loses state it was carrying.** Embedding handed back
+  the bond-order-rewritten copy it uses internally rather than the caller's
+  molecule, and validation answered "does RDKit accept this?" by sanitising the
+  caller's molecule — which, for a sheet with no kekulé structure, rewrites its
+  aromatic bonds on the way to raising.
+- **The bundled ML charge model is no longer a pickle.** It is
+  ``charges_gpr_cm5.json``: the fitted hyperparameters and the reference data,
+  rebuilt on load and checked against the charges it recorded. This replaces the
+  scikit-learn version pin the pickle would otherwise have required.
+  ``MLChargeRefinement.model_source`` names which model answered.
 
 0.5.0 (2026-08-03)
 ------------------

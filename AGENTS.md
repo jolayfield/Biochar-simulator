@@ -31,13 +31,20 @@ requirement.
 **Run the fast tier constantly, the full suite at boundaries.**
 
 ```bash
-pytest -m "not slow" -n auto   # ~32s
-pytest -n auto                 # full suite -- ~2m43s
+pytest -m "not slow" -n auto   # ~30s
+pytest -n auto                 # full suite -- ~1m25s
 ```
 
-Always `-n auto`; both figures assume it, and serial is roughly eight times
-slower. 15 of 1055 tests are most of the runtime; they are marked `slow` so the
-tier you run constantly stays usable. Measured 2026-08-04 at `fc3f7b9`.
+Always `-n auto`; both figures assume it, and serial is roughly fifteen times
+slower. 15 of 1064 tests are most of the runtime; they are marked `slow` so the
+tier you run constantly stays usable. Measured 2026-08-04 at `27b8244` on 14
+workers.
+
+The full-suite figure also assumes the `--dist worksteal` in `pyproject.toml`'s
+`addopts`. Without it the same suite takes 3m30s, because xdist's default hands
+out chunks up front and the 43-second regressions bunch onto a few workers. A
+full run much slower than the sum of the two tiers is a scheduling artefact, not
+a heavier test.
 
 **A green run is not automatically evidence.** Two silent-skip traps here:
 
