@@ -737,7 +737,12 @@ class NitrogenSubstitutor:
         return [len(r) for r in ring_info.AtomRings() if idx in r]
 
     def _candidate_carbons(self, mol: Chem.Mol, used: Set[int]) -> List[int]:
-        """Aromatic ring carbons not yet substituted, shuffled."""
+        """Ring carbons not yet substituted, shuffled.
+
+        Ring membership only -- a skeleton has non-aromatic regions and this
+        offers their carbons too. A caller whose nitrogen needs the π system
+        (pyrrolic) reads the bonds itself.
+        """
         cands = [
             a.GetIdx()
             for a in mol.GetAtoms()
@@ -815,7 +820,7 @@ class NitrogenSubstitutor:
         N-H explicitly here (and pin it with SetNoImplicit) rather than relying
         on HydrogenAssigner.
 
-        Three bonds is the whole budget, and two constraints follow from it.
+        Three bonds is the whole budget, and three constraints follow from it.
 
         Nothing is left for a substituent the carbon was already carrying.
         Oxygen placement runs before this, so a decorated five-ring carbon is
@@ -825,11 +830,45 @@ class NitrogenSubstitutor:
         neighbours and nothing else, in the same way a graphitic site must be
         an interior junction with no hydrogen.
 
-        And one pyrrolic nitrogen per ring. Two of them in the same pentagon is
+        One pyrrolic nitrogen per ring. Two of them in the same pentagon is
         a pyrazole or an imidazole, where only one nitrogen carries the
         hydrogen; giving both an N-H leaves the ring unable to aromatise, it
         kekulises to single and double bonds instead, and the nitrogen on the
         double bond ends up with four again.
+
+        The third constraint is about the ring, and it is why the substitution
+        below closes the pentagon's bonds rather than only opening a site.
+
+        A skeleton is not aromatic everywhere. Growth and aliphatic decoration
+        leave pockets that aromaticity perception refuses, and a pentagon in
+        one of them is a cyclopentadiene carrying the kekulé single and double
+        bonds the perception fell back to. Every free carbon in such a ring
+        holds one of those double bonds, so swapping any of them gives a
+        nitrogen with a C=N, and the N-H makes four. Ring membership -- all the
+        candidate list screens for -- says nothing about this, and a
+        substitution that only edits the atom inherits it.
+
+        But refusing those rings refuses the chemistry. A cyclopenta-fused
+        pentagon is not aromatic; the same ring with an N-H in it is a pyrrole,
+        which is, and the nitrogen's own lone pair is what aromatises it. So
+        the substitution puts the ring into the state the new nitrogen implies:
+        the pentagon's bonds become aromatic, the double bond the site was
+        holding included. The two σ bonds and the N-H are then the whole of the
+        nitrogen, and the carbon that gave up the double bond is an aromatic
+        carbon with a free valence for its hydrogen.
+
+        Whether that lands is checked rather than assumed -- a ring can hold an
+        sp3 carbon from aliphatic decoration, which no amount of flagging makes
+        aromatic. The substitution happens on a copy and the whole pentagon is
+        read back; a ring that comes out with an atom over its maximum anywhere
+        in it is discarded untouched and the search moves on, which is also how
+        a request for more nitrogen than the skeleton can carry places fewer
+        and says so.
+
+        Over the maximum, and only that. Hydrogen saturation has not run yet,
+        so an aromatic edge carbon here is *under* its minimum by exactly the
+        hydrogen it is about to be given, and reading the full valence would
+        reject every ring in the molecule.
         """
         placed = 0
         ring_atoms = mol.GetRingInfo().AtomRings()
@@ -844,20 +883,45 @@ class NitrogenSubstitutor:
             rings_here = [r for r in ring_atoms if c_idx in r]
             if any(other in used for r in rings_here for other in r):
                 continue
-            mol = self._swap_carbon_to_nitrogen(mol, c_idx, remove_h=False)
+            pentagon = next(r for r in rings_here if len(r) == 5)
+
+            trial = self._swap_carbon_to_nitrogen(mol, c_idx, remove_h=False)
             # Attach an explicit N-H and forbid implicit Hs on this nitrogen.
-            rw = Chem.RWMol(mol)
+            rw = Chem.RWMol(trial)
             n_atom = rw.GetAtomWithIdx(c_idx)
             h_idx = rw.AddAtom(Chem.Atom(1))
             rw.AddBond(c_idx, h_idx, Chem.BondType.SINGLE)
             n_atom.SetNumExplicitHs(0)
             n_atom.SetNoImplicit(True)
-            mol = rw.GetMol()
+            self._aromatise_ring(rw, pentagon)
+            trial = rw.GetMol()
+            _safe_sanitize(trial)
+
+            ring_valences = [
+                ValenceValidator.get_valence_info(trial, i) for i in pentagon
+            ]
+            if any(v.current_bonds > v.max_valence for v in ring_valences):
+                continue
+            mol = trial
             used.add(c_idx)
             placed += 1
             if placed >= count:
                 break
         return mol, placed
+
+    @staticmethod
+    def _aromatise_ring(rw: Chem.RWMol, ring: Tuple[int, ...]) -> None:
+        """Mark every atom and in-ring bond of *ring* aromatic, in place.
+
+        Bonds out of the ring are left alone: they belong to whatever the
+        pentagon is fused to, and that ring's own perception owns them.
+        """
+        for atom_idx in ring:
+            rw.GetAtomWithIdx(atom_idx).SetIsAromatic(True)
+        for a, b in zip(ring, ring[1:] + ring[:1]):
+            bond = rw.GetBondBetweenAtoms(a, b)
+            bond.SetBondType(Chem.BondType.AROMATIC)
+            bond.SetIsAromatic(True)
 
     def _substitute_graphitic(
         self, mol: Chem.Mol, count: int, used: Set[int]

@@ -138,8 +138,25 @@ that cannot find enough qualifying carbons places fewer and says so, rather than
 that does not qualify.
 
 The requirement is about the nitrogen in the finished structure, not only about the site it was
-placed on. A pentagon that loses its aromaticity later kekulises to single and double bonds, and
-the N–H the substitution attached then sits on a nitrogen that already has a double bond.
+placed on, and the remaining way to miss it is the ring rather than the carbon. A skeleton is not
+aromatic everywhere: growth and aliphatic decoration leave pockets aromaticity perception refuses,
+and a pentagon in one of them is a cyclopentadiene whose bonds are the kekulé single and double the
+perception fell back to. Every free carbon in such a ring holds one of those double bonds, so a
+substitution that edits only the atom gives a nitrogen with a C=N, and the N–H makes four again.
+
+Refusing those rings would refuse the chemistry. A cyclopenta-fused pentagon is not aromatic; the
+same ring with an N–H in it is a pyrrole, which is, and the nitrogen's own lone pair is what
+aromatises it. The substitution therefore puts the ring into the state the new nitrogen implies —
+the pentagon's bonds become aromatic, the double bond the site was holding included — and the
+carbon that gave up that double bond is left an aromatic carbon with a free valence for its
+hydrogen.
+
+That is checked rather than assumed, because a pentagon can also hold an sp3 carbon from aliphatic
+decoration, which no amount of flagging makes aromatic. The substitution is made on a copy and the
+whole ring is read back; a ring that comes out with an atom over its maximum is discarded untouched
+and the search moves on. Over the maximum and only that: hydrogen saturation has not run at this
+point, so every aromatic edge carbon is legitimately *under* its minimum by the hydrogen it is
+about to be given.
 
 ```gherkin
 Feature: Dope only carbons that can become the nitrogen requested
@@ -155,6 +172,19 @@ Feature: Dope only carbons that can become the nitrogen requested
     Given a structure with unsubstituted five-ring carbons
     When pyrrolic nitrogen is requested
     Then it is placed
+
+  @rq-ca3487ca
+  Scenario: A non-aromatic pentagon becomes a pyrrole rather than being skipped
+    Given a five-ring whose bonds are kekulé single and double
+    When a pyrrolic nitrogen is placed in it
+    Then the ring's bonds are aromatic
+    And the nitrogen carries two ring bonds and one hydrogen
+
+  @rq-171f79aa
+  Scenario: A ring that cannot carry the nitrogen is left as it was
+    Given a five-ring that would put an atom over its maximum valence
+    When a pyrrolic nitrogen is offered that ring
+    Then the ring keeps the bonds and atoms it had
 ```
 
 ## A Bond Is Judged Against the Molecule Being Edited <!-- rq-30fef9a1 -->
