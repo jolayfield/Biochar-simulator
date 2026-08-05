@@ -427,6 +427,18 @@
     "title": "Every emitted dihedral resolves in the forcefield",
     "type": "scenario"
   },
+  "rq-1a4b6dae": {
+    "decl": "Scenario: A flag supplied at its own default value still overrides",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A flag supplied at its own default value still overrides",
+    "type": "scenario"
+  },
   "rq-1ae3a84a": {
     "decl": "## A Status Means One Thing",
     "file": "parameter-sweep",
@@ -466,6 +478,19 @@
     ],
     "title": "Charges are computed on the given coordinates by default",
     "type": "scenario"
+  },
+  "rq-1eae7bef": {
+    "decl": "## A Command That Produced Nothing Does Not Report Success",
+    "file": "cli-arguments",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A Command That Produced Nothing Does Not Report Success",
+    "type": "section"
   },
   "rq-1f2ce9fc": {
     "decl": "Scenario: A structure with more than three geometry errors reports all of them",
@@ -610,6 +635,18 @@
     "title": "Embedding Returns the Molecule It Was Given, Carrying the Coordinates It Found",
     "type": "section"
   },
+  "rq-2b6f2c93": {
+    "decl": "Scenario: A manifest yielding no run directories exits non-zero",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A manifest yielding no run directories exits non-zero",
+    "type": "scenario"
+  },
   "rq-2bb117a3": {
     "decl": "- `PH_MIN`, `PH_MAX`",
     "file": "ph-protonation",
@@ -671,6 +708,18 @@
       }
     ],
     "title": "Every status a build can return is one the documented set names",
+    "type": "scenario"
+  },
+  "rq-2ed54e2c": {
+    "decl": "Scenario: A repeat within range is accepted",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A repeat within range is accepted",
     "type": "scenario"
   },
   "rq-2f3c2379": {
@@ -795,6 +844,18 @@
     "refs": [],
     "title": "An Extrapolated Temperature Is Reported",
     "type": "section"
+  },
+  "rq-32e0e0e6": {
+    "decl": "Scenario: The template runs as written",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The template runs as written",
+    "type": "scenario"
   },
   "rq-330a61eb": {
     "decl": "- `TOPFileWriter.write(filepath: str, mol: Chem.Mol, atom_types: Dict[int, str], charges: Dict[int, float], molecule_name: str = \"BIOCHAR\", forcefield_path: str = \"oplsaa.ff/forcefield.itp\", include_dihedrals: bool = True) -> None`",
@@ -1047,6 +1108,18 @@
     "file": "surface-stacking",
     "refs": [],
     "title": "SheetResult",
+    "type": "api-item"
+  },
+  "rq-46f0dae6": {
+    "decl": "- `biochar.cli.sweep_cli.main(argv=None) -> int`",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "biochar",
     "type": "api-item"
   },
   "rq-47323ea3": {
@@ -1407,6 +1480,18 @@
       }
     ],
     "title": "A target above the library is met or exceeded",
+    "type": "scenario"
+  },
+  "rq-59fb4726": {
+    "decl": "Scenario: A manifest yielding some run directories succeeds",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A manifest yielding some run directories succeeds",
     "type": "scenario"
   },
   "rq-5b7a5ab8": {
@@ -2219,6 +2304,18 @@
     "title": "Export",
     "type": "section"
   },
+  "rq-92f2fb37": {
+    "decl": "Scenario: Any group flag replaces the loaded group set",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Any group flag replaces the loaded group set",
+    "type": "scenario"
+  },
   "rq-92fec87b": {
     "decl": "Scenario: Severity is reported so a marginal contact can be told from a real one",
     "file": "geometry-embedding",
@@ -2550,6 +2647,18 @@
     "title": "cm1a_from_am1",
     "type": "api-item"
   },
+  "rq-a2c4ed0e": {
+    "decl": "- `biochar.cli.md_setup_cli.main(argv=None) -> int`",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "biochar",
+    "type": "api-item"
+  },
   "rq-a467c647": {
     "decl": "Scenario: A deprotonated oxygen has no free valence",
     "file": "valence-validation",
@@ -2572,6 +2681,31 @@
       }
     ],
     "title": "A validation failure that repeats unchanged stops the retry loop",
+    "type": "scenario"
+  },
+  "rq-a48afb56": {
+    "decl": "## A Setup Run Does Not Point at a Repeat It Will Not Produce",
+    "file": "cli-arguments",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A Setup Run Does Not Point at a Repeat It Will Not Produce",
+    "type": "section"
+  },
+  "rq-a4f5a7d7": {
+    "decl": "Scenario: A repeat below one is refused",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A repeat below one is refused",
     "type": "scenario"
   },
   "rq-a60c7e3b": {
@@ -2612,6 +2746,19 @@
     "refs": [],
     "title": "Feature: Valence Validation",
     "type": "file"
+  },
+  "rq-a71b7f66": {
+    "decl": "## A Saved Config Reloads as the Config That Was Saved",
+    "file": "cli-arguments",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A Saved Config Reloads as the Config That Was Saved",
+    "type": "section"
   },
   "rq-a7480504": {
     "decl": "## Carboxyl and Phenolic Oxygens Are Different Types",
@@ -2679,6 +2826,19 @@
     ],
     "title": "A molecule that kekulises cleanly also knows its rings",
     "type": "scenario"
+  },
+  "rq-ac71d20f": {
+    "decl": "## A Failure Is Reported on stderr and in the Status",
+    "file": "cli-arguments",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A Failure Is Reported on stderr and in the Status",
+    "type": "section"
   },
   "rq-acf97ed2": {
     "decl": "Scenario: A structure with no reported clashes is still refined",
@@ -2772,6 +2932,19 @@
     "title": "No two atoms share a name in the structure file",
     "type": "scenario"
   },
+  "rq-b31f2ffe": {
+    "decl": "## Feature API",
+    "file": "cli-arguments",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-b37f44d2": {
     "decl": "Scenario: Both carboxylate oxygens take the anionic type",
     "file": "opls-typing",
@@ -2796,6 +2969,18 @@
     "title": "Forcefield-backed tests fail loudly when the forcefield is absent",
     "type": "scenario"
   },
+  "rq-b4e2b5cc": {
+    "decl": "Scenario: A reloaded config matches the one that was saved",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A reloaded config matches the one that was saved",
+    "type": "scenario"
+  },
   "rq-b5909c8c": {
     "decl": "- `CompositionResult.net_charge`, `.ionized_counts`, `.titratable_counts`",
     "file": "ph-protonation",
@@ -2813,6 +2998,18 @@
       }
     ],
     "title": "A temperature outside a feedstock's support falls back visibly",
+    "type": "scenario"
+  },
+  "rq-b697d2e6": {
+    "decl": "Scenario: A missing config file is reported and fails",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A missing config file is reported and fails",
     "type": "scenario"
   },
   "rq-b6b192ce": {
@@ -2847,6 +3044,18 @@
     "title": "Every Atom Gets a Charge",
     "type": "section"
   },
+  "rq-b81e79b5": {
+    "decl": "Scenario: Without a config file the parser defaults still apply",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Without a config file the parser defaults still apply",
+    "type": "scenario"
+  },
   "rq-b8611a4d": {
     "decl": "Scenario: Each violating atom is named",
     "file": "valence-validation",
@@ -2867,6 +3076,18 @@
     "title": "A Backend That Cannot Run Refuses",
     "type": "section"
   },
+  "rq-b8fb0aeb": {
+    "decl": "Scenario: A supplied flag overrides the loaded value",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A supplied flag overrides the loaded value",
+    "type": "scenario"
+  },
   "rq-b8fce9a6": {
     "decl": "Scenario: The repair runs after every sanitising stage",
     "file": "heteroatom-assignment",
@@ -2878,6 +3099,18 @@
     ],
     "title": "The repair runs after every sanitising stage",
     "type": "scenario"
+  },
+  "rq-b9751811": {
+    "decl": "# Feature: Command-Line Entry Points",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Feature: Command-Line Entry Points",
+    "type": "file"
   },
   "rq-bae6e6ca": {
     "decl": "## The Aromatic Floor Is a Floor, Not a Prediction",
@@ -3106,6 +3339,18 @@
     "title": "Feature API",
     "type": "section"
   },
+  "rq-c46e42dc": {
+    "decl": "- `biochar.cli.condensation_cli.main(argv=None) -> int`",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "biochar",
+    "type": "api-item"
+  },
   "rq-c49c52b0": {
     "decl": "Scenario: Scaling ends at the formal charge",
     "file": "charge-backends",
@@ -3128,6 +3373,18 @@
       }
     ],
     "title": "Embedding retries a bounded number of times",
+    "type": "scenario"
+  },
+  "rq-c53b3aeb": {
+    "decl": "Scenario: A repeat above the repeat count is refused",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A repeat above the repeat count is refused",
     "type": "scenario"
   },
   "rq-c58a2ebe": {
@@ -3198,6 +3455,18 @@
     "title": "A furan-type ring oxygen is valid",
     "type": "scenario"
   },
+  "rq-c72f3fd1": {
+    "decl": "Scenario: No group flag leaves the loaded group set intact",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "No group flag leaves the loaded group set intact",
+    "type": "scenario"
+  },
   "rq-c7715c26": {
     "decl": "Scenario: An amino nitrogen types as aniline N on a large sheet",
     "file": "opls-typing",
@@ -3225,6 +3494,18 @@
     "title": "Atom Names Identify One Atom Each",
     "type": "section"
   },
+  "rq-c8d1f9e0": {
+    "decl": "Scenario: The template command writes only the template to stdout",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The template command writes only the template to stdout",
+    "type": "scenario"
+  },
   "rq-ca3487ca": {
     "decl": "Scenario: A non-aromatic pentagon becomes a pyrrole rather than being skipped",
     "file": "valence-validation",
@@ -3235,6 +3516,18 @@
       }
     ],
     "title": "A non-aromatic pentagon becomes a pyrrole rather than being skipped",
+    "type": "scenario"
+  },
+  "rq-cba5c290": {
+    "decl": "Scenario: Every charge method the template names is accepted",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Every charge method the template names is accepted",
     "type": "scenario"
   },
   "rq-cf3d7a56": {
@@ -3481,6 +3774,43 @@
     "title": "GeneratorConfig",
     "type": "api-item"
   },
+  "rq-e2c50b04": {
+    "decl": "Scenario: Derived composition keeps the conditions it was derived from",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Derived composition keeps the conditions it was derived from",
+    "type": "scenario"
+  },
+  "rq-e6099cd4": {
+    "decl": "Scenario: An unsupplied flag leaves the loaded value alone",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "An unsupplied flag leaves the loaded value alone",
+    "type": "scenario"
+  },
+  "rq-e6faa000": {
+    "decl": "## A Default Is Not a Request",
+    "file": "cli-arguments",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A Default Is Not a Request",
+    "type": "section"
+  },
   "rq-e7260a44": {
     "decl": "## A Library Entry That Cannot Be Loaded Is Reported",
     "file": "carbon-skeleton",
@@ -3527,6 +3857,19 @@
     "level": 2,
     "refs": [],
     "title": "Composition Resolution Has Three Levels",
+    "type": "section"
+  },
+  "rq-eb1c8214": {
+    "decl": "## The Starter Template Names Only Options That Exist",
+    "file": "cli-arguments",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The Starter Template Names Only Options That Exist",
     "type": "section"
   },
   "rq-eb28d0a1": {
@@ -3703,6 +4046,18 @@
     "title": "A skeleton that cannot be grown raises",
     "type": "scenario"
   },
+  "rq-fa8c5dbc": {
+    "decl": "- `biochar.cli.cli.main(argv=None) -> int`",
+    "file": "cli-arguments",
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "biochar",
+    "type": "api-item"
+  },
   "rq-fa93a423": {
     "decl": "Scenario: A model that rebuilds exactly is not reported",
     "file": "charge-backends",
@@ -3755,6 +4110,19 @@
     "title": "A Skeleton Is Never Returned at an Unrelated Size",
     "type": "section"
   },
+  "rq-fb2e2ae7": {
+    "decl": "## Cross-references",
+    "file": "cli-arguments",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Cross-references",
+    "type": "section"
+  },
   "rq-fb7f157f": {
     "decl": "# Feature: Charge Backends",
     "file": "charge-backends",
@@ -3788,6 +4156,19 @@
     "level": 2,
     "refs": [],
     "title": "Hydrogen Saturation",
+    "type": "section"
+  },
+  "rq-fd1e5f16": {
+    "decl": "## Functional Groups Are Replaced as a Set",
+    "file": "cli-arguments",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/test_cli_arguments_contract.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Functional Groups Are Replaced as a Set",
     "type": "section"
   },
   "rq-fda6981b": {

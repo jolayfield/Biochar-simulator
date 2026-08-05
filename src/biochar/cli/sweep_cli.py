@@ -29,7 +29,7 @@ output_directory: sweep_out
 # Applied identically to every grid point (any GeneratorConfig field).
 fixed:
   target_num_carbons: 100
-  charge_method: opls          # opls | gasteiger | qm (qm needs MOPAC)
+  charge_method: opls          # opls | ml | qm (ml needs scikit-learn, qm needs MOPAC)
 
 # Each key is a GeneratorConfig field; the sweep takes the product of the lists.
 # temperature + feedstock derive H/C, O/C, and aromaticity from the built-in

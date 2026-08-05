@@ -54,7 +54,11 @@ def main(argv=None) -> int:
         else:
             print(f"  [skipped] {r['label']:30s} -> {r['skipped_reason']}", file=sys.stderr)
     print(f"Wrote {n_written} run director{'y' if n_written == 1 else 'ies'}, skipped {n_skipped}.", file=sys.stderr)
-    return 0
+    # Partial skips are the expected shape of a real sweep and stay a success.
+    # Writing nothing at all is not: there is no run to submit, and a pipeline
+    # branching on the status has nothing else to read.  2 means the same here
+    # as it does in biochar-sweep.
+    return 0 if n_written else 2
 
 
 if __name__ == "__main__":

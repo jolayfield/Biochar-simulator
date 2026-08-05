@@ -14,6 +14,7 @@ validation scripts. No `gmx` is invoked.
 from __future__ import annotations
 
 import argparse
+import sys
 
 from ..workflows.condensation import (
     add_surface_and_validation,
@@ -120,6 +121,19 @@ def main(argv=None) -> int:
     ff.set_defaults(func=_cmd_from_files)
 
     args = parser.parse_args(argv)
+
+    # run_condensation.sh produces rep_1 .. rep_{repeats}; run_surface.sh lifts
+    # rep_{which_repeat}.  This is the only place both numbers are visible, and
+    # an out-of-range repeat otherwise surfaces as a missing path *after* the
+    # annealing run -- hours later, for a flag that costs nothing to re-enter.
+    if not 1 <= args.which_repeat <= args.repeats:
+        print(
+            f"error: --which-repeat {args.which_repeat} is outside the "
+            f"{args.repeats} repeat(s) --repeats will produce (expected 1..{args.repeats})",
+            file=sys.stderr,
+        )
+        return 1
+
     return args.func(args)
 
 

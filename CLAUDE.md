@@ -149,7 +149,10 @@ Beyond that pipeline:
 - **`charges/ml_charges.py`** — ML-based partial charge refinement.
 - **`pipeline/valence.py`** — valence validation system (see `docs/guides/VALENCE_SYSTEM.md`).
 - **`cli/cli.py`**, **`cli/sweep_cli.py`**, **`cli/md_setup_cli.py`**, **`cli/condensation_cli.py`**
-  — argument parsing only; the logic lives in the module each one wraps.
+  — argument parsing plus the three decisions only this layer can make: precedence between a
+  loaded config and the command line, the exit status, and consistency between flags that are
+  individually valid but jointly impossible. Everything else lives in the module each one wraps.
+  Specified in `rqm/cli-arguments.md`.
 
 ### Generation pipeline (single molecule)
 
