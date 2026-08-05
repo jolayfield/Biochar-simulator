@@ -2,6 +2,76 @@
 
 All significant changes to the Biochar Simulator project are documented here.
 
+## [0.7.0] — August 5, 2026
+
+> **A config file reloaded with `--load-config` was largely discarded. Re-run
+> anything built that way.**
+>
+> Twelve fields — including `seed`, `temperature`, `feedstock`,
+> `target_num_carbons` and `molecule_name` — were taken from the command line
+> unconditionally, and a parsed argument cannot tell a flag the user typed from
+> one left at its default. So the parser's defaults, not the user's requests,
+> overwrote the loaded file. A config saved with `carbons=10, name=TST,
+> seed=1234, temperature=600, feedstock=softwood` reloaded as `carbons=50,
+> name=BC` and `None` for the rest, silently.
+>
+> `H_C_ratio` and `O_C_ratio` survived, on a different code path. So a reload
+> kept the composition derived from 600 °C while dropping the 600 °C that
+> explained it — a config that still builds a plausible structure and no longer
+> records what it rests on.
+>
+> Nothing else read a config file, so a run driven entirely by command-line
+> flags is unaffected.
+>
+> **One change breaks an exit status.** It is listed first below; the rest of
+> the release is corrective.
+
+Requirements coverage extended to the four console entry points, which were
+excluded on the grounds that argument parsing holds no logic of its own.
+Writing `rqm/cli-arguments.md` showed otherwise — precedence between a loaded
+config and the command line, the exit status a pipeline branches on, and
+consistency between two individually-valid flags are decided at that layer and
+nowhere else, and each had a defect. Fifteen documents, 205 scenarios, every one
+with a defending test. `constants.py` is now the only unspecified module, its
+tables being checked against the forcefield itself rather than against a promise
+this repository makes.
+
+### Breaking changes
+
+- **`biochar-md-setup` exits 2 when it writes no run directories.** It exited 0,
+  so a pipeline was told the stage succeeded and went on to submit an empty
+  directory tree; the failure then surfaced at the scheduler rather than at the
+  command that had the information. 2 means here what it already means in
+  `biochar-sweep`, so a shell can branch on it without knowing which ran. Partial
+  skips stay 0 — a manifest row without structure files is the normal shape of a
+  real sweep, and a status that fired on those would be ignored within a week.
+
+### Fixed — the command line
+
+- **A saved config reloads as the config that was saved.** Described above. The
+  three-way split it replaced — fields that always overrode, fields that
+  overrode only when non-`None`, and `pH` — is now one rule: the loaded file is
+  the base, a flag the user typed overrides it, and a flag left at its default
+  only fills what the file does not carry. Typing `--carbons 50` when 50 is also
+  the default still overrides a loaded 14; the request is a request whether or
+  not it coincides with the default.
+- **Explicit functional-group flags replace a loaded group set rather than
+  merging into it.** The six counts describe one dictionary between them and
+  compete for the same edge sites, so a set assembled from two sources is a
+  composition nobody chose.
+- **`biochar-condense` refuses a `--which-repeat` outside `--repeats`.**
+  `--repeats 3 --which-repeat 7` exited 0 and wrote a `run_surface.sh` pointing
+  at `rep_7/final.gro`, which the condensation run would never create. Nothing
+  failed until after the annealing run — hours later, for a flag that costs
+  nothing to re-enter. The check now runs before any structure is generated.
+- **`biochar-sweep template` names only backends that exist.** Its comment
+  offered `gasteiger`, which `GeneratorConfig` rejects, and omitted `ml`, which
+  it accepts. The template's comments are the only sweep-format documentation
+  most users read.
+- **A loaded config's `box_size` survives.** `--load-config` built the
+  configuration directly from the parsed JSON, where `box_size` is a list, in
+  place of the `from_dict` that restores it to the array the field expects.
+
 ## [0.6.0] — August 4, 2026
 
 > **Two things changed what gets written to disk. Re-run anything whose results

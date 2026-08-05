@@ -7,6 +7,50 @@ Changelog
    is not a full mirror of it: releases 0.3.0 and 0.4.0 are recorded there and
    are not reproduced here.
 
+0.7.0 (2026-08-05)
+------------------
+
+Requirements coverage extended to the four console entry points, which were
+excluded on the grounds that argument parsing holds no logic of its own. Writing
+``rqm/cli-arguments.md`` showed otherwise: precedence between a loaded config and
+the command line, the exit status a pipeline branches on, and consistency between
+two individually-valid flags are decided at that layer and nowhere else, and each
+had a defect. Fifteen documents, 205 scenarios, every one with a defending test.
+``constants.py`` is now the only unspecified module.
+
+.. warning::
+
+   **A config file reloaded with ``--load-config`` was largely discarded. Re-run
+   anything built that way.**
+
+   Twelve fields — including ``seed``, ``temperature``, ``feedstock``,
+   ``target_num_carbons`` and ``molecule_name`` — were taken from the command
+   line unconditionally, and a parsed argument cannot tell a flag the user typed
+   from one left at its default. The parser's defaults, not the user's requests,
+   overwrote the loaded file. ``H_C_ratio`` and ``O_C_ratio`` survived on a
+   different code path, so a reload kept the composition derived from 600 °C
+   while dropping the 600 °C that explained it. A run driven entirely by
+   command-line flags is unaffected.
+
+.. warning::
+
+   **One change breaks an exit status.** ``biochar-md-setup`` exits 2 when it
+   writes no run directories, where it exited 0 — so a pipeline was told the
+   stage succeeded and went on to submit an empty directory tree. 2 means here
+   what it already means in ``biochar-sweep``. Partial skips stay 0.
+
+- **Explicit functional-group flags replace a loaded group set** rather than
+  merging into it. The six counts describe one dictionary between them and
+  compete for the same edge sites.
+- **``biochar-condense`` refuses a ``--which-repeat`` outside ``--repeats``**,
+  before any structure is generated. It previously wrote a ``run_surface.sh``
+  pointing at a repeat the condensation run would never create, and nothing
+  failed until after the annealing run.
+- **``biochar-sweep template`` names only backends that exist.** Its comment
+  offered ``gasteiger``, which ``GeneratorConfig`` rejects, and omitted ``ml``.
+- **A loaded config's ``box_size`` survives**, being restored to the array the
+  field expects rather than left as the list the JSON carries.
+
 0.6.0 (2026-08-04)
 ------------------
 
