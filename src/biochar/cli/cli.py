@@ -156,6 +156,75 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+# Command-line option (argparse dest) → GeneratorConfig field.  A flag the user
+# typed overrides a loaded config; a flag left at its default only fills a field
+# the loaded config does not already carry.  The six functional-group counts are
+# absent deliberately — they describe one dictionary between them and are
+# resolved as a set below.
+_CONFIG_FIELDS = {
+    "carbons": "target_num_carbons",
+    "defects": "defect_fraction",
+    "name": "molecule_name",
+    "seed": "seed",
+    "pyridinic": "num_pyridinic",
+    "pyrrolic": "num_pyrrolic",
+    "graphitic": "num_graphitic",
+    "charge_method": "charge_method",
+    "temperature": "temperature",
+    "feedstock": "feedstock",
+    "hc_ratio": "H_C_ratio",
+    "oc_ratio": "O_C_ratio",
+    "aromaticity": "aromaticity_percent",
+    "pH": "pH",
+}
+
+_FG_DESTS = ("phenolic", "carboxyl", "ether", "amino", "thiol", "thioether")
+
+
+def _supplied_dests(argv) -> set:
+    """Return the dests the user actually typed on the command line.
+
+    A parsed namespace cannot distinguish a flag left at its default from one
+    supplied at that same value, and that difference decides whether a loaded
+    config is overridden. Re-parsing against ``SUPPRESS`` defaults leaves only
+    what was given. Safe to run after the real parse has already succeeded.
+    """
+    probe = _build_parser()
+    for action in probe._actions:
+        action.default = argparse.SUPPRESS
+    return set(vars(probe.parse_args(argv)))
+
+
+def _resolve_config_dict(args, supplied: set, base: dict) -> dict:
+    """Merge a loaded config with the command line into GeneratorConfig kwargs.
+
+    *base* is the loaded file (empty when none was given), *supplied* the dests
+    the user actually typed. The loaded file is the base, a typed flag overrides
+    it, and a flag left at its default only fills what the file does not carry.
+    Without that last distinction every defaulted flag silently overwrites the
+    loaded value with its own — which is how a saved config used to lose its
+    seed, temperature and feedstock on reload.
+    """
+    cfg_dict = dict(base)
+
+    for dest, field in _CONFIG_FIELDS.items():
+        value = getattr(args, dest)
+        if dest in supplied:
+            cfg_dict[field] = value
+        elif field not in cfg_dict and value is not None:
+            cfg_dict[field] = value
+
+    # The six group counts describe one dictionary between them, so any of them
+    # replaces a loaded set rather than merging into it -- a set assembled from
+    # two sources is a composition nobody requested.
+    if supplied.intersection(_FG_DESTS):
+        cfg_dict["functional_groups"] = {
+            d: getattr(args, d) for d in _FG_DESTS if getattr(args, d) is not None
+        }
+
+    return cfg_dict
+
+
 def main(argv=None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
@@ -179,54 +248,10 @@ def main(argv=None) -> int:
     else:
         base = {}
 
-    # Collect explicit functional groups
-    fg_map = {
-        "phenolic": args.phenolic,
-        "carboxyl": args.carboxyl,
-        "ether": args.ether,
-        "amino": args.amino,
-        "thiol": args.thiol,
-        "thioether": args.thioether,
-    }
-    functional_groups = {k: v for k, v in fg_map.items() if v is not None} or None
-
-    # Build config dict: start from loaded config, CLI args override.
-    # Composition fields (H_C_ratio etc.) are only set from CLI when explicitly
-    # provided (not None); otherwise GeneratorConfig derives them from
-    # --temperature / --feedstock or falls back to historical defaults.
-    _ALWAYS_OVERRIDE = {
-        "target_num_carbons", "defect_fraction", "molecule_name", "seed",
-        "functional_groups", "num_pyridinic", "num_pyrrolic", "num_graphitic",
-        "charge_method", "temperature", "feedstock",
-    }
-    cfg_dict = {k: v for k, v in base.items() if k not in _ALWAYS_OVERRIDE}
-    cfg_dict.update({
-        "target_num_carbons": args.carbons,
-        "defect_fraction": args.defects,
-        "molecule_name": args.name,
-        "seed": args.seed,
-        "functional_groups": functional_groups,
-        "num_pyridinic": args.pyridinic,
-        "num_pyrrolic": args.pyrrolic,
-        "num_graphitic": args.graphitic,
-        "charge_method": args.charge_method,
-        "temperature": args.temperature,
-        "feedstock": args.feedstock,
-    })
-    # Composition: CLI wins only when explicitly supplied
-    if args.hc_ratio is not None:
-        cfg_dict["H_C_ratio"] = args.hc_ratio
-    if args.oc_ratio is not None:
-        cfg_dict["O_C_ratio"] = args.oc_ratio
-    if args.aromaticity is not None:
-        cfg_dict["aromaticity_percent"] = args.aromaticity
-    # pH: None is both "not supplied" and the neutral default, so a loaded
-    # config's pH survives unless --pH is given explicitly.
-    if args.pH is not None:
-        cfg_dict["pH"] = args.pH
+    cfg_dict = _resolve_config_dict(args, _supplied_dests(argv), base)
 
     try:
-        config = GeneratorConfig(**cfg_dict)
+        config = GeneratorConfig.from_dict(cfg_dict)
     except (ValueError, TypeError) as exc:
         print(f"Configuration error: {exc}", file=sys.stderr)
         return 1

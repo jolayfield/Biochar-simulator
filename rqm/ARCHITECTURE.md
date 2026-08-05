@@ -151,11 +151,17 @@ These hold across the whole system and are easy to violate locally.
 | `valence-validation.md` | Aromatic ring members, anion ranges, doping sites, safe bond addition |
 | `condensation-annealing.md` | Wood anchors, the schedule, packing verification, run provenance |
 | `charge-backends.md` | Backend refusal, charge conservation, the 1.14 factor, model provenance |
+| `cli-arguments.md` | Config precedence, exit status, cross-argument consistency, stream separation |
 
-Every module the 2026-07-30 review listed is now specified. What remains unspecified is the CLI
-argument parsing, which holds no logic of its own, and `constants.py`, whose tables are checked
-by `tests/test_constants_ff.py` against the forcefield rather than against a promise this
-repository makes.
+Every module the 2026-07-30 review listed is now specified, and so are the four console entry
+points. Those were previously described here as holding no logic of their own; specifying them
+showed otherwise. Precedence between a loaded config and the command line, the exit status a
+pipeline branches on, and consistency between two individually-valid flags are all decided at
+that layer and nowhere else — and each had a defect.
+
+What remains unspecified is `constants.py`, whose tables are checked by
+`tests/test_constants_ff.py` against the forcefield rather than against a promise this repository
+makes.
 
 An absent document is not an absent requirement — it means the behaviour is currently defended
 by tests that no specification points at. `tools/rqm/rq check` reports the converse: specified
