@@ -22,6 +22,15 @@ from ..constants import (
     BOND_ORDER_LENGTH_FACTORS,
     BOND_LENGTH_MIN_FACTOR,
     BOND_LENGTH_MAX_FACTOR,
+    HYDROXYL_H_PLACEMENT_ANGLE_DEG,
+    LATTICE_TILT_MAX_DEG,
+    LATTICE_TILT_STEP_DEG,
+    LATTICE_TETHER_RADIUS,
+    LATTICE_TETHER_FORCE_CONSTANT,
+    LATTICE_BOND_RANGE,
+    LATTICE_BOND_FORCE_CONSTANT,
+    LATTICE_RELAX_MAX_ITERATIONS,
+    LATTICE_MAX_SHEET_RMS,
 )
 
 logger = logging.getLogger(__name__)
@@ -134,6 +143,49 @@ def _clash_floor(
     return 0.75 * (r_vdw_i + r_vdw_j)
 
 
+def _clash_floor_matrix(
+    mol: Chem.Mol, hbond_pairs: set, excluded: set
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Every pair's :func:`_clash_floor` at once, and a mask of the pairs that are
+    judged at all (not self, not 1-2 or 1-3).
+    """
+    n = mol.GetNumAtoms()
+    radii = np.array([VDW_RADII.get(a.GetSymbol(), 1.70) for a in mol.GetAtoms()])
+    floor = 0.75 * (radii[:, None] + radii[None, :])
+    for i, j in hbond_pairs:
+        floor[i, j] = floor[j, i] = HBOND_MIN_H_ACCEPTOR_DISTANCE
+    judged = np.ones((n, n), dtype=bool)
+    np.fill_diagonal(judged, False)
+    for i, j in excluded:
+        judged[i, j] = judged[j, i] = False
+    return floor, judged
+
+
+def _clash_pairs(
+    mol: Chem.Mol, coords: np.ndarray, excluded: Optional[set] = None
+) -> List[Tuple[int, int, float, float]]:
+    """
+    Every steric clash as ``(i, j, distance, floor)`` with ``i < j``, in
+    ascending ``(i, j)`` order.
+
+    The one definition of a clash: a judged pair more than
+    :data:`~biochar.constants.CLASH_SEVERITY_TOLERANCE` inside its floor.
+    :meth:`GeometryValidator._check_steric_clashes` reports these, and the
+    hex-lattice relief pass resolves them, so the two cannot disagree about
+    what counts.
+    """
+    if excluded is None:
+        excluded = _get_excluded_pairs(mol)
+    floor, judged = _clash_floor_matrix(mol, _get_hbond_pairs(mol, coords), excluded)
+    distances = squareform(pdist(coords))
+    clashing = np.triu(judged & (distances < floor - CLASH_SEVERITY_TOLERANCE))
+    return [
+        (int(i), int(j), float(distances[i, j]), float(floor[i, j]))
+        for i, j in zip(*np.nonzero(clashing))
+    ]
+
+
 def _read_skeleton_positions(mol: Chem.Mol) -> dict:
     """
     Collect hex-lattice positions tagged on the molecule by
@@ -203,6 +255,38 @@ def _place_untagged_heavy_atom(
     else:
         bl = 1.42
     return par_pos + direction * bl
+
+
+def _bent_hydrogen_position(
+    parent_pos: np.ndarray,
+    grandparent_pos: np.ndarray,
+    bond_length: float,
+    occupied: List[np.ndarray],
+) -> np.ndarray:
+    """
+    Place a hydrogen on *parent* at :data:`HYDROXYL_H_PLACEMENT_ANGLE_DEG` to
+    the grandparent bond, in the z = 0 plane of the flat layout, on whichever
+    side has more room from the *occupied* heavy-atom positions.
+    """
+    axis = parent_pos - grandparent_pos
+    axis = axis / np.linalg.norm(axis)
+    side = np.cross(np.array([0.0, 0.0, 1.0]), axis)
+    if np.linalg.norm(side) < 1e-8:
+        side = _perpendicular_unit(axis)
+    side = side / np.linalg.norm(side)
+    bend = np.radians(180.0 - HYDROXYL_H_PLACEMENT_ANGLE_DEG)
+    others = [p for p in occupied
+              if np.linalg.norm(p - parent_pos) > 1e-6
+              and np.linalg.norm(p - grandparent_pos) > 1e-6]
+
+    def clearance(pos):
+        return min((float(np.linalg.norm(pos - p)) for p in others), default=np.inf)
+
+    candidates = [
+        parent_pos + bond_length * (np.cos(bend) * axis + sign * np.sin(bend) * side)
+        for sign in (1.0, -1.0)
+    ]
+    return max(candidates, key=clearance)
 
 
 def _heavy_atom_flat_layout(mol: Chem.Mol, seed: Optional[int] = None) -> np.ndarray:
@@ -536,6 +620,222 @@ def _optimize_h_positions(
     return all_coords
 
 
+def _substituent_groups(mol: Chem.Mol) -> dict:
+    """
+    Map each ring atom to the non-ring atoms hanging off it.
+
+    A group is a connected tree of non-ring atoms -- an H, a hydroxyl, a
+    carboxyl -- attached to exactly one ring atom, so it can be turned about
+    that atom as a rigid body. A chain bridging two ring atoms has no single
+    pivot and is left alone.
+    """
+    in_ring = {a.GetIdx() for a in mol.GetAtoms() if a.IsInRing()}
+    seen: set = set()
+    groups: dict = {}
+    for atom in mol.GetAtoms():
+        start = atom.GetIdx()
+        if start in in_ring or start in seen:
+            continue
+        members, stack, anchors = [], [start], set()
+        seen.add(start)
+        while stack:
+            u = stack.pop()
+            members.append(u)
+            for nbr in mol.GetAtomWithIdx(u).GetNeighbors():
+                v = nbr.GetIdx()
+                if v in in_ring:
+                    anchors.add(v)
+                elif v not in seen:
+                    seen.add(v)
+                    stack.append(v)
+        if len(anchors) == 1:
+            groups.setdefault(anchors.pop(), []).extend(members)
+    return groups
+
+
+def _ring_normal_at(mol: Chem.Mol, coords: np.ndarray, idx: int) -> Optional[np.ndarray]:
+    """Unit normal of the sheet at ring atom *idx*, from two of its ring neighbours."""
+    nbrs = [n.GetIdx() for n in mol.GetAtomWithIdx(idx).GetNeighbors() if n.IsInRing()]
+    if len(nbrs) < 2:
+        return None
+    normal = np.cross(coords[nbrs[0]] - coords[idx], coords[nbrs[1]] - coords[idx])
+    norm = float(np.linalg.norm(normal))
+    return normal / norm if norm > 1e-6 else None
+
+
+def _rotate_about(points: np.ndarray, origin: np.ndarray, axis: np.ndarray, angle: float) -> np.ndarray:
+    """Rotate *points* by *angle* (radians) about the line through *origin* along unit *axis*."""
+    v = points - origin
+    c, s = np.cos(angle), np.sin(angle)
+    return origin + v * c + np.cross(axis, v) * s + np.outer(v @ axis, axis) * (1.0 - c)
+
+
+def _tilt_crowded_substituents(mol: Chem.Mol, coords: np.ndarray) -> np.ndarray:
+    """
+    Turn substituents that clash out of the sheet plane, the two sides of a
+    crowded site in opposite directions.
+
+    At a cove both substituents point into the same vacant lattice site; tilting
+    one up and the other down is the direction a real [4]helicene twists. Each
+    group turns rigidly about its ring atom, so its bond lengths and internal
+    angles are untouched, by the smallest tilt that clears its contacts (or the
+    one that leaves the least overlap, if none does).
+
+    This pass is what makes the force field safe to run afterwards: the
+    overlaps it removes are close enough to near-coincident that a force field
+    started from them throws atoms apart.
+    """
+    coords = coords.copy()
+    excluded = _get_excluded_pairs(mol)
+    floor, judged = _clash_floor_matrix(mol, _get_hbond_pairs(mol, coords), excluded)
+    floor = floor - CLASH_SEVERITY_TOLERANCE
+
+    groups = _substituent_groups(mol)
+    owner = {a: anchor for anchor, members in groups.items() for a in members}
+    origin_pos, tilt_axis = {}, {}
+    for anchor, members in groups.items():
+        normal = _ring_normal_at(mol, coords, anchor)
+        root = [a for a in members if mol.GetBondBetweenAtoms(a, anchor) is not None]
+        if normal is None or not root:
+            continue
+        radial = coords[root[0]] - coords[anchor]
+        radial = radial - (radial @ normal) * normal
+        axis = np.cross(normal, radial)
+        if np.linalg.norm(axis) < 1e-6:
+            continue
+        origin_pos[anchor] = coords[members].copy()
+        tilt_axis[anchor] = axis / np.linalg.norm(axis)
+
+    direction: dict = {}
+    angle: dict = {}
+
+    def worst_overlap(atoms):
+        d = np.linalg.norm(coords[atoms][:, None, :] - coords[None, :, :], axis=2)
+        return float(np.where(judged[atoms], floor[atoms] - d, -np.inf).max())
+
+    def set_tilt(anchor, a):
+        coords[groups[anchor]] = _rotate_about(
+            origin_pos[anchor], coords[anchor], tilt_axis[anchor], a
+        )
+        angle[anchor] = a
+
+    steps = np.radians(np.arange(
+        LATTICE_TILT_STEP_DEG, LATTICE_TILT_MAX_DEG + 1e-9, LATTICE_TILT_STEP_DEG
+    ))
+    # A tilt that clears one contact can create another, so sweep a few times.
+    for _ in range(4):
+        pending = [c for c in _clash_pairs(mol, coords, excluded)
+                   if c[0] in owner or c[1] in owner]
+        if not pending:
+            break
+        pending.sort(key=lambda c: c[2] - c[3])  # deepest overlap first
+        for i, j, _d, _f in pending:
+            movers = list(dict.fromkeys(
+                owner[k] for k in (i, j) if k in owner and owner[k] in origin_pos
+            ))
+            if not movers:
+                continue
+            atoms = np.array([a for anchor in movers for a in groups[anchor]])
+            if worst_overlap(atoms) < 0:
+                continue  # already cleared by an earlier move this sweep
+            for k, anchor in enumerate(movers):
+                if anchor not in direction:
+                    partner = [direction[m] for m in movers if m in direction]
+                    direction[anchor] = -partner[0] if partner else (1.0 if k == 0 else -1.0)
+            start = {anchor: angle.get(anchor, 0.0) for anchor in movers}
+            best = (worst_overlap(atoms), dict(start))
+            for step in steps:
+                for anchor in movers:
+                    set_tilt(anchor, direction[anchor] * max(step, abs(start[anchor])))
+                overlap = worst_overlap(atoms)
+                if overlap < best[0]:
+                    best = (overlap, {anchor: angle[anchor] for anchor in movers})
+                if overlap < 0:
+                    break
+            for anchor, a in best[1].items():
+                set_tilt(anchor, a)
+    return coords
+
+
+def _lattice_force_field_copy(mol: Chem.Mol) -> Chem.Mol:
+    """
+    A copy of *mol* UFF can parametrise without kekulising: aromatic bonds as
+    single bonds, aromatic atoms typed sp2.
+
+    UFF refuses an aromatic sheet it cannot kekulise, and the usual fallback --
+    :func:`_kekulize_or_dearomatize` -- leaves ring carbons typed sp3, which
+    buckles a flat sheet into a blob. Typing them sp2 keeps UFF's trigonal
+    angles and planar inversion terms; the single-bond rest length (~1.46 Å)
+    is overridden by distance constraints in the caller.
+    """
+    working = Chem.RWMol(mol)
+    for bond in working.GetBonds():
+        if bond.GetIsAromatic() or bond.GetBondType() == Chem.BondType.AROMATIC:
+            bond.SetBondType(Chem.BondType.SINGLE)
+            bond.SetIsAromatic(False)
+    for atom in working.GetAtoms():
+        if atom.GetIsAromatic():
+            atom.SetIsAromatic(False)
+            atom.SetHybridization(Chem.HybridizationType.SP2)
+        elif atom.GetAtomicNum() == 8 and all(
+            b.GetBondType() == Chem.BondType.SINGLE for b in atom.GetBonds()
+        ):
+            # RDKit marks a phenolic O conjugated (sp2), which UFF reads as a
+            # carbonyl-type O_2 and opens C-O-H to 120°. It is an sp3 oxygen.
+            atom.SetHybridization(Chem.HybridizationType.SP3)
+        # Every hydrogen is already an explicit atom. Without this, a ring
+        # carbon's two single ring bonds read as room for an implicit H, which
+        # UFF then warns about.
+        atom.SetNoImplicit(True)
+    working.UpdatePropertyCache(strict=False)
+    return working.GetMol()
+
+
+def _tethered_lattice_relax(
+    mol: Chem.Mol, coords: np.ndarray, seed: Optional[int] = None
+) -> Optional[np.ndarray]:
+    """
+    UFF-minimise *coords* with every ring atom tethered near its position and
+    every aromatic bond held to the lattice length. Returns None when UFF
+    cannot be set up.
+
+    A perfectly flat start is a saddle a minimiser never leaves -- every
+    out-of-plane force is zero -- so ring atoms get a small seeded z offset.
+    """
+    working = _lattice_force_field_copy(mol)
+    start = coords.copy()
+    ring = [a.GetIdx() for a in mol.GetAtoms() if a.IsInRing()]
+    rng = np.random.default_rng(0 if seed is None else seed)
+    start[ring, 2] += rng.normal(0.0, 0.05, len(ring))
+
+    conformer = Chem.Conformer(working.GetNumAtoms())
+    for i, xyz in enumerate(start):
+        conformer.SetAtomPosition(i, xyz.tolist())
+    # The molecule arrives carrying its embedded conformer; UFF uses the
+    # first one, so it must go or the pass relaxes the wrong coordinates.
+    working.RemoveAllConformers()
+    working.AddConformer(conformer, assignId=True)
+    try:
+        ff = AllChem.UFFGetMoleculeForceField(working)
+    except Exception:
+        return None
+    if ff is None:
+        return None
+    for i in ring:
+        ff.UFFAddPositionConstraint(i, LATTICE_TETHER_RADIUS, LATTICE_TETHER_FORCE_CONSTANT)
+    low, high = LATTICE_BOND_RANGE
+    for bond in mol.GetBonds():
+        if bond.GetIsAromatic():
+            ff.UFFAddDistanceConstraint(
+                bond.GetBeginAtomIdx(), bond.GetEndAtomIdx(), False,
+                low, high, LATTICE_BOND_FORCE_CONSTANT,
+            )
+    ff.Initialize()
+    ff.Minimize(maxIts=LATTICE_RELAX_MAX_ITERATIONS)
+    relaxed = np.array(working.GetConformer().GetPositions())
+    return relaxed if np.all(np.isfinite(relaxed)) else None
+
+
 class CoordinateGenerator:
     """Generate valid 3D coordinates for molecules."""
 
@@ -720,6 +1020,18 @@ class CoordinateGenerator:
                     # Choose bond length by parent-H element
                     par_elem = parent.GetAtomicNum()
                     bl = 1.09 if par_elem == 6 else 0.96  # C-H or O-H
+
+                    # A hydrogen on a heteroatom with a single heavy neighbour
+                    # (hydroxyl, carboxyl OH) has a bond angle to keep, not a
+                    # radial direction: "opposite the other neighbours" is the
+                    # C-O axis itself, and a collinear X-O-H is both wrong and
+                    # a singular torsion for any later force field.
+                    if par_elem != 6 and len(other_nbrs) == 1:
+                        grand_pos = heavy_pos.get(other_nbrs[0], all_coords[other_nbrs[0]])
+                        all_coords[idx] = _bent_hydrogen_position(
+                            par_pos, grand_pos, bl, list(heavy_pos.values())
+                        )
+                        continue
                     all_coords[idx] = par_pos + h_dir * bl
 
                 # Rotate clashing H atoms to minimise non-bonded contacts.
@@ -990,6 +1302,65 @@ class CoordinateGenerator:
         _adopt_conformer(mol, working)
         return coords, converged
 
+    def relieve_lattice_crowding(
+        self, mol: Chem.Mol, coords: np.ndarray
+    ) -> np.ndarray:
+        """
+        Relieve the overlaps an exact flat lattice leaves at helicene-type
+        edges, and return the new coordinates.
+
+        Two stages. Crowded substituents are first tilted out of plane
+        (:func:`_tilt_crowded_substituents`), which removes the near-coincident
+        atoms; a tethered UFF relaxation (:func:`_tethered_lattice_relax`) then
+        lets each cove open and buckle locally, as it does in a real molecule
+        and in GROMACS energy minimisation. The relaxed result is kept only
+        when it has no more bond-length errors and no more clashes than the
+        tilted one, and the sheet is still flat
+        (:data:`~biochar.constants.LATTICE_MAX_SHEET_RMS`); otherwise the
+        tilted coordinates are returned. Neither stage can make the geometry
+        worse than it arrived.
+        """
+        coords = self._relieved_coordinates(mol, coords)
+        # The caller's molecule carries the coordinates this pass settled on,
+        # as it does after validate_and_relax.
+        if mol.GetNumConformers():
+            conformer = mol.GetConformer(0)
+            for i, xyz in enumerate(coords):
+                conformer.SetAtomPosition(i, xyz.tolist())
+        return coords
+
+    def _relieved_coordinates(self, mol: Chem.Mol, coords: np.ndarray) -> np.ndarray:
+        excluded = _get_excluded_pairs(mol)
+        if not _clash_pairs(mol, coords, excluded):
+            return coords
+        tilted = _tilt_crowded_substituents(mol, coords)
+        if not _clash_pairs(mol, tilted, excluded):
+            return tilted
+        relaxed = _tethered_lattice_relax(mol, tilted, self.seed)
+        if relaxed is None:
+            return tilted
+
+        def defects(c):
+            return (
+                len(GeometryValidator._validate_bond_lengths(mol, c)),
+                len(_clash_pairs(mol, c, excluded)),
+            )
+
+        ring = [a.GetIdx() for a in mol.GetAtoms() if a.IsInRing()]
+        centred = relaxed[ring] - relaxed[ring].mean(axis=0)
+        normal = np.linalg.svd(centred, full_matrices=False)[2][-1]
+        sheet_rms = float(np.sqrt(np.mean((centred @ normal) ** 2)))
+
+        bonds_after, clashes_after = defects(relaxed)
+        bonds_before, clashes_before = defects(tilted)
+        if (
+            bonds_after <= bonds_before
+            and clashes_after <= clashes_before
+            and sheet_rms <= LATTICE_MAX_SHEET_RMS
+        ):
+            return relaxed
+        return tilted
+
 
 class ClashResolver:
     """Resolve steric clashes in molecular geometries."""
@@ -1171,45 +1542,27 @@ class GeometryValidator:
         # reported as a clash.
         excluded = _get_excluded_pairs(mol)
         # Intramolecular O-H...O / N-H...O contacts are hydrogen bonds, not
-        # clashes; they get a reduced floor (see _get_hbond_pairs).
+        # clashes; they get a reduced floor (see _get_hbond_pairs).  Only an
+        # overlap deeper than CLASH_SEVERITY_TOLERANCE is reported: a contact
+        # within it is embedding noise the FF/EM step relaxes, not a clash.
         hbond_pairs = _get_hbond_pairs(mol, coords)
 
         errors = []
-        clashes = []
-
-        # Calculate pairwise distances
-        distances = squareform(pdist(coords))
-
-        for i in range(mol.GetNumAtoms()):
-            for j in range(i + 1, mol.GetNumAtoms()):
-                if (i, j) in excluded:
-                    continue
-
-                atom_i = mol.GetAtomWithIdx(i)
-                atom_j = mol.GetAtomWithIdx(j)
-                symbol_i = atom_i.GetSymbol()
-                symbol_j = atom_j.GetSymbol()
-                min_distance = _clash_floor(mol, i, j, hbond_pairs)
-
-                distance = distances[i, j]
-                # Report only overlaps deeper than the tolerance: a contact
-                # within CLASH_SEVERITY_TOLERANCE of the floor is embedding
-                # noise the FF/EM step relaxes, not a clash.
-                if distance < min_distance - CLASH_SEVERITY_TOLERANCE:
-                    severity = min_distance - distance  # How far below minimum
-                    # An H-bonded pair that still violates the reduced floor is
-                    # genuinely too close — label it so the report is diagnostic.
-                    clash_type = "H-bond" if (i, j) in hbond_pairs else \
-                                 "H-H" if symbol_i == "H" and symbol_j == "H" else \
-                                 "H-C" if symbol_i in ["H", "C"] and symbol_j in ["H", "C"] else \
-                                 "Other"
-
-                    clashes.append((i, j, distance, min_distance, severity, clash_type))
-                    errors.append(
-                        f"Steric clash: atoms {i} and {j} "
-                        f"(distance: {distance:.2f}, min: {min_distance:.2f}, "
-                        f"severity: {severity:.2f} Å, type: {clash_type})"
-                    )
+        for i, j, distance, min_distance in _clash_pairs(mol, coords, excluded):
+            symbol_i = mol.GetAtomWithIdx(i).GetSymbol()
+            symbol_j = mol.GetAtomWithIdx(j).GetSymbol()
+            severity = min_distance - distance  # How far below minimum
+            # An H-bonded pair that still violates the reduced floor is
+            # genuinely too close — label it so the report is diagnostic.
+            clash_type = "H-bond" if (i, j) in hbond_pairs else \
+                         "H-H" if symbol_i == "H" and symbol_j == "H" else \
+                         "H-C" if symbol_i in ["H", "C"] and symbol_j in ["H", "C"] else \
+                         "Other"
+            errors.append(
+                f"Steric clash: atoms {i} and {j} "
+                f"(distance: {distance:.2f}, min: {min_distance:.2f}, "
+                f"severity: {severity:.2f} Å, type: {clash_type})"
+            )
 
         return errors
 

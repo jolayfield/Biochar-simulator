@@ -141,7 +141,8 @@ class TestClashResolutionRouting:
         assert calls["n"] == 0, "clash resolution must not run on the hex lattice"
 
         # "Ring lattice intact": aromatic C-C bonds sit at the hex-lattice
-        # value (1.42 Angstrom), not displaced by a resolver that never ran.
+        # value (1.42 Angstrom). The lattice relief (rq-8e5f5dc1) may buckle a
+        # cove, but it holds every aromatic bond to the lattice length.
         conf = mol.GetConformer()
         aromatic_cc = [
             b for b in mol.GetBonds()

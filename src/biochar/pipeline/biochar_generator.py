@@ -929,15 +929,19 @@ class BiocharGenerator:
         # Resolve clashes if found.
         #
         # When hex-lattice positions are used (generator.used_hex_lattice is
-        # True), skip ALL clash resolution and FF passes.  The hex lattice
-        # gives perfect 1.42 Å CC bonds; the "clashes" reported are physical
-        # features of fused PAH geometry:
-        #   * Peri C-C at 2.44 Å (bay regions) — real PAH geometry, not a
-        #     clash; below the 0.75×vdW threshold (2.55 Å) but chemically fine.
-        #   * Peri H-C: also within expected PAH ranges.
-        # Displacing ring carbons via the resolver would shatter the ring
-        # geometry.  GROMACS energy minimisation (gmx grompp + em) will relax
-        # H/O positions further before any production MD run.
+        # True), the generic resolver and FF passes do not run: the resolver
+        # displaces atoms pairwise with no notion of a ring, and would shatter
+        # the lattice.  What a flat lattice gets wrong is local -- helicene-type
+        # edges.  At a cove (edge carbons 2.46 Å apart, four bonds apart) both
+        # substituents point into the same vacant site and land 0.1-0.6 Å
+        # apart, and the cove carbons sit inside the 2.50 Å C...C floor; a fjord
+        # is worse.  relieve_lattice_crowding tilts those substituents out of
+        # plane and lets the coves open under a tethered UFF pass, keeping the
+        # sheet's bond lengths and overall flatness (rq-8e5f5dc1).
+        if generator.used_hex_lattice:
+            coords = generator.relieve_lattice_crowding(mol, coords)
+            valid, errors = GeometryValidator.validate_geometry(mol, coords)
+
         # The force-field pass is NOT gated on clashes.  A clean clash report
         # does not mean the embedding is strain-free: ETKDG can leave a
         # compressed aromatic bond (e.g. 1.16 Å where 1.40 Å is expected) that

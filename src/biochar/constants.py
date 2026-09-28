@@ -627,6 +627,57 @@ HBOND_DONOR_ACCEPTOR_ELEMENTS = (7, 8)  # N, O (atomic numbers)
 # clash.
 CLASH_SEVERITY_TOLERANCE = 0.05  # Angstroms
 
+# --- Hex-lattice crowding relief -------------------------------------------
+# The hex-lattice path places ring atoms on an exact flat lattice and every
+# substituent radially outward from its parent.  That is right almost
+# everywhere and wrong at helicene-type edges: at a cove (two edge carbons
+# 2.46 Å apart, four bonds apart -- a [4]helicene motif) both substituents point
+# into the same vacant lattice site and land 0.1-0.6 Å apart, and the cove
+# carbons themselves sit at 2.46 Å, inside the 2.50 Å C...C floor.  Real
+# molecules relieve this by twisting out of plane; GROMACS energy minimisation
+# of an exported sheet opens such coves to ~2.95 Å and buckles the ring carbons
+# up to ~1.0 Å out of plane.  The relief pass reproduces that locally.
+#
+# X-O-H angle (degrees) at which a hydroxyl hydrogen is placed.  Radial
+# placement put it collinear with the C-O bond (180°) on ~30% of hydroxyls --
+# the ones no clash drew attention to -- which is both wrong geometry and a
+# singular torsion for any force field handed the structure.
+HYDROXYL_H_PLACEMENT_ANGLE_DEG = 108.5
+
+# Largest out-of-plane tilt (degrees) applied to a crowded substituent before
+# relaxation, and the step the search takes toward it.  75° stops short of
+# standing a substituent perpendicular to the sheet, where its tilt axis
+# degenerates.
+LATTICE_TILT_MAX_DEG = 75.0
+LATTICE_TILT_STEP_DEG = 7.5
+
+# Restrained relaxation.  Each ring atom is held by a flat-bottomed tether: free
+# within LATTICE_TETHER_RADIUS of its lattice position, penalised beyond it, so
+# a cove can open and buckle locally while the sheet as a whole stays where the
+# lattice put it.  Aromatic bonds are held to LATTICE_BOND_RANGE -- the
+# force-field copy types them as sp2 single bonds, whose UFF rest length
+# (~1.47 Å) would otherwise stretch every bond in the sheet.  The bond term is
+# stiff, so the constraint must be stiffer: at 500 the bonds settled at ~1.46 Å,
+# and a relaxed sheet sits at the constraint's upper edge, which is why the
+# range tops out at the lattice value rather than straddling it (bonds land at
+# 1.41-1.43 Å, median 1.42).  Much stiffer (50000) left the minimiser too
+# little room and relieved fewer structures.  Values were chosen on a
+# 36-structure grid (100-200 C, H/C 0.35, O/C 0-0.2): a 0.2 Å tether relieved
+# fewer structures, a 0.5 Å one let the whole sheet drift.
+LATTICE_TETHER_RADIUS = 0.3  # Angstroms
+LATTICE_TETHER_FORCE_CONSTANT = 10.0
+LATTICE_BOND_RANGE = (1.40, 1.42)  # Angstroms
+LATTICE_BOND_FORCE_CONSTANT = 20000.0
+LATTICE_RELAX_MAX_ITERATIONS = 400
+
+# Largest RMS deviation (Å) of the ring atoms from their best-fit plane that a
+# relaxed sheet may show and still count as flat.  Local cove buckling of up to
+# ~1 Å at a few sites puts a relieved 100-200 C sheet at 0.25-0.55 Å RMS
+# (GROMACS EM of the same sheets: ~0.33 Å); a sheet the relaxation folded is
+# well beyond this.  A result over it is discarded in favour of the unrelaxed
+# (tilted-only) coordinates.
+LATTICE_MAX_SHEET_RMS = 0.75  # Angstroms
+
 # --- Bond-length validation ------------------------------------------------
 # COVALENT_RADII are *single-bond* radii, so their sum only predicts a single
 # bond.  Scale by bond order to get the expected length: an aromatic C-C is

@@ -117,8 +117,10 @@ assumption they drifted, and do not pick up QM validation unprompted.
 - `molecule_name` / residue name: **5 characters or fewer** (GROMACS `.gro`).
 - `_fix_heteroatom_bond_types` must run after **any** `SanitizeMol` pass on a
   molecule with ether oxygens.
-- Clash warnings on hex-lattice structures are artefacts of an exact lattice,
-  not defects.
+- A clash on a hex-lattice structure is not an artefact to ignore. The lattice
+  is exact, but at coves and fjords (helicene-type edges) its flat placement
+  overlaps atoms, and `relieve_lattice_crowding` exists to fix that. A clash
+  surviving it is a real defect — see rq-8e5f5dc1.
 
 ## Pull requests
 
