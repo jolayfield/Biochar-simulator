@@ -1,0 +1,143 @@
+---
+title: Overlaps on a flat lattice were dismissed as artefacts, and strict mode rejected nearly every large sheet
+date: 2026-09-28
+category: bugs
+module: geometry_3d
+problem_type: bug
+component: geometry
+severity: high
+applies_when:
+  - "Strict validation fails on most structures above ~80 heavy atoms"
+  - "A clash on the hex-lattice path is about to be written off as an artefact"
+  - "Handing an RDKit molecule that already has a conformer to a force field"
+  - "Placing a substituent by a radial or 'opposite the neighbours' rule"
+related_components:
+  - validation
+  - biochar_generator
+  - carbon_skeleton
+tags:
+  - steric-clash
+  - hex-lattice
+  - helicene
+  - cove
+  - uff
+  - conformer
+  - masked-bug
+---
+
+# Overlaps on a flat lattice were dismissed as artefacts, and strict mode rejected nearly every large sheet
+
+Issue #62.
+
+## Context
+
+On the hex-lattice path (>80 heavy atoms), ring carbons sit on an exact flat lattice and every
+substituent is placed radially outward from its parent. The generic clash resolver is skipped
+there, and the codebase's guidance said to ignore clash warnings on these structures: *"peri
+contacts are real geometry; GROMACS energy minimisation resolves them."*
+
+## Symptom
+
+With the default `strict=True`, 100-carbon structures failed on **every** seed, whatever the
+composition, even with no oxygen at all (`H_C_ratio=0.35, O_C_ratio=0.0`: 6/6 failed).
+Temperature mode at 500 °C passed 1 in 6 at 100 C and above.
+
+## What was actually there
+
+Cataloguing every reported contact across 69 structures, and grouping each by how far apart its
+two ring anchors are in space and through the graph, gave one family. It is **helicene-type
+edges**, which a flat lattice cannot represent:
+
+| Motif | Anchors | What the flat placement produced |
+|---|---|---|
+| bay (phenanthrene) | 2.84 Å, 3 bonds | H···O ~1.6 Å |
+| **cove** ([4]helicene) | 2.46 Å, 4 bonds | substituents 0.1–0.6 Å apart; ring C···C 2.46 Å, inside the 2.50 Å floor |
+| fjord ([5]helicene) | 1.42 Å, 5 bonds | substituent 0.1–0.3 Å from the other arm's ring carbon |
+
+The "peri contacts at ~2.44 Å" in the old comment were real, but they weren't what was failing.
+The contacts left behind were 6–7× shorter.
+
+GROMACS energy minimisation settled what was physical. It opened each cove from 2.46 Å to
+~2.95 Å, took cove H···H from 0.57 Å to 1.95 Å, and buckled ring carbons up to 1.0 Å out of
+plane, which is exactly how a real [4]helicene twists. So the ring carbons had to move. Moving
+only H and O, as first proposed in #62, could never have passed strict mode.
+
+> This is the inverse of `physical-features-misread-as-geometry-errors.md`. There, a threshold
+> called real chemistry a clash. Here, the prose called real overlaps chemistry. Both are settled
+> the same way: take the structure to something that knows the physics (GROMACS EM) and see what
+> it does.
+
+## Fix
+
+`CoordinateGenerator.relieve_lattice_crowding`, run in `_generate_geometry` on the hex-lattice
+branch after embedding and planarity enforcement. It does three things:
+
+1. **Tilt.** Each crowded substituent group turns rigidly out of plane about its ring atom, with
+   the two sides of a site going opposite ways.
+2. **Tethered relaxation.** A UFF pass on an sp2-typed copy. Ring atoms have flat-bottomed tethers
+   (0.3 Å), and aromatic bonds are held to 1.40–1.42 Å.
+3. **Guard.** The relaxed result is kept only if it has no more bond errors and no more clashes
+   than the tilted one, and it's still flat (ring RMS ≤ 0.75 Å). Otherwise the tilted coordinates
+   are kept.
+
+Separately, a polar H is now placed at 108.5° to its bond, not collinear with it.
+
+Results:
+
+- **Temperature grid (500–800 °C, 60–200 C, 6 seeds):** clash failures went from 5–6 of 6 in every
+  cell at 100 C and above to **none**.
+- **Plain 100 C (H/C 0.35, O/C 0–0.1):** 18/18 pass, against 0/18 before.
+- **The same example through GROMACS energy minimisation:** 1,068 steps to 444 kJ/mol, against
+  1,337 steps to 620 kJ/mol before.
+
+## Three traps, each of which produced a convincing wrong answer
+
+**1. The stale conformer.** The molecule reaching the relief already carries its embedded
+conformer. `AddConformer` appends a second one, and `UFFGetMoleculeForceField` uses the first. The
+force field therefore minimised the *raw overlapping* coordinates every time and ignored the input
+entirely.
+
+The tell was an energy (1.3 × 10¹⁷) that did not change when atoms were moved by 3 Å. An energy
+that doesn't respond to the coordinates you changed is minimising different coordinates.
+`RemoveAllConformers()` first.
+
+**2. The collinear hydroxyl.** "Place H opposite the parent's other neighbours" is the C–O axis
+itself when the parent has one heavy neighbour. 30% of hydroxyls sat at a 180° C–O–H, the ones no
+clash drew attention to, and `_optimize_h_positions` cannot rotate a collinear H. It made UFF's
+torsions singular.
+
+Separately, RDKit marks a phenolic O conjugated (sp2), which UFF reads as a carbonyl `O_2`, so the
+copy retypes it sp3.
+
+**3. The NaN that validated.** `validate_geometry` returns early on NaN coordinates, reporting only
+"NaN values found". A metric that counted *clash* errors therefore scored a NaN structure as
+clean. An early version of the tilt produced NaN (a degenerate axis once a group had turned 90°)
+and looked like a 35/45 success.
+
+Count every error kind, or check finiteness first.
+
+## Also learned
+
+- **UFF can't take a non-kekulisable aromatic sheet**, and `_kekulize_or_dearomatize` types ring
+  carbons sp3, which folds the sheet. Single bonds plus explicit sp2 hybridisation and
+  `SetNoImplicit(True)` work. The single-bond rest length (~1.47 Å) then needs a *stiff* distance
+  constraint: at k = 500 the bonds settled at 1.46 Å. A relaxed bond sits at the constraint's upper
+  edge, so the range should top out at the target (1.40–1.42 Å), not straddle it.
+- **A perfectly flat start is a saddle point**, and a minimiser never leaves it. Seed a small
+  out-of-plane offset.
+- **Force fields don't start from near-coincident atoms.** Without the tilt stage, UFF stretched
+  ring bonds to 2–28 Å.
+- **Tuning on cached inputs can mislead.** The prototype cleaned several oversized skeletons from a
+  cache built before the hydroxyl fix. The same skeletons from the real pipeline, with correct H
+  placement, did not relieve. When a result depends on input details, re-capture the input from
+  the real pipeline before tuning.
+
+## What this does not fix
+
+- **Oversized skeletons.** Some elongated builds overshoot their carbon target (asked for 200, got
+  310) and leave unbonded ring carbons at bond distance (fjords). Relief makes them no worse but
+  can't rescue them. That's a skeleton-builder defect.
+- **The Kamada–Kawai path.** When H/C-reaching aliphatic carbons are untagged, the sheet takes the
+  Kamada–Kawai layout, not the hex lattice, and its residual contacts (≤0.1 Å inside the floor)
+  are outside this path.
+- **Composition.** 650–800 °C targets below a skeleton's H/C floor are #63.

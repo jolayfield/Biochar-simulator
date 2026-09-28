@@ -18,8 +18,10 @@ by user request.
 - Molecules of **80 heavy atoms or fewer** embed with RDKit ETKDGv3 (falling back to ETKDGv2)
   followed by MMFF94 relaxation.
 - Molecules of **more than 80 heavy atoms** use a 2D-first path: compute the flat aromatic
-  layout, promote to 3D at `z = 0`, perturb non-ring atoms slightly in `z` so the force field
-  converges, then minimise.
+  layout — the hex-lattice positions the skeleton builder tagged, or a Kamada–Kawai layout when
+  any carbon is untagged — and promote it to 3D at `z = 0`. The Kamada–Kawai layout is then
+  force-field minimised. The hex lattice is not minimised: it is already exact, and the only
+  relief it gets is local (see *Hex-Lattice Sheets Keep Their Lattice* below).
 
 The reason for the split is that ETKDGv3 folds or collapses large flat fused-ring systems.
 A large PAH sheet is genuinely planar, and an embedding algorithm that treats it as a flexible
@@ -143,31 +145,141 @@ Feature: Tolerate knife-edge contacts that are embedding noise
     Then it states how far below the floor the contact sits
 ```
 
-## Clash Resolution Is Skipped on the Hex-Lattice Path <!-- rq-8e5f5dc1 -->
+## Hex-Lattice Sheets Keep Their Lattice, Except Where a Flat Lattice Is Wrong <!-- rq-8e5f5dc1 -->
 
-When `CoordinateGenerator.used_hex_lattice` is true, clash resolution does not run.
+When `CoordinateGenerator.used_hex_lattice` is true, the generic clash resolver does not run. It
+displaces atoms pairwise with no notion of a ring, so on a fused sheet it would try to move hundreds
+of atoms and shatter the lattice — replacing a correct structure with a broken one.
 
-Peri-hydrogen contacts in large fused PAHs are real geometry, not errors. They sit inside the
-0.75 × vdW threshold by construction, so a resolver would try to displace hundreds of atoms and
-shatter the ring lattice — replacing a correct structure with a broken one. The flat hex-lattice
-path produces geometrically exact sheets; clash warnings on those structures are artefacts and
-GROMACS energy minimisation resolves them.
+A flat lattice is correct almost everywhere. It is wrong at **helicene-type edges**, and this used
+to be misdescribed as "peri contacts that are real geometry":
+
+- at a **cove** — two edge carbons 2.46 Å apart and four bonds apart, the [4]helicene motif —
+  both substituents point into the same vacant lattice site and land 0.1–0.6 Å apart, and the cove
+  carbons themselves sit at 2.46 Å, inside the 2.50 Å C···C floor;
+- at a **fjord** — five bonds apart, [5]helicene — the edge carbons are 1.42 Å apart unbonded, and
+  a substituent can land on the other arm's ring carbon.
+
+Those are not physical features: real helicenes twist out of plane, and GROMACS energy minimisation
+of an exported sheet opens a cove from 2.46 Å to ~2.95 Å and buckles its carbons up to ~1.0 Å out
+of plane. Left unrelieved, they failed strict validation on nearly every structure above 80 heavy
+atoms.
+
+So the hex-lattice path runs its own relief, `CoordinateGenerator.relieve_lattice_crowding`, after
+embedding and planarity enforcement:
+
+1. substituents that clash are turned rigidly out of plane about their ring atom, the two sides of a
+   crowded site in opposite directions;
+2. a UFF relaxation then lets each cove open, with every ring atom tethered within
+   `LATTICE_TETHER_RADIUS` of its lattice position and every aromatic bond held to
+   `LATTICE_BOND_RANGE`.
+
+The relaxed result is kept only if it has no more bond-length errors and no more clashes than the
+tilted one, and its ring atoms stay within `LATTICE_MAX_SHEET_RMS` of a plane. Otherwise the tilted
+coordinates are kept. A structure with no clash is returned unchanged.
+
+Stage 1 is not optional. The overlaps it removes are close enough to coincident that a force field
+started from them throws atoms apart: ring bonds stretched to 2–28 Å.
+
+The relaxation also needs care in two places. UFF cannot parametrise an aromatic sheet it cannot
+kekulise, and the de-aromatised fallback types ring carbons sp³ and folds the sheet, so the force
+field sees a copy with aromatic atoms typed sp². And a perfectly flat start is a saddle point, so
+ring atoms get a small seeded out-of-plane offset.
+
+A skeleton that is itself malformed — the elongated builder can overshoot its carbon target and
+leave unbonded ring carbons at bond distance — is not repaired here. Relief makes it no worse, but
+may leave it failing.
 
 ```gherkin
-Feature: Do not resolve clashes on geometrically exact lattices
+Feature: Keep the hex lattice, relieving only what a flat lattice gets wrong
 
   @rq-49e2ed82
-  Scenario: Hex-lattice structures keep their coordinates
+  Scenario: Hex-lattice structures keep their lattice
     Given a structure whose coordinates came from the hex-lattice path
     When the generator finishes geometry
-    Then clash resolution does not run
-    And the ring lattice is left intact
+    Then the generic clash resolver does not run
+    And every aromatic carbon-carbon bond stays at the lattice length
 
   @rq-3c400653
   Scenario: Small-molecule structures still get clash resolution
     Given a structure embedded by ETKDG rather than the hex lattice
     When the generator finishes geometry
     Then clash resolution runs
+
+  @rq-57d3fc46
+  Scenario: A cove's substituents are pulled apart
+    Given a hex-lattice sheet with a cove whose two hydrogens were placed on top of each other
+    When lattice crowding is relieved
+    Then no contact in the structure is a steric clash
+
+  @rq-da5ef2fc
+  Scenario: Relief opens the cove rather than only moving its hydrogens
+    Given a hex-lattice sheet with a cove
+    When lattice crowding is relieved
+    Then the two cove carbons are further apart than the flat lattice's 2.46 Angstrom
+
+  @rq-13532295
+  Scenario: A relieved sheet stays flat
+    Given a hex-lattice sheet with crowded edges
+    When lattice crowding is relieved
+    Then its ring atoms deviate from their best-fit plane by no more than LATTICE_MAX_SHEET_RMS
+
+  @rq-ac64435a
+  Scenario: A relaxation that makes things worse is discarded
+    Given a relaxation that would leave more clashes or bond-length errors than it started with
+    When lattice crowding is relieved
+    Then the tilted, unrelaxed coordinates are returned instead
+
+  @rq-37a3d53e
+  Scenario: A sheet with nothing to relieve is left alone
+    Given a hex-lattice structure with no steric clash
+    When lattice crowding is relieved
+    Then its coordinates are unchanged
+
+  @rq-9a59d62c
+  Scenario: Large hex-lattice structures pass strict validation
+    Given a strict configuration of 100 carbons whose composition target is reachable
+    When structures are generated across several seeds
+    Then none fails validation on a steric clash
+```
+
+### A hydroxyl hydrogen keeps its bond angle <!-- rq-7515b128 -->
+
+On the flat path each hydrogen was placed "opposite the parent's other neighbours". For a
+hydroxyl or carboxyl OH that direction is the C–O axis itself, so the X–O–H angle came out at
+180° on the roughly 30% of hydroxyls no clash drew attention to. That is wrong geometry, and it is
+a singular torsion for any force field later handed the structure — the relief pass's UFF energy
+started at 10¹⁷ until it was fixed.
+
+A hydrogen on a heteroatom with a single heavy neighbour is placed at
+`HYDROXYL_H_PLACEMENT_ANGLE_DEG` (108.5°) to that bond, in the sheet plane, on the side with more
+room.
+
+```gherkin
+Feature: Place hydroxyl hydrogens at a real bond angle
+
+  @rq-653a5fd2
+  Scenario: A hydroxyl on a large sheet is bent, not linear
+    Given a structure on the hex-lattice path carrying hydroxyl groups
+    When coordinates are generated
+    Then every C-O-H angle is between 100 and 120 degrees
+```
+
+### The validator and the relief share one definition of a clash <!-- rq-5079b4df -->
+
+`_clash_pairs` is the single implementation of "a judged pair more than
+`CLASH_SEVERITY_TOLERANCE` inside its floor". `GeometryValidator._check_steric_clashes` reports what
+it returns, and the relief pass resolves what it returns. A second implementation would let the
+relief call a structure clean that strict validation then rejects.
+
+```gherkin
+Feature: One definition of a clash
+
+  @rq-4eb90e63
+  Scenario: The validator reports exactly the pairs the clash finder returns
+    Given any structure with steric clashes
+    When geometry validation runs
+    Then the clashes it reports are the pairs the shared clash finder returns, in the same order
 ```
 
 ## Force-Field Refinement Is Not Gated on Clashes <!-- rq-e05e7026 -->

@@ -162,11 +162,11 @@ Beyond that pipeline:
 
 2. **`heteroatom_assignment.py`** — `OxygenAssigner` places functional groups (phenolic, carboxyl, ether, etc.) either from an explicit dict or derived from `O_C_ratio`. `HydrogenAssigner` then fills remaining free valences. A critical function `_fix_heteroatom_bond_types` (also called in `biochar_generator.py` after geometry and after validation) corrects RDKit's tendency to mark ether C–O bonds as `AROMATIC` during sanitisation.
 
-3. **`geometry_3d.py`** — `CoordinateGenerator` embeds in 3D. Molecules ≤80 heavy atoms use RDKit ETKDGv3/v2 + MMFF94; larger molecules use the pre-computed hex-lattice 2D coords. When `generator.used_hex_lattice` is `True`, clash resolution is **skipped** because peri-H contacts in large fused PAHs are real geometry, not errors — displacing atoms would shatter the ring lattice.
+3. **`geometry_3d.py`** — `CoordinateGenerator` embeds in 3D. Molecules ≤80 heavy atoms use RDKit ETKDGv3/v2 + MMFF94; larger molecules use the pre-computed hex-lattice 2D coords. When `generator.used_hex_lattice` is `True`, the generic clash resolver is **skipped** — it would shatter the ring lattice — and `relieve_lattice_crowding` runs instead: it tilts substituents crowded at coves/fjords out of plane, then lets the coves open under a tethered UFF pass that keeps bond lengths and overall flatness (rq-8e5f5dc1).
 
 4. **`opls_typing.py`** — `AtomTyper` maps each atom to an internal OPLS-AA type (CA, HA, OH, OS, …). At export time `GROMACS_OPLS_TYPE_MAP` in `constants.py` translates these to GROMACS `opls_XXX` names.
 
-5. **`validation.py`** — `ValidationEngine` checks composition ratios and geometry. Steric clash warnings from the flat hex-lattice path are expected and do not indicate a bug.
+5. **`validation.py`** — `ValidationEngine` checks composition ratios and geometry. A steric clash surviving the hex-lattice relief is a real defect, not an artefact.
 
 ### Surface pipeline
 
@@ -181,4 +181,4 @@ Beyond that pipeline:
 - `molecule_name` / residue name: **≤5 characters** (GROMACS hard limit).
 - Carbonyl, quinone, and lactone functional groups fall back silently to phenolic — pure aromatic PAH edges have no free valence for these.
 - `_fix_heteroatom_bond_types` must be called after any RDKit `SanitizeMol` pass that touches a molecule containing ether oxygens.
-- The hex-lattice path (large molecules) produces geometrically perfect structures; clash warnings from `GeometryValidator` on these are artefacts and should be ignored — GROMACS energy minimisation resolves them.
+- The hex-lattice path (large molecules) keeps an exact lattice except at helicene-type edges (coves, fjords), where a flat lattice overlaps atoms; `relieve_lattice_crowding` relieves those. Do not dismiss a clash on these structures as an artefact — see rq-8e5f5dc1 and `docs/solutions/bugs/flat-lattice-overlaps-at-helicene-edges.md`.

@@ -127,8 +127,9 @@ These hold across the whole system and are easy to violate locally.
 - `molecule_name` and residue name must be **5 characters or fewer** — a GROMACS format limit.
 - `_fix_heteroatom_bond_types` must be called after **any** `SanitizeMol` pass touching a
   molecule with ether oxygens.
-- Clash warnings from `GeometryValidator` on hex-lattice structures are artefacts of a
-  geometrically exact lattice, not defects.
+- A clash on a hex-lattice structure is a defect, not an artefact: the lattice is exact, but its
+  flat placement overlaps atoms at coves and fjords, which the geometry stage relieves
+  (rq-8e5f5dc1).
 - Requested composition is a target, not a promise. Measure the realised structure.
 - Only the `opls_XXX` name reaches GROMACS. A name identifying the wrong element silently
   simulates the wrong chemistry.

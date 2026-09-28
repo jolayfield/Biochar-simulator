@@ -253,6 +253,18 @@
     "title": "Public surface",
     "type": "section"
   },
+  "rq-13532295": {
+    "decl": "Scenario: A relieved sheet stays flat",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A relieved sheet stays flat",
+    "type": "scenario"
+  },
   "rq-13a85be1": {
     "decl": "## Cross-references",
     "file": "geometry-embedding",
@@ -896,6 +908,18 @@
     "title": "An amino nitrogen types as aniline N on a small flake",
     "type": "scenario"
   },
+  "rq-37a3d53e": {
+    "decl": "Scenario: A sheet with nothing to relieve is left alone",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A sheet with nothing to relieve is left alone",
+    "type": "scenario"
+  },
   "rq-39798517": {
     "decl": "## A Model the Running Library Does Not Reproduce Says So",
     "file": "charge-backends",
@@ -1165,7 +1189,7 @@
     "type": "scenario"
   },
   "rq-49e2ed82": {
-    "decl": "Scenario: Hex-lattice structures keep their coordinates",
+    "decl": "Scenario: Hex-lattice structures keep their lattice",
     "file": "geometry-embedding",
     "refs": [
       {
@@ -1173,7 +1197,7 @@
         "kind": "code"
       }
     ],
-    "title": "Hex-lattice structures keep their coordinates",
+    "title": "Hex-lattice structures keep their lattice",
     "type": "scenario"
   },
   "rq-4a9e69bb": {
@@ -1227,6 +1251,18 @@
     "title": "The fallback is reported to the caller",
     "type": "scenario"
   },
+  "rq-4eb90e63": {
+    "decl": "Scenario: The validator reports exactly the pairs the clash finder returns",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The validator reports exactly the pairs the clash finder returns",
+    "type": "scenario"
+  },
   "rq-4f5a5569": {
     "decl": "## Every Stage Consumes What an Earlier Stage Produced",
     "file": "md-setup",
@@ -1266,6 +1302,19 @@
     ],
     "title": "A partially placed functional group does not satisfy strict validation",
     "type": "scenario"
+  },
+  "rq-5079b4df": {
+    "decl": "### The validator and the relief share one definition of a clash",
+    "file": "geometry-embedding",
+    "level": 3,
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "The validator and the relief share one definition of a clash",
+    "type": "section"
   },
   "rq-5084d61d": {
     "decl": "Scenario: Each repeat runs the four stages in order",
@@ -1451,6 +1500,18 @@
     "title": "Strictness Covers Shortfall, Not Only Failure",
     "type": "section"
   },
+  "rq-57d3fc46": {
+    "decl": "Scenario: A cove's substituents are pulled apart",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A cove's substituents are pulled apart",
+    "type": "scenario"
+  },
   "rq-5840d1b3": {
     "decl": "- `PAHAssembler(seed: int = None)`",
     "file": "carbon-skeleton",
@@ -1627,6 +1688,18 @@
     "refs": [],
     "title": "The Name a Point Is Recorded Under Is the Name in Its Topology",
     "type": "section"
+  },
+  "rq-653a5fd2": {
+    "decl": "Scenario: A hydroxyl on a large sheet is bent, not linear",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A hydroxyl on a large sheet is bent, not linear",
+    "type": "scenario"
   },
   "rq-6659180d": {
     "decl": "## Aromatic Rings Carry the Terms That Keep Them Planar",
@@ -1839,6 +1912,19 @@
     ],
     "title": "Titration does not disturb the caller's random stream",
     "type": "scenario"
+  },
+  "rq-7515b128": {
+    "decl": "### A hydroxyl hydrogen keeps its bond angle",
+    "file": "geometry-embedding",
+    "level": 3,
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A hydroxyl hydrogen keeps its bond angle",
+    "type": "section"
   },
   "rq-75419e1a": {
     "decl": "Scenario: A condensation run directory records its provenance",
@@ -2257,11 +2343,28 @@
     "type": "scenario"
   },
   "rq-8e5f5dc1": {
-    "decl": "## Clash Resolution Is Skipped on the Hex-Lattice Path",
+    "decl": "## Hex-Lattice Sheets Keep Their Lattice, Except Where a Flat Lattice Is Wrong",
     "file": "geometry-embedding",
     "level": 2,
-    "refs": [],
-    "title": "Clash Resolution Is Skipped on the Hex-Lattice Path",
+    "refs": [
+      {
+        "file": "rqm/ARCHITECTURE.md",
+        "kind": "code"
+      },
+      {
+        "file": "src/biochar/pipeline/biochar_generator.py",
+        "kind": "code"
+      },
+      {
+        "file": "tests/test_geometry_embedding_paths.py",
+        "kind": "code"
+      },
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Hex-Lattice Sheets Keep Their Lattice, Except Where a Flat Lattice Is Wrong",
     "type": "section"
   },
   "rq-8ebaed02": {
@@ -2426,6 +2529,18 @@
     "refs": [],
     "title": "get_valence_range",
     "type": "api-item"
+  },
+  "rq-9a59d62c": {
+    "decl": "Scenario: Large hex-lattice structures pass strict validation",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Large hex-lattice structures pass strict validation",
+    "type": "scenario"
   },
   "rq-9a9488ab": {
     "decl": "Scenario: An aromatic C-C is measured against the aromatic expectation",
@@ -2825,6 +2940,18 @@
       }
     ],
     "title": "A molecule that kekulises cleanly also knows its rings",
+    "type": "scenario"
+  },
+  "rq-ac64435a": {
+    "decl": "Scenario: A relaxation that makes things worse is discarded",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "A relaxation that makes things worse is discarded",
     "type": "scenario"
   },
   "rq-ac71d20f": {
@@ -3608,6 +3735,18 @@
     "refs": [],
     "title": "Questionable Combinations Warn",
     "type": "section"
+  },
+  "rq-da5ef2fc": {
+    "decl": "Scenario: Relief opens the cove rather than only moving its hydrogens",
+    "file": "geometry-embedding",
+    "refs": [
+      {
+        "file": "tests/test_lattice_relief.py",
+        "kind": "code"
+      }
+    ],
+    "title": "Relief opens the cove rather than only moving its hydrogens",
+    "type": "scenario"
   },
   "rq-da875aee": {
     "decl": "Scenario: The bundled artifact's training data is the current reference data",
